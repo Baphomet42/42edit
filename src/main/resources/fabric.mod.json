@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "ftedit",
+  "version": "${version}",
+
+  "name": "42edit",
+  "description": "Blackest Magick in Practice",
+  "authors": [
+    "BaphomethLabs"
+  ],
+  "contact": {
+    "homepage": "https://namemc.com/profile/42Richtofen42.1"
+  },
+
+  "license": "CC0-1.0",
+  "icon": "assets/42edit/icon.png",
+
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "baphomethlabs.fortytwoedit.FortytwoEdit"
+    ]
+  },
+  "mixins": [
+    "ftedit.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "fabric": "*",
+    "minecraft": "1.18.x",
+    "java": ">=17",
+    "fabric-key-binding-api-v1":"*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
