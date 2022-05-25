@@ -19,7 +19,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 
 public class FromWorld extends LightweightGuiDescription {
     public FromWorld() {
@@ -28,30 +28,30 @@ public class FromWorld extends LightweightGuiDescription {
         root.setSize(12*20,9*22);
 
         //labels
-        WLabel lblMenu = new WLabel("Get Data");
+        WLabel lblMenu = new WLabel(Text.of("Get Data"));
         lblMenu.setHorizontalAlignment(HorizontalAlignment.CENTER);
 
         //back button
-        WButton btnBack = new WButton(new LiteralText("Back"));
+        WButton btnBack = new WButton(Text.of("Back"));
         btnBack.setOnClick(() -> {
             MinecraftClient.getInstance().setScreen(new MagickScreen(new MagickGui()));
         });
 
         //print item data
-        WButton btnGetItemData = new WButton(new LiteralText("Copy Item Data"));
+        WButton btnGetItemData = new WButton(Text.of("Copy Item Data"));
         btnGetItemData.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(!client.player.getMainHandStack().isEmpty()) {
                 String itemData = client.player.getMainHandStack().getItem().toString();
                 if(client.player.getMainHandStack().hasNbt())
                     itemData += client.player.getMainHandStack().getNbt().asString();
-                client.player.sendMessage(new LiteralText(itemData),false);
+                client.player.sendMessage(Text.of(itemData),false);
                 client.keyboard.setClipboard(itemData);
             }
         });
 
         //get entity
-        WButton btnGetEntity = new WButton(new LiteralText("Get Entity"));
+        WButton btnGetEntity = new WButton(Text.of("Get Entity"));
         btnGetEntity.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if (client.player.getAbilities().creativeMode) {
@@ -128,7 +128,7 @@ public class FromWorld extends LightweightGuiDescription {
                 }
             }
         });
-        WButton btnGetEntityFull = new WButton(new LiteralText("Full Data"));
+        WButton btnGetEntityFull = new WButton(Text.of("Full Data"));
         btnGetEntityFull.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if (client.player.getAbilities().creativeMode) {
@@ -190,7 +190,7 @@ public class FromWorld extends LightweightGuiDescription {
 
         //testfor invis armorstands
         //and invis item frames without an item
-        WButton btnFindInvis = new WButton(new LiteralText("Find Invis"));
+        WButton btnFindInvis = new WButton(Text.of("Find Invis"));
         btnFindInvis.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if (client.player.getAbilities().creativeMode) {
@@ -206,7 +206,7 @@ public class FromWorld extends LightweightGuiDescription {
                             if(((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(0))).isEmpty() && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(1))).isEmpty()
                             && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(2))).isEmpty() && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(3))).isEmpty()
                             && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(0))).isEmpty() && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(1))).isEmpty())
-                                client.player.sendMessage(new LiteralText("Invisible armor stand ["+
+                                client.player.sendMessage(Text.of("Invisible armor stand ["+
                                     current.getBlockX()+","+current.getBlockY()+","+current.getBlockZ()+"]"),false);
                         }
                     }
@@ -217,7 +217,7 @@ public class FromWorld extends LightweightGuiDescription {
                         if(nbt.contains("Invisible") && nbt.get("Invisible").getType()==NbtType.BYTE
                         && nbt.get("Invisible").asString().equals("1b")) {
                             if(!nbt.contains("Item")) {
-                                client.player.sendMessage(new LiteralText("Invisible item frame ["+
+                                client.player.sendMessage(Text.of("Invisible item frame ["+
                                 current.getBlockX()+","+current.getBlockY()+","+current.getBlockZ()+"]"),false);
                             }
                         }
@@ -227,7 +227,7 @@ public class FromWorld extends LightweightGuiDescription {
         });
 
         //panorama
-        WButton btnPanorama = new WButton(new LiteralText("Take Panorama"));
+        WButton btnPanorama = new WButton(Text.of("Take Panorama"));
         btnPanorama.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             File location = new File(client.runDirectory.getAbsolutePath());
@@ -238,7 +238,7 @@ public class FromWorld extends LightweightGuiDescription {
             }
             client.takePanorama(location,1024,1024);
         });
-        WButton btnScreenshots = new WButton(new LiteralText("View"));
+        WButton btnScreenshots = new WButton(Text.of("View"));
         btnScreenshots.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             File screenshots = new File(client.runDirectory.getAbsolutePath()+"/screenshots");
@@ -247,19 +247,19 @@ public class FromWorld extends LightweightGuiDescription {
         });
 
         //compare hand items
-        WButton btnCompareItems = new WButton(new LiteralText("Compare Items"));
-        WLabel lblCompareItems = new WLabel("");
+        WButton btnCompareItems = new WButton(Text.of("Compare Items"));
+        WLabel lblCompareItems = new WLabel(Text.of(""));
         btnCompareItems.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(!client.player.getMainHandStack().isEmpty() && !client.player.getOffHandStack().isEmpty()) {
                 boolean equal = ItemStack.areNbtEqual(client.player.getMainHandStack(),client.player.getOffHandStack());
                 if(equal)
-                    lblCompareItems.setText(new LiteralText("\u2611"));
+                    lblCompareItems.setText(Text.of("\u2611"));
                 else
-                    lblCompareItems.setText(new LiteralText("\u2612"));
+                    lblCompareItems.setText(Text.of("\u2612"));
             }
             else
-                lblCompareItems.setText(new LiteralText(""));
+                lblCompareItems.setText(Text.of(""));
         });
 
         //add items

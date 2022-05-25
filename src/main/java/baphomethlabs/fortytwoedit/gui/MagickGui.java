@@ -12,7 +12,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 
 public class MagickGui extends LightweightGuiDescription {
     public MagickGui() {
@@ -24,35 +24,35 @@ public class MagickGui extends LightweightGuiDescription {
         WItem logo = new WItem(new ItemStack(Items.JIGSAW));
 
         //menu label
-        WLabel lblMenu = new WLabel("\u00a75\u00a7lBlack Magick by BaphomethLabs");
+        WLabel lblMenu = new WLabel(Text.of("\u00a75\u00a7lBlack Magick by BaphomethLabs"));
         lblMenu.setHorizontalAlignment(HorizontalAlignment.CENTER);
 
         //item builder button
-        WButton btnItem = new WButton(new ItemIcon(new ItemStack(Items.SPONGE)), new LiteralText("42edit..."));
+        WButton btnItem = new WButton(new ItemIcon(new ItemStack(Items.SPONGE)), Text.of("42edit..."));
         btnItem.setOnClick(() -> {
             MinecraftClient.getInstance().setScreen(new MagickScreen(new ItemBuilder()));
         });
 
         //item from world button
-        WButton btnFromWorld = new WButton(new ItemIcon(new ItemStack(Items.ARMOR_STAND)), new LiteralText("Get Data..."));
+        WButton btnFromWorld = new WButton(new ItemIcon(new ItemStack(Items.ARMOR_STAND)), Text.of("Get Data..."));
         btnFromWorld.setOnClick(() -> {
             MinecraftClient.getInstance().setScreen(new MagickScreen(new FromWorld()));
         });
 
         //hacks button
-        WButton btnHacks = new WButton(new ItemIcon(new ItemStack(Items.REPEATING_COMMAND_BLOCK)),new LiteralText("Hacks..."));
+        WButton btnHacks = new WButton(new ItemIcon(new ItemStack(Items.REPEATING_COMMAND_BLOCK)),Text.of("Hacks..."));
         btnHacks.setOnClick(() -> {
             MinecraftClient.getInstance().setScreen(new MagickScreen(new Hacks()));
         });
 
         //look button
-        WButton btnLookN = new WButton(new LiteralText("Look N"));
+        WButton btnLookN = new WButton(Text.of("Look N"));
         btnLookN.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),
                 180f,client.player.getPitch());
         });
-        WButton btnLookR = new WButton(new LiteralText("Rotate"));
+        WButton btnLookR = new WButton(Text.of("Rotate"));
         btnLookR.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             float yaw = client.player.getYaw() + 90;
@@ -61,7 +61,7 @@ public class MagickGui extends LightweightGuiDescription {
             client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),
                 yaw,client.player.getPitch());
         });
-        WButton btnLookH = new WButton(new ItemIcon(new ItemStack(Items.SPYGLASS)), new LiteralText("Look H"));
+        WButton btnLookH = new WButton(new ItemIcon(new ItemStack(Items.SPYGLASS)), Text.of("Look H"));
         btnLookH.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),
@@ -69,7 +69,7 @@ public class MagickGui extends LightweightGuiDescription {
         });
 
         //hat
-        WButton btnHat = new WButton(new ItemIcon(new ItemStack(Items.DIAMOND_HELMET)), new LiteralText("Hat"));
+        WButton btnHat = new WButton(new ItemIcon(new ItemStack(Items.DIAMOND_HELMET)), Text.of("Hat"));
         btnHat.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(client.player.getAbilities().creativeMode) {
@@ -109,7 +109,7 @@ public class MagickGui extends LightweightGuiDescription {
         });
 
         //cape menu
-        WButton btnCapes = new WButton(new ItemIcon(new ItemStack(Items.ELYTRA)),new LiteralText("Capes..."));
+        WButton btnCapes = new WButton(new ItemIcon(new ItemStack(Items.ELYTRA)),Text.of("Capes..."));
         btnCapes.setOnClick(() -> {
             MinecraftClient.getInstance().setScreen(new MagickScreen(new Capes()));
         });

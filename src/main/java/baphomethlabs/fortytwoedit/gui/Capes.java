@@ -11,7 +11,7 @@ import io.github.cottonmc.cotton.gui.widget.WPlainPanel;
 import io.github.cottonmc.cotton.gui.widget.WTextField;
 import io.github.cottonmc.cotton.gui.widget.data.HorizontalAlignment;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 
 public class Capes extends LightweightGuiDescription {
@@ -22,36 +22,36 @@ public class Capes extends LightweightGuiDescription {
         root.setSize(12*20,9*22);
 
         //labels
-        WLabel lblMenu = new WLabel("Capes");
+        WLabel lblMenu = new WLabel(Text.of("Capes"));
         lblMenu.setHorizontalAlignment(HorizontalAlignment.CENTER);
 
         //back button
-        WButton btnBack = new WButton(new LiteralText("Back"));
+        WButton btnBack = new WButton(Text.of("Back"));
         btnBack.setOnClick(() -> {
             MinecraftClient.getInstance().setScreen(new MagickScreen(new MagickGui()));
         });
 
         //optifine capes
-        WLabel lblOptifine = new WLabel("Optifine");
-        WButton btnOptiCape = new WButton(new LiteralText("Show Optifine Capes [On]"));
+        WLabel lblOptifine = new WLabel(Text.of("Optifine"));
+        WButton btnOptiCape = new WButton(Text.of("Show Optifine Capes [On]"));
         if(!FortytwoEdit.opticapesOn)
-            btnOptiCape.setLabel(new LiteralText("Show Optifine Capes [Off]"));
+            btnOptiCape.setLabel(Text.of("Show Optifine Capes [Off]"));
         btnOptiCape.setOnClick(() -> {
             FortytwoEdit.opticapesOn = !FortytwoEdit.opticapesOn;
             FortytwoEdit.updateOptions();
             if(FortytwoEdit.opticapesOn)
-                btnOptiCape.setLabel(new LiteralText("Show Optifine Capes [On]"));
+                btnOptiCape.setLabel(Text.of("Show Optifine Capes [On]"));
             else
-                btnOptiCape.setLabel(new LiteralText("Show Optifine Capes [Off]"));
+                btnOptiCape.setLabel(Text.of("Show Optifine Capes [Off]"));
         });
-        WButton btnReloadCapes = new WButton(new LiteralText("Reload Capes"));
+        WButton btnReloadCapes = new WButton(Text.of("Reload Capes"));
         btnReloadCapes.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
-            client.player.sendMessage(new LiteralText("Cleared "+FortytwoEdit.debugCapeNamesSize()+" cached names."),false);
-            client.player.sendMessage(new LiteralText("Deleted "+FortytwoEdit.debugCapeNames2Size()+" cached capes."),false);
+            client.player.sendMessage(Text.of("Cleared "+FortytwoEdit.debugCapeNamesSize()+" cached names."),false);
+            client.player.sendMessage(Text.of("Deleted "+FortytwoEdit.debugCapeNames2Size()+" cached capes."),false);
             FortytwoEdit.clearCapes();
         });
-        WButton btnEditCape = new WButton(new LiteralText("Edit Cape"));
+        WButton btnEditCape = new WButton(Text.of("Edit Cape"));
         btnEditCape.setOnClick(() -> {
             try {
                 //partly from https://github.com/dragonostic/of-capes/blob/main/src/main/java/net/drago/ofcapes/mixin/SkinOptionsScreenMixin.java
@@ -66,22 +66,22 @@ public class Capes extends LightweightGuiDescription {
         });
 
         //custom capes
-        WLabel lblCustom = new WLabel("Custom");
-        WButton btnCustom = new WButton(new LiteralText("Custom [Off]"));
+        WLabel lblCustom = new WLabel(Text.of("Custom"));
+        WButton btnCustom = new WButton(Text.of("Custom [Off]"));
         if(FortytwoEdit.showClientCape)
-            btnCustom.setLabel(new LiteralText("Custom [On]"));
+            btnCustom.setLabel(Text.of("Custom [On]"));
         btnCustom.setOnClick(() -> {
             FortytwoEdit.showClientCape = !FortytwoEdit.showClientCape;
             FortytwoEdit.updateOptions();
             if(FortytwoEdit.showClientCape)
-                btnCustom.setLabel(new LiteralText("Custom [On]"));
+                btnCustom.setLabel(Text.of("Custom [On]"));
             else
-                btnCustom.setLabel(new LiteralText("Custom [Off]"));
+                btnCustom.setLabel(Text.of("Custom [Off]"));
         });
         WTextField txtCustom = new WTextField();
         txtCustom.setMaxLength(64);
         txtCustom.setText(FortytwoEdit.clientCape);
-        WButton btnSetCustom = new WButton(new LiteralText("Set"));
+        WButton btnSetCustom = new WButton(Text.of("Set"));
         btnSetCustom.setOnClick(() -> {
             if(txtCustom.getText().replaceAll("\\s","").equals(""))
                 FortytwoEdit.clientCape = "default";
@@ -89,10 +89,10 @@ public class Capes extends LightweightGuiDescription {
                 FortytwoEdit.clientCape = txtCustom.getText().replaceAll("\\s","");
             FortytwoEdit.updateOptions();
         });
-        WLabel lblCustomHelp = new WLabel("[?]"){
+        WLabel lblCustomHelp = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
-                tooltip.add(new LiteralText("minecon2011"),new LiteralText("minecon2013"),new LiteralText("minecon2016"),new LiteralText("mojang-old"),
-                    new LiteralText("mojang"),new LiteralText("spartan"),new LiteralText("christmas"));
+                tooltip.add(Text.of("minecon2011"),Text.of("minecon2013"),Text.of("minecon2016"),Text.of("mojang-old"),
+                Text.of("mojang"),Text.of("spartan"),Text.of("christmas"));
             }
         };
 

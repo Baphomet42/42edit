@@ -1,0 +1,19 @@
+------todo------
+get last death pos (and dim)
+itembuilder: attributemodifiers, custompotioneffects, potion(if needed), suspicious stew effects, fireworks
+autofill texts
+phase out libgui
+phase out java imports
+lowercase and symbol banners (add to final chars)
+banner shortcuts for all banners, just upper/lower/num/symbol
+unicode symbols in items not saving correctly?
+review comments and credit stolen
+lostforgottenrealm
+visible air types
+playsound (and list of all sounds)
+
+------bugs------
+visible light looks bad
+opticapes needs resource pack
+disable opticapes doesnt work right away
+42edit menu broken

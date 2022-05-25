@@ -35,7 +35,7 @@ import net.minecraft.nbt.NbtShort;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class ItemBuilder extends LightweightGuiDescription {
@@ -51,9 +51,9 @@ public class ItemBuilder extends LightweightGuiDescription {
         root.setSize(12*20,9*22);
 
         //itembuilder main
-        WLabel lblMenu = new WLabel("42edit");
+        WLabel lblMenu = new WLabel(Text.of("42edit"));
         lblMenu.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        WButton btnBack = new WButton(new LiteralText("Back"));
+        WButton btnBack = new WButton(Text.of("Back"));
         btnBack.setOnClick(() -> {
             MinecraftClient.getInstance().setScreen(new MagickScreen(new MagickGui()));
         });
@@ -141,12 +141,12 @@ public class ItemBuilder extends LightweightGuiDescription {
                     int endIndex = 48;
                     if(itemData.length()<endIndex)
                         endIndex = itemData.length();
-                    tooltip.add(new LiteralText(itemData.substring(0,endIndex)));
+                    tooltip.add(Text.of(itemData.substring(0,endIndex)));
                     tooltipLines++;
                     if(itemData.length()>endIndex) {
                         itemData = itemData.substring(endIndex);
                         if(tooltipLines==42)
-                            tooltip.add(new LiteralText("..."));
+                            tooltip.add(Text.of("..."));
                     }
                     else
                         itemData = "";
@@ -156,7 +156,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         };
         updateItem();
         //
-        WButton btnSlotLeft = new WButton(new LiteralText("<"));
+        WButton btnSlotLeft = new WButton(Text.of("<"));
         btnSlotLeft.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             int slot = client.player.getInventory().selectedSlot;
@@ -166,7 +166,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             client.player.getInventory().selectedSlot = slot;
             updateItem();
         });
-        WButton btnSlotRight = new WButton(new LiteralText(">"));
+        WButton btnSlotRight = new WButton(Text.of(">"));
         btnSlotRight.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             int slot = client.player.getInventory().selectedSlot;
@@ -176,7 +176,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             client.player.getInventory().selectedSlot = slot;
             updateItem();
         });
-        WButton btnSlotOff = new WButton(new LiteralText("c"));
+        WButton btnSlotOff = new WButton(Text.of("c"));
         btnSlotOff.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(client.player.getAbilities().creativeMode) {
@@ -210,7 +210,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                 }
             }
         });
-        WButton btnSlotCopyToOff = new WButton(new LiteralText("c*"));
+        WButton btnSlotCopyToOff = new WButton(Text.of("c*"));
         btnSlotCopyToOff.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(client.player.getAbilities().creativeMode) {
@@ -221,14 +221,14 @@ public class ItemBuilder extends LightweightGuiDescription {
                 }
             }
         });
-        WButton btnSlotThrow = new WButton(new LiteralText("Q"));
+        WButton btnSlotThrow = new WButton(Text.of("Q"));
         btnSlotThrow.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             client.player.dropSelectedItem(true);
             client.player.playerScreenHandler.sendContentUpdates();
             updateItem();
         });
-        WButton btnSlotThrowCopy = new WButton(new LiteralText("Q*"));
+        WButton btnSlotThrowCopy = new WButton(Text.of("Q*"));
         btnSlotThrowCopy.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(client.player.getAbilities().creativeMode) {
@@ -255,23 +255,23 @@ public class ItemBuilder extends LightweightGuiDescription {
 
         //tabGeneral
         WPlainPanel tabGeneralScroll = new WPlainPanel();
-        WLabel tabGeneralLblBlank = new WLabel("");
+        WLabel tabGeneralLblBlank = new WLabel(Text.of(""));
         //
-        WButton tabGeneralBtnId = new WButton(new LiteralText("id"));
+        WButton tabGeneralBtnId = new WButton(Text.of("id"));
         WTextField tabGeneralTxtId = new WTextField();
         tabGeneralTxtId.setMaxLength(64);
         tabGeneralBtnId.setOnClick(() -> {
             BlackMagick.setId(tabGeneralTxtId.getText());
         });
         //
-        WButton tabGeneralBtnCount = new WButton(new LiteralText("Count"));
+        WButton tabGeneralBtnCount = new WButton(Text.of("Count"));
         WTextField tabGeneralTxtCount = new WTextField();
         tabGeneralTxtCount.setMaxLength(2);
         tabGeneralBtnCount.setOnClick(() -> {
             BlackMagick.setCount(tabGeneralTxtCount.getText());
         });
         //
-        WButton tabGeneralBtnName = new WButton(new LiteralText("Name"));
+        WButton tabGeneralBtnName = new WButton(Text.of("Name"));
         WTextField tabGeneralTxtName = new WTextField();
         tabGeneralTxtName.setMaxLength(1024);
         tabGeneralBtnName.setOnClick(() -> {
@@ -285,12 +285,12 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"display/Name");
         });
         //
-        WButton tabGeneralBtnHideFlags = new WButton(new LiteralText("HideFlags"));
-        WLabel tabGeneralLblHideFlags = new WLabel(new LiteralText("[?]")){
+        WButton tabGeneralBtnHideFlags = new WButton(Text.of("HideFlags"));
+        WLabel tabGeneralLblHideFlags = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
-                tooltip.add(new LiteralText("1-Ench     2-Attribute     4-Unbreakable"),
-                    new LiteralText("8-CanDestroy     16-CanPlaceOn     32-Other"),
-                    new LiteralText("64-Armor Dye     127-Everything"));
+                tooltip.add(Text.of("1-Ench     2-Attribute     4-Unbreakable"),
+                    Text.of("8-CanDestroy     16-CanPlaceOn     32-Other"),
+                    Text.of("64-Armor Dye     127-Everything"));
             }
         };
         tabGeneralLblHideFlags.setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -308,10 +308,10 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"HideFlags");
         });
         //
-        WLabel tabGeneralLblTool = new WLabel("Tools / Adventure Mode");
+        WLabel tabGeneralLblTool = new WLabel(Text.of("Tools / Adventure Mode"));
         tabGeneralLblTool.setHorizontalAlignment(HorizontalAlignment.CENTER);
         //
-        WButton tabGeneralBtnUnbreakable = new WButton(new LiteralText("Unbreakable"));
+        WButton tabGeneralBtnUnbreakable = new WButton(Text.of("Unbreakable"));
         WTextField tabGeneralTxtUnbreakable = new WTextField();
         tabGeneralTxtUnbreakable.setMaxLength(5);
         tabGeneralBtnUnbreakable.setOnClick(() -> {
@@ -325,18 +325,18 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"Unbreakable");
         });
         //
-        WButton tabGeneralBtnDamage = new WButton(new LiteralText("Damage"));
-        WLabel tabGeneralLblDamage = new WLabel(new LiteralText("[?]")){
+        WButton tabGeneralBtnDamage = new WButton(Text.of("Damage"));
+        WLabel tabGeneralLblDamage = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
-                tooltip.add(new LiteralText("Tools-"),
-                new LiteralText("Netherite-2031  Diamond-1561  Iron-250"),
-                new LiteralText("Stone-131  Wood-59  Gold-32"),new LiteralText(""),new LiteralText("Armor (H/C/L/B)-"),
-                new LiteralText("Netherite-407,592,555,481  Diamond-363,528,495,429"),
-                new LiteralText("Iron/Chain-165,240,225,195  Gold-77,112,105,91"),
-                new LiteralText("Leather-55,80,75,65  Turtle-275  Elytra-432"),new LiteralText(""), new LiteralText("Other-"),
-                new LiteralText("Bow-384  Crossbow-326  Trident-250  Shield-336"),
-                new LiteralText("Flint-64  Shears-238  Fishing-64"),
-                new LiteralText("CarrotStick-25  FungusStick-100"));
+                tooltip.add(Text.of("Tools-"),
+                Text.of("Netherite-2031  Diamond-1561  Iron-250"),
+                Text.of("Stone-131  Wood-59  Gold-32"),Text.of(""),Text.of("Armor (H/C/L/B)-"),
+                Text.of("Netherite-407,592,555,481  Diamond-363,528,495,429"),
+                Text.of("Iron/Chain-165,240,225,195  Gold-77,112,105,91"),
+                Text.of("Leather-55,80,75,65  Turtle-275  Elytra-432"),Text.of(""),Text.of("Other-"),
+                Text.of("Bow-384  Crossbow-326  Trident-250  Shield-336"),
+                Text.of("Flint-64  Shears-238  Fishing-64"),
+                Text.of("CarrotStick-25  FungusStick-100"));
             }
         };
         tabGeneralLblDamage.setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -354,7 +354,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"Damage");
         });
         //
-        WButton tabGeneralBtnModel = new WButton(new LiteralText("Custom Model"));
+        WButton tabGeneralBtnModel = new WButton(Text.of("Custom Model"));
         WTextField tabGeneralTxtModel = new WTextField();
         tabGeneralTxtModel.setMaxLength(10);
         tabGeneralBtnModel.setOnClick(() -> {
@@ -368,9 +368,9 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"CustomModelData");
         });
         //
-        WLabel tabGeneralLblBlock = new WLabel("Block:");
-        WButton tabGeneralBtnCanPlaceOn = new WButton(new LiteralText("CanPlaceOn"));
-        WButton tabGeneralBtnCanDestroy = new WButton(new LiteralText("CanDestroy"));
+        WLabel tabGeneralLblBlock = new WLabel(Text.of("Block:"));
+        WButton tabGeneralBtnCanPlaceOn = new WButton(Text.of("CanPlaceOn"));
+        WButton tabGeneralBtnCanDestroy = new WButton(Text.of("CanDestroy"));
         WTextField tabGeneralTxtBlock = new WTextField();
         tabGeneralTxtBlock.setMaxLength(64);
         tabGeneralBtnCanPlaceOn.setOnClick(() -> {
@@ -463,47 +463,47 @@ public class ItemBuilder extends LightweightGuiDescription {
 
         //tabDisplay
         WPlainPanel tabDisplayScroll = new WPlainPanel();
-        WLabel tabDisplayLblBlank = new WLabel("");
+        WLabel tabDisplayLblBlank = new WLabel(Text.of(""));
         //
-        WLabel tabDisplayLblJsonTitle = new WLabel("JSON");
+        WLabel tabDisplayLblJsonTitle = new WLabel(Text.of("JSON"));
         tabDisplayLblJsonTitle.setHorizontalAlignment(HorizontalAlignment.CENTER);
         //
-        WButton tabDisplayBtnSetJson = new WButton(new LiteralText("Set"));
-        WButton tabDisplayBtnGetJson = new WButton(new LiteralText("Get"));
+        WButton tabDisplayBtnSetJson = new WButton(Text.of("Set"));
+        WButton tabDisplayBtnGetJson = new WButton(Text.of("Get"));
         WTextField tabDisplayTxtJsonIndex = new WTextField();
         tabDisplayTxtJsonIndex.setMaxLength(2);
         WTextField tabDisplayTxtJsonPath = new WTextField();
         tabDisplayTxtJsonPath.setMaxLength(1024);
-        WLabel tabDisplayLblJsonHelp = new WLabel("[?]"){
+        WLabel tabDisplayLblJsonHelp = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
                 tooltip.add(
-                new LiteralText("font"),
-                new LiteralText("default  uniform  alt  illageralt"),
-                new LiteralText(""),
-                new LiteralText("clickEvent (action | value)"),
-                new LiteralText("  action"),
-                new LiteralText("    open_url  open_file  run_command"),
-                new LiteralText("    suggest_command change_page copy_to_clipboard"),
-                new LiteralText(""),
-                new LiteralText("hoverEvent (action | contents)"),
-                new LiteralText("  action"),
-                new LiteralText("    show_text  show_item  show_entity"),
-                new LiteralText("  contents"),
-                new LiteralText("    (show_text) json"),
-                new LiteralText("    (show_item) {id: ,count: ,tag: }"),
-                new LiteralText("    (show_entity) {name: ,type: ,id:(UUID)}"));
+                    Text.of("font"),
+                    Text.of("default  uniform  alt  illageralt"),
+                    Text.of(""),
+                    Text.of("clickEvent (action | value)"),
+                    Text.of("  action"),
+                    Text.of("    open_url  open_file  run_command"),
+                    Text.of("    suggest_command change_page copy_to_clipboard"),
+                    Text.of(""),
+                    Text.of("hoverEvent (action | contents)"),
+                    Text.of("  action"),
+                    Text.of("    show_text  show_item  show_entity"),
+                    Text.of("  contents"),
+                    Text.of("    (show_text) json"),
+                    Text.of("    (show_item) {id: ,count: ,tag: }"),
+                    Text.of("    (show_entity) {name: ,type: ,id:(UUID)}"));
             }
         };
         WTextField tabDisplayTxtJson = new WTextField();
         tabDisplayTxtJson.setMaxLength(4096);
-        WLabel tabDisplayLblJson = new WLabel(new LiteralText("[?]")){
+        WLabel tabDisplayLblJson = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
                 String json = tabDisplayTxtJson.getText();
                 while(json.length()>0) {
                     int endIndex = 48;
                     if(json.length()<endIndex)
                         endIndex = json.length();
-                    tooltip.add(new LiteralText(json.substring(0,endIndex)));
+                    tooltip.add(Text.of(json.substring(0,endIndex)));
                     if(json.length()>endIndex)
                         json = json.substring(endIndex);
                     else
@@ -563,28 +563,28 @@ public class ItemBuilder extends LightweightGuiDescription {
                 tabDisplayTxtJson.setText(((NbtString)jsonElement).asString());
         });
         //
-        WLabel tabDisplayLblColors = new WLabel("Colors");
+        WLabel tabDisplayLblColors = new WLabel(Text.of("Colors"));
         tabDisplayLblColors.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        WButton tabDisplayBtnColor = new WButton(new LiteralText("Convert RGB"));
-        WLabel tabDisplayLblColor = new WLabel("\u2588");
-        WLabel tabDisplayLblColorHelp = new WLabel("[?]"){
+        WButton tabDisplayBtnColor = new WButton(Text.of("Convert RGB"));
+        WLabel tabDisplayLblColor = new WLabel(Text.of("\u2588"));
+        WLabel tabDisplayLblColorHelp = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
                 tooltip.add(
-                new LiteralText("\u00a7f0 black #000000   \u00a711 dark_blue #0000AA"),
-                new LiteralText("\u00a722 dark_green #00AA00   \u00a733 dark_aqua #00AAAA"),
-                new LiteralText("\u00a744 dark_red #AA0000   \u00a755 dark_purple #AA00AA"),
-                new LiteralText("\u00a766 gold #FFAA00   \u00a777 gray #AAAAAA"),
-                new LiteralText("\u00a788 dark_gray #555555   \u00a799 blue #5555FF"),
-                new LiteralText("\u00a7aa green #55FF55   \u00a7bb aqua #55FFFF"),
-                new LiteralText("\u00a7cc red #FF5555   \u00a7dd light_purple #FF55FF"),
-                new LiteralText("\u00a7ee yellow #FFFF55   \u00a7ff white #FFFFFF"),
-                new LiteralText("\u00a7fr reset"),
-                new LiteralText(""),
-                new LiteralText("\u00a77k obfuscated \u00a7kobfuscated"),
-                new LiteralText("\u00a77l bold \u00a7lbold"),
-                new LiteralText("\u00a77m strikethrough \u00a7mstrikethrough"),
-                new LiteralText("\u00a77n underlined \u00a7nunderlined"),
-                new LiteralText("\u00a77o italic \u00a7oitalic"));
+                Text.of("\u00a7f0 black #000000   \u00a711 dark_blue #0000AA"),
+                Text.of("\u00a722 dark_green #00AA00   \u00a733 dark_aqua #00AAAA"),
+                Text.of("\u00a744 dark_red #AA0000   \u00a755 dark_purple #AA00AA"),
+                Text.of("\u00a766 gold #FFAA00   \u00a777 gray #AAAAAA"),
+                Text.of("\u00a788 dark_gray #555555   \u00a799 blue #5555FF"),
+                Text.of("\u00a7aa green #55FF55   \u00a7bb aqua #55FFFF"),
+                Text.of("\u00a7cc red #FF5555   \u00a7dd light_purple #FF55FF"),
+                Text.of("\u00a7ee yellow #FFFF55   \u00a7ff white #FFFFFF"),
+                Text.of("\u00a7fr reset"),
+                Text.of(""),
+                Text.of("\u00a77k obfuscated \u00a7kobfuscated"),
+                Text.of("\u00a77l bold \u00a7lbold"),
+                Text.of("\u00a77m strikethrough \u00a7mstrikethrough"),
+                Text.of("\u00a77n underlined \u00a7nunderlined"),
+                Text.of("\u00a77o italic \u00a7oitalic"));
             }
         };
         WTextField tabDisplayTxtColorRGB = new WTextField();
@@ -628,7 +628,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabDisplayBtnArmor = new WButton(new LiteralText("Armor Color"));
+        WButton tabDisplayBtnArmor = new WButton(Text.of("Armor Color"));
         tabDisplayBtnArmor.setOnClick(() -> {
             if(tabDisplayTxtColorDec.getText().equals(""))
                 BlackMagick.removeNbt(null,"display/color");
@@ -637,7 +637,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                     BlackMagick.setNbt(null,"display/color",NbtInt.of(Integer.parseInt(tabDisplayTxtColorDec.getText())));
                 } catch(NumberFormatException e) {}
         });
-        WButton tabDisplayBtnMap = new WButton(new LiteralText("Map Color"));
+        WButton tabDisplayBtnMap = new WButton(Text.of("Map Color"));
         tabDisplayBtnMap.setOnClick(() -> {
             if(tabDisplayTxtColorDec.getText().equals(""))
                 BlackMagick.removeNbt(null,"display/MapColor");
@@ -646,7 +646,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                     BlackMagick.setNbt(null,"display/MapColor",NbtInt.of(Integer.parseInt(tabDisplayTxtColorDec.getText())));
                 } catch(NumberFormatException e) {}
         });
-        WButton tabDisplayBtnPotion = new WButton(new LiteralText("Potion Color"));
+        WButton tabDisplayBtnPotion = new WButton(Text.of("Potion Color"));
         tabDisplayBtnPotion.setOnClick(() -> {
             if(tabDisplayTxtColorDec.getText().equals(""))
                 BlackMagick.removeNbt(null,"CustomPotionColor");
@@ -656,7 +656,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                 } catch(NumberFormatException e) {}
         });
         //
-        WButton tabDisplayBtnLabs = new WButton(new LiteralText("BaphomethLabs"));
+        WButton tabDisplayBtnLabs = new WButton(Text.of("BaphomethLabs"));
         tabDisplayBtnLabs.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(!client.player.getMainHandStack().isEmpty()) {
@@ -683,7 +683,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                 }
             }
         });
-        WButton tabDisplayBtnWatermark = new WButton(new LiteralText("Watermark"));
+        WButton tabDisplayBtnWatermark = new WButton(Text.of("Watermark"));
         tabDisplayBtnWatermark.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/\u00a76\u00a7oBaphomethLabs\u00a7r")!=null)
                 BlackMagick.removeNbt(null,"\u00a76\u00a7oBaphomethLabs\u00a7r");
@@ -719,12 +719,12 @@ public class ItemBuilder extends LightweightGuiDescription {
 
         //tabEnch
         WPlainPanel tabEnchScroll = new WPlainPanel();
-        WLabel tabEnchLblBlank = new WLabel("");
+        WLabel tabEnchLblBlank = new WLabel(Text.of(""));
         //
-        WLabel tabEnchLblEnch = new WLabel("Enchanting");
+        WLabel tabEnchLblEnch = new WLabel(Text.of("Enchanting"));
         tabEnchLblEnch.setHorizontalAlignment(HorizontalAlignment.CENTER);
         //
-        WButton tabEnchBtnEnch = new WButton(new LiteralText("Ench"));
+        WButton tabEnchBtnEnch = new WButton(Text.of("Ench"));
         WTextField tabEnchTxtEnchId = new WTextField();
         tabEnchTxtEnchId.setMaxLength(64);
         WTextField tabEnchTxtEnchLvl = new WTextField();
@@ -898,10 +898,10 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabEnchBtnRepair = new WButton(new LiteralText("Repair Cost"));
-        WButton tabEnchBtnRepairMax = new WButton(new LiteralText("?")){
+        WButton tabEnchBtnRepair = new WButton(Text.of("Repair Cost"));
+        WButton tabEnchBtnRepairMax = new WButton(Text.of("?")){
             public void addTooltip(TooltipBuilder tooltip) {
-                tooltip.add(new LiteralText("Max 2,147,483,647"));
+                tooltip.add(Text.of("Max 2,147,483,647"));
             }
         };
         WTextField tabEnchTxtRepair = new WTextField();
@@ -935,9 +935,9 @@ public class ItemBuilder extends LightweightGuiDescription {
 
         //tabBlock
         WPlainPanel tabBlockScroll = new WPlainPanel();
-        WLabel tabBlockLblBlank = new WLabel("");
+        WLabel tabBlockLblBlank = new WLabel(Text.of(""));
         //
-        WButton tabBlockBtnName = new WButton(new LiteralText("Name"));
+        WButton tabBlockBtnName = new WButton(Text.of("Name"));
         WTextField tabBlockTxtName = new WTextField();
         tabBlockTxtName.setMaxLength(1024);
         tabBlockBtnName.setOnClick(() -> {
@@ -952,7 +952,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"BlockEntityTag/CustomName");
         });
         //
-        WButton tabBlockBtnLock = new WButton(new LiteralText("Lock"));
+        WButton tabBlockBtnLock = new WButton(Text.of("Lock"));
         WTextField tabBlockTxtLock = new WTextField();
         tabBlockTxtLock.setMaxLength(256);
         tabBlockBtnLock.setOnClick(() -> {
@@ -967,34 +967,34 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"BlockEntityTag/Lock");
         });
         //
-        WButton tabBlockBtnState = new WButton(new LiteralText("BlockState"));
-        WLabel tabBlockLblState = new WLabel(new LiteralText("[?]")){
+        WButton tabBlockBtnState = new WButton(Text.of("BlockState"));
+        WLabel tabBlockLblState = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
                 tooltip.add(
-                new LiteralText("Key | (Value)"),
-                new LiteralText(""),
-                new LiteralText("facing (n/s/e/w/u/d)   n/s/e/w/u/d (t/f)   axis (x/y/z)"),
-                new LiteralText("rotation (15)   n/s/e/w/u/d (t/f)   waterlogged (t/f)"),
-                new LiteralText(""),
-                new LiteralText("walls- n/s/e/w (none/low/tall)  up (t/f)"),
-                new LiteralText("slabs- type (bottom/top/double)"),
-                new LiteralText("stairs- half (bottom/top)"),
-                new LiteralText("           shape (inner_[left/right]/outer_[left/right])"),
-                new LiteralText("doors/gates/trapdoors/barrel- open (t/f)"),
-                new LiteralText("furnaces/campfires/lamp- lit (t/f)  farmland- moisture (7)"),
-                new LiteralText("bamboo- leaves (none/small/large)"),
-                new LiteralText("pistons- extended (t/f)  tnt- unstable (t/f)"),
-                new LiteralText("double plants- half (lower/upper)"),
-                new LiteralText("chests- type (single/left/right)"),
-                new LiteralText("beds- part (foot/head)  campfires- signal_fire (t/f)"),
-                new LiteralText("grass/podzol/mycelium- snowy (t/f)"),
-                new LiteralText(""),
-                new LiteralText("age"),
-                new LiteralText("bamboo 0-1  cocoa_beans 0-2"),
-                new LiteralText("nether_wart/beetroot_seeds/sweet_berries 0-3"),
-                new LiteralText("[wheat/pumpkin/melon]_seeds/carrot/potato 0-7"),
-                new LiteralText("Stop growth at:  chorus_flower 5"),
-                new LiteralText("kelp/glow_berries/[twisting/weeping]_vines 25"));
+                Text.of("Key | (Value)"),
+                Text.of(""),
+                Text.of("facing (n/s/e/w/u/d)   n/s/e/w/u/d (t/f)   axis (x/y/z)"),
+                Text.of("rotation (15)   n/s/e/w/u/d (t/f)   waterlogged (t/f)"),
+                Text.of(""),
+                Text.of("walls- n/s/e/w (none/low/tall)  up (t/f)"),
+                Text.of("slabs- type (bottom/top/double)"),
+                Text.of("stairs- half (bottom/top)"),
+                Text.of("           shape (inner_[left/right]/outer_[left/right])"),
+                Text.of("doors/gates/trapdoors/barrel- open (t/f)"),
+                Text.of("furnaces/campfires/lamp- lit (t/f)  farmland- moisture (7)"),
+                Text.of("bamboo- leaves (none/small/large)"),
+                Text.of("pistons- extended (t/f)  tnt- unstable (t/f)"),
+                Text.of("double plants- half (lower/upper)"),
+                Text.of("chests- type (single/left/right)"),
+                Text.of("beds- part (foot/head)  campfires- signal_fire (t/f)"),
+                Text.of("grass/podzol/mycelium- snowy (t/f)"),
+                Text.of(""),
+                Text.of("age"),
+                Text.of("bamboo 0-1  cocoa_beans 0-2"),
+                Text.of("nether_wart/beetroot_seeds/sweet_berries 0-3"),
+                Text.of("[wheat/pumpkin/melon]_seeds/carrot/potato 0-7"),
+                Text.of("Stop growth at:  chorus_flower 5"),
+                Text.of("kelp/glow_berries/[twisting/weeping]_vines 25"));
             }
         };
         WTextField tabBlockTxtStateKey = new WTextField();
@@ -1013,38 +1013,38 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"BlockStateTag/"+tabBlockTxtStateKey.getText());
         });
         //
-        WLabel tabBlockLblBanner = new WLabel("Banners");
+        WLabel tabBlockLblBanner = new WLabel(Text.of("Banners"));
         tabBlockLblBanner.setHorizontalAlignment(HorizontalAlignment.CENTER);
         //
-        WButton tabBlockBtnBannerBase = new WButton(new LiteralText("Base Color"));
-        WButton tabBlockBtnBannerPattern = new WButton(new LiteralText("Pattern"));
-        WButton tabBlockBtnBannerReplaceMode = new WButton(new LiteralText("Add"));
+        WButton tabBlockBtnBannerBase = new WButton(Text.of("Base Color"));
+        WButton tabBlockBtnBannerPattern = new WButton(Text.of("Pattern"));
+        WButton tabBlockBtnBannerReplaceMode = new WButton(Text.of("Add"));
         WTextField tabBlockTxtBannerBase = new WTextField();
         tabBlockTxtBannerBase.setMaxLength(16);
-        WLabel tabBlockLblBannerHelp = new WLabel(new LiteralText("[?]")){
+        WLabel tabBlockLblBannerHelp = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
-                tooltip.add(new LiteralText("Color | Pattern | Index (0-5/15)"),new LiteralText(""),
-                new LiteralText("Pattern-"),
-                new LiteralText("bs-Base   ts-Chief   ls-Pale Dexter"),
-                new LiteralText("rs-Pale S.   cs-Pale   ms-Fess"),
-                new LiteralText("drs-Bend   dls-Bend S.   ss-Paly"),
-                new LiteralText("cr-Saltire   sc-Cross   ld-Per Bend S."),
-                new LiteralText("rud-Per Bend   lud-Per Bend I.   rd-Per Bend S.I."),
-                new LiteralText("vh-Per Pale   vhr-Per Pale I.   hh-Per Fess"),
-                new LiteralText("hhb-Per Fess I.   bl-Base Dexter Canton   br-Base S. Canton"),
-                new LiteralText("tl-Chief Dexter Canton   tr-Chief S. Canton   bt-Chevron"),
-                new LiteralText("tt-I. Chevron   bts-Base Indented   tts-Chief Indented"),
-                new LiteralText("mc-Roundel   mr-Lozenge   bo-Bordure"),
-                new LiteralText("cbo-Bordure Indented   bri-Field Masoned   gra-Gradient"),
-                new LiteralText("gru-Base Gradient"),
-                new LiteralText("cre-Creeper Charge   sku-Skull Charge   flo-Flower Charge"),
-                new LiteralText("moj-Thing   glb-Globe   pig-Snout"),
-                new LiteralText(""),
-                new LiteralText("Color-"),
-                new LiteralText("0-White   1-Orange   2-Magenta   3-Light Blue"),
-                new LiteralText("4-Yellow   5-Lime   6-Pink   7-Gray"),
-                new LiteralText("8-Light Gray   9-Cyan   10-Purple   11-Blue"),
-                new LiteralText("12-Brown   13-Green   14-Red   15-Black"));
+                tooltip.add(Text.of("Color | Pattern | Index (0-5/15)"),Text.of(""),
+                Text.of("Pattern-"),
+                Text.of("bs-Base   ts-Chief   ls-Pale Dexter"),
+                Text.of("rs-Pale S.   cs-Pale   ms-Fess"),
+                Text.of("drs-Bend   dls-Bend S.   ss-Paly"),
+                Text.of("cr-Saltire   sc-Cross   ld-Per Bend S."),
+                Text.of("rud-Per Bend   lud-Per Bend I.   rd-Per Bend S.I."),
+                Text.of("vh-Per Pale   vhr-Per Pale I.   hh-Per Fess"),
+                Text.of("hhb-Per Fess I.   bl-Base Dexter Canton   br-Base S. Canton"),
+                Text.of("tl-Chief Dexter Canton   tr-Chief S. Canton   bt-Chevron"),
+                Text.of("tt-I. Chevron   bts-Base Indented   tts-Chief Indented"),
+                Text.of("mc-Roundel   mr-Lozenge   bo-Bordure"),
+                Text.of("cbo-Bordure Indented   bri-Field Masoned   gra-Gradient"),
+                Text.of("gru-Base Gradient"),
+                Text.of("cre-Creeper Charge   sku-Skull Charge   flo-Flower Charge"),
+                Text.of("moj-Thing   glb-Globe   pig-Snout"),
+                Text.of(""),
+                Text.of("Color-"),
+                Text.of("0-White   1-Orange   2-Magenta   3-Light Blue"),
+                Text.of("4-Yellow   5-Lime   6-Pink   7-Gray"),
+                Text.of("8-Light Gray   9-Cyan   10-Purple   11-Blue"),
+                Text.of("12-Brown   13-Green   14-Red   15-Black"));
             }
         };
         WTextField tabBlockTxtBannerIndex = new WTextField();
@@ -1054,10 +1054,10 @@ public class ItemBuilder extends LightweightGuiDescription {
         WTextField tabBlockTxtPattern = new WTextField();
         tabBlockTxtPattern.setMaxLength(3);
         tabBlockBtnBannerReplaceMode.setOnClick(() -> {
-            if(tabBlockBtnBannerReplaceMode.getLabel().asString().equals("Add"))
-                tabBlockBtnBannerReplaceMode.setLabel(new LiteralText("Set"));
+            if(tabBlockBtnBannerReplaceMode.getLabel().getString().equals("Add"))
+                tabBlockBtnBannerReplaceMode.setLabel(Text.of("Set"));
             else
-                tabBlockBtnBannerReplaceMode.setLabel(new LiteralText("Add"));
+                tabBlockBtnBannerReplaceMode.setLabel(Text.of("Add"));
         });
         tabBlockBtnBannerBase.setOnClick(() -> {
             if(!tabBlockTxtBannerBase.getText().equals(""))
@@ -1164,7 +1164,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                     BlackMagick.removeNbt(null,"BlockEntityTag/Patterns/"+index+":");
                     break CLICK;
                 }
-                boolean replace = (tabBlockBtnBannerReplaceMode.getLabel().asString().equals("Set"));
+                boolean replace = (tabBlockBtnBannerReplaceMode.getLabel().getString().equals("Set"));
                 NbtList nbtPatterns = (NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/BlockEntityTag/Patterns");
                 if(replace && nbtPatterns!=null) {
                     if(index==-1)
@@ -1205,13 +1205,13 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabBlockBtnBannerPreset = new WButton(new LiteralText("Preset"));
+        WButton tabBlockBtnBannerPreset = new WButton(Text.of("Preset"));
         String allChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        WLabel tabBlockLblBannerPreset = new WLabel(new LiteralText("[?]")){
+        WLabel tabBlockLblBannerPreset = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
                 tooltip.add(
-                new LiteralText("Char Color | Char | Base Color"),new LiteralText(""),
-                new LiteralText(allChars));
+                Text.of("Char Color | Char | Base Color"),Text.of(""),
+                Text.of(allChars));
             }
         };
         WTextField tabBlockTxtBannerPresetPatternColor = new WTextField();
@@ -1287,7 +1287,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabBlockBtnMaxStack = new WButton(new LiteralText("Fill Container Stacks"));
+        WButton tabBlockBtnMaxStack = new WButton(Text.of("Fill Container Stacks"));
         tabBlockBtnMaxStack.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(client.player.getAbilities().creativeMode) {
@@ -1341,12 +1341,12 @@ public class ItemBuilder extends LightweightGuiDescription {
 
         //tabEntity
         WPlainPanel tabEntityScroll = new WPlainPanel();
-        WLabel tabEntityLblBlank = new WLabel("");
+        WLabel tabEntityLblBlank = new WLabel(Text.of(""));
         //
-        WLabel tabEntityLblArmorStand = new WLabel("Armor Stands");
+        WLabel tabEntityLblArmorStand = new WLabel(Text.of("Armor Stands"));
         tabEntityLblArmorStand.setHorizontalAlignment(HorizontalAlignment.CENTER);
         //
-        WButton tabEntityBtnBasePlate = new WButton(new LiteralText("BasePlate"));
+        WButton tabEntityBtnBasePlate = new WButton(Text.of("BasePlate"));
         tabEntityBtnBasePlate.setOnClick(() -> {
             ItemStack item = BlackMagick.setId("armor_stand");
             if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/NoBasePlate")!=null &&
@@ -1357,7 +1357,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(item,"EntityTag/NoBasePlate",NbtByte.of(true));
         });
-        WButton tabEntityBtnShowArms = new WButton(new LiteralText("ShowArms"));
+        WButton tabEntityBtnShowArms = new WButton(Text.of("ShowArms"));
         tabEntityBtnShowArms.setOnClick(() -> {
             ItemStack item = BlackMagick.setId("armor_stand");
             if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/ShowArms")!=null &&
@@ -1368,7 +1368,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(item,"EntityTag/ShowArms",NbtByte.of(true));
         });
-        WButton tabEntityBtnSmall = new WButton(new LiteralText("Small"));
+        WButton tabEntityBtnSmall = new WButton(Text.of("Small"));
         tabEntityBtnSmall.setOnClick(() -> {
             ItemStack item = BlackMagick.setId("armor_stand");
             if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Small")!=null &&
@@ -1379,7 +1379,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(item,"EntityTag/Small",NbtByte.of(true));
         });
-        WButton tabEntityBtnMarker = new WButton(new LiteralText("Marker"));
+        WButton tabEntityBtnMarker = new WButton(Text.of("Marker"));
         tabEntityBtnMarker.setOnClick(() -> {
             ItemStack item = BlackMagick.setId("armor_stand");
             if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Marker")!=null &&
@@ -1390,7 +1390,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(item,"EntityTag/Marker",NbtByte.of(true));
         });
-        WButton tabEntityBtnInvisible = new WButton(new LiteralText("Invisible"));
+        WButton tabEntityBtnInvisible = new WButton(Text.of("Invisible"));
         tabEntityBtnInvisible.setOnClick(() -> {
             ItemStack item = BlackMagick.setId("armor_stand");
             if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Invisible")!=null &&
@@ -1402,10 +1402,10 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.setNbt(item,"EntityTag/Invisible",NbtByte.of(true));
         });
         //
-        WButton tabEntityBtnDisabledSlots = new WButton(new LiteralText("DisabledSlots"));
-        WButton tabEntityBtnDisableAll = new WButton(new LiteralText("?")){
+        WButton tabEntityBtnDisabledSlots = new WButton(Text.of("DisabledSlots"));
+        WButton tabEntityBtnDisableAll = new WButton(Text.of("?")){
             public void addTooltip(TooltipBuilder tooltip) {
-                tooltip.add(new LiteralText("Disable All Slots (16,191)"));
+                tooltip.add(Text.of("Disable All Slots (16,191)"));
             }
         };
         WTextField tabEntityTxtDisabledSlots = new WTextField();
@@ -1424,29 +1424,29 @@ public class ItemBuilder extends LightweightGuiDescription {
             tabEntityTxtDisabledSlots.setText("16191");
         });
         //
-        WButton tabEntityBtnPose = new WButton(new LiteralText("Pose"));
-        WLabel tabEntityLblPose = new WLabel(new LiteralText("[?]")){
+        WButton tabEntityBtnPose = new WButton(Text.of("Pose"));
+        WLabel tabEntityLblPose = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
                 tooltip.add(
-                new LiteralText("Part | Rotation (x,y,z)"),
-                new LiteralText(""),
-                new LiteralText("Head"),
-                new LiteralText("+x Look Down    +y Look Right   +z Tilt Left"),
-                new LiteralText(""),
-                new LiteralText("Body"),
-                new LiteralText("+x Lean Forward    +y Aim Right   +z Lean Left"),
-                new LiteralText(""),
-                new LiteralText("LeftArm"),
-                new LiteralText("+x Swing Back    +y Tilt Right    +z Swing Right"),
-                new LiteralText(""),
-                new LiteralText("RightArm"),
-                new LiteralText("+x Swing Back    +y Tilt Right   +z Swing Right"),
-                new LiteralText(""),
-                new LiteralText("LeftLeg"),
-                new LiteralText("+x Swing Back    +y Tilt Right    +z Swing Right"),
-                new LiteralText(""),
-                new LiteralText("RightLeg"),
-                new LiteralText("+x Swing Back    +y Tilt Right    +z Swing Right"));
+                Text.of("Part | Rotation (x,y,z)"),
+                Text.of(""),
+                Text.of("Head"),
+                Text.of("+x Look Down    +y Look Right   +z Tilt Left"),
+                Text.of(""),
+                Text.of("Body"),
+                Text.of("+x Lean Forward    +y Aim Right   +z Lean Left"),
+                Text.of(""),
+                Text.of("LeftArm"),
+                Text.of("+x Swing Back    +y Tilt Right    +z Swing Right"),
+                Text.of(""),
+                Text.of("RightArm"),
+                Text.of("+x Swing Back    +y Tilt Right   +z Swing Right"),
+                Text.of(""),
+                Text.of("LeftLeg"),
+                Text.of("+x Swing Back    +y Tilt Right    +z Swing Right"),
+                Text.of(""),
+                Text.of("RightLeg"),
+                Text.of("+x Swing Back    +y Tilt Right    +z Swing Right"));
             }
         };
         WTextField tabEntityTxtPosePart = new WTextField();
@@ -1500,7 +1500,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabEntityBtnId = new WButton(new LiteralText("Entity"));
+        WButton tabEntityBtnId = new WButton(Text.of("Entity"));
         WTextField tabEntityTxtId = new WTextField();
         tabEntityTxtId.setMaxLength(128);
         tabEntityBtnId.setOnClick(() -> {
@@ -1520,7 +1520,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(item,"EntityTag/id");
         });
         //
-        WButton tabEntityBtnName = new WButton(new LiteralText("Name"));
+        WButton tabEntityBtnName = new WButton(Text.of("Name"));
         WTextField tabEntityTxtName = new WTextField();
         tabEntityTxtName.setMaxLength(1024);
         tabEntityBtnName.setOnClick(() -> {
@@ -1534,7 +1534,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"EntityTag/CustomName");
         });
         //
-        WButton tabEntityBtnNameVisible = new WButton(new LiteralText("ShowName"));
+        WButton tabEntityBtnNameVisible = new WButton(Text.of("ShowName"));
         tabEntityBtnNameVisible.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/CustomNameVisible")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/CustomNameVisible").getType()==NbtType.BYTE &&
@@ -1544,7 +1544,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(null,"EntityTag/CustomNameVisible",NbtByte.of(true));
         });
-        WButton tabEntityBtnGravity = new WButton(new LiteralText("NoGravity"));
+        WButton tabEntityBtnGravity = new WButton(Text.of("NoGravity"));
         tabEntityBtnGravity.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoGravity")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoGravity").getType()==NbtType.BYTE &&
@@ -1554,7 +1554,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(null,"EntityTag/NoGravity",NbtByte.of(true));
         });
-        WButton tabEntityBtnGlowing = new WButton(new LiteralText("Glowing"));
+        WButton tabEntityBtnGlowing = new WButton(Text.of("Glowing"));
         tabEntityBtnGlowing.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Glowing")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Glowing").getType()==NbtType.BYTE &&
@@ -1564,7 +1564,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(null,"EntityTag/Glowing",NbtByte.of(true));
         });
-        WButton tabEntityBtnFire = new WButton(new LiteralText("VisualFire"));
+        WButton tabEntityBtnFire = new WButton(Text.of("VisualFire"));
         tabEntityBtnFire.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/HasVisualFire")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/HasVisualFire").getType()==NbtType.BYTE &&
@@ -1574,7 +1574,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(null,"EntityTag/HasVisualFire",NbtByte.of(true));
         });
-        WButton tabEntityBtnSilent = new WButton(new LiteralText("Silent"));
+        WButton tabEntityBtnSilent = new WButton(Text.of("Silent"));
         tabEntityBtnSilent.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Silent")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Silent").getType()==NbtType.BYTE &&
@@ -1584,7 +1584,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(null,"EntityTag/Silent",NbtByte.of(true));
         });
-        WButton tabEntityBtnAI = new WButton(new LiteralText("NoAI"));
+        WButton tabEntityBtnAI = new WButton(Text.of("NoAI"));
         tabEntityBtnAI.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoAI")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoAI").getType()==NbtType.BYTE &&
@@ -1594,7 +1594,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(null,"EntityTag/NoAI",NbtByte.of(true));
         });
-        WButton tabEntityBtnInvulnerable = new WButton(new LiteralText("Invulnerable"));
+        WButton tabEntityBtnInvulnerable = new WButton(Text.of("Invulnerable"));
         tabEntityBtnInvulnerable.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invulnerable")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invulnerable").getType()==NbtType.BYTE &&
@@ -1604,7 +1604,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(null,"EntityTag/Invulnerable",NbtByte.of(true));
         });
-        WButton tabEntityBtnDespawn = new WButton(new LiteralText("Persistence"));
+        WButton tabEntityBtnDespawn = new WButton(Text.of("Persistence"));
         tabEntityBtnDespawn.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/PersistenceRequired")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/PersistenceRequired").getType()==NbtType.BYTE &&
@@ -1615,17 +1615,17 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.setNbt(null,"EntityTag/PersistenceRequired",NbtByte.of(true));
         });
         //
-        WButton tabEntityBtnItems = new WButton(new LiteralText("Items"));
-        WLabel tabEntityLblItems = new WLabel(new LiteralText("[?]")){
+        WButton tabEntityBtnItems = new WButton(Text.of("Items"));
+        WLabel tabEntityLblItems = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
                 tooltip.add(
-                new LiteralText("0 Mainhand    1 Offhand"),
-                new LiteralText("2 Boots    3 Leggings"),
-                new LiteralText("4 Chestplate    5 Helmet"),
-                new LiteralText(""),
-                new LiteralText("6 Armor    7 Armor/Mainhand"),
-                new LiteralText(""),
-                new LiteralText("8 Remove Armor    9 Remove Hand"));
+                Text.of("0 Mainhand    1 Offhand"),
+                Text.of("2 Boots    3 Leggings"),
+                Text.of("4 Chestplate    5 Helmet"),
+                Text.of(""),
+                Text.of("6 Armor    7 Armor/Mainhand"),
+                Text.of(""),
+                Text.of("8 Remove Armor    9 Remove Hand"));
             }
         };
         WTextField tabEntityTxtItems = new WTextField();
@@ -1951,7 +1951,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabEntityBtnPos = new WButton(new LiteralText("Pos"));
+        WButton tabEntityBtnPos = new WButton(Text.of("Pos"));
         WTextField tabEntityTxtPos = new WTextField();
         tabEntityTxtPos.setMaxLength(64);
         tabEntityBtnPos.setOnClick(() -> {
@@ -1989,7 +1989,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabEntityBtnMot = new WButton(new LiteralText("Motion"));
+        WButton tabEntityBtnMot = new WButton(Text.of("Motion"));
         WTextField tabEntityTxtMot = new WTextField();
         tabEntityTxtMot.setMaxLength(64);
         tabEntityBtnMot.setOnClick(() -> {
@@ -2027,14 +2027,14 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabEntityBtnRot = new WButton(new LiteralText("Rotation"));
-        WLabel tabEntityLblRot = new WLabel(new LiteralText("[?]")){
+        WButton tabEntityBtnRot = new WButton(Text.of("Rotation"));
+        WLabel tabEntityLblRot = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
                 tooltip.add(
-                new LiteralText("(Yaw,Pitch)"),
-                new LiteralText(""),
-                new LiteralText("Yaw 0 - 360 (South=0,West=90)"),
-                new LiteralText("Pitch -90 - 90 (Down=90)"));
+                Text.of("(Yaw,Pitch)"),
+                Text.of(""),
+                Text.of("Yaw 0 - 360 (South=0,West=90)"),
+                Text.of("Pitch -90 - 90 (Down=90)"));
             }
         };
         WTextField tabEntityTxtRot = new WTextField();
@@ -2074,10 +2074,10 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WLabel tabEntityLblItemFrame = new WLabel("Item Frames");
+        WLabel tabEntityLblItemFrame = new WLabel(Text.of("Item Frames"));
         tabEntityLblItemFrame.setHorizontalAlignment(HorizontalAlignment.CENTER);
         //
-        WButton tabEntityBtnItemRot = new WButton(new LiteralText("Rotation"));
+        WButton tabEntityBtnItemRot = new WButton(Text.of("Rotation"));
         WTextField tabEntityTxtItemRot = new WTextField();
         tabEntityTxtItemRot.setMaxLength(1);
         tabEntityBtnItemRot.setOnClick(() -> {
@@ -2091,7 +2091,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"EntityTag/ItemRotation");
         });
         //
-        WButton tabEntityBtnItem = new WButton(new LiteralText("Item"));
+        WButton tabEntityBtnItem = new WButton(Text.of("Item"));
         tabEntityBtnItem.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Item")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Item").getType()==NbtType.COMPOUND) {
@@ -2100,7 +2100,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(null,"EntityTag/Item",BlackMagick.getNbtFromPath(null,"1:"));
         });
-        WButton tabEntityBtnItemInvis = new WButton(new LiteralText("Invis"));
+        WButton tabEntityBtnItemInvis = new WButton(Text.of("Invis"));
         tabEntityBtnItemInvis.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invisible")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invisible").getType()==NbtType.BYTE &&
@@ -2110,7 +2110,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(null,"EntityTag/Invisible",NbtByte.of(true));
         });
-        WButton tabEntityBtnItemFix = new WButton(new LiteralText("Fixed"));
+        WButton tabEntityBtnItemFix = new WButton(Text.of("Fixed"));
         tabEntityBtnItemFix.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Fixed")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Fixed").getType()==NbtType.BYTE &&
@@ -2120,7 +2120,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             else
                 BlackMagick.setNbt(null,"EntityTag/Fixed",NbtByte.of(true));
         });
-        WButton tabEntityBtnItemDrop = new WButton(new LiteralText("Drop"));
+        WButton tabEntityBtnItemDrop = new WButton(Text.of("Drop"));
         tabEntityBtnItemDrop.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/ItemDropChance")!=null &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/ItemDropChance").getType()==NbtType.FLOAT &&
@@ -2181,12 +2181,12 @@ public class ItemBuilder extends LightweightGuiDescription {
 
         //tabMisc
         WPlainPanel tabMiscScroll = new WPlainPanel();
-        WLabel tabMiscLblBlank = new WLabel("");
+        WLabel tabMiscLblBlank = new WLabel(Text.of(""));
         //
-        WLabel tabMiscLblSkull = new WLabel("Player Heads");
+        WLabel tabMiscLblSkull = new WLabel(Text.of("Player Heads"));
         tabMiscLblSkull.setHorizontalAlignment(HorizontalAlignment.CENTER);
         //
-        WButton tabMiscBtnSkullOwner = new WButton(new LiteralText("Owner"));
+        WButton tabMiscBtnSkullOwner = new WButton(Text.of("Owner"));
         WTextField tabMiscTxtSkullOwner = new WTextField();
         tabMiscTxtSkullOwner.setMaxLength(16);
         tabMiscBtnSkullOwner.setOnClick(() -> {
@@ -2209,10 +2209,10 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabMiscBtnSkullName = new WButton(new LiteralText("Name"));
+        WButton tabMiscBtnSkullName = new WButton(Text.of("Name"));
         WTextField tabMiscTxtSkullName = new WTextField();
         tabMiscTxtSkullName.setMaxLength(256);
-        WButton tabMiscBtnSection = new WButton(new LiteralText("\u00a7mS"));
+        WButton tabMiscBtnSection = new WButton(Text.of("\u00a7mS"));
         tabMiscBtnSection.setOnClick(() -> {
             tabMiscTxtSkullName.setText(tabMiscTxtSkullName.getText()+"\u00a7");
         });
@@ -2228,7 +2228,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"SkullOwner/Name");
         });
         //
-        WButton tabMiscBtnSkullGive = new WButton(new LiteralText("Skin"));
+        WButton tabMiscBtnSkullGive = new WButton(Text.of("Skin"));
         WTextField tabMiscTxtSkullGive = new WTextField();
         tabMiscTxtSkullGive.setMaxLength(1024);
         tabMiscBtnSkullGive.setOnClick(() -> {
@@ -2279,10 +2279,10 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WLabel tabMiscLblBook = new WLabel("Books");
+        WLabel tabMiscLblBook = new WLabel(Text.of("Books"));
         tabMiscLblBook.setHorizontalAlignment(HorizontalAlignment.CENTER);
         //
-        WButton tabMiscBtnTitle = new WButton(new LiteralText("title"));
+        WButton tabMiscBtnTitle = new WButton(Text.of("title"));
         WTextField tabMiscTxtTitle = new WTextField();
         tabMiscTxtTitle.setMaxLength(256);
         tabMiscBtnTitle.setOnClick(() -> {
@@ -2300,7 +2300,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabMiscBtnAuthor = new WButton(new LiteralText("author"));
+        WButton tabMiscBtnAuthor = new WButton(Text.of("author"));
         WTextField tabMiscTxtAuthor = new WTextField();
         tabMiscTxtAuthor.setMaxLength(256);
         tabMiscBtnAuthor.setOnClick(() -> {
@@ -2315,7 +2315,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"author");
         });
         //
-        WButton tabMiscBtnGeneration = new WButton(new LiteralText("generation"));
+        WButton tabMiscBtnGeneration = new WButton(Text.of("generation"));
         WTextField tabMiscTxtGeneration = new WTextField();
         tabMiscTxtGeneration.setMaxLength(2);
         tabMiscBtnGeneration.setOnClick(() -> {
@@ -2329,22 +2329,22 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"generation");
         });
         //
-        WLabel tabMiscLblFish = new WLabel("Tropical Fish Bucket");
+        WLabel tabMiscLblFish = new WLabel(Text.of("Tropical Fish Bucket"));
         tabMiscLblFish.setHorizontalAlignment(HorizontalAlignment.CENTER);
         //
-        WButton tabMiscBtnFish = new WButton(new LiteralText("Variant"));
+        WButton tabMiscBtnFish = new WButton(Text.of("Variant"));
         WTextField tabMiscTxtFishSize = new WTextField();
         tabMiscTxtFishSize.setMaxLength(1);
-        WLabel tabMiscLblFishHelp = new WLabel(new LiteralText("[?]")){
+        WLabel tabMiscLblFishHelp = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
-                tooltip.add(new LiteralText("Size | Pattern | Base Color | Pattern Color"),new LiteralText(""),
-                new LiteralText("Size-"),new LiteralText("0-Small   1-Large"),new LiteralText(""),
-                new LiteralText("Pattern-"),new LiteralText("0-Kob/Flopper   1-Sunstreak/Stripey   2-Snooper/Glitter"),
-                new LiteralText("3-Dasher/Blockfish   4-Brinely/Betty   5-Spotty/Clayfish"),new LiteralText(""),
-                new LiteralText("Color-"),new LiteralText("0-White   1-Orange   2-Magenta   3-Light Blue"),
-                new LiteralText("4-Yellow   5-Lime   6-Pink   7-Gray"),
-                new LiteralText("8-Light Gray   9-Cyan   10-Purple   11-Blue"),
-                new LiteralText("12-Brown   13-Green   14-Red   15-Black"));
+                tooltip.add(Text.of("Size | Pattern | Base Color | Pattern Color"),Text.of(""),
+                Text.of("Size-"),Text.of("0-Small   1-Large"),Text.of(""),
+                Text.of("Pattern-"),Text.of("0-Kob/Flopper   1-Sunstreak/Stripey   2-Snooper/Glitter"),
+                Text.of("3-Dasher/Blockfish   4-Brinely/Betty   5-Spotty/Clayfish"),Text.of(""),
+                Text.of("Color-"),Text.of("0-White   1-Orange   2-Magenta   3-Light Blue"),
+                Text.of("4-Yellow   5-Lime   6-Pink   7-Gray"),
+                Text.of("8-Light Gray   9-Cyan   10-Purple   11-Blue"),
+                Text.of("12-Brown   13-Green   14-Red   15-Black"));
             }
         };
         WTextField tabMiscTxtFishPattern = new WTextField();
@@ -2386,10 +2386,10 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WLabel tabMiscLblMap = new WLabel("Maps");
+        WLabel tabMiscLblMap = new WLabel(Text.of("Maps"));
         tabMiscLblMap.setHorizontalAlignment(HorizontalAlignment.CENTER);
         //
-        WButton tabMiscBtnMap = new WButton(new LiteralText("map #"));
+        WButton tabMiscBtnMap = new WButton(Text.of("map #"));
         WTextField tabMiscTxtMap = new WTextField();
         tabMiscTxtMap.setMaxLength(10);
         tabMiscBtnMap.setOnClick(() -> {
@@ -2411,17 +2411,17 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,"map");
         });
         //
-        WButton tabMiscBtnDecor = new WButton(new LiteralText("Decor"));
+        WButton tabMiscBtnDecor = new WButton(Text.of("Decor"));
         WTextField tabMiscTxtDecor = new WTextField();
         tabMiscTxtDecor.setMaxLength(256);
-        WLabel tabMiscLblDecor = new WLabel(new LiteralText("[?]")){
+        WLabel tabMiscLblDecor = new WLabel(Text.of("[?]")){
             public void addTooltip(TooltipBuilder tooltip) {
-                tooltip.add(new LiteralText("decor index, id (Name), type (0-26), x, z, rot (180 is upright)"),new LiteralText(""),
-                new LiteralText("type"),
-                new LiteralText("0- player marker  1- frame marker  2- red marker"),
-                new LiteralText("3- blue marker  4- white x  5- red triangle"),
-                new LiteralText("6- large white dot  7- small white dot  8- mansion"),
-                new LiteralText("9- monument 10-25 banners  26- red x"));
+                tooltip.add(Text.of("decor index, id (Name), type (0-26), x, z, rot (180 is upright)"),Text.of(""),
+                Text.of("type"),
+                Text.of("0- player marker  1- frame marker  2- red marker"),
+                Text.of("3- blue marker  4- white x  5- red triangle"),
+                Text.of("6- large white dot  7- small white dot  8- mansion"),
+                Text.of("9- monument 10-25 banners  26- red x"));
             }
         };
         tabMiscBtnDecor.setOnClick(() -> {
@@ -2465,7 +2465,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabMiscBtnBundle = new WButton(new LiteralText("Container to Bundle"));
+        WButton tabMiscBtnBundle = new WButton(Text.of("Container to Bundle"));
         tabMiscBtnBundle.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(client.player.getAbilities().creativeMode) {
@@ -2484,7 +2484,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabMiscBtnSound = new WButton(new LiteralText("Playsound"));
+        WButton tabMiscBtnSound = new WButton(Text.of("Playsound"));
         WTextField tabMiscTxtSound = new WTextField();
         tabMiscTxtSound.setMaxLength(512);
         tabMiscBtnSound.setOnClick(() -> {
@@ -2532,11 +2532,11 @@ public class ItemBuilder extends LightweightGuiDescription {
 
         //tab custom
         WPlainPanel tabCustomScroll = new WPlainPanel();
-        WLabel tabCustomLblBlank = new WLabel("");
+        WLabel tabCustomLblBlank = new WLabel(Text.of(""));
         //
-        WLabel tabCustomLblKey = new WLabel("Key:");
-        WLabel tabCustomLblInp = new WLabel("Value:");
-        WButton tabCustomBtnCustom = new WButton(new LiteralText("Set"));
+        WLabel tabCustomLblKey = new WLabel(Text.of("Key:"));
+        WLabel tabCustomLblInp = new WLabel(Text.of("Value:"));
+        WButton tabCustomBtnCustom = new WButton(Text.of("Set"));
         WTextField tabCustomTxtKey = new WTextField();
         tabCustomTxtKey.setMaxLength(1024);
         WTextField tabCustomTxtInp = new WTextField();
@@ -2552,9 +2552,9 @@ public class ItemBuilder extends LightweightGuiDescription {
                 BlackMagick.removeNbt(null,tabCustomTxtKey.getText());
         });
         //
-        WLabel tabCustomLblSetPath = new WLabel("Key:");
-        WLabel tabCustomLblGetPath = new WLabel("From:");
-        WButton tabCustomBtnCustomFrom = new WButton(new LiteralText("Set"));
+        WLabel tabCustomLblSetPath = new WLabel(Text.of("Key:"));
+        WLabel tabCustomLblGetPath = new WLabel(Text.of("From:"));
+        WButton tabCustomBtnCustomFrom = new WButton(Text.of("Set"));
         WTextField tabCustomTxtSetPath = new WTextField();
         tabCustomTxtSetPath.setMaxLength(1024);
         WTextField tabCustomTxtGetPath = new WTextField();
@@ -2564,7 +2564,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             BlackMagick.setNbt(null,tabCustomTxtSetPath.getText(),inp);
         });
         //
-        WButton tabCustomBtnGive = new WButton(new LiteralText("Give"));
+        WButton tabCustomBtnGive = new WButton(Text.of("Give"));
         WTextField tabCustomTxtGive = new WTextField();
         tabCustomTxtGive.setMaxLength(8192);
         tabCustomBtnGive.setOnClick(() -> {
@@ -2649,20 +2649,20 @@ public class ItemBuilder extends LightweightGuiDescription {
 
         //tab saved
         WPlainPanel tabSavedScroll = new WPlainPanel();
-        WLabel tabSavedLblBlank = new WLabel("");
+        WLabel tabSavedLblBlank = new WLabel(Text.of(""));
         //
         final int SAVED_HEIGHT = 15;
         saved = new ItemStack[9][SAVED_HEIGHT];
         //
         tabSavedMode = false;
-        WButton tabSavedBtnMode = new WButton(new LiteralText("V"));
+        WButton tabSavedBtnMode = new WButton(Text.of("V"));
         tabSavedBtnMode.setOnClick(() -> {
-            if(tabSavedBtnMode.getLabel().asString().equals("V")) {
-                tabSavedBtnMode.setLabel(new LiteralText("C"));
+            if(tabSavedBtnMode.getLabel().getString().equals("V")) {
+                tabSavedBtnMode.setLabel(Text.of("C"));
                 tabSavedMode = true;
             }
             else {
-                tabSavedBtnMode.setLabel(new LiteralText("V"));
+                tabSavedBtnMode.setLabel(Text.of("V"));
                 tabSavedMode = false;
             }
         });
@@ -2714,14 +2714,14 @@ public class ItemBuilder extends LightweightGuiDescription {
         tabSaved.add(tabSavedScrollPanel,5+33,5,12*20-10-33,9*22-30-30-10);
 
         //add items
-        tabs.add(tabGeneral, tab -> tab.icon(new ItemIcon(new ItemStack(Items.GOLDEN_SWORD))).tooltip(new LiteralText("General")));
-        tabs.add(tabDisplay, tab -> tab.icon(new ItemIcon(new ItemStack(Items.NAME_TAG))).tooltip(new LiteralText("Display")));
-        tabs.add(tabEnch, tab -> tab.icon(new ItemIcon(new ItemStack(Items.ENCHANTED_BOOK))).tooltip(new LiteralText("Enchantments")));
-        tabs.add(tabBlock, tab -> tab.icon(new ItemIcon(new ItemStack(Items.BARREL))).tooltip(new LiteralText("Blocks")));
-        tabs.add(tabEntity, tab -> tab.icon(new ItemIcon(new ItemStack(Items.BAT_SPAWN_EGG))).tooltip(new LiteralText("Entity Data")));
-        tabs.add(tabMisc, tab -> tab.icon(new ItemIcon(new ItemStack(Items.PLAYER_HEAD))).tooltip(new LiteralText("Misc")));
-        tabs.add(tabCustom, tab -> tab.icon(new ItemIcon(new ItemStack(Items.COMMAND_BLOCK))).tooltip(new LiteralText("Custom NBT")));
-        tabs.add(tabSaved, tab -> tab.icon(new ItemIcon(new ItemStack(Items.JIGSAW))).tooltip(new LiteralText("Saved Items")));
+        tabs.add(tabGeneral, tab -> tab.icon(new ItemIcon(new ItemStack(Items.GOLDEN_SWORD))).tooltip(Text.of("General")));
+        tabs.add(tabDisplay, tab -> tab.icon(new ItemIcon(new ItemStack(Items.NAME_TAG))).tooltip(Text.of("Display")));
+        tabs.add(tabEnch, tab -> tab.icon(new ItemIcon(new ItemStack(Items.ENCHANTED_BOOK))).tooltip(Text.of("Enchantments")));
+        tabs.add(tabBlock, tab -> tab.icon(new ItemIcon(new ItemStack(Items.BARREL))).tooltip(Text.of("Blocks")));
+        tabs.add(tabEntity, tab -> tab.icon(new ItemIcon(new ItemStack(Items.BAT_SPAWN_EGG))).tooltip(Text.of("Entity Data")));
+        tabs.add(tabMisc, tab -> tab.icon(new ItemIcon(new ItemStack(Items.PLAYER_HEAD))).tooltip(Text.of("Misc")));
+        tabs.add(tabCustom, tab -> tab.icon(new ItemIcon(new ItemStack(Items.COMMAND_BLOCK))).tooltip(Text.of("Custom NBT")));
+        tabs.add(tabSaved, tab -> tab.icon(new ItemIcon(new ItemStack(Items.JIGSAW))).tooltip(Text.of("Saved Items")));
         root.add(btnBack,5,5,40,20);
         //root.add(lblMenu,120,11,0,0);
         root.add(btnSlotCopyToOff,120-15-15-20-1,5,20,20);
@@ -3213,7 +3213,7 @@ public class ItemBuilder extends LightweightGuiDescription {
     public static void createTooltip(TooltipBuilder tooltip, ItemStack item) {
         if(item != null) {
                 tooltip.add(item.getName());
-                tooltip.add(new LiteralText(item.getItem().toString()+" ("+item.getCount()+")"));
+                tooltip.add(Text.of(item.getItem().toString()+" ("+item.getCount()+")"));
                 //
                 String itemData = "";
                 if(item.hasNbt()) {
@@ -3296,12 +3296,12 @@ public class ItemBuilder extends LightweightGuiDescription {
                     int endIndex = 48;
                     if(itemData.length()<endIndex)
                         endIndex = itemData.length();
-                    tooltip.add(new LiteralText(itemData.substring(0,endIndex)));
+                    tooltip.add(Text.of(itemData.substring(0,endIndex)));
                     tooltipLines++;
                     if(itemData.length()>endIndex) {
                         itemData = itemData.substring(endIndex);
                         if(tooltipLines==42)
-                            tooltip.add(new LiteralText("..."));
+                            tooltip.add(Text.of("..."));
                     }
                     else
                         itemData = "";

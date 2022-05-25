@@ -23,7 +23,7 @@ import net.minecraft.nbt.NbtLongArray;
 import net.minecraft.nbt.NbtShort;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.nbt.StringNbtReader;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 
 public class BlackMagick {
     
@@ -627,7 +627,7 @@ public class BlackMagick {
                 nbtBase.putString("id",item.getItem().toString());
                 ItemStack newItem = ItemStack.fromNbt(nbtBase);
                 if(newItem.isEmpty()) {
-                    client.player.sendMessage(new LiteralText("Item id error (id not equal to Item.toString() "+
+                    client.player.sendMessage(Text.of("Item id error (id not equal to Item.toString() "+
                     item.getItem().toString()+")"),false);
                     return null;
                 }
@@ -645,7 +645,7 @@ public class BlackMagick {
                 nbtBase.putString("id",offItem.getItem().toString());
                 ItemStack newItem = ItemStack.fromNbt(nbtBase);
                 if(newItem.isEmpty()) {
-                    client.player.sendMessage(new LiteralText("Item id error (id not equal to Item.toString() "+
+                    client.player.sendMessage(Text.of("Item id error (id not equal to Item.toString() "+
                     offItem.getItem().toString()+")"),false);
                     return null;
                 }

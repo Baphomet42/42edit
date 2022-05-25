@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.11-SNAPSHOT'
+	id 'fabric-loom' version '0.12-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -27,6 +27,7 @@ dependencies {
 	
 	//	UPDATE PROTOCOL
 	//	paste gradle.properties Fabric Properties and Dependencies and manually update Mod Properties
+	//	update fabric.mod.json depends minecraft version
 	//	paste cottonmc version below
 	//	delete .gradle .vscode bin build run
 	//	java project clean workspace
@@ -42,7 +43,7 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	//	https://github.com/CottonMC/LibGui/releases
-	modImplementation include("io.github.cottonmc:LibGui:5.3.2+1.18.2")
+	modImplementation include("io.github.cottonmc:LibGui:6.0.0-beta.4+1.19-pre1")
 	
 
 }

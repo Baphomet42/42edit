@@ -11,7 +11,8 @@ import io.github.cottonmc.cotton.gui.widget.icon.ItemIcon;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.util.math.GlobalPos;
 
 public class Hacks extends LightweightGuiDescription {
 
@@ -23,25 +24,25 @@ public class Hacks extends LightweightGuiDescription {
         root.setSize(12*20,9*22);
 
         //labels
-        WLabel lblMenu = new WLabel("Hacks");
+        WLabel lblMenu = new WLabel(Text.of("Hacks"));
         lblMenu.setHorizontalAlignment(HorizontalAlignment.CENTER);
 
         //back button
-        WButton btnBack = new WButton(new LiteralText("Back"));
+        WButton btnBack = new WButton(Text.of("Back"));
         btnBack.setOnClick(() -> {
             MinecraftClient.getInstance().setScreen(new MagickScreen(new MagickGui()));
         });
 
         //random place
-        WButton btnRando = new WButton(new ItemIcon(new ItemStack(Items.CRACKED_STONE_BRICKS)), new LiteralText("Mix [Off]"));
+        WButton btnRando = new WButton(new ItemIcon(new ItemStack(Items.CRACKED_STONE_BRICKS)), Text.of("Mix [Off]"));
         if(FortytwoEdit.randoMode)
-            btnRando.setLabel(new LiteralText("Mix [On]"));
+            btnRando.setLabel(Text.of("Mix [On]"));
         btnRando.setOnClick(() -> {
             FortytwoEdit.randoMode = !FortytwoEdit.randoMode;
             if(FortytwoEdit.randoMode)
-                btnRando.setLabel(new LiteralText("Mix [On]"));
+                btnRando.setLabel(Text.of("Mix [On]"));
             else
-                btnRando.setLabel(new LiteralText("Mix [Off]"));
+                btnRando.setLabel(Text.of("Mix [Off]"));
         });
         txtRando = new WTextField();
         txtRando.setMaxLength(15);
@@ -52,33 +53,47 @@ public class Hacks extends LightweightGuiDescription {
             }
             txtRando.setText(keys);
         }
-        WButton btnSetRando = new WButton(new LiteralText("Set"));
+        WButton btnSetRando = new WButton(Text.of("Set"));
         btnSetRando.setOnClick(() -> {
             updateRandoSlots();
             if(FortytwoEdit.randoSlots == null) {
                 FortytwoEdit.randoMode = false;
-                btnRando.setLabel(new LiteralText("Mix [Off]"));
+                btnRando.setLabel(Text.of("Mix [Off]"));
             }
             else {
                 FortytwoEdit.randoMode = true;
-                btnRando.setLabel(new LiteralText("Mix [On]"));
+                btnRando.setLabel(Text.of("Mix [On]"));
             }
         });
 
         //show barrier/void/light button
         WButton btnSeeInvis = new WButton(new ItemIcon(new ItemStack(Items.BARRIER)));
         if(FortytwoEdit.seeInvis)
-            btnSeeInvis.setLabel(new LiteralText("Xray Vision [On]"));
+            btnSeeInvis.setLabel(Text.of("Xray Vision [On]"));
         else
-            btnSeeInvis.setLabel(new LiteralText("Xray Vision [Off]"));
+            btnSeeInvis.setLabel(Text.of("Xray Vision [Off]"));
         btnSeeInvis.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             client.worldRenderer.reload();
             FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
             if(FortytwoEdit.seeInvis)
-                btnSeeInvis.setLabel(new LiteralText("Xray Vision [On]"));
+                btnSeeInvis.setLabel(Text.of("Xray Vision [On]"));
             else
-                btnSeeInvis.setLabel(new LiteralText("Xray Vision [Off]"));
+                btnSeeInvis.setLabel(Text.of("Xray Vision [Off]"));
+        });
+
+        //get last death pos
+        WButton btnDeathPos = new WButton(new ItemIcon(new ItemStack(Items.SKELETON_SKULL)), Text.of("Death Pos"));
+        btnDeathPos.setOnClick(() -> {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.player.getLastDeathPos().isPresent()) {
+                GlobalPos pos = client.player.getLastDeathPos().get();
+                String coords = "Last death [X: "+pos.getPos().getX()+", Y: "+pos.getPos().getY()+", Z: "+pos.getPos().getZ()+"] in "+pos.getDimension().getValue().toString();
+                client.player.sendMessage(Text.of(coords),false);
+            }
+            else {
+                client.player.sendMessage(Text.of("No death pos recorded"),false);
+            }
         });
 
         //add items
@@ -88,6 +103,7 @@ public class Hacks extends LightweightGuiDescription {
         root.add(txtRando,105,44+1,100,20);
         root.add(btnSetRando,210,44+1,20,20);
         root.add(btnSeeInvis,20,22*3+1,120,20);
+        root.add(btnDeathPos,20,22*4+1,100,20);
 
     }
 
