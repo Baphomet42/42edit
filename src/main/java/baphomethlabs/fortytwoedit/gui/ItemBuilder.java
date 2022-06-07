@@ -2566,7 +2566,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         //
         WButton tabCustomBtnGive = new WButton(Text.of("Give"));
         WTextField tabCustomTxtGive = new WTextField();
-        tabCustomTxtGive.setMaxLength(8192);
+        tabCustomTxtGive.setMaxLength(65536);
         tabCustomBtnGive.setOnClick(() -> {
             String inp = tabCustomTxtGive.getText();
             if(inp.contains("/") && inp.indexOf("/")==0)

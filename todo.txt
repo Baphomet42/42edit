@@ -16,4 +16,3 @@ playsound (and list of all sounds)
 visible light looks bad
 opticapes needs resource pack
 disable opticapes doesnt work right away
-42edit menu broken
