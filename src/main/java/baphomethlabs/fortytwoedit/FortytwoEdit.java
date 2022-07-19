@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -154,7 +153,7 @@ public class FortytwoEdit implements ClientModInitializer {
         capeNames.add(name);
         try {
             URL link = new URL("https://s.optifine.net/capes/" + name + ".png");
-            URLConnection con = link.openConnection();
+            HttpURLConnection con = (HttpURLConnection)link.openConnection();
             con.setConnectTimeout(500);
             con.setReadTimeout(500);
             NativeImage capeInp = NativeImage.read(con.getInputStream());
