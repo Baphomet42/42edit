@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -16,8 +18,12 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.EntityHitResult;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.loader.impl.util.log.Log;
+import net.fabricmc.loader.impl.util.log.LogCategory;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -40,7 +46,12 @@ public class FortytwoEdit implements ClientModInitializer {
 
     // hacks
     public static boolean autoMove = false;
+    public static boolean autoClicker = false;
     public static boolean autoClick = false;
+    public static boolean autoAttack = true;
+    public static boolean autoMine = false;
+    public static int attackWait = 1500;
+    private static long lastAttack = 0;
 
     // grian mode
     public static int[] randoSlots;
@@ -50,10 +61,11 @@ public class FortytwoEdit implements ClientModInitializer {
     private static long lastCapeLoaded = System.currentTimeMillis();
 
     public static boolean capeTimeCheck() {
-        if (System.currentTimeMillis() - lastCapeLoaded > 40) {
+        if (System.currentTimeMillis() - lastCapeLoaded > 50) {
             lastCapeLoaded = System.currentTimeMillis();
             return true;
-        } else
+        }
+        else
             return false;
     }
 
@@ -84,6 +96,20 @@ public class FortytwoEdit implements ClientModInitializer {
                     + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets\\42edit\\cache\\capes")).exists())
                 (new File(client.runDirectory.getAbsolutePath()
                         + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets\\42edit\\cache\\capes")).mkdirs();
+        }
+
+        if(opticapes) {
+            boolean connect = false;
+            try {
+                HttpURLConnection con = (HttpURLConnection)(new URL("https://s.optifine.net/capes/42Richtofen42.png")).openConnection();
+                con.setConnectTimeout(2000);
+                if(con.getResponseCode() == HttpURLConnection.HTTP_OK)
+                    connect = true;
+            } catch(IOException e) {}
+            if(!connect) {
+                opticapes = false;
+                Log.warn(LogCategory.GENERAL,"[42edit] Failed connection to Optifine");
+            }
         }
     }
 
@@ -127,9 +153,13 @@ public class FortytwoEdit implements ClientModInitializer {
             tryLoadCape(client.getSession().getUsername());
         capeNames.add(name);
         try {
-            NativeImage capeInp = NativeImage
-                    .read((new URL("http://s.optifine.net/capes/" + name + ".png")).openStream());
+            URL link = new URL("https://s.optifine.net/capes/" + name + ".png");
+            URLConnection con = link.openConnection();
+            con.setConnectTimeout(500);
+            con.setReadTimeout(500);
+            NativeImage capeInp = NativeImage.read(con.getInputStream());
             NativeImage cape = new NativeImage(128, 64, true);
+
             for (int x = 0; x < capeInp.getWidth(); x++)
                 for (int y = 0; y < capeInp.getHeight(); y++)
                     cape.setColor(x, y, capeInp.getColor(x, y));
@@ -159,12 +189,12 @@ public class FortytwoEdit implements ClientModInitializer {
 
         KeyBinding openMagickGui = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.openMagickGui",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_J, "ftedit.key.categories.ftedit"));
-        KeyBinding zoom = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.zoom", InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_R, "ftedit.key.categories.ftedit"));
-        KeyBinding afkClick = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.afkClick",
-                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_MINUS, "ftedit.key.categories.ftedit"));
+        KeyBinding zoom = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.zoom",
+                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "ftedit.key.categories.ftedit"));
         KeyBinding afkMove = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.afkMove",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_EQUAL, "ftedit.key.categories.ftedit"));
+        KeyBinding afkClick = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.afkClick",
+                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_MINUS, "ftedit.key.categories.ftedit"));
         KeyBinding freeLook = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.freeLook",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "ftedit.key.categories.ftedit"));
 
@@ -203,20 +233,34 @@ public class FortytwoEdit implements ClientModInitializer {
             if (afkMove.wasPressed()) {
                 autoMove = !autoMove;
                 if (!autoMove)
-                    KeyBinding.setKeyPressed(client.options.forwardKey.getDefaultKey(), false);
+                    KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.forwardKey), false);
             }
-            if (autoMove) {
-                KeyBinding.setKeyPressed(client.options.forwardKey.getDefaultKey(), true);
+            if (autoMove && client.player != null) {
+                KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.forwardKey), true);
             }
 
-            // afkClick
-            if (afkClick.wasPressed()) {
-                autoClick = !autoClick;
-                if (!autoClick)
-                    KeyBinding.setKeyPressed(client.options.attackKey.getDefaultKey(), false);
+            //afkClick
+            if(afkClick.wasPressed()) {
+                autoClicker = !autoClicker;
+
+                if (!autoClicker && autoClick)
+                    KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.useKey), false);
+                if (!autoClicker && autoMine)
+                    KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.attackKey), false);
             }
-            if (autoClick) {
-                KeyBinding.setKeyPressed(client.options.attackKey.getDefaultKey(), true);
+            if(autoClicker && client.player != null) {
+                if (autoClick) {
+                    KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.useKey), true);
+                }
+                if (autoAttack && System.currentTimeMillis()>=lastAttack + attackWait && client.crosshairTarget instanceof EntityHitResult) {
+                    lastAttack = System.currentTimeMillis();
+                    client.interactionManager.attackEntity(client.player, ((EntityHitResult)client.crosshairTarget).getEntity());
+                    client.player.resetLastAttackedTicks();
+                    client.player.swingHand(Hand.MAIN_HAND);
+                }
+                if (autoMine) {
+                    KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.attackKey), true);
+                }
             }
 
             //freelook from https://github.com/Columner/FreeLook
@@ -239,7 +283,6 @@ public class FortytwoEdit implements ClientModInitializer {
             // capes
             if (!clearAtLaunch) {
                 clearCapes();
-                checkCapesEnabled();
                 clearAtLaunch = true;
             }
             if (capeNames.size() > 0 && MinecraftClient.getInstance().player == null) {
@@ -255,6 +298,21 @@ public class FortytwoEdit implements ClientModInitializer {
         });
     }
 
+    public static void updateAutoClick(boolean click, boolean mine, boolean attack, int wait) {
+        final MinecraftClient client = MinecraftClient.getInstance();
+        autoClicker = false;
+
+        autoClick = click;
+        autoMine = mine;
+        autoAttack = attack;
+        attackWait = wait;
+        if(wait < 1)
+            attackWait = 1500;
+
+        KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.useKey), false);
+        KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.attackKey), false);
+    }
+
     private static void drawText(MatrixStack m, float t) {
         final MinecraftClient client = MinecraftClient.getInstance();
         TextRenderer renderer = client.textRenderer;
@@ -262,7 +320,7 @@ public class FortytwoEdit implements ClientModInitializer {
         int y = 220;
         if (autoMove)
             renderer.draw(m, "[Auto Move]", x, y + 5, 0xffffff);
-        if (autoClick)
+        if (autoClicker)
             renderer.draw(m, "[Auto Click]", x, y - 5, 0xffffff);
         if (randoMode)
             renderer.draw(m, "[Rando Mode]", x, y - 15, 0xffffff);

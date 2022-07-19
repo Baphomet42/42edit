@@ -1,11 +1,14 @@
 package baphomethlabs.fortytwoedit.gui;
 
 import java.util.Iterator;
+
+import baphomethlabs.fortytwoedit.FortytwoEdit;
 import io.github.cottonmc.cotton.gui.client.LightweightGuiDescription;
 import io.github.cottonmc.cotton.gui.widget.WButton;
 import io.github.cottonmc.cotton.gui.widget.WItem;
 import io.github.cottonmc.cotton.gui.widget.WLabel;
 import io.github.cottonmc.cotton.gui.widget.WPlainPanel;
+import io.github.cottonmc.cotton.gui.widget.WTextField;
 import io.github.cottonmc.cotton.gui.widget.data.HorizontalAlignment;
 import io.github.cottonmc.cotton.gui.widget.icon.ItemIcon;
 import net.minecraft.client.MinecraftClient;
@@ -43,29 +46,6 @@ public class MagickGui extends LightweightGuiDescription {
         WButton btnHacks = new WButton(new ItemIcon(new ItemStack(Items.REPEATING_COMMAND_BLOCK)),Text.of("Hacks..."));
         btnHacks.setOnClick(() -> {
             MinecraftClient.getInstance().setScreen(new MagickScreen(new Hacks()));
-        });
-
-        //look button
-        WButton btnLookN = new WButton(Text.of("Look N"));
-        btnLookN.setOnClick(() -> {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),
-                180f,client.player.getPitch());
-        });
-        WButton btnLookR = new WButton(Text.of("Rotate"));
-        btnLookR.setOnClick(() -> {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            float yaw = client.player.getYaw() + 90;
-            if(yaw>=360)
-                yaw=yaw-360;
-            client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),
-                yaw,client.player.getPitch());
-        });
-        WButton btnLookH = new WButton(new ItemIcon(new ItemStack(Items.SPYGLASS)), Text.of("Look H"));
-        btnLookH.setOnClick(() -> {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),
-                client.player.getYaw(),0f);
         });
 
         //hat
@@ -114,18 +94,55 @@ public class MagickGui extends LightweightGuiDescription {
             MinecraftClient.getInstance().setScreen(new MagickScreen(new Capes()));
         });
 
+        //auto clickers
+        WButton btnAutoClickSettings = new WButton(new ItemIcon(new ItemStack(Items.GOLDEN_SWORD)),Text.of("AutoClick..."));
+        btnAutoClickSettings.setOnClick(() -> {
+            MinecraftClient.getInstance().setScreen(new MagickScreen(new AutoClick()));
+        });
+        WButton btnAutoClick = new WButton(Text.of(""));
+        if(FortytwoEdit.autoClick && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack)
+            btnAutoClick.setLabel(Text.of("[Use]"));
+        else if(!FortytwoEdit.autoClick && FortytwoEdit.autoMine && !FortytwoEdit.autoAttack)
+            btnAutoClick.setLabel(Text.of("[Mine]"));
+        else if(!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 1500)
+            btnAutoClick.setLabel(Text.of("[Attack 1.5]"));
+        else if(!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 650)
+            btnAutoClick.setLabel(Text.of("[Attack .65]"));
+        else
+            btnAutoClick.setLabel(Text.of("[Custom]"));
+        btnAutoClick.setOnClick(() -> {
+            if(btnAutoClick.getLabel().getString().equals("[Use]")) {
+                btnAutoClick.setLabel(Text.of("[Mine]"));
+                FortytwoEdit.updateAutoClick(false,true,false,1500);
+            }
+            else if(btnAutoClick.getLabel().getString().equals("[Attack .65]")) {
+                btnAutoClick.setLabel(Text.of("[Use]"));
+                FortytwoEdit.updateAutoClick(true,false,false,1500);
+            }
+            else if(btnAutoClick.getLabel().getString().equals("[Attack 1.5]")) {
+                btnAutoClick.setLabel(Text.of("[Attack .65]"));
+                FortytwoEdit.updateAutoClick(false,false,true,650);
+            }
+            else if(btnAutoClick.getLabel().getString().equals("[Mine]")) {
+                btnAutoClick.setLabel(Text.of("[Attack 1.5]"));
+                FortytwoEdit.updateAutoClick(false,false,true,1500);
+            }
+            else {
+                btnAutoClick.setLabel(Text.of("[Attack 1.5]"));
+                FortytwoEdit.updateAutoClick(false,false,true,1500);
+            }
+        });
+
         //add items
         root.add(logo,5,5);
         root.add(lblMenu,120,11,0,0);
         root.add(btnItem,20,44+1,80,20);
         root.add(btnFromWorld,20,66+1,80,20);
         root.add(btnHacks,20,88+1,80,20);
-        root.add(btnLookH,20,22*5+1,80,20);
-        root.add(btnLookN,20+80+5,22*5+1,40,20);
-        root.add(btnLookR,20+80+5+40+5,22*5+1,40,20);
-        root.add(btnHat,20,22*6+1,60,20);
-        root.add(btnCapes,20,22*7+1,80,20);
-
+        root.add(btnHat,20,22*5+1,60,20);
+        root.add(btnCapes,20,22*6+1,80,20);
+        root.add(btnAutoClickSettings,20,22*7+1,90,20);
+        root.add(btnAutoClick,20+90+5,22*7+1,70,20);
         
     }
 }

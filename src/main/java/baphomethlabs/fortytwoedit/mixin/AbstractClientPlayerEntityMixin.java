@@ -23,7 +23,7 @@ public abstract class AbstractClientPlayerEntityMixin {
             if(FortytwoEdit.capeCached(name)) {
                 cir.setReturnValue(new Identifier("42edit:cache/capes/"+name.toLowerCase()));
             }
-            else if(FortytwoEdit.capeTimeCheck() && !FortytwoEdit.nameCached(name)) {
+            else if(!FortytwoEdit.nameCached(name) && FortytwoEdit.capeTimeCheck()) {
                 FortytwoEdit.tryLoadCape(name);
             }
         }

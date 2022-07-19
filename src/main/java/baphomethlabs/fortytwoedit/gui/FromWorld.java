@@ -10,12 +10,14 @@ import io.github.cottonmc.cotton.gui.widget.WButton;
 import io.github.cottonmc.cotton.gui.widget.WLabel;
 import io.github.cottonmc.cotton.gui.widget.WPlainPanel;
 import io.github.cottonmc.cotton.gui.widget.data.HorizontalAlignment;
+import io.github.cottonmc.cotton.gui.widget.icon.ItemIcon;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.EntityDataObject;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
@@ -38,7 +40,7 @@ public class FromWorld extends LightweightGuiDescription {
         });
 
         //print item data
-        WButton btnGetItemData = new WButton(Text.of("Copy Item Data"));
+        WButton btnGetItemData = new WButton(new ItemIcon(new ItemStack(Items.NAME_TAG)),Text.of("Copy Item Data"));
         btnGetItemData.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(!client.player.getMainHandStack().isEmpty()) {
@@ -51,7 +53,7 @@ public class FromWorld extends LightweightGuiDescription {
         });
 
         //get entity
-        WButton btnGetEntity = new WButton(Text.of("Get Entity"));
+        WButton btnGetEntity = new WButton(new ItemIcon(new ItemStack(Items.ENDERMITE_SPAWN_EGG)),Text.of("Get Entity"));
         btnGetEntity.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if (client.player.getAbilities().creativeMode) {
@@ -190,7 +192,7 @@ public class FromWorld extends LightweightGuiDescription {
 
         //testfor invis armorstands
         //and invis item frames without an item
-        WButton btnFindInvis = new WButton(Text.of("Find Invis"));
+        WButton btnFindInvis = new WButton(new ItemIcon(new ItemStack(Items.ARMOR_STAND)),Text.of("Find Invis"));
         btnFindInvis.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             if (client.player.getAbilities().creativeMode) {
@@ -226,8 +228,31 @@ public class FromWorld extends LightweightGuiDescription {
             }
         });
 
+        //look button
+        WButton btnLookN = new WButton(Text.of("Look N"));
+        btnLookN.setOnClick(() -> {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),
+                180f,client.player.getPitch());
+        });
+        WButton btnLookR = new WButton(Text.of("Rotate"));
+        btnLookR.setOnClick(() -> {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            float yaw = client.player.getYaw() + 90;
+            if(yaw>=360)
+                yaw=yaw-360;
+            client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),
+                yaw,client.player.getPitch());
+        });
+        WButton btnLookH = new WButton(new ItemIcon(new ItemStack(Items.SPYGLASS)), Text.of("Look H"));
+        btnLookH.setOnClick(() -> {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),
+                client.player.getYaw(),0f);
+        });
+
         //panorama
-        WButton btnPanorama = new WButton(Text.of("Take Panorama"));
+        WButton btnPanorama = new WButton(new ItemIcon(new ItemStack(Items.GRASS_BLOCK)),Text.of("Take Panorama"));
         btnPanorama.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
             File location = new File(client.runDirectory.getAbsolutePath());
@@ -247,7 +272,7 @@ public class FromWorld extends LightweightGuiDescription {
         });
 
         //compare hand items
-        WButton btnCompareItems = new WButton(Text.of("Compare Items"));
+        WButton btnCompareItems = new WButton(new ItemIcon(new ItemStack(Items.SHULKER_BOX)),Text.of("Compare Items"));
         WLabel lblCompareItems = new WLabel(Text.of(""));
         btnCompareItems.setOnClick(() -> {
             final MinecraftClient client = MinecraftClient.getInstance();
@@ -265,14 +290,17 @@ public class FromWorld extends LightweightGuiDescription {
         //add items
         root.add(btnBack,5,5,40,20);
         root.add(lblMenu,120,11,0,0);
-        root.add(btnGetItemData,20,44+1,100,20);
-        root.add(btnGetEntity,20,66+1,60,20);
-        root.add(btnGetEntityFull,20+60+5,66+1,60,20);
-        root.add(btnFindInvis,20,88+1,60,20);
-        root.add(btnPanorama,20,22*5+1,100,20);
-        root.add(btnScreenshots,20+100+5,22*5+1,40,20);
-        root.add(btnCompareItems,20,22*6+1,80,20);
-        root.add(lblCompareItems,20+80+5,22*6+1+6,60,20);
+        root.add(btnGetItemData,20,44+1,120,20);
+        root.add(btnGetEntity,20,66+1,80,20);
+        root.add(btnGetEntityFull,20+80+5,66+1,60,20);
+        root.add(btnFindInvis,20,88+1,80,20);
+        root.add(btnLookH,20,22*5+1,80,20);
+        root.add(btnLookN,20+80+5,22*5+1,40,20);
+        root.add(btnLookR,20+80+5+40+5,22*5+1,40,20);
+        root.add(btnPanorama,20,22*6+1,120,20);
+        root.add(btnScreenshots,20+120+5,22*6+1,40,20);
+        root.add(btnCompareItems,20,22*7+1,120,20);
+        root.add(lblCompareItems,20+120+5,22*7+1+6,60,20);
         
     }
 }
