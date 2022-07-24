@@ -100,7 +100,7 @@ public class FortytwoEdit implements ClientModInitializer {
         if(opticapes) {
             boolean connect = false;
             try {
-                HttpURLConnection con = (HttpURLConnection)(new URL("https://s.optifine.net/capes/42Richtofen42.png")).openConnection();
+                HttpURLConnection con = (HttpURLConnection)(new URL("http://s.optifine.net/capes/42Richtofen42.png")).openConnection();
                 con.setConnectTimeout(2000);
                 if(con.getResponseCode() == HttpURLConnection.HTTP_OK)
                     connect = true;
@@ -152,7 +152,7 @@ public class FortytwoEdit implements ClientModInitializer {
             tryLoadCape(client.getSession().getUsername());
         capeNames.add(name);
         try {
-            URL link = new URL("https://s.optifine.net/capes/" + name + ".png");
+            URL link = new URL("http://s.optifine.net/capes/" + name + ".png");
             HttpURLConnection con = (HttpURLConnection)link.openConnection();
             con.setConnectTimeout(500);
             con.setReadTimeout(500);
