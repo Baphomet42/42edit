@@ -3,6 +3,7 @@ package baphomethlabs.fortytwoedit.gui;
 import java.math.BigInteger;
 import java.util.Random;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.gui.framework.MagickScreen;
 import io.github.cottonmc.cotton.gui.client.LightweightGuiDescription;
 import io.github.cottonmc.cotton.gui.widget.TooltipBuilder;
 import io.github.cottonmc.cotton.gui.widget.WButton;

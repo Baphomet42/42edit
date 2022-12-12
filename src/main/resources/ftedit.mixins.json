@@ -10,7 +10,8 @@
     "LightBlockMixin",
     "LogicalZoomMixin",
     "CameraMixin",
-    "EntityMixin"
+    "EntityMixin",
+    "CreativeInventoryScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

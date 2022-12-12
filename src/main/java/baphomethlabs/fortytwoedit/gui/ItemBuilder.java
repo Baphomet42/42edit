@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import baphomethlabs.fortytwoedit.BlackMagick;
+import baphomethlabs.fortytwoedit.gui.framework.MagickScreen;
 import io.github.cottonmc.cotton.gui.client.LightweightGuiDescription;
 import io.github.cottonmc.cotton.gui.widget.TooltipBuilder;
 import io.github.cottonmc.cotton.gui.widget.WButton;
@@ -1310,6 +1311,25 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
+        WButton tabBlockBtnBundle = new WButton(Text.of("Container to Bundle"));
+        tabBlockBtnBundle.setOnClick(() -> {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.player.getAbilities().creativeMode) {
+                ItemStack item0 = BlackMagick.setNbt(null,"Items",BlackMagick.getNbtFromPath(null,"0:/tag/BlockEntityTag/Items"));
+                NbtCompound tag = new NbtCompound();
+                if(item0.hasNbt())
+                    tag = item0.getNbt();
+                NbtCompound nbt = new NbtCompound();
+                nbt.putString("id","bundle");
+                nbt.putInt("Count",1);
+                nbt.put("tag",tag);
+                ItemStack item = ItemStack.fromNbt(nbt);
+                client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
+                client.player.playerScreenHandler.sendContentUpdates();
+                ItemBuilder.updateItem(item);
+            }
+        });
+        //
         tabBlockScroll.add(tabBlockBtnName,5,5+1,40,20);
         tabBlockScroll.add(tabBlockTxtName,50,5+1,230-8-50-13-10,22);
         tabBlockScroll.add(tabBlockBtnLock,5,5+1+22,40,20);
@@ -1333,7 +1353,8 @@ public class ItemBuilder extends LightweightGuiDescription {
         tabBlockScroll.add(tabBlockTxtBannerPresetBaseColor,50+60+1+230-8-50-13-10-120-1,5+1+22*6,60,22);
         tabBlockScroll.add(tabBlockLblBannerPreset,50+20+230-8-50-13-10-20+5,5+1+22*6+6,13,7);
         tabBlockScroll.add(tabBlockBtnMaxStack,5,5+1+22*8,120,20);
-        tabBlockScroll.add(tabBlockLblBlank,0,5+1+22*8,0,22+5+1-2);
+        tabBlockScroll.add(tabBlockBtnBundle,5,5+1+22*9,120,20);
+        tabBlockScroll.add(tabBlockLblBlank,0,5+1+22*9,0,22+5+1-2);
         WScrollPanel tabBlockScrollPanel = new WScrollPanel(tabBlockScroll);
         tabBlockScrollPanel.setScrollingHorizontally(TriState.FALSE);
         tabBlockScrollPanel.setScrollingVertically(TriState.TRUE);
@@ -2465,33 +2486,60 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        WButton tabMiscBtnBundle = new WButton(Text.of("Container to Bundle"));
-        tabMiscBtnBundle.setOnClick(() -> {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.player.getAbilities().creativeMode) {
-                ItemStack item0 = BlackMagick.setNbt(null,"Items",BlackMagick.getNbtFromPath(null,"0:/tag/BlockEntityTag/Items"));
-                NbtCompound tag = new NbtCompound();
-                if(item0.hasNbt())
-                    tag = item0.getNbt();
-                NbtCompound nbt = new NbtCompound();
-                nbt.putString("id","bundle");
-                nbt.putInt("Count",1);
-                nbt.put("tag",tag);
-                ItemStack item = ItemStack.fromNbt(nbt);
-                client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-                client.player.playerScreenHandler.sendContentUpdates();
-                ItemBuilder.updateItem(item);
-            }
-        });
-        //
-        WButton tabMiscBtnSound = new WButton(Text.of("Playsound"));
+        WButton tabMiscBtnSound = new WButton(Text.of("Sound"));
         WTextField tabMiscTxtSound = new WTextField();
         tabMiscTxtSound.setMaxLength(512);
         tabMiscBtnSound.setOnClick(() -> {
-            if(!tabMiscTxtSound.getText().equals("")) {
-                String sound = tabMiscTxtSound.getText();
-                final MinecraftClient client = MinecraftClient.getInstance();
-                client.player.playSound(new SoundEvent(new Identifier(sound)), SoundCategory.MASTER, 1, 1);
+            if(!tabMiscTxtSound.getText().trim().equals("")) {
+                String sound = tabMiscTxtSound.getText().trim();
+                sound = sound.replaceAll("[^a-zA-Z0-9.]","");
+                if(!sound.equals("")) {
+                    final MinecraftClient client = MinecraftClient.getInstance();
+                    client.player.playSound(SoundEvent.of(new Identifier(sound)), SoundCategory.MASTER, 1, 1);
+                }
+            }
+        });
+        WButton tabMiscBtnHeadSound = new WButton(Text.of("Head Sound"));
+        tabMiscBtnHeadSound.setOnClick(() -> {
+            if(!tabMiscTxtSound.getText().trim().equals("")) {
+                String sound = tabMiscTxtSound.getText().trim();
+                sound = sound.replaceAll("[^a-zA-Z0-9.]","");
+                if(!sound.equals("")) {
+                    final MinecraftClient client = MinecraftClient.getInstance();
+                    if(client.player.getMainHandStack().isEmpty()) {
+                        NbtCompound nbt = new NbtCompound();
+                        nbt.putString("id","player_head");
+                        nbt.putInt("Count",1);
+                        NbtCompound tag = new NbtCompound();
+                        NbtCompound BET = new NbtCompound();
+                        BET.putString("note_block_sound",sound);
+                        tag.put("BlockEntityTag",BET);
+                        NbtList lore = new NbtList();
+                        lore.add(NbtString.of("{\"text\":\"Note block sound:\",\"italic\":false,\"color\":\"gray\"}"));
+                        lore.add(NbtString.of("{\"text\":\""+sound+"\",\"italic\":false,\"color\":\"gray\"}"));
+                        NbtCompound display = new NbtCompound();
+                        display.put("Lore",lore);
+                        tag.put("display",display);
+                        nbt.put("tag",tag);
+                        ItemStack item = ItemStack.fromNbt(nbt);
+                        if(item != null && client.player.getAbilities().creativeMode) {
+                            client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
+                            client.player.playerScreenHandler.sendContentUpdates();
+                            updateItem(item);
+                        }
+                    }
+                    else {
+                        BlackMagick.setNbt(null,"BlockEntityTag/note_block_sound",NbtString.of(sound));
+                        NbtList lore = new NbtList();
+                        lore.add(NbtString.of("{\"text\":\"Note block sound:\",\"italic\":false,\"color\":\"gray\"}"));
+                        lore.add(NbtString.of("{\"text\":\""+sound+"\",\"italic\":false,\"color\":\"gray\"}"));
+                        BlackMagick.setNbt(null,"display/Lore",lore);
+                    }
+                }
+            }
+            else {
+                BlackMagick.removeNbt(null,"BlockEntityTag/note_block_sound");
+                BlackMagick.removeNbt(null,"display/Lore");
             }
         });
         //
@@ -2523,8 +2571,10 @@ public class ItemBuilder extends LightweightGuiDescription {
         tabMiscScroll.add(tabMiscBtnDecor,5,5+1+22*12,40,20);
         tabMiscScroll.add(tabMiscTxtDecor,50,5+1+22*12,230-8-50-13-10,22);
         tabMiscScroll.add(tabMiscLblDecor,50+20+230-8-50-13-10-20+5,5+1+22*12+6,13,7);
-        tabMiscScroll.add(tabMiscBtnBundle,5,5+1+22*14,120,20);
-        tabMiscScroll.add(tabMiscLblBlank,0,5+1+22*14,0,22+5+1-2);
+        tabMiscScroll.add(tabMiscBtnSound,5,5+1+22*14,40,20);
+        tabMiscScroll.add(tabMiscTxtSound,50,5+1+22*14,230-8-50-13-10,22);
+        tabMiscScroll.add(tabMiscBtnHeadSound,5,5+1+22*15,80,20);
+        tabMiscScroll.add(tabMiscLblBlank,0,5+1+22*15,0,22+5+1-2);
         WScrollPanel tabMiscScrollPanel = new WScrollPanel(tabMiscScroll);
         tabMiscScrollPanel.setScrollingHorizontally(TriState.FALSE);
         tabMiscScrollPanel.setScrollingVertically(TriState.TRUE);

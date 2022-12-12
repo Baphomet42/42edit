@@ -6,10 +6,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Scanner;
-
 import org.apache.commons.io.FileUtils;
+
 import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
@@ -17,6 +18,8 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.resource.featuretoggle.FeatureFlags;
+import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.EntityHitResult;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -27,7 +30,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import baphomethlabs.fortytwoedit.gui.MagickGui;
-import baphomethlabs.fortytwoedit.gui.MagickScreen;
+import baphomethlabs.fortytwoedit.gui.framework.MagickScreen;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -163,9 +166,9 @@ public class FortytwoEdit implements ClientModInitializer {
                 for (int y = 0; y < capeInp.getHeight(); y++)
                     cape.setColor(x, y, capeInp.getColor(x, y));
             capeInp.close();
-            cape.writeTo(client.runDirectory.getAbsolutePath()
+            cape.writeTo(Path.of(client.runDirectory.getAbsolutePath()
                     + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets\\42edit\\cache\\capes\\"
-                    + name.toLowerCase());
+                    + name.toLowerCase()));
             cape.close();
             capeNames2.add(name);
             return true;
@@ -182,6 +185,9 @@ public class FortytwoEdit implements ClientModInitializer {
     //freelook
     public static boolean isFreeLooking = false;
     private static Perspective lastPerspective;
+
+    //see feature items
+    public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE,FeatureFlags.UPDATE_1_20);
 
     @Override
     public void onInitializeClient() {

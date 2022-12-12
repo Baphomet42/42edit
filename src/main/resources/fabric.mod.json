@@ -9,7 +9,8 @@
     "BaphomethLabs"
   ],
   "contact": {
-    "homepage": "https://namemc.com/profile/42Richtofen42.1"
+    "homepage": "https://namemc.com/profile/42Richtofen42.1",
+    "sources":  "https://github.com/Baphomet42/42edit"
   },
 
   "license": "CC0-1.0",
@@ -26,13 +27,11 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.11.3",
-    "fabric": "*",
-    "minecraft": "1.19.x",
+    "fabricloader": ">=0.14.11",
+    "fabric-api": "*",
+    "minecraft": "~1.19.3",
     "java": ">=17",
     "fabric-key-binding-api-v1":"*"
   },
-  "suggests": {
-    "another-mod": "*"
-  }
+  "suggests": {}
 }

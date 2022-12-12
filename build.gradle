@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.12-SNAPSHOT'
+	id 'fabric-loom' version '1.0-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -24,14 +24,17 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 	
 	//	UPDATE PROTOCOL
 	//	paste gradle.properties Fabric Properties and Dependencies and manually update Mod Properties
+	//	loom version set above (from https://github.com/FabricMC/fabric-example-mod)
 	//	update fabric.mod.json depends minecraft version
 	//	paste cottonmc version below
 	//	delete .gradle .vscode bin build run
+	//	paste new example mod files (rarely needed)
+	//	update fabric.mod.json (rarely needed)
 	//	java project clean workspace
-	//	answer Now to java classpath message by RedHat
 	//	./gradlew genSources	.\gradlew vscode
 	//	./gradlew --refresh-dependencies
 	//	./gradlew build
@@ -40,11 +43,13 @@ dependencies {
 	//	use fabric installer to get new launcher profile
 	//	copy 42jar from build/libs
 
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	//	ERRORS
+	//	file being used by another process -> ./gradlew --stop
+
 
 	//	https://github.com/CottonMC/LibGui/releases
-	modImplementation include("io.github.cottonmc:LibGui:6.0.0+1.19")
-	
+	modImplementation include("io.github.cottonmc:LibGui:6.5.0+1.19.3")
+	//include api("io.github.juuxel:libninepatch:1.1.0")
 
 }
 
