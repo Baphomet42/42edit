@@ -40,6 +40,7 @@ public class Capes extends LightweightGuiDescription {
         btnOptiCape.setOnClick(() -> {
             FortytwoEdit.opticapesOn = !FortytwoEdit.opticapesOn;
             FortytwoEdit.updateOptions();
+            FortytwoEdit.clearCapes();
             if(FortytwoEdit.opticapesOn)
                 btnOptiCape.setLabel(Text.of("Show Optifine Capes [On]"));
             else
@@ -81,21 +82,24 @@ public class Capes extends LightweightGuiDescription {
         });
         WTextField txtCustom = new WTextField();
         txtCustom.setMaxLength(64);
-        txtCustom.setText(FortytwoEdit.clientCape);
-        WButton btnSetCustom = new WButton(Text.of("Set"));
-        btnSetCustom.setOnClick(() -> {
-            if(txtCustom.getText().replaceAll("\\s","").equals(""))
-                FortytwoEdit.clientCape = "default";
-            else
-                FortytwoEdit.clientCape = txtCustom.getText().replaceAll("\\s","");
+        txtCustom.setText(FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]);
+        txtCustom.setEditable(false);
+        WButton btnIncCustom = new WButton(Text.of(">"));
+        btnIncCustom.setOnClick(() -> {
+            FortytwoEdit.clientCape++;
+            if(FortytwoEdit.clientCape>=FortytwoEdit.clientCapeList.length)
+                FortytwoEdit.clientCape=0;
+            txtCustom.setText(FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]);
             FortytwoEdit.updateOptions();
         });
-        WLabel lblCustomHelp = new WLabel(Text.of("[?]")){
-            public void addTooltip(TooltipBuilder tooltip) {
-                tooltip.add(Text.of("minecon2011"),Text.of("minecon2013"),Text.of("minecon2016"),Text.of("mojang-old"),
-                Text.of("mojang"),Text.of("spartan"),Text.of("christmas"));
-            }
-        };
+        WButton btnDecCustom = new WButton(Text.of("<"));
+        btnDecCustom.setOnClick(() -> {
+            FortytwoEdit.clientCape--;
+            if(FortytwoEdit.clientCape<0)
+                FortytwoEdit.clientCape=FortytwoEdit.clientCapeList.length-1;
+            txtCustom.setText(FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]);
+            FortytwoEdit.updateOptions();
+        });
 
         //add items
         root.add(btnBack,5,5,40,20);
@@ -106,9 +110,9 @@ public class Capes extends LightweightGuiDescription {
         root.add(btnEditCape,105,22*3+1,60,20);
         root.add(lblCustom,20,5+7+22*4,0,0);
         root.add(btnCustom,20,22*5+1,80,20);
-        root.add(txtCustom,20+1,22*6+1,140,22);
-        root.add(btnSetCustom,165,22*6+1,40,20);
-        root.add(lblCustomHelp,210,5+1+22*6+1,13,7);
+        root.add(btnDecCustom,20,22*6+1,20,20);
+        root.add(txtCustom,20+1+20+5,22*6+1,120,22);
+        root.add(btnIncCustom,20+20+120+5+5+2,22*6+1,20,20);
 
     }
 

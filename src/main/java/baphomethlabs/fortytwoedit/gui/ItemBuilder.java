@@ -20,7 +20,6 @@ import io.github.cottonmc.cotton.gui.widget.WTextField;
 import io.github.cottonmc.cotton.gui.widget.data.HorizontalAlignment;
 import io.github.cottonmc.cotton.gui.widget.data.VerticalAlignment;
 import io.github.cottonmc.cotton.gui.widget.icon.ItemIcon;
-import net.fabricmc.fabric.api.util.NbtType;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
@@ -280,7 +279,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             NbtElement inpEl;
             if(!inp.equals("")) {
                 inpEl = BlackMagick.elementFromString("\'"+inp+"\'");
-                BlackMagick.setNbt(null,"display/Name",inpEl,NbtType.STRING);
+                BlackMagick.setNbt(null,"display/Name",inpEl,NbtElement.STRING_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"display/Name");
@@ -303,7 +302,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             NbtElement inpEl;
             if(!inp.equals("")) {
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"HideFlags",inpEl,NbtType.NUMBER);
+                BlackMagick.setNbt(null,"HideFlags",inpEl,NbtElement.NUMBER_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"HideFlags");
@@ -320,7 +319,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             NbtElement inpEl;
             if(!inp.equals("")) {
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"Unbreakable",inpEl,NbtType.NUMBER);
+                BlackMagick.setNbt(null,"Unbreakable",inpEl,NbtElement.NUMBER_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"Unbreakable");
@@ -349,7 +348,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             NbtElement inpEl;
             if(!inp.equals("")) {
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"Damage",inpEl,NbtType.NUMBER);
+                BlackMagick.setNbt(null,"Damage",inpEl,NbtElement.NUMBER_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"Damage");
@@ -363,7 +362,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             NbtElement inpEl;
             if(!inp.equals("")) {
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"CustomModelData",inpEl,NbtType.NUMBER);
+                BlackMagick.setNbt(null,"CustomModelData",inpEl,NbtElement.NUMBER_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"CustomModelData");
@@ -382,10 +381,10 @@ public class ItemBuilder extends LightweightGuiDescription {
                 inp = "\""+inp+"\"";
                 inpEl = BlackMagick.elementFromString(inp);
                 if(BlackMagick.getNbtFromPath(null,"0:/tag/CanPlaceOn")!=null &&
-                    BlackMagick.getNbtFromPath(null,"0:/tag/CanPlaceOn").getType()==NbtType.LIST) {
+                    BlackMagick.getNbtFromPath(null,"0:/tag/CanPlaceOn").getType()==NbtElement.LIST_TYPE) {
                         list = (NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/CanPlaceOn");
                         if(list.size()==0) {
-                            BlackMagick.setNbt(null,"CanPlaceOn/0:",inpEl,NbtType.STRING);
+                            BlackMagick.setNbt(null,"CanPlaceOn/0:",inpEl,NbtElement.STRING_TYPE);
                         }
                         else {
                             if(list.contains(inpEl)) {
@@ -399,7 +398,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                         }
                 }
                 else
-                    BlackMagick.setNbt(null,"CanPlaceOn/0:",inpEl,NbtType.STRING);
+                    BlackMagick.setNbt(null,"CanPlaceOn/0:",inpEl,NbtElement.STRING_TYPE);
             }
             else if(inp.equals(""))
                 BlackMagick.removeNbt(null,"CanPlaceOn");
@@ -412,10 +411,10 @@ public class ItemBuilder extends LightweightGuiDescription {
                 inp = "\""+inp+"\"";
                 inpEl = BlackMagick.elementFromString(inp);
                 if(BlackMagick.getNbtFromPath(null,"0:/tag/CanDestroy")!=null &&
-                    BlackMagick.getNbtFromPath(null,"0:/tag/CanDestroy").getType()==NbtType.LIST) {
+                    BlackMagick.getNbtFromPath(null,"0:/tag/CanDestroy").getType()==NbtElement.LIST_TYPE) {
                         list = (NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/CanDestroy");
                         if(list.size()==0) {
-                            BlackMagick.setNbt(null,"CanDestroy/0:",inpEl,NbtType.STRING);
+                            BlackMagick.setNbt(null,"CanDestroy/0:",inpEl,NbtElement.STRING_TYPE);
                         }
                         else {
                             if(list.contains(inpEl)) {
@@ -429,7 +428,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                         }
                 }
                 else
-                    BlackMagick.setNbt(null,"CanDestroy/0:",inpEl,NbtType.STRING);
+                    BlackMagick.setNbt(null,"CanDestroy/0:",inpEl,NbtElement.STRING_TYPE);
             }
             else if(inp.equals(""))
                 BlackMagick.removeNbt(null,"CanDestroy");
@@ -526,9 +525,9 @@ public class ItemBuilder extends LightweightGuiDescription {
                     return;
                 }
                 NbtElement pathElement = BlackMagick.getNbtFromPath(null,"0:/tag/"+path);
-                if(pathElement!=null && pathElement.getType()==NbtType.LIST) {
+                if(pathElement!=null && pathElement.getType()==NbtElement.LIST_TYPE) {
                     NbtList jsonList = (NbtList)pathElement;
-                    if(jsonList.size()>0 && jsonList.get(0).getType()==NbtType.STRING) {
+                    if(jsonList.size()>0 && jsonList.get(0).getType()==NbtElement.STRING_TYPE) {
                         while(index>jsonList.size()) {
                             jsonList.add(NbtString.of("{\"text\":\"\"}"));
                         }
@@ -560,7 +559,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         });
         tabDisplayBtnGetJson.setOnClick(() -> {
             NbtElement jsonElement = BlackMagick.getNbtFromPath(null,"0:/tag/"+tabDisplayTxtJsonPath.getText());
-            if(jsonElement!=null && jsonElement.getType()==NbtType.STRING)
+            if(jsonElement!=null && jsonElement.getType()==NbtElement.STRING_TYPE)
                 tabDisplayTxtJson.setText(((NbtString)jsonElement).asString());
         });
         //
@@ -662,9 +661,9 @@ public class ItemBuilder extends LightweightGuiDescription {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(!client.player.getMainHandStack().isEmpty()) {
                 NbtElement element = BlackMagick.getNbtFromPath(null,"0:/tag/display/Lore");
-                if(element!=null && element.getType()==NbtType.LIST) {
+                if(element!=null && element.getType()==NbtElement.LIST_TYPE) {
                     NbtList jsonList = (NbtList)element;
-                    if(jsonList.size()>0 && jsonList.get(0).getType()==NbtType.STRING) {
+                    if(jsonList.size()>0 && jsonList.get(0).getType()==NbtElement.STRING_TYPE) {
                         jsonList.add(NbtString.of("{\"text\":\"\"}"));
                         jsonList.add(NbtString.of("{\"text\":\"BaphomethLabs\",\"color\":\"gold\"}"));
                         BlackMagick.setNbt(null,"display/Lore",jsonList);
@@ -741,7 +740,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                     if(id.equals("*")) {
                         NbtElement element = BlackMagick.getNbtFromPath(null,"0:/tag/Enchantments");
                         int i = 0;
-                        if(element != null && element.getType() == NbtType.LIST)
+                        if(element != null && element.getType() == NbtElement.LIST_TYPE)
                             i = ((NbtList)element).size();
                         BlackMagick.setNbt(null,"Enchantments/"+i+":/id",NbtString.of("aqua_affinity"));
                         BlackMagick.setNbt(null,"Enchantments/"+i+":/lvl",NbtShort.of(lvl));
@@ -855,7 +854,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                         NbtElement element = BlackMagick.getNbtFromPath(null,"0:/tag/Enchantments");
                         if(!id.contains("minecraft:"))
                             id = "minecraft:"+id;
-                        if(element != null && element.getType() == NbtType.LIST) {
+                        if(element != null && element.getType() == NbtElement.LIST_TYPE) {
                             NbtList nbtEnchantments = (NbtList)element;
                             NbtCompound nbt = new NbtCompound();
                             nbt.putString("id",id);
@@ -875,15 +874,15 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
             else {
                 NbtElement element = BlackMagick.getNbtFromPath(null,"0:/tag/Enchantments");
-                if(element !=null && element.getType() == NbtType.LIST) {
+                if(element !=null && element.getType() == NbtElement.LIST_TYPE) {
                     NbtList nbtEnchantments = (NbtList)element;
                     boolean changedEnch = false;
                     if(!id.contains("minecraft:"))
                         id = "minecraft:"+id;
                     for(int i=0; i<nbtEnchantments.size(); i++) {
-                        if(nbtEnchantments.get(i).getType() == NbtType.COMPOUND
+                        if(nbtEnchantments.get(i).getType() == NbtElement.COMPOUND_TYPE
                             && ((NbtCompound)nbtEnchantments.get(i)).contains("id")
-                            && ((NbtCompound)nbtEnchantments.get(i)).get("id").getType() == NbtType.STRING
+                            && ((NbtCompound)nbtEnchantments.get(i)).get("id").getType() == NbtElement.STRING_TYPE
                             && ((NbtCompound)nbtEnchantments.get(i)).get("id").asString().equals(id)) {
                                 nbtEnchantments.remove(i);
                                 i--;
@@ -912,7 +911,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             NbtElement inpEl;
             if(!inp.equals("")) {
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"RepairCost",inpEl,NbtType.NUMBER);
+                BlackMagick.setNbt(null,"RepairCost",inpEl,NbtElement.NUMBER_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"RepairCost");
@@ -947,7 +946,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             if(!inp.equals("")) {
                 inp = "\'"+inp+"\'";
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"BlockEntityTag/CustomName",inpEl,NbtType.STRING);
+                BlackMagick.setNbt(null,"BlockEntityTag/CustomName",inpEl,NbtElement.STRING_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"BlockEntityTag/CustomName");
@@ -962,7 +961,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             if(!inp.equals("")) {
                 inp = "\'"+inp+"\'";
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"BlockEntityTag/Lock",inpEl,NbtType.STRING);
+                BlackMagick.setNbt(null,"BlockEntityTag/Lock",inpEl,NbtElement.STRING_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"BlockEntityTag/Lock");
@@ -1008,7 +1007,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             if(!inp.equals("") && !tabBlockTxtStateKey.getText().equals("")) {
                 inp = "\""+inp+"\"";
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"BlockStateTag/"+tabBlockTxtStateKey.getText(),inpEl,NbtType.STRING);
+                BlackMagick.setNbt(null,"BlockStateTag/"+tabBlockTxtStateKey.getText(),inpEl,NbtElement.STRING_TYPE);
             }
             else if(inp.equals(""))
                 BlackMagick.removeNbt(null,"BlockStateTag/"+tabBlockTxtStateKey.getText());
@@ -1296,11 +1295,11 @@ public class ItemBuilder extends LightweightGuiDescription {
                     ItemStack item = client.player.getMainHandStack();
                     if(item.hasNbt()) {
                         NbtCompound nbt = item.getNbt().copy();
-                        if(nbt.contains("BlockEntityTag") && nbt.get("BlockEntityTag").getType()==NbtType.COMPOUND
+                        if(nbt.contains("BlockEntityTag") && nbt.get("BlockEntityTag").getType()==NbtElement.COMPOUND_TYPE
                         && ((NbtCompound)nbt.get("BlockEntityTag")).contains("Items")
-                        && ((NbtCompound)nbt.get("BlockEntityTag")).get("Items").getType()==NbtType.LIST
+                        && ((NbtCompound)nbt.get("BlockEntityTag")).get("Items").getType()==NbtElement.LIST_TYPE
                         && ((NbtList)((NbtCompound)nbt.get("BlockEntityTag")).get("Items")).size()>0
-                        && ((NbtList)((NbtCompound)nbt.get("BlockEntityTag")).get("Items")).get(0).getType()==NbtType.COMPOUND) {
+                        && ((NbtList)((NbtCompound)nbt.get("BlockEntityTag")).get("Items")).get(0).getType()==NbtElement.COMPOUND_TYPE) {
                             NbtList nbtItems = (NbtList)((NbtCompound)nbt.get("BlockEntityTag")).get("Items");
                             for(int i=0; i<nbtItems.size(); i++) {
                                 BlackMagick.setNbt(null,"BlockEntityTag/Items/"+i+":/Count",NbtInt.of(64));
@@ -1371,7 +1370,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         tabEntityBtnBasePlate.setOnClick(() -> {
             ItemStack item = BlackMagick.setId("armor_stand");
             if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/NoBasePlate")!=null &&
-            BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/NoBasePlate").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/NoBasePlate").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/NoBasePlate").asString().equals("1b")) {
                 BlackMagick.removeNbt(item,"EntityTag/NoBasePlate");
             }
@@ -1382,7 +1381,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         tabEntityBtnShowArms.setOnClick(() -> {
             ItemStack item = BlackMagick.setId("armor_stand");
             if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/ShowArms")!=null &&
-            BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/ShowArms").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/ShowArms").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/ShowArms").asString().equals("1b")) {
                 BlackMagick.removeNbt(item,"EntityTag/ShowArms");
             }
@@ -1393,7 +1392,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         tabEntityBtnSmall.setOnClick(() -> {
             ItemStack item = BlackMagick.setId("armor_stand");
             if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Small")!=null &&
-            BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Small").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Small").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Small").asString().equals("1b")) {
                 BlackMagick.removeNbt(item,"EntityTag/Small");
             }
@@ -1404,7 +1403,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         tabEntityBtnMarker.setOnClick(() -> {
             ItemStack item = BlackMagick.setId("armor_stand");
             if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Marker")!=null &&
-            BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Marker").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Marker").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Marker").asString().equals("1b")) {
                 BlackMagick.removeNbt(item,"EntityTag/Marker");
             }
@@ -1415,7 +1414,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         tabEntityBtnInvisible.setOnClick(() -> {
             ItemStack item = BlackMagick.setId("armor_stand");
             if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Invisible")!=null &&
-            BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Invisible").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Invisible").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Invisible").asString().equals("1b")) {
                 BlackMagick.removeNbt(item,"EntityTag/Invisible");
             }
@@ -1436,7 +1435,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             NbtElement inpEl;
             if(!inp.equals("")) {
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"EntityTag/DisabledSlots",inpEl,NbtType.NUMBER);
+                BlackMagick.setNbt(null,"EntityTag/DisabledSlots",inpEl,NbtElement.NUMBER_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"EntityTag/DisabledSlots");
@@ -1494,9 +1493,9 @@ public class ItemBuilder extends LightweightGuiDescription {
                     }
                     float[] rot = {0f,0f,0f};
                     if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pose/"+inpPart)!=null
-                    && BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pose/"+inpPart).getType()==NbtType.LIST &&
+                    && BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pose/"+inpPart).getType()==NbtElement.LIST_TYPE &&
                     ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pose/"+inpPart)).size()==3 &&
-                    ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pose/"+inpPart)).getHeldType()==NbtType.FLOAT)
+                    ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pose/"+inpPart)).getHeldType()==NbtElement.FLOAT_TYPE)
                         for(int i=0; i<3; i++)
                             rot[i]=Float.parseFloat(
                                 ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pose/"+inpPart)).get(i).asString());
@@ -1535,7 +1534,7 @@ public class ItemBuilder extends LightweightGuiDescription {
                 item = client.player.getMainHandStack();
             if(!inp.equals("")) {
                 inpEl = BlackMagick.elementFromString("\""+inp+"\"");
-                BlackMagick.setNbt(item,"EntityTag/id",inpEl,NbtType.STRING);
+                BlackMagick.setNbt(item,"EntityTag/id",inpEl,NbtElement.STRING_TYPE);
             }
             else
                 BlackMagick.removeNbt(item,"EntityTag/id");
@@ -1549,7 +1548,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             NbtElement inpEl;
             if(!inp.equals("")) {
                 inpEl = BlackMagick.elementFromString("\'"+inp+"\'");
-                BlackMagick.setNbt(null,"EntityTag/CustomName",inpEl,NbtType.STRING);
+                BlackMagick.setNbt(null,"EntityTag/CustomName",inpEl,NbtElement.STRING_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"EntityTag/CustomName");
@@ -1558,7 +1557,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnNameVisible = new WButton(Text.of("ShowName"));
         tabEntityBtnNameVisible.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/CustomNameVisible")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/CustomNameVisible").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/CustomNameVisible").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/CustomNameVisible").asString().equals("1b")) {
                 BlackMagick.removeNbt(null,"EntityTag/CustomNameVisible");
             }
@@ -1568,7 +1567,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnGravity = new WButton(Text.of("NoGravity"));
         tabEntityBtnGravity.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoGravity")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoGravity").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoGravity").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoGravity").asString().equals("1b")) {
                 BlackMagick.removeNbt(null,"EntityTag/NoGravity");
             }
@@ -1578,7 +1577,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnGlowing = new WButton(Text.of("Glowing"));
         tabEntityBtnGlowing.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Glowing")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Glowing").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Glowing").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Glowing").asString().equals("1b")) {
                 BlackMagick.removeNbt(null,"EntityTag/Glowing");
             }
@@ -1588,7 +1587,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnFire = new WButton(Text.of("VisualFire"));
         tabEntityBtnFire.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/HasVisualFire")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/HasVisualFire").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/HasVisualFire").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/HasVisualFire").asString().equals("1b")) {
                 BlackMagick.removeNbt(null,"EntityTag/HasVisualFire");
             }
@@ -1598,7 +1597,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnSilent = new WButton(Text.of("Silent"));
         tabEntityBtnSilent.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Silent")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Silent").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Silent").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Silent").asString().equals("1b")) {
                 BlackMagick.removeNbt(null,"EntityTag/Silent");
             }
@@ -1608,7 +1607,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnAI = new WButton(Text.of("NoAI"));
         tabEntityBtnAI.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoAI")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoAI").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoAI").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/NoAI").asString().equals("1b")) {
                 BlackMagick.removeNbt(null,"EntityTag/NoAI");
             }
@@ -1618,7 +1617,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnInvulnerable = new WButton(Text.of("Invulnerable"));
         tabEntityBtnInvulnerable.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invulnerable")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invulnerable").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invulnerable").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invulnerable").asString().equals("1b")) {
                 BlackMagick.removeNbt(null,"EntityTag/Invulnerable");
             }
@@ -1628,7 +1627,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnDespawn = new WButton(Text.of("Persistence"));
         tabEntityBtnDespawn.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/PersistenceRequired")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/PersistenceRequired").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/PersistenceRequired").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/PersistenceRequired").asString().equals("1b")) {
                 BlackMagick.removeNbt(null,"EntityTag/PersistenceRequired");
             }
@@ -1983,9 +1982,9 @@ public class ItemBuilder extends LightweightGuiDescription {
                 else {
                     double[] pos = {0d,0d,0d};
                     if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pos")!=null
-                    && BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pos").getType()==NbtType.LIST &&
+                    && BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pos").getType()==NbtElement.LIST_TYPE &&
                     ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pos")).size()==3 &&
-                    ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pos")).getHeldType()==NbtType.DOUBLE)
+                    ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pos")).getHeldType()==NbtElement.DOUBLE_TYPE)
                         for(int i=0; i<3; i++)
                             pos[i]=Double.parseDouble(
                                 ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Pos")).get(i).asString());
@@ -2021,9 +2020,9 @@ public class ItemBuilder extends LightweightGuiDescription {
                 else {
                     double[] mot = {0d,0d,0d};
                     if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Motion")!=null
-                    && BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Motion").getType()==NbtType.LIST &&
+                    && BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Motion").getType()==NbtElement.LIST_TYPE &&
                     ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Motion")).size()==3 &&
-                    ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Motion")).getHeldType()==NbtType.DOUBLE)
+                    ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Motion")).getHeldType()==NbtElement.DOUBLE_TYPE)
                         for(int i=0; i<3; i++)
                             mot[i]=Double.parseDouble(
                                 ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Motion")).get(i).asString());
@@ -2068,9 +2067,9 @@ public class ItemBuilder extends LightweightGuiDescription {
                 else {
                     float[] rot = {0f,0f};
                     if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Rotation")!=null
-                    && BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Rotation").getType()==NbtType.LIST &&
+                    && BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Rotation").getType()==NbtElement.LIST_TYPE &&
                     ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Rotation")).size()==2 &&
-                    ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Rotation")).getHeldType()==NbtType.FLOAT)
+                    ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Rotation")).getHeldType()==NbtElement.FLOAT_TYPE)
                         for(int i=0; i<2; i++)
                             rot[i]=Float.parseFloat(
                                 ((NbtList)BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Rotation")).get(i).asString());
@@ -2106,7 +2105,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             NbtElement inpEl;
             if(!inp.equals("")) {
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"EntityTag/ItemRotation",inpEl,NbtType.NUMBER);
+                BlackMagick.setNbt(null,"EntityTag/ItemRotation",inpEl,NbtElement.NUMBER_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"EntityTag/ItemRotation");
@@ -2115,7 +2114,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnItem = new WButton(Text.of("Item"));
         tabEntityBtnItem.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Item")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Item").getType()==NbtType.COMPOUND) {
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Item").getType()==NbtElement.COMPOUND_TYPE) {
                 BlackMagick.removeNbt(null,"EntityTag/Item");
             }
             else
@@ -2124,7 +2123,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnItemInvis = new WButton(Text.of("Invis"));
         tabEntityBtnItemInvis.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invisible")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invisible").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invisible").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invisible").asString().equals("1b")) {
                 BlackMagick.removeNbt(null,"EntityTag/Invisible");
             }
@@ -2134,7 +2133,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnItemFix = new WButton(Text.of("Fixed"));
         tabEntityBtnItemFix.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Fixed")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Fixed").getType()==NbtType.BYTE &&
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Fixed").getType()==NbtElement.BYTE_TYPE &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Fixed").asString().equals("1b")) {
                 BlackMagick.removeNbt(null,"EntityTag/Fixed");
             }
@@ -2144,7 +2143,7 @@ public class ItemBuilder extends LightweightGuiDescription {
         WButton tabEntityBtnItemDrop = new WButton(Text.of("Drop"));
         tabEntityBtnItemDrop.setOnClick(() -> {
             if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/ItemDropChance")!=null &&
-            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/ItemDropChance").getType()==NbtType.FLOAT &&
+            BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/ItemDropChance").getType()==NbtElement.FLOAT_TYPE &&
             BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/ItemDropChance").asString().equals("0.0f")) {
                 BlackMagick.removeNbt(null,"EntityTag/ItemDropChance");
             }
@@ -2218,9 +2217,9 @@ public class ItemBuilder extends LightweightGuiDescription {
                 inp = "\""+inp+"\"";
                 inpEl = BlackMagick.elementFromString(inp);
                 if(client.player.getMainHandStack().isEmpty())
-                    BlackMagick.setNbt(BlackMagick.setId("player_head"),"SkullOwner",inpEl,NbtType.STRING);
+                    BlackMagick.setNbt(BlackMagick.setId("player_head"),"SkullOwner",inpEl,NbtElement.STRING_TYPE);
                 else
-                    BlackMagick.setNbt(null,"SkullOwner",inpEl,NbtType.STRING);
+                    BlackMagick.setNbt(null,"SkullOwner",inpEl,NbtElement.STRING_TYPE);
             }
             else {
                 if(client.player.getMainHandStack().isEmpty())
@@ -2243,7 +2242,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             if(!inp.equals("")) {
                 inp = "\'"+inp+"\'";
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"SkullOwner/Name",inpEl,NbtType.STRING);
+                BlackMagick.setNbt(null,"SkullOwner/Name",inpEl,NbtElement.STRING_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"SkullOwner/Name");
@@ -2312,8 +2311,8 @@ public class ItemBuilder extends LightweightGuiDescription {
             if(!inp.equals("")) {
                 inp = "\'"+inp+"\'";
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"title",inpEl,NbtType.STRING);
-                BlackMagick.setNbt(null,"filtered_title",inpEl,NbtType.STRING);
+                BlackMagick.setNbt(null,"title",inpEl,NbtElement.STRING_TYPE);
+                BlackMagick.setNbt(null,"filtered_title",inpEl,NbtElement.STRING_TYPE);
             }
             else {
                 BlackMagick.removeNbt(null,"title");
@@ -2330,7 +2329,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             if(!inp.equals("")) {
                 inp = "\'"+inp+"\'";
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"author",inpEl,NbtType.STRING);
+                BlackMagick.setNbt(null,"author",inpEl,NbtElement.STRING_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"author");
@@ -2344,7 +2343,7 @@ public class ItemBuilder extends LightweightGuiDescription {
             NbtElement inpEl;
             if(!inp.equals("")) {
                 inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,"generation",inpEl,NbtType.NUMBER);
+                BlackMagick.setNbt(null,"generation",inpEl,NbtElement.NUMBER_TYPE);
             }
             else
                 BlackMagick.removeNbt(null,"generation");
@@ -2400,10 +2399,10 @@ public class ItemBuilder extends LightweightGuiDescription {
                 final MinecraftClient client = MinecraftClient.getInstance();
                 if(client.player.getMainHandStack().isEmpty()) {
                     BlackMagick.setNbt(BlackMagick.setId("tropical_fish_bucket"),"BucketVariantTag",
-                        BlackMagick.elementFromString(""+inp),NbtType.NUMBER);
+                        BlackMagick.elementFromString(""+inp),NbtElement.NUMBER_TYPE);
                 }
                 else
-                    BlackMagick.setNbt(null,"BucketVariantTag",BlackMagick.elementFromString(""+inp),NbtType.NUMBER);
+                    BlackMagick.setNbt(null,"BucketVariantTag",BlackMagick.elementFromString(""+inp),NbtElement.NUMBER_TYPE);
             }
         });
         //
@@ -2584,36 +2583,6 @@ public class ItemBuilder extends LightweightGuiDescription {
         WPlainPanel tabCustomScroll = new WPlainPanel();
         WLabel tabCustomLblBlank = new WLabel(Text.of(""));
         //
-        WLabel tabCustomLblKey = new WLabel(Text.of("Key:"));
-        WLabel tabCustomLblInp = new WLabel(Text.of("Value:"));
-        WButton tabCustomBtnCustom = new WButton(Text.of("Set"));
-        WTextField tabCustomTxtKey = new WTextField();
-        tabCustomTxtKey.setMaxLength(1024);
-        WTextField tabCustomTxtInp = new WTextField();
-        tabCustomTxtInp.setMaxLength(1024);
-        tabCustomBtnCustom.setOnClick(() -> {
-            String inp = tabCustomTxtInp.getText();
-            NbtElement inpEl;
-            if(!inp.equals("")) {
-                inpEl = BlackMagick.elementFromString(inp);
-                BlackMagick.setNbt(null,tabCustomTxtKey.getText(),inpEl);
-            }
-            else
-                BlackMagick.removeNbt(null,tabCustomTxtKey.getText());
-        });
-        //
-        WLabel tabCustomLblSetPath = new WLabel(Text.of("Key:"));
-        WLabel tabCustomLblGetPath = new WLabel(Text.of("From:"));
-        WButton tabCustomBtnCustomFrom = new WButton(Text.of("Set"));
-        WTextField tabCustomTxtSetPath = new WTextField();
-        tabCustomTxtSetPath.setMaxLength(1024);
-        WTextField tabCustomTxtGetPath = new WTextField();
-        tabCustomTxtGetPath.setMaxLength(1024);
-        tabCustomBtnCustomFrom.setOnClick(() -> {
-            NbtElement inp = BlackMagick.getNbtFromPath(null,tabCustomTxtGetPath.getText());
-            BlackMagick.setNbt(null,tabCustomTxtSetPath.getText(),inp);
-        });
-        //
         WButton tabCustomBtnGive = new WButton(Text.of("Give"));
         WTextField tabCustomTxtGive = new WTextField();
         tabCustomTxtGive.setMaxLength(131072);
@@ -2679,19 +2648,79 @@ public class ItemBuilder extends LightweightGuiDescription {
             }
         });
         //
-        tabCustomScroll.add(tabCustomLblKey,5+3,5+7,40,20);
-        tabCustomScroll.add(tabCustomTxtKey,50,5+1,230-8-50-13-10,22);
-        tabCustomScroll.add(tabCustomLblInp,5+3,5+7+22,40,20);
-        tabCustomScroll.add(tabCustomTxtInp,50,5+1+22,230-8-50-13-10,22);
-        tabCustomScroll.add(tabCustomBtnCustom,5,5+1+22*2,40,20);
-        tabCustomScroll.add(tabCustomLblSetPath,5+3,5+7+22*4,40,20);
-        tabCustomScroll.add(tabCustomTxtSetPath,50,5+1+22*4,230-8-50-13-10,22);
-        tabCustomScroll.add(tabCustomLblGetPath,5+3,5+7+22*5,40,20);
-        tabCustomScroll.add(tabCustomTxtGetPath,50,5+1+22*5,230-8-50-13-10,22);
-        tabCustomScroll.add(tabCustomBtnCustomFrom,5,5+1+22*6,40,20);
-        tabCustomScroll.add(tabCustomBtnGive,5,5+1+22*8,40,20);
-        tabCustomScroll.add(tabCustomTxtGive,50,5+1+22*8,230-8-50-13-10,22);
-        tabCustomScroll.add(tabCustomLblBlank,0,5+1+22*8,0,22+5+1-2);
+        WLabel tabCustomLblKey = new WLabel(Text.of("Key:"));
+        WLabel tabCustomLblInp = new WLabel(Text.of("Value:"));
+        WButton tabCustomBtnCustom = new WButton(Text.of("Set"));
+        WTextField tabCustomTxtKey = new WTextField();
+        tabCustomTxtKey.setMaxLength(1024);
+        WTextField tabCustomTxtInp = new WTextField();
+        tabCustomTxtInp.setMaxLength(1024);
+        tabCustomBtnCustom.setOnClick(() -> {
+            String inp = tabCustomTxtInp.getText();
+            NbtElement inpEl;
+            if(!inp.equals("")) {
+                inpEl = BlackMagick.elementFromString(inp);
+                BlackMagick.setNbt(null,tabCustomTxtKey.getText(),inpEl);
+            }
+            else
+                BlackMagick.removeNbt(null,tabCustomTxtKey.getText());
+        });
+        //
+        WLabel tabCustomLblSetPath = new WLabel(Text.of("Key:"));
+        WLabel tabCustomLblGetPath = new WLabel(Text.of("From:"));
+        WButton tabCustomBtnCustomFrom = new WButton(Text.of("Set"));
+        WTextField tabCustomTxtSetPath = new WTextField();
+        tabCustomTxtSetPath.setMaxLength(1024);
+        WTextField tabCustomTxtGetPath = new WTextField();
+        tabCustomTxtGetPath.setMaxLength(1024);
+        tabCustomBtnCustomFrom.setOnClick(() -> {
+            NbtElement inp = BlackMagick.getNbtFromPath(null,tabCustomTxtGetPath.getText());
+            BlackMagick.setNbt(null,tabCustomTxtSetPath.getText(),inp);
+        });
+        //
+        WButton tabCustomBtnGiveDisabled = new WButton(Text.of("Bundle Item"));
+        WTextField tabCustomTxtGiveDisabled = new WTextField();
+        tabCustomTxtGiveDisabled.setMaxLength(64);
+        tabCustomBtnGiveDisabled.setOnClick(() -> {
+            String inp = tabCustomTxtGiveDisabled.getText();
+            inp = inp.replaceAll("[^a-zA-Z_]","");
+            if(inp.length()>1) {
+                NbtCompound nbt = new NbtCompound();
+                nbt.putString("id","bundle");
+                nbt.putInt("Count",1);
+                NbtCompound tag = new NbtCompound();
+                NbtCompound innerItem = new NbtCompound();
+                innerItem.putString("id",inp);
+                innerItem.putInt("Count",1);
+                NbtList items = new NbtList();
+                items.add(innerItem);
+                tag.put("Items",items);
+                nbt.put("tag",tag);
+                ItemStack item = ItemStack.fromNbt(nbt);
+                final MinecraftClient client = MinecraftClient.getInstance();
+                if(item != null && client.player.getAbilities().creativeMode) {
+                    client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
+                    client.player.playerScreenHandler.sendContentUpdates();
+                    updateItem(item);
+                }
+            }
+        });
+        //
+        tabCustomScroll.add(tabCustomBtnGive,5,5+1,40,20);
+        tabCustomScroll.add(tabCustomTxtGive,50,5+1,230-8-50-13-10,22);
+        tabCustomScroll.add(tabCustomLblKey,5+3,5+7+22*2,40,20);
+        tabCustomScroll.add(tabCustomTxtKey,50,5+1+22*2,230-8-50-13-10,22);
+        tabCustomScroll.add(tabCustomLblInp,5+3,5+7+22*3,40,20);
+        tabCustomScroll.add(tabCustomTxtInp,50,5+1+22*3,230-8-50-13-10,22);
+        tabCustomScroll.add(tabCustomBtnCustom,5,5+1+22*4,40,20);
+        tabCustomScroll.add(tabCustomLblSetPath,5+3,5+7+22*6,40,20);
+        tabCustomScroll.add(tabCustomTxtSetPath,50,5+1+22*6,230-8-50-13-10,22);
+        tabCustomScroll.add(tabCustomLblGetPath,5+3,5+7+22*7,40,20);
+        tabCustomScroll.add(tabCustomTxtGetPath,50,5+1+22*7,230-8-50-13-10,22);
+        tabCustomScroll.add(tabCustomBtnCustomFrom,5,5+1+22*8,40,20);
+        tabCustomScroll.add(tabCustomBtnGiveDisabled,5,5+1+22*10,80,20);
+        tabCustomScroll.add(tabCustomTxtGiveDisabled,90,5+1+22*10,230-8-50-40-13-10,22);
+        tabCustomScroll.add(tabCustomLblBlank,0,5+1+22*10,0,22+5+1-2);
         WScrollPanel tabCustomScrollPanel = new WScrollPanel(tabCustomScroll);
         tabCustomScrollPanel.setScrollingHorizontally(TriState.FALSE);
         tabCustomScrollPanel.setScrollingVertically(TriState.TRUE);

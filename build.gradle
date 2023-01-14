@@ -39,16 +39,16 @@ dependencies {
 	//	./gradlew --refresh-dependencies
 	//	./gradlew build
 	//	UPDATE LAUNCHER
-	//	download new fabric API mod
+	//	download new fabric API mod (from https://www.curseforge.com/minecraft/mc-mods/fabric-api)
 	//	use fabric installer to get new launcher profile
-	//	copy 42jar from build/libs
+	//	copy 42jar from build/libs to mods
 
 	//	ERRORS
 	//	file being used by another process -> ./gradlew --stop
 
 
 	//	https://github.com/CottonMC/LibGui/releases
-	modImplementation include("io.github.cottonmc:LibGui:6.5.0+1.19.3")
+	modImplementation include("io.github.cottonmc:LibGui:6.5.1+1.19.3")
 	//include api("io.github.juuxel:libninepatch:1.1.0")
 
 }

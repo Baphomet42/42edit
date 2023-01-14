@@ -28,7 +28,7 @@ public abstract class AbstractClientPlayerEntityMixin {
             }
         }
         if(FortytwoEdit.showClientCape && this.getPlayerListEntry().getProfile().getName().equals(FortytwoEdit.clientUsername)) {
-            cir.setReturnValue(new Identifier("42edit:textures/capes/"+FortytwoEdit.clientCape+".png"));
+            cir.setReturnValue(new Identifier("42edit:textures/capes/"+FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]+".png"));
         }
     }
 

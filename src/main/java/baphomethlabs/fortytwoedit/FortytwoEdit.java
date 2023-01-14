@@ -110,7 +110,7 @@ public class FortytwoEdit implements ClientModInitializer {
             } catch(IOException e) {}
             if(!connect) {
                 opticapes = false;
-                Log.warn(LogCategory.GENERAL,"[42edit] Failed connection to Optifine");
+                Log.warn(LogCategory.GENERAL,"[42edit] Failed connection to OptiFine capes");
             }
         }
     }
@@ -179,7 +179,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
     // custom capes
     public static boolean showClientCape = false;
-    public static String clientCape = "default";
+    public static int clientCape = 0;
+    public static String[] clientCapeList = {"minecon2011","minecon2013","minecon2016","mojang-old","mojang","spartan","christmas"};
     public static String clientUsername = "";
 
     //freelook
@@ -364,7 +365,16 @@ public class FortytwoEdit implements ClientModInitializer {
                     if (line.substring(11).equals("true"))
                         showClientCape = true;
                 } else if (line.length()>5 && line.substring(0, 5).equals("cape:")) {
-                    clientCape = line.substring(5);
+                    String val = line.substring(5);
+                    try{
+                        clientCape = Integer.parseInt(val);
+                        if(clientCape<0)
+                            clientCape=0;
+                        else if(clientCape>=clientCapeList.length)
+                            clientCape=0;
+                    } catch(NumberFormatException e) {
+                        clientCape=0;
+                    }
                 } else if (line.length()>9 && line.substring(0, 9).equals("optiCape:")) {
                     if (line.substring(11).equals("false"))
                         opticapesOn = false;
