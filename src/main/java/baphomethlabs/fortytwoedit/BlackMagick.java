@@ -6,7 +6,6 @@ import java.util.List;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import baphomethlabs.fortytwoedit.gui.ItemBuilder;
-import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtByte;
@@ -691,10 +690,10 @@ public class BlackMagick {
             List<NbtElement> nbtList = new ArrayList<NbtElement>();
             nbtList.add(nbt);
             for(int i=0; i<keyList.size(); i++) {
-                if(nbtList.get(i).getType()==NbtType.COMPOUND && ((NbtCompound)nbtList.get(i)).contains(keyList.get(i))) {
+                if(nbtList.get(i).getType()==NbtElement.COMPOUND_TYPE && ((NbtCompound)nbtList.get(i)).contains(keyList.get(i))) {
                         nbtList.add(((NbtCompound)nbtList.get(i)).get(keyList.get(i)));
                 }
-                else if(nbtList.get(i).getType()==NbtType.LIST && ((NbtList)nbtList.get(i)).size()>(type[i-1])) {
+                else if(nbtList.get(i).getType()==NbtElement.LIST_TYPE && ((NbtList)nbtList.get(i)).size()>(type[i-1])) {
                     nbtList.add(((NbtList)nbtList.get(i)).get(type[i-1]));
                 }
                 else
@@ -736,15 +735,15 @@ public class BlackMagick {
             return null;
         if(inp == null)
             return item;
-        else if(inp.getType()==NbtType.COMPOUND || inp.getType()==NbtType.LIST || inp.getType()==NbtType.BYTE_ARRAY
-        || inp.getType()==NbtType.INT_ARRAY || inp.getType()==NbtType.LONG_ARRAY || inp.getType()==NbtType.STRING
-        || inp.getType()==NbtType.BYTE || inp.getType()==NbtType.SHORT || inp.getType()==NbtType.INT
-        || inp.getType()==NbtType.LONG || inp.getType()==NbtType.FLOAT || inp.getType()==NbtType.DOUBLE ) {
+        else if(inp.getType()==NbtElement.COMPOUND_TYPE || inp.getType()==NbtElement.LIST_TYPE || inp.getType()==NbtElement.BYTE_ARRAY_TYPE
+        || inp.getType()==NbtElement.INT_ARRAY_TYPE || inp.getType()==NbtElement.LONG_ARRAY_TYPE || inp.getType()==NbtElement.STRING_TYPE
+        || inp.getType()==NbtElement.BYTE_TYPE || inp.getType()==NbtElement.SHORT_TYPE || inp.getType()==NbtElement.INT_TYPE
+        || inp.getType()==NbtElement.LONG_TYPE || inp.getType()==NbtElement.FLOAT_TYPE || inp.getType()==NbtElement.DOUBLE_TYPE ) {
             if(inp.getType()==forceType)
                 return setNbt(overrideItem, inpKey, inp);
-            else if(forceType==NbtType.NUMBER && ( inp.getType()==NbtType.BYTE || inp.getType()==NbtType.SHORT
-            || inp.getType()==NbtType.INT || inp.getType()==NbtType.LONG || inp.getType()==NbtType.FLOAT
-            || inp.getType()==NbtType.DOUBLE ))
+            else if(forceType==NbtElement.NUMBER_TYPE && ( inp.getType()==NbtElement.BYTE_TYPE || inp.getType()==NbtElement.SHORT_TYPE
+            || inp.getType()==NbtElement.INT_TYPE || inp.getType()==NbtElement.LONG_TYPE || inp.getType()==NbtElement.FLOAT_TYPE
+            || inp.getType()==NbtElement.DOUBLE_TYPE ))
                 return setNbt(overrideItem, inpKey, inp);
         }
         return item;
@@ -770,17 +769,17 @@ public class BlackMagick {
             else
                 return null;
             if(inp !=null && inpKey.equals("")) {
-                if(inp.getType()==NbtType.COMPOUND) {
+                if(inp.getType()==NbtElement.COMPOUND_TYPE) {
                     item.setNbt((NbtCompound)inp);
                     return item;
                 }
             }
             if(inp == null)
                 return item;
-            else if(inp.getType()==NbtType.COMPOUND || inp.getType()==NbtType.LIST || inp.getType()==NbtType.BYTE_ARRAY
-            || inp.getType()==NbtType.INT_ARRAY || inp.getType()==NbtType.LONG_ARRAY || inp.getType()==NbtType.STRING
-            || inp.getType()==NbtType.BYTE || inp.getType()==NbtType.SHORT || inp.getType()==NbtType.INT
-            || inp.getType()==NbtType.LONG || inp.getType()==NbtType.FLOAT || inp.getType()==NbtType.DOUBLE ) {
+            else if(inp.getType()==NbtElement.COMPOUND_TYPE || inp.getType()==NbtElement.LIST_TYPE || inp.getType()==NbtElement.BYTE_ARRAY_TYPE
+            || inp.getType()==NbtElement.INT_ARRAY_TYPE || inp.getType()==NbtElement.LONG_ARRAY_TYPE || inp.getType()==NbtElement.STRING_TYPE
+            || inp.getType()==NbtElement.BYTE_TYPE || inp.getType()==NbtElement.SHORT_TYPE || inp.getType()==NbtElement.INT_TYPE
+            || inp.getType()==NbtElement.LONG_TYPE || inp.getType()==NbtElement.FLOAT_TYPE || inp.getType()==NbtElement.DOUBLE_TYPE ) {
                 if(inpKey.contains("/") || inpKey.contains(":")) {
                     NbtCompound nbt = new NbtCompound();
                     if(item.hasNbt())
@@ -827,14 +826,14 @@ public class BlackMagick {
                     List<NbtElement> nbtList = new ArrayList<NbtElement>();
                     nbtList.add(nbt);
                     for(int i=0; i<keyList.size(); i++) {
-                        if(nbtList.get(i).getType()==NbtType.COMPOUND) {
+                        if(nbtList.get(i).getType()==NbtElement.COMPOUND_TYPE) {
                             if(((NbtCompound)nbtList.get(i)).get(keyList.get(i))!=null
-                            && ((((NbtCompound)nbtList.get(i)).get(keyList.get(i)).getType()==NbtType.COMPOUND
+                            && ((((NbtCompound)nbtList.get(i)).get(keyList.get(i)).getType()==NbtElement.COMPOUND_TYPE
                             && type[i]==-1))) {
                                 nbtList.add(((NbtCompound)nbtList.get(i)).get(keyList.get(i)));
                             }
                             else if(((NbtCompound)nbtList.get(i)).get(keyList.get(i))!=null
-                            && ((((NbtCompound)nbtList.get(i)).get(keyList.get(i)).getType()==NbtType.LIST
+                            && ((((NbtCompound)nbtList.get(i)).get(keyList.get(i)).getType()==NbtElement.LIST_TYPE
                             && type[i]!=-1))) {
                                 nbtList.add(((NbtCompound)nbtList.get(i)).get(keyList.get(i)));
                             }
@@ -847,15 +846,15 @@ public class BlackMagick {
                                 nbtList.add(((NbtCompound)nbtList.get(i)).get(keyList.get(i)));
                             }
                         }
-                        else if(nbtList.get(i).getType()==NbtType.LIST) {
+                        else if(nbtList.get(i).getType()==NbtElement.LIST_TYPE) {
                             if(type[i]==-1 && i<keyList.size()-1 && ((NbtList)nbtList.get(i)).size()>type[i-1]
                             && ((NbtList)nbtList.get(i)).get(type[i-1])!=null
-                            && ((NbtList)nbtList.get(i)).get(type[i-1]).getType()==NbtType.COMPOUND) {
+                            && ((NbtList)nbtList.get(i)).get(type[i-1]).getType()==NbtElement.COMPOUND_TYPE) {
                                 nbtList.add(((NbtList)nbtList.get(i)).get(type[i-1]));
                             }
                             else if(type[i]==-1 && i<keyList.size()-1 && ((NbtList)nbtList.get(i)).size()>0
                             && ((NbtList)nbtList.get(i)).get(0)!=null
-                            && ((NbtList)nbtList.get(i)).get(0).getType()==NbtType.COMPOUND) {
+                            && ((NbtList)nbtList.get(i)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
                                 while(((NbtList)nbtList.get(i)).size()<=type[i-1]) {
                                    ((NbtList)nbtList.get(i)).add(new NbtCompound());
                                 }
@@ -888,11 +887,11 @@ public class BlackMagick {
                     }
                     else {
                         int inpIndex = type[type.length-2];
-                        if(inp.getType()==NbtType.LIST)
+                        if(inp.getType()==NbtElement.LIST_TYPE)
                             return item;
-                        if(inp.getType()==NbtType.COMPOUND) {
+                        if(inp.getType()==NbtElement.COMPOUND_TYPE) {
                             if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtType.COMPOUND) {
+                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
                                 while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
                                     ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtCompound());
                                 }
@@ -906,9 +905,9 @@ public class BlackMagick {
                                 ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
                             }
                         }
-                        else if(inp.getType()==NbtType.BYTE_ARRAY) {
+                        else if(inp.getType()==NbtElement.BYTE_ARRAY_TYPE) {
                             if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtType.BYTE_ARRAY) {
+                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.BYTE_ARRAY_TYPE) {
                                 while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
                                     ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtByteArray(new byte[0]));
                                 }
@@ -922,9 +921,9 @@ public class BlackMagick {
                                 ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
                             }
                         }
-                        else if(inp.getType()==NbtType.INT_ARRAY) {
+                        else if(inp.getType()==NbtElement.INT_ARRAY_TYPE) {
                             if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtType.INT_ARRAY) {
+                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.INT_ARRAY_TYPE) {
                                 while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
                                     ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtIntArray(new int[0]));
                                 }
@@ -938,9 +937,9 @@ public class BlackMagick {
                                 ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
                             }
                         }
-                        else if(inp.getType()==NbtType.LONG_ARRAY) {
+                        else if(inp.getType()==NbtElement.LONG_ARRAY_TYPE) {
                             if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtType.LONG_ARRAY) {
+                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.LONG_ARRAY_TYPE) {
                                 while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
                                     ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtLongArray(new long[0]));
                                 }
@@ -954,9 +953,9 @@ public class BlackMagick {
                                 ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
                             }
                         }
-                        else if(inp.getType()==NbtType.STRING) {
+                        else if(inp.getType()==NbtElement.STRING_TYPE) {
                             if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtType.STRING) {
+                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.STRING_TYPE) {
                                 while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
                                     ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtString.of(""));
                                 }
@@ -970,9 +969,9 @@ public class BlackMagick {
                                 ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
                             }
                         }
-                        else if(inp.getType()==NbtType.DOUBLE) {
+                        else if(inp.getType()==NbtElement.DOUBLE_TYPE) {
                             if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtType.DOUBLE) {
+                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.DOUBLE_TYPE) {
                                 while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
                                     ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtDouble.of(0.0));
                                 }
@@ -986,9 +985,9 @@ public class BlackMagick {
                                 ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
                             }
                         }
-                        else if(inp.getType()==NbtType.FLOAT) {
+                        else if(inp.getType()==NbtElement.FLOAT_TYPE) {
                             if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtType.FLOAT) {
+                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.FLOAT_TYPE) {
                                 while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
                                     ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtFloat.of((float)0.0));
                                 }
@@ -1002,9 +1001,9 @@ public class BlackMagick {
                                 ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
                             }
                         }
-                        else if(inp.getType()==NbtType.BYTE) {
+                        else if(inp.getType()==NbtElement.BYTE_TYPE) {
                             if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtType.BYTE) {
+                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.BYTE_TYPE) {
                                 while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
                                     ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtByte.of((byte)0));
                                 }
@@ -1018,9 +1017,9 @@ public class BlackMagick {
                                 ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
                             }
                         }
-                        else if(inp.getType()==NbtType.SHORT) {
+                        else if(inp.getType()==NbtElement.SHORT_TYPE) {
                             if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtType.SHORT) {
+                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.SHORT_TYPE) {
                                 while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
                                     ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtShort.of((short)0));
                                 }
@@ -1034,9 +1033,9 @@ public class BlackMagick {
                                 ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
                             }
                         }
-                        else if(inp.getType()==NbtType.INT) {
+                        else if(inp.getType()==NbtElement.INT_TYPE) {
                             if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtType.INT) {
+                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.INT_TYPE) {
                                 while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
                                     ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtInt.of(0));
                                 }
@@ -1050,9 +1049,9 @@ public class BlackMagick {
                                 ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
                             }
                         }
-                        else if(inp.getType()==NbtType.LONG) {
+                        else if(inp.getType()==NbtElement.LONG_TYPE) {
                             if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtType.LONG) {
+                            && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.LONG_TYPE) {
                                 while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
                                     ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtLong.of((long)0));
                                 }
@@ -1160,11 +1159,11 @@ public class BlackMagick {
                         List<NbtElement> nbtList = new ArrayList<NbtElement>();
                         nbtList.add(nbt);
                         for(int i=0; i<keyList.size(); i++) {
-                            if(nbtList.get(i).getType()==NbtType.COMPOUND
+                            if(nbtList.get(i).getType()==NbtElement.COMPOUND_TYPE
                             && ((NbtCompound)nbtList.get(i)).get(keyList.get(i))!=null) {
                                 nbtList.add(((NbtCompound)nbtList.get(i)).get(keyList.get(i)));
                             }
-                            else if(nbtList.get(i).getType()==NbtType.LIST
+                            else if(nbtList.get(i).getType()==NbtElement.LIST_TYPE
                             && ((NbtList)nbtList.get(i)).size()>type[i-1]
                             && ((NbtList)nbtList.get(i)).get(type[i-1])!=null) {
                                 nbtList.add(((NbtList)nbtList.get(i)).get(type[i-1]));
@@ -1189,10 +1188,10 @@ public class BlackMagick {
                                 else
                                     break CLEAN;
                             }
-                            if(nbtList.get(1).getType()==NbtType.COMPOUND && ((NbtCompound)nbtList.get(1)).isEmpty()) {
+                            if(nbtList.get(1).getType()==NbtElement.COMPOUND_TYPE && ((NbtCompound)nbtList.get(1)).isEmpty()) {
                                 ((NbtCompound)nbtList.get(0)).remove(keyList.get(0));
                             }
-                            else if(nbtList.get(1).getType()==NbtType.LIST && ((NbtList)nbtList.get(1)).isEmpty()) {
+                            else if(nbtList.get(1).getType()==NbtElement.LIST_TYPE && ((NbtList)nbtList.get(1)).isEmpty()) {
                                 ((NbtCompound)nbtList.get(0)).remove(keyList.get(0));
                             }
                         }
