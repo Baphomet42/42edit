@@ -14,7 +14,6 @@ import io.github.cottonmc.cotton.gui.widget.WLabel;
 import io.github.cottonmc.cotton.gui.widget.WPlainPanel;
 import io.github.cottonmc.cotton.gui.widget.data.HorizontalAlignment;
 import io.github.cottonmc.cotton.gui.widget.icon.ItemIcon;
-import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.EntityDataObject;
 import net.minecraft.entity.Entity;
@@ -22,6 +21,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
@@ -206,7 +206,7 @@ public class FromWorld extends LightweightGuiDescription {
                         NbtCompound nbt = new NbtCompound();
                         if((new EntityDataObject(current)).getNbt()!=null)
                             nbt = (new EntityDataObject(current)).getNbt();
-                        if(nbt.contains("Invisible") && nbt.get("Invisible").getType()==NbtType.BYTE
+                        if(nbt.contains("Invisible") && nbt.get("Invisible").getType()==NbtElement.BYTE_TYPE
                         && nbt.get("Invisible").asString().equals("1b")) {
                             if(((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(0))).isEmpty() && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(1))).isEmpty()
                             && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(2))).isEmpty() && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(3))).isEmpty()
@@ -219,7 +219,7 @@ public class FromWorld extends LightweightGuiDescription {
                         NbtCompound nbt = new NbtCompound();
                         if((new EntityDataObject(current)).getNbt()!=null)
                             nbt = (new EntityDataObject(current)).getNbt();
-                        if(nbt.contains("Invisible") && nbt.get("Invisible").getType()==NbtType.BYTE
+                        if(nbt.contains("Invisible") && nbt.get("Invisible").getType()==NbtElement.BYTE_TYPE
                         && nbt.get("Invisible").asString().equals("1b")) {
                             if(!nbt.contains("Item")) {
                                 client.player.sendMessage(Text.of("Invisible item frame ["+

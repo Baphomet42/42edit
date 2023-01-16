@@ -9,11 +9,11 @@ import io.github.cottonmc.cotton.gui.widget.WPlainPanel;
 import io.github.cottonmc.cotton.gui.widget.WTextField;
 import io.github.cottonmc.cotton.gui.widget.data.HorizontalAlignment;
 import io.github.cottonmc.cotton.gui.widget.icon.ItemIcon;
-import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.GlobalPos;
@@ -108,9 +108,9 @@ public class Hacks extends LightweightGuiDescription {
             ItemStack item = client.player.getMainHandStack();
             if(item.hasNbt() && (item.getItem().toString().equals("beehive") || item.getItem().toString().equals("bee_nest"))) {
                 NbtCompound nbt = item.getNbt();
-                if(nbt.contains("BlockEntityTag") && nbt.get("BlockEntityTag").getType() == NbtType.COMPOUND) {
+                if(nbt.contains("BlockEntityTag") && nbt.get("BlockEntityTag").getType() == NbtElement.COMPOUND_TYPE) {
                     NbtCompound tag = (NbtCompound)nbt.get("BlockEntityTag");
-                    if(tag.contains("Bees") && tag.get("Bees").getType() == NbtType.LIST) {
+                    if(tag.contains("Bees") && tag.get("Bees").getType() == NbtElement.LIST_TYPE) {
                         int beeCount = ((NbtList)tag.get("Bees")).size();
                         lblBeeCount.setText(Text.of("["+beeCount+"]"));
                     }

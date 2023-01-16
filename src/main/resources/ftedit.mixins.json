@@ -11,7 +11,8 @@
     "LogicalZoomMixin",
     "CameraMixin",
     "EntityMixin",
-    "CreativeInventoryScreenMixin"
+    "CreativeInventoryScreenMixin",
+    "SharedConstantsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
