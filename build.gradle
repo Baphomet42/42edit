@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.0-SNAPSHOT'
+	id 'fabric-loom' version '1.1-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -32,6 +32,7 @@ dependencies {
 	//	update fabric.mod.json depends minecraft version
 	//	paste cottonmc version below
 	//	delete .gradle .vscode bin build run
+	//	delete .gradle .cache from User
 	//	paste new example mod files (rarely needed)
 	//	update fabric.mod.json (rarely needed)
 	//	java project clean workspace
@@ -46,10 +47,14 @@ dependencies {
 	//	ERRORS
 	//	file being used by another process -> ./gradlew --stop
 
+	//	TOOLS
+	//	Ctrl-P search MC classes starting with #
+	//	Mixin help https://fabricmc.net/wiki/tutorial:mixin_introduction
+
 
 	//	https://github.com/CottonMC/LibGui/releases
-	modImplementation include("io.github.cottonmc:LibGui:6.5.1+1.19.3")
-	//include api("io.github.juuxel:libninepatch:1.1.0")
+	//modImplementation include("io.github.cottonmc:LibGui:6.5.2+1.19.3")
+	include api("io.github.juuxel:libninepatch:1.1.0")
 
 }
 

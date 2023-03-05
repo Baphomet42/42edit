@@ -23,13 +23,16 @@
     ]
   },
   "mixins": [
-    "ftedit.mixins.json"
+    "ftedit.mixins.json",
+    "logical_zoom.mixins.json",
+    "freelook.mixins.json",
+    "visiblebarriers.mixins.json"
   ],
 
   "depends": {
     "fabricloader": ">=0.14.11",
     "fabric-api": "*",
-    "minecraft": "~1.19.3",
+    "minecraft": "~1.19",
     "java": ">=17",
     "fabric-key-binding-api-v1":"*"
   },

@@ -37,7 +37,16 @@ import net.minecraft.client.font.TextRenderer;
 
 public class FortytwoEdit implements ClientModInitializer {
 
-    // "./gradlew build"
+    /*------------------------------------------
+     *  Incorporated works
+     *  
+     *  Example Mod from https://github.com/FabricMC/fabric-example-mod
+     *  LibGui from https://github.com/CottonMC/LibGui
+     *  Logical Zoom from https://github.com/LogicalGeekBoy/logical_zoom
+     *  Freelook from https://github.com/Celibistrial/freelook
+     *  Visible Barriers from https://github.com/AmyMialeeMods/visible-barriers
+     *------------------------------------------
+     */
 
     // zoom
     public static boolean zoomed = false;
@@ -55,7 +64,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static int attackWait = 1500;
     private static long lastAttack = 0;
 
-    // grian mode
+    // randomizer mode
     public static int[] randoSlots;
     public static boolean randoMode = false;
 
@@ -269,7 +278,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 }
             }
 
-            //freelook from https://github.com/Columner/FreeLook
+            //freelook
             if (freeLook.isPressed()) {
                 if (!isFreeLooking) { // Only execute when enabling FreeLook.
                     lastPerspective = client.options.getPerspective();
