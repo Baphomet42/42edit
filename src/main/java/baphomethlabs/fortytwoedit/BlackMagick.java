@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
-import baphomethlabs.fortytwoedit.gui.ItemBuilder;
+import baphomethlabs.fortytwoedit.gui.legacy.ItemBuilder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtByte;

@@ -4,7 +4,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.util.math.MatrixStack;
 
-import io.github.cottonmc.cotton.gui.client.Scissors;
+import baphomethlabs.fortytwoedit.gui.legacy.framework.Scissors;
 
 /**
  * A panel that is clipped to only render widgets inside its bounds.

@@ -1,7 +1,6 @@
-package io.github.cottonmc.cotton.gui.impl.client;
+package baphomethlabs.fortytwoedit.gui.legacy.framework;
 
 import net.minecraft.client.gui.screen.Screen;
-
 import io.github.cottonmc.cotton.gui.widget.WWidget;
 import io.github.cottonmc.cotton.gui.widget.data.InputResult;
 import io.github.cottonmc.cotton.gui.widget.data.ObservableProperty;
@@ -12,7 +11,7 @@ import java.util.function.Function;
 /**
  * The implementation for mouse inputs.
  */
-public final class MouseInputHandler<S extends Screen & CottonScreenImpl> {
+public final class MouseInputHandler<S extends Screen & FTScreen> {
 	private final S screen;
 	private final ObservableProperty<@Nullable WWidget> hovered = ObservableProperty.<WWidget>of(null).build();
 

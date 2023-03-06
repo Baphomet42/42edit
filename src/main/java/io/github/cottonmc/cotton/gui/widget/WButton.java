@@ -11,8 +11,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-
-import io.github.cottonmc.cotton.gui.client.LibGui;
 import io.github.cottonmc.cotton.gui.client.ScreenDrawing;
 import io.github.cottonmc.cotton.gui.impl.client.NarrationMessages;
 import io.github.cottonmc.cotton.gui.widget.data.HorizontalAlignment;
@@ -21,7 +19,6 @@ import io.github.cottonmc.cotton.gui.widget.icon.Icon;
 import org.jetbrains.annotations.Nullable;
 
 public class WButton extends WWidget {
-	private static final Identifier DARK_WIDGETS_LOCATION = new Identifier("libgui", "textures/widget/dark_widgets.png");
 	private static final int BUTTON_HEIGHT = 20;
 	private static final int ICON_SPACING = 2;
 
@@ -267,6 +264,6 @@ public class WButton extends WWidget {
 
 	@Environment(EnvType.CLIENT)
 	static Identifier getTexture() {
-		return LibGui.isDarkMode() ? DARK_WIDGETS_LOCATION : ClickableWidget.WIDGETS_TEXTURE;
+		return ClickableWidget.WIDGETS_TEXTURE;
 	}
 }

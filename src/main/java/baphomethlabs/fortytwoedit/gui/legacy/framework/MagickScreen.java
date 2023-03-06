@@ -1,4 +1,4 @@
-package baphomethlabs.fortytwoedit.gui.framework;
+package baphomethlabs.fortytwoedit.gui.legacy.framework;
 
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;

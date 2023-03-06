@@ -3,8 +3,7 @@ package io.github.cottonmc.cotton.gui.client;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
-import io.github.cottonmc.cotton.gui.impl.LibGuiCommon;
-import io.github.cottonmc.cotton.gui.widget.WItemSlot;
+//import io.github.cottonmc.cotton.gui.widget.WItemSlot;
 import io.github.cottonmc.cotton.gui.widget.WWidget;
 import io.github.cottonmc.cotton.gui.widget.data.Texture;
 import juuxel.libninepatch.NinePatch;
@@ -38,8 +37,8 @@ public interface BackgroundPainter {
 	 * @since 1.5.0
 	 */
 	public static BackgroundPainter VANILLA = createLightDarkVariants(
-			createNinePatch(new Identifier(LibGuiCommon.MOD_ID, "textures/widget/panel_light.png")),
-			createNinePatch(new Identifier(LibGuiCommon.MOD_ID, "textures/widget/panel_dark.png"))
+			createNinePatch(new Identifier("libgui", "textures/widget/panel_light.png")),
+			createNinePatch(new Identifier("libgui", "textures/widget/panel_dark.png"))
 	);
 
 	/**
@@ -48,36 +47,36 @@ public interface BackgroundPainter {
 	 * <p>For {@linkplain WItemSlot item slots}, this painter uses {@link WItemSlot#SLOT_TEXTURE libgui:textures/widget/item_slot.png}.
 	 */
 	public static BackgroundPainter SLOT = (matrices, left, top, panel) -> {
-		if (!(panel instanceof WItemSlot)) {
-			ScreenDrawing.drawBeveledPanel(matrices, left-1, top-1, panel.getWidth()+2, panel.getHeight()+2, 0xB8000000, 0x4C000000, 0xB8FFFFFF);
-		} else {
-			WItemSlot slot = (WItemSlot)panel;
-			for(int x = 0; x < slot.getWidth()/18; ++x) {
-				for(int y = 0; y < slot.getHeight()/18; ++y) {
-					int index = x + y * (slot.getWidth() / 18);
-					float px = 1 / 64f;
-					if (slot.isBigSlot()) {
-						int sx = (x * 18) + left - 4;
-						int sy = (y * 18) + top - 4;
-						ScreenDrawing.texturedRect(matrices, sx, sy, 26, 26, WItemSlot.SLOT_TEXTURE,
-								18 * px, 0, 44 * px, 26 * px, 0xFF_FFFFFF);
-						if (slot.getFocusedSlot() == index) {
-							ScreenDrawing.texturedRect(matrices, sx, sy, 26, 26, WItemSlot.SLOT_TEXTURE,
-									18 * px, 26 * px, 44 * px, 52 * px, 0xFF_FFFFFF);
-						}
-					} else {
-						int sx = (x * 18) + left;
-						int sy = (y * 18) + top;
-						ScreenDrawing.texturedRect(matrices, sx, sy, 18, 18, WItemSlot.SLOT_TEXTURE,
-								0, 0, 18 * px, 18 * px, 0xFF_FFFFFF);
-						if (slot.getFocusedSlot() == index) {
-							ScreenDrawing.texturedRect(matrices, sx, sy, 18, 18, WItemSlot.SLOT_TEXTURE,
-									0, 26 * px, 18 * px, 44 * px, 0xFF_FFFFFF);
-						}
-					}
-				}
-			}
-		}
+		// if (!(panel instanceof WItemSlot)) {
+		// 	ScreenDrawing.drawBeveledPanel(matrices, left-1, top-1, panel.getWidth()+2, panel.getHeight()+2, 0xB8000000, 0x4C000000, 0xB8FFFFFF);
+		// } else {
+		// 	WItemSlot slot = (WItemSlot)panel;
+		// 	for(int x = 0; x < slot.getWidth()/18; ++x) {
+		// 		for(int y = 0; y < slot.getHeight()/18; ++y) {
+		// 			int index = x + y * (slot.getWidth() / 18);
+		// 			float px = 1 / 64f;
+		// 			if (slot.isBigSlot()) {
+		// 				int sx = (x * 18) + left - 4;
+		// 				int sy = (y * 18) + top - 4;
+		// 				ScreenDrawing.texturedRect(matrices, sx, sy, 26, 26, WItemSlot.SLOT_TEXTURE,
+		// 						18 * px, 0, 44 * px, 26 * px, 0xFF_FFFFFF);
+		// 				if (slot.getFocusedSlot() == index) {
+		// 					ScreenDrawing.texturedRect(matrices, sx, sy, 26, 26, WItemSlot.SLOT_TEXTURE,
+		// 							18 * px, 26 * px, 44 * px, 52 * px, 0xFF_FFFFFF);
+		// 				}
+		// 			} else {
+		// 				int sx = (x * 18) + left;
+		// 				int sy = (y * 18) + top;
+		// 				ScreenDrawing.texturedRect(matrices, sx, sy, 18, 18, WItemSlot.SLOT_TEXTURE,
+		// 						0, 0, 18 * px, 18 * px, 0xFF_FFFFFF);
+		// 				if (slot.getFocusedSlot() == index) {
+		// 					ScreenDrawing.texturedRect(matrices, sx, sy, 18, 18, WItemSlot.SLOT_TEXTURE,
+		// 							0, 26 * px, 18 * px, 44 * px, 0xFF_FFFFFF);
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
 	};
 
 	/**
@@ -152,8 +151,7 @@ public interface BackgroundPainter {
 	 */
 	public static BackgroundPainter createLightDarkVariants(BackgroundPainter light, BackgroundPainter dark) {
 		return (matrices, left, top, panel) -> {
-			if (LibGui.isDarkMode()) dark.paintBackground(matrices, left, top, panel);
-			else light.paintBackground(matrices, left, top, panel);
+			light.paintBackground(matrices, left, top, panel);
 		};
 	}
 }

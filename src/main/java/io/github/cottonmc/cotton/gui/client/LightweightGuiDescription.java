@@ -3,7 +3,7 @@ package io.github.cottonmc.cotton.gui.client;
 import net.minecraft.screen.PropertyDelegate;
 
 import io.github.cottonmc.cotton.gui.GuiDescription;
-import io.github.cottonmc.cotton.gui.ValidatedSlot;
+//import io.github.cottonmc.cotton.gui.ValidatedSlot;
 import io.github.cottonmc.cotton.gui.widget.WGridPanel;
 import io.github.cottonmc.cotton.gui.widget.WLabel;
 import io.github.cottonmc.cotton.gui.widget.WPanel;
@@ -35,7 +35,7 @@ public class LightweightGuiDescription implements GuiDescription {
 
 	@Override
 	public int getTitleColor() {
-		return (LibGui.isDarkMode()) ? darkmodeTitleColor : titleColor;
+		return titleColor;
 	}
 
 	@Override
@@ -65,10 +65,10 @@ public class LightweightGuiDescription implements GuiDescription {
 		}
 	}
 
-	@Override
-	public void addSlotPeer(ValidatedSlot slot) {
-		//NO-OP
-	}
+	// @Override
+	// public void addSlotPeer(ValidatedSlot slot) {
+	// 	//NO-OP
+	// }
 
 	@Override
 	@Nullable

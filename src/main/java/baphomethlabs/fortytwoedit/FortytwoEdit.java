@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Scanner;
 import org.apache.commons.io.FileUtils;
-
 import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
@@ -30,7 +29,6 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import baphomethlabs.fortytwoedit.gui.MagickGui;
-import baphomethlabs.fortytwoedit.gui.framework.MagickScreen;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -45,8 +43,12 @@ public class FortytwoEdit implements ClientModInitializer {
      *  Logical Zoom from https://github.com/LogicalGeekBoy/logical_zoom
      *  Freelook from https://github.com/Celibistrial/freelook
      *  Visible Barriers from https://github.com/AmyMialeeMods/visible-barriers
+     *  OptiFine Cape Editing from https://github.com/dragonostic/of-capes/blob/main/src/main/java/net/drago/ofcapes/mixin/SkinOptionsScreenMixin.java
      *------------------------------------------
      */
+
+    //gui
+    public static KeyBinding magickGuiKey;
 
     // zoom
     public static boolean zoomed = false;
@@ -202,7 +204,7 @@ public class FortytwoEdit implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
 
-        KeyBinding openMagickGui = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.openMagickGui",
+        magickGuiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.openMagickGui",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_J, "ftedit.key.categories.ftedit"));
         KeyBinding zoom = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.zoom",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "ftedit.key.categories.ftedit"));
@@ -231,8 +233,8 @@ public class FortytwoEdit implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
 
             // magickgui
-            if (openMagickGui.wasPressed())
-                MinecraftClient.getInstance().setScreen(new MagickScreen(new MagickGui()));
+            if (magickGuiKey.wasPressed())
+                MinecraftClient.getInstance().setScreen(new MagickGui());
 
             // zoom
             if (zoom.isPressed() && !zoomed) {
@@ -329,17 +331,18 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     private static void drawText(MatrixStack m, float t) {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        TextRenderer renderer = client.textRenderer;
-        int x = 350;
-        int y = 220;
-        if (autoMove)
-            renderer.draw(m, "[Auto Move]", x, y + 5, 0xffffff);
-        if (autoClicker)
-            renderer.draw(m, "[Auto Click]", x, y - 5, 0xffffff);
-        if (randoMode)
-            renderer.draw(m, "[Rando Mode]", x, y - 15, 0xffffff);
-
+        if(autoMove || autoClicker || randoMode) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            TextRenderer renderer = client.textRenderer;
+            int x = 350; // 350;
+            int y = 220; //220;
+            if (autoMove)
+                renderer.draw(m, "[Auto Move]", x, y + 5, 0xffffff);
+            if (autoClicker)
+                renderer.draw(m, "[Auto Click]", x, y - 5, 0xffffff);
+            if (randoMode)
+                renderer.draw(m, "[Rando Mode]", x, y - 15, 0xffffff);
+        }
     }
 
     private static boolean testRandoSlot() {

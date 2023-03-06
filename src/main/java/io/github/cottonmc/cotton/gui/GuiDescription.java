@@ -53,7 +53,7 @@ public interface GuiDescription {
 	public GuiDescription setPropertyDelegate(PropertyDelegate delegate);
 	
 	/** Typical users won't call this. This adds a Slot to Container/Controller-based guis, and does nothing on lightweight guis. */
-	public void addSlotPeer(ValidatedSlot slot);
+	//public void addSlotPeer(ValidatedSlot slot);
 	
 	/** Guis should use this method to add clientside styles and BackgroundPainters to their controls */
 	@Environment(EnvType.CLIENT)

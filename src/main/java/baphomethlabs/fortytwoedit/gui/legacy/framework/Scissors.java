@@ -1,4 +1,4 @@
-package baphomethlabs.fortytwoedit.gui.framework;
+package baphomethlabs.fortytwoedit.gui.legacy.framework;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
