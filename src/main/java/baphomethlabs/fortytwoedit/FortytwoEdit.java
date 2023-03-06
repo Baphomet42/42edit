@@ -9,6 +9,8 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Set;
+
 import org.apache.commons.io.FileUtils;
 import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.option.KeyBinding;
@@ -17,9 +19,13 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.resource.featuretoggle.FeatureSet;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.EntityHitResult;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
@@ -39,7 +45,6 @@ public class FortytwoEdit implements ClientModInitializer {
      *  Incorporated works
      *  
      *  Example Mod from https://github.com/FabricMC/fabric-example-mod
-     *  LibGui from https://github.com/CottonMC/LibGui
      *  Logical Zoom from https://github.com/LogicalGeekBoy/logical_zoom
      *  Freelook from https://github.com/Celibistrial/freelook
      *  Visible Barriers from https://github.com/AmyMialeeMods/visible-barriers
@@ -200,6 +205,28 @@ public class FortytwoEdit implements ClientModInitializer {
 
     //see feature items
     public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE,FeatureFlags.UPDATE_1_20);
+
+    //supersecretsettings
+    private static final Identifier[] SECRETSOUNDS = getSecretSounds();
+    private static Identifier[] getSecretSounds() {
+        Set<Identifier> sounds = Registries.SOUND_EVENT.getIds();
+        ArrayList<Identifier> valid = new ArrayList<>();
+        for(Identifier sound: sounds) {
+            if(sound.getPath().contains("entity.") || sound.getPath().contains("block.") || sound.getPath().contains("weather.") || sound.getPath().contains("item."))
+                valid.add(sound);
+        }
+        Identifier[] arr = new Identifier[valid.size()];
+        return valid.toArray(arr);
+    }
+    public static void secretSound() {
+        if(SECRETSOUNDS != null && SECRETSOUNDS.length > 0) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            int i = (int)(Math.random()*SECRETSOUNDS.length);
+            client.player.playSound(SoundEvent.of(SECRETSOUNDS[i]), SoundCategory.MASTER, 1f, .5f);
+        }
+    }
+
+
 
     @Override
     public void onInitializeClient() {

@@ -11,10 +11,11 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
-    maven {
-        name = "CottonMC"
-        url = "https://server.bbkr.space/artifactory/libs-release"
-    }
+	// Add repositories to retrieve artifacts from in here.
+	// You should only use this when depending on other mods because
+	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
+	// for more information about repositories.
 }
 
 dependencies {
@@ -30,7 +31,6 @@ dependencies {
 	//	paste gradle.properties Fabric Properties and Dependencies and manually update Mod Properties
 	//	loom version set above (from https://github.com/FabricMC/fabric-example-mod)
 	//	update fabric.mod.json depends minecraft version
-	//	paste cottonmc version below
 	//	delete .gradle .vscode bin build run
 	//	delete .gradle .cache from User
 	//	paste new example mod files (rarely needed)
@@ -51,9 +51,6 @@ dependencies {
 	//	Ctrl-P search MC classes starting with #
 	//	Mixin help https://fabricmc.net/wiki/tutorial:mixin_introduction
 
-
-	//	https://github.com/CottonMC/LibGui/releases
-	//modImplementation include("io.github.cottonmc:LibGui:6.5.2+1.19.3")
 	include api("io.github.juuxel:libninepatch:1.1.0")
 
 }

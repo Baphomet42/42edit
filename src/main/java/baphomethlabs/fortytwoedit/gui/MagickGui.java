@@ -85,6 +85,7 @@ public class MagickGui extends GenericScreen {
     protected void btnSuperSecretSettings() {
         final MinecraftClient client = MinecraftClient.getInstance();
         client.gameRenderer.cycleSuperSecretSetting();
+        FortytwoEdit.secretSound();
     }
 
     protected void btnCapes() {
