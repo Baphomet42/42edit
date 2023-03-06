@@ -6,8 +6,8 @@ import net.minecraft.util.Identifier;
 //import io.github.cottonmc.cotton.gui.widget.WItemSlot;
 import io.github.cottonmc.cotton.gui.widget.WWidget;
 import io.github.cottonmc.cotton.gui.widget.data.Texture;
-import juuxel.libninepatch.NinePatch;
-import juuxel.libninepatch.TextureRegion;
+import io.github.juuxel.libninepatch.NinePatch;
+import io.github.juuxel.libninepatch.TextureRegion;
 
 import java.util.function.Consumer;
 

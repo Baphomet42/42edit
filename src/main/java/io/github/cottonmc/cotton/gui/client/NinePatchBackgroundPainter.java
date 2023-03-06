@@ -8,7 +8,7 @@ import net.minecraft.util.Identifier;
 import io.github.cottonmc.cotton.gui.impl.client.NinePatchTextureRendererImpl;
 import io.github.cottonmc.cotton.gui.widget.WWidget;
 import io.github.cottonmc.cotton.gui.widget.data.Texture;
-import juuxel.libninepatch.NinePatch;
+import io.github.juuxel.libninepatch.NinePatch;
 
 import java.util.function.Consumer;
 

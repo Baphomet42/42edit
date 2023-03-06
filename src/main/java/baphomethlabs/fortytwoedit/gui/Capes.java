@@ -53,6 +53,7 @@ public class Capes extends GenericScreen {
     }
 
     protected void btnEditCape() {
+        //from https://github.com/dragonostic/of-capes/blob/main/src/main/java/net/drago/ofcapes/mixin/SkinOptionsScreenMixin.java
         try {
             final MinecraftClient client = MinecraftClient.getInstance();
             BigInteger random1Bi = new BigInteger(128, new Random());

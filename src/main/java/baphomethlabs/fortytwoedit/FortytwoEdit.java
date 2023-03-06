@@ -44,11 +44,10 @@ public class FortytwoEdit implements ClientModInitializer {
     /*------------------------------------------
      *  Incorporated works
      *  
-     *  Example Mod from https://github.com/FabricMC/fabric-example-mod
-     *  Logical Zoom from https://github.com/LogicalGeekBoy/logical_zoom
-     *  Freelook from https://github.com/Celibistrial/freelook
-     *  Visible Barriers from https://github.com/AmyMialeeMods/visible-barriers
-     *  OptiFine Cape Editing from https://github.com/dragonostic/of-capes/blob/main/src/main/java/net/drago/ofcapes/mixin/SkinOptionsScreenMixin.java
+     *  Example Mod from https://github.com/FabricMC/fabric-example-mod Creative Commons Zero v1.0 Universal
+     *  Logical Zoom from https://github.com/LogicalGeekBoy/logical_zoom (com.logicalgeekboy.logical_zoom) MIT License
+     *  Freelook from https://github.com/Celibistrial/freelook (celibistrial.freelook) GNU Affero General Public License v3.0
+     *  Visible Barriers from https://github.com/AmyMialeeMods/visible-barriers (xyz.amymialee.visiblebarriers) Copyright (c) 2022 AmyMialee All rights reserved.
      *------------------------------------------
      */
 

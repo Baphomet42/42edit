@@ -51,8 +51,6 @@ dependencies {
 	//	Ctrl-P search MC classes starting with #
 	//	Mixin help https://fabricmc.net/wiki/tutorial:mixin_introduction
 
-	include api("io.github.juuxel:libninepatch:1.1.0")
-
 }
 
 processResources {

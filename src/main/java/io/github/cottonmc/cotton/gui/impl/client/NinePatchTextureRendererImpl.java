@@ -4,7 +4,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
 import io.github.cottonmc.cotton.gui.client.ScreenDrawing;
-import juuxel.libninepatch.ContextualTextureRenderer;
+import io.github.juuxel.libninepatch.ContextualTextureRenderer;
 
 /**
  * An implementation of LibNinePatch's {@link ContextualTextureRenderer} for identifiers.
