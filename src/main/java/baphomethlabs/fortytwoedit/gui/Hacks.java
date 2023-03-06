@@ -9,7 +9,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.command.EntityDataObject;
 import net.minecraft.entity.Entity;
@@ -27,8 +26,6 @@ import net.minecraft.util.math.GlobalPos;
 public class Hacks extends GenericScreen {
 
     TextFieldWidget txtRando;
-    TextWidget lblBeeCount;
-    TextWidget lblCompareItems;
     
     public Hacks() {}
 
@@ -65,11 +62,6 @@ public class Hacks extends GenericScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.of("Rotate"), button -> this.btnLookR()).dimensions(x+20+40+5,y+22*7+1,40,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Pano"), button -> this.btnPano()).dimensions(x+20+40+5+40+5,y+22*7+1,40,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("View Pano"), button -> this.btnScreenshots()).dimensions(x+20+120+15,y+22*7+1,60,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Copy NBT"), button -> this.btnGetItemData()).dimensions(x+20,y+22*8+1,60,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Compare Items"), button -> this.btnCompareItems()).dimensions(x+20+60+5,y+22*8+1,80,20).build());
-        lblCompareItems = this.addDrawableChild(new TextWidget(x+20+60+5+80,y+22*8+1,0,0,Text.of(""),this.textRenderer));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Bee Count"), button -> this.btnBeeCount()).dimensions(x+20+140+10,y+22*8+1,60,20).build());
-        lblBeeCount = this.addDrawableChild(new TextWidget(x+20+140+10+60,y+22*8+1,0,0,Text.of(""),this.textRenderer));
     }
 
     protected void btnBack() {
@@ -313,46 +305,6 @@ public class Hacks extends GenericScreen {
         File screenshots = new File(client.runDirectory.getAbsolutePath()+"\\screenshots");
         if(screenshots.exists() && screenshots.isDirectory())
             try{ Util.getOperatingSystem().open(screenshots); } catch(Exception e) {}
-    }
-
-    protected void btnGetItemData() {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        if(!client.player.getMainHandStack().isEmpty()) {
-            String itemData = client.player.getMainHandStack().getItem().toString();
-            if(client.player.getMainHandStack().hasNbt())
-                itemData += client.player.getMainHandStack().getNbt().asString();
-            client.player.sendMessage(Text.of(itemData),false);
-            client.keyboard.setClipboard(itemData);
-        }
-    }
-
-    protected void btnCompareItems() {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        if(!client.player.getMainHandStack().isEmpty() && !client.player.getOffHandStack().isEmpty()) {
-            boolean equal = ItemStack.areNbtEqual(client.player.getMainHandStack(),client.player.getOffHandStack());
-            if(equal)
-                lblCompareItems.setMessage(Text.of("\u2611"));
-            else
-                lblCompareItems.setMessage(Text.of("\u2612"));
-        }
-        else
-            lblCompareItems.setMessage(Text.of(""));
-    }
-
-    protected void btnBeeCount() {
-        lblBeeCount.setMessage(Text.of("[0]"));
-        final MinecraftClient client = MinecraftClient.getInstance();
-        ItemStack item = client.player.getMainHandStack();
-        if(!client.player.getMainHandStack().isEmpty() && item.hasNbt() && (item.getItem().toString().equals("beehive") || item.getItem().toString().equals("bee_nest"))) {
-            NbtCompound nbt = item.getNbt();
-            if(nbt.contains("BlockEntityTag") && nbt.get("BlockEntityTag").getType() == NbtElement.COMPOUND_TYPE) {
-                NbtCompound tag = (NbtCompound)nbt.get("BlockEntityTag");
-                if(tag.contains("Bees") && tag.get("Bees").getType() == NbtElement.LIST_TYPE) {
-                    int beeCount = ((NbtList)tag.get("Bees")).size();
-                    lblBeeCount.setMessage(Text.of("["+beeCount+"]"));
-                }
-            }
-        }
     }
     
     @Override

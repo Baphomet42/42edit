@@ -2705,6 +2705,58 @@ public class ItemBuilder extends LightweightGuiDescription {
                 }
             }
         });
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //print item data
+        WButton btnGetItemData = new WButton(new ItemIcon(new ItemStack(Items.NAME_TAG)),Text.of("Copy Item Data"));
+        btnGetItemData.setOnClick(() -> {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(!client.player.getMainHandStack().isEmpty()) {
+                String itemData = client.player.getMainHandStack().getItem().toString();
+                if(client.player.getMainHandStack().hasNbt())
+                    itemData += client.player.getMainHandStack().getNbt().asString();
+                client.player.sendMessage(Text.of(itemData),false);
+                client.keyboard.setClipboard(itemData);
+            }
+        });
+        //compare hand items
+        WButton btnCompareItems = new WButton(new ItemIcon(new ItemStack(Items.SHULKER_BOX)),Text.of("Compare Items"));
+        WLabel lblCompareItems = new WLabel(Text.of(""));
+        btnCompareItems.setOnClick(() -> {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(!client.player.getMainHandStack().isEmpty() && !client.player.getOffHandStack().isEmpty()) {
+                boolean equal = ItemStack.areNbtEqual(client.player.getMainHandStack(),client.player.getOffHandStack());
+                if(equal)
+                    lblCompareItems.setText(Text.of("\u2611"));
+                else
+                    lblCompareItems.setText(Text.of("\u2612"));
+            }
+            else
+                lblCompareItems.setText(Text.of(""));
+        });
+        //get bee count
+        WButton btnBeeCount = new WButton(new ItemIcon(new ItemStack(Items.BEE_NEST)),Text.of("Bee Count"));
+        WLabel lblBeeCount = new WLabel(Text.of(""));
+        btnBeeCount.setOnClick(() -> {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            ItemStack item = client.player.getMainHandStack();
+            if(item.hasNbt() && (item.getItem().toString().equals("beehive") || item.getItem().toString().equals("bee_nest"))) {
+                NbtCompound nbt = item.getNbt();
+                if(nbt.contains("BlockEntityTag") && nbt.get("BlockEntityTag").getType() == NbtElement.COMPOUND_TYPE) {
+                    NbtCompound tag = (NbtCompound)nbt.get("BlockEntityTag");
+                    if(tag.contains("Bees") && tag.get("Bees").getType() == NbtElement.LIST_TYPE) {
+                        int beeCount = ((NbtList)tag.get("Bees")).size();
+                        lblBeeCount.setText(Text.of("["+beeCount+"]"));
+                    }
+                    else
+                        lblBeeCount.setText(Text.of("[0]"));
+                }
+                else
+                    lblBeeCount.setText(Text.of("[0]"));
+            }
+            else
+                lblBeeCount.setText(Text.of("[0]"));
+        });
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //
         tabCustomScroll.add(tabCustomBtnGive,5,5+1,40,20);
         tabCustomScroll.add(tabCustomTxtGive,50,5+1,230-8-50-13-10,22);
@@ -2720,7 +2772,14 @@ public class ItemBuilder extends LightweightGuiDescription {
         tabCustomScroll.add(tabCustomBtnCustomFrom,5,5+1+22*8,40,20);
         tabCustomScroll.add(tabCustomBtnGiveDisabled,5,5+1+22*10,80,20);
         tabCustomScroll.add(tabCustomTxtGiveDisabled,90,5+1+22*10,230-8-50-40-13-10,22);
-        tabCustomScroll.add(tabCustomLblBlank,0,5+1+22*10,0,22+5+1-2);
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        tabCustomScroll.add(btnGetItemData,5,22*11+1+5,120,20);
+        tabCustomScroll.add(btnCompareItems,5,22*12+1+5,120,20);
+        tabCustomScroll.add(lblCompareItems,5+120+5,22*12+1+5+6,60,20);
+        tabCustomScroll.add(btnBeeCount,5,22*13+1+5,100,20);
+        tabCustomScroll.add(lblBeeCount,5+100+5,22*13+1+5+6,60,20);
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        tabCustomScroll.add(tabCustomLblBlank,0,5+1+22*13,0,22+5+1-2);
         WScrollPanel tabCustomScrollPanel = new WScrollPanel(tabCustomScroll);
         tabCustomScrollPanel.setScrollingHorizontally(TriState.FALSE);
         tabCustomScrollPanel.setScrollingVertically(TriState.TRUE);
