@@ -1,6 +1,7 @@
 package baphomethlabs.fortytwoedit;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,13 +11,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Set;
-
 import org.apache.commons.io.FileUtils;
 import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.registry.Registries;
@@ -130,7 +131,6 @@ public class FortytwoEdit implements ClientModInitializer {
         }
     }
 
-    private static boolean clearAtLaunch = false;
     private static ArrayList<String> capeNames = new ArrayList<>(); // all cached names
     private static ArrayList<String> capeNames2 = new ArrayList<>(); // names with capes
 
@@ -198,6 +198,34 @@ public class FortytwoEdit implements ClientModInitializer {
     public static String[] clientCapeList = {"minecon2011","minecon2013","minecon2016","mojang-old","mojang","spartan","christmas"};
     public static String clientUsername = "";
 
+    //skin testing
+    public static boolean showClientSkin = false;
+    public static boolean clientSkinSlim = false;
+    public static String customSkinName = "";
+    public static Identifier customSkinID = new Identifier("42edit:cache/custom_skin");
+    private static NativeImage skin = new NativeImage(64,64,true);
+
+    public static boolean setCustomSkin(File file) {
+        try {
+            FileInputStream inp = new FileInputStream(file);
+            NativeImage skinFile = NativeImage.read(inp);
+            skin = new NativeImage(skinFile.getWidth(),skinFile.getHeight(),true);
+
+            for (int x = 0; x < skinFile.getWidth(); x++)
+                for (int y = 0; y < skinFile.getHeight(); y++)
+                    skin.setColor(x, y, skinFile.getColor(x, y));
+
+            customSkinName = file.getName();
+            inp.close();
+            skinFile.close();
+            final MinecraftClient client = MinecraftClient.getInstance();
+            client.getTextureManager().registerTexture(customSkinID, new NativeImageBackedTexture(skin));
+            return true;
+        } catch(Exception e) {
+            return false;
+        }
+    }
+
     //freelook
     public static boolean isFreeLooking = false;
     private static Perspective lastPerspective;
@@ -252,6 +280,7 @@ public class FortytwoEdit implements ClientModInitializer {
         // custom capes
         final MinecraftClient gameClient = MinecraftClient.getInstance();
         clientUsername = gameClient.getSession().getUsername();
+        clearCapes();
 
         // options
         readOptions();
@@ -323,11 +352,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 client.options.setPerspective(lastPerspective);
             }
 
-            // capes
-            if (!clearAtLaunch) {
-                clearCapes();
-                clearAtLaunch = true;
-            }
+            //capes
             if (capeNames.size() > 0 && MinecraftClient.getInstance().player == null) {
                 clearCapes();
             }

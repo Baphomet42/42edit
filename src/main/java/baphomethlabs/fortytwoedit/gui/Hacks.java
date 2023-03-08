@@ -39,7 +39,7 @@ public class Hacks extends GenericScreen {
             else if((boolean)trackOutput && FortytwoEdit.randoSlots != null)
                 FortytwoEdit.randoMode = true;
         }));
-        this.txtRando = new TextFieldWidget(this.textRenderer,x+105,y+44+1,100,20,Text.of(""));
+        this.txtRando = new TextFieldWidget(this.textRenderer,x+105+1,y+44+1,100-2,20,Text.of(""));
         this.txtRando.setMaxLength(15);
         if(FortytwoEdit.randoSlots != null) {
             String keys = "";
@@ -65,7 +65,7 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnBack() {
-        MinecraftClient.getInstance().setScreen(new MagickGui());
+        client.setScreen(new MagickGui());
     }
 
     protected void btnSetRando() {
@@ -99,7 +99,6 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnGetEntity() {
-        final MinecraftClient client = MinecraftClient.getInstance();
         if (client.player.getAbilities().creativeMode) {
             Iterator<Entity> entities = client.world.getEntities().iterator();
             List<NbtCompound> items = new ArrayList<>();
@@ -176,7 +175,6 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnGetEntityFull() {
-        final MinecraftClient client = MinecraftClient.getInstance();
         if (client.player.getAbilities().creativeMode) {
             Iterator<Entity> entities = client.world.getEntities().iterator();
             List<NbtCompound> items = new ArrayList<>();
@@ -235,7 +233,6 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnFindInvis() {
-        final MinecraftClient client = MinecraftClient.getInstance();
         if (client.player.getAbilities().creativeMode) {
             Iterator<Entity> entities = client.world.getEntities().iterator();
             while (entities.hasNext()) {
@@ -270,7 +267,6 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnDeathPos() {
-        final MinecraftClient client = MinecraftClient.getInstance();
         if(client.player.getLastDeathPos().isPresent()) {
             GlobalPos pos = client.player.getLastDeathPos().get();
             String coords = "Last death [X: "+pos.getPos().getX()+", Y: "+pos.getPos().getY()+", Z: "+pos.getPos().getZ()+"] in "+pos.getDimension().getValue().toString();
@@ -282,12 +278,10 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnLookN() {
-        final MinecraftClient client = MinecraftClient.getInstance();
         client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),180f,0f);
     }
 
     protected void btnLookR() {
-        final MinecraftClient client = MinecraftClient.getInstance();
         float yaw = client.player.getYaw() + 90;
         if(yaw>=360)
             yaw=yaw-360;
@@ -295,13 +289,11 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnPano() {
-        final MinecraftClient client = MinecraftClient.getInstance();
         File location = new File(client.runDirectory.getAbsolutePath());
         client.takePanorama(location,1024,1024);
     }
 
     protected void btnScreenshots() {
-        final MinecraftClient client = MinecraftClient.getInstance();
         File screenshots = new File(client.runDirectory.getAbsolutePath()+"\\screenshots");
         if(screenshots.exists() && screenshots.isDirectory())
             try{ Util.getOperatingSystem().open(screenshots); } catch(Exception e) {}

@@ -1,7 +1,6 @@
 package baphomethlabs.fortytwoedit.gui;
 
 import baphomethlabs.fortytwoedit.FortytwoEdit;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -18,7 +17,7 @@ public class ItemBuilder extends GenericScreen {
     }
 
     protected void btnBack() {
-        MinecraftClient.getInstance().setScreen(new MagickGui());
+        client.setScreen(new MagickGui());
     }
     
     @Override

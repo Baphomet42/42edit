@@ -4,7 +4,6 @@ import java.util.Iterator;
 
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
@@ -33,19 +32,18 @@ public class MagickGui extends GenericScreen {
     }
 
     protected void btnItem() {
-        MinecraftClient.getInstance().setScreen(new ItemBuilder());
+        client.setScreen(new ItemBuilder());
     }
 
     protected void btnItemOld() {//TODO
-        MinecraftClient.getInstance().setScreen(new baphomethlabs.fortytwoedit.gui.legacy.framework.MagickScreen(new baphomethlabs.fortytwoedit.gui.legacy.ItemBuilder()));
+        client.setScreen(new baphomethlabs.fortytwoedit.gui.legacy.framework.MagickScreen(new baphomethlabs.fortytwoedit.gui.legacy.ItemBuilder()));
     }
 
     protected void btnHacks() {
-        MinecraftClient.getInstance().setScreen(new Hacks());
+        client.setScreen(new Hacks());
     }
 
     protected void btnHat() {
-        final MinecraftClient client = MinecraftClient.getInstance();
         if(client.player.getAbilities().creativeMode) {
             ItemStack hand = null;
             ItemStack head = null;
@@ -83,17 +81,16 @@ public class MagickGui extends GenericScreen {
     }
 
     protected void btnSuperSecretSettings() {
-        final MinecraftClient client = MinecraftClient.getInstance();
         client.gameRenderer.cycleSuperSecretSetting();
         FortytwoEdit.secretSound();
     }
 
     protected void btnCapes() {
-        MinecraftClient.getInstance().setScreen(new Capes());
+        client.setScreen(new Capes());
     }
 
     protected void btnAutoClickSettings() {
-        MinecraftClient.getInstance().setScreen(new AutoClick());
+        client.setScreen(new AutoClick());
     }
 
     protected void btnAutoClick() {

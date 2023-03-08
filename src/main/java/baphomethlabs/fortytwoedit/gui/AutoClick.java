@@ -30,14 +30,14 @@ public class AutoClick extends GenericScreen {
             FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,(boolean)trackOutput,FortytwoEdit.attackWait);
         }));
         this.addDrawableChild(ButtonWidget.builder(Text.of("Attack Cooldown"), button -> this.btnAttackCooldown()).dimensions(x+20,y+22*6+1,100,20).build());
-        this.txtAttackCooldown = new TextFieldWidget(this.textRenderer,x+20+100+5,y+22*6+1,40,20,Text.of(""));
+        this.txtAttackCooldown = new TextFieldWidget(this.textRenderer,x+20+100+5+1,y+22*6+1,40-2,20,Text.of(""));
         this.txtAttackCooldown.setMaxLength(4);
         this.txtAttackCooldown.setText(""+FortytwoEdit.attackWait);
         this.addSelectableChild(this.txtAttackCooldown);
     }
 
     protected void btnBack() {
-        MinecraftClient.getInstance().setScreen(new MagickGui());
+        client.setScreen(new MagickGui());
     }
 
     protected void btnAttackCooldown() {

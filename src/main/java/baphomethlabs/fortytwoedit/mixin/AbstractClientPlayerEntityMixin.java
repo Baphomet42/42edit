@@ -31,5 +31,25 @@ public abstract class AbstractClientPlayerEntityMixin {
             cir.setReturnValue(new Identifier("42edit:textures/capes/"+FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]+".png"));
         }
     }
+    
+    @Inject(method="Lnet/minecraft/client/network/AbstractClientPlayerEntity;getSkinTexture()Lnet/minecraft/util/Identifier;",
+        at=@At("RETURN"), cancellable = true)
+    public void getSkinTexture(CallbackInfoReturnable<Identifier> cir) {
+        if(FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && this.getPlayerListEntry().getProfile().getName().equals(FortytwoEdit.clientUsername)) {
+            cir.setReturnValue(FortytwoEdit.customSkinID);
+        }
+    }
+    
+    @Inject(method="Lnet/minecraft/client/network/AbstractClientPlayerEntity;getModel()Ljava/lang/String;",
+        at=@At("RETURN"), cancellable = true)
+    public void getModel(CallbackInfoReturnable<String> cir) {
+        if(FortytwoEdit.showClientSkin && this.getPlayerListEntry().getProfile().getName().equals(FortytwoEdit.clientUsername)) {
+            if(FortytwoEdit.clientSkinSlim)
+                cir.setReturnValue("slim");
+            else
+                cir.setReturnValue("default");
+
+        }
+    }
 
 }
