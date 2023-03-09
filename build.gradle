@@ -31,21 +31,20 @@ dependencies {
 	//	paste gradle.properties Fabric Properties and Dependencies and manually update Mod Properties
 	//	loom version set above (from https://github.com/FabricMC/fabric-example-mod)
 	//	update fabric.mod.json depends minecraft version
-	//	delete .gradle .vscode bin build run
-	//	delete .gradle .cache from User
-	//	paste new example mod files (rarely needed)
-	//	update fabric.mod.json (rarely needed)
-	//	java project clean workspace
-	//	./gradlew genSources	.\gradlew vscode
-	//	./gradlew --refresh-dependencies
+	//	./gradlew --stop
+	//	./gradlew genSources --refresh-dependencies
 	//	./gradlew build
 	//	UPDATE LAUNCHER
 	//	download new fabric API mod (from https://www.curseforge.com/minecraft/mc-mods/fabric-api)
 	//	use fabric installer to get new launcher profile
 	//	copy 42jar from build/libs to mods
 
-	//	ERRORS
-	//	file being used by another process -> ./gradlew --stop
+	//	RARE UPDATES
+	//	delete .gradle .vscode bin build run
+	//	delete .gradle .cache from User
+	//	.\gradlew vscode
+	//	java project clean workspace
+	//	update example mod files
 
 	//	TOOLS
 	//	Ctrl-P search MC classes starting with #

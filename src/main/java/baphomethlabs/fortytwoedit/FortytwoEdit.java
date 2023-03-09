@@ -7,11 +7,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Set;
-import org.apache.commons.io.FileUtils;
 import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
@@ -94,27 +92,6 @@ public class FortytwoEdit implements ClientModInitializer {
         opticapes = false;
         if(opticapesOn)
             opticapes = true;
-        final MinecraftClient client = MinecraftClient.getInstance();
-        if (!client.getResourcePackManager().getEnabledNames().contains("file/§5§lMinekvlt §8- ULTIMATE EDITION"))
-            opticapes = false;
-        else {
-            if (!(new File(client.runDirectory.getAbsolutePath()
-                    + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets")).exists())
-                (new File(client.runDirectory.getAbsolutePath()
-                        + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets")).mkdirs();
-            if (!(new File(client.runDirectory.getAbsolutePath()
-                    + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets\\42edit")).exists())
-                (new File(client.runDirectory.getAbsolutePath()
-                        + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets\\42edit")).mkdirs();
-            if (!(new File(client.runDirectory.getAbsolutePath()
-                    + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets\\42edit\\cache")).exists())
-                (new File(client.runDirectory.getAbsolutePath()
-                        + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets\\42edit\\cache")).mkdirs();
-            if (!(new File(client.runDirectory.getAbsolutePath()
-                    + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets\\42edit\\cache\\capes")).exists())
-                (new File(client.runDirectory.getAbsolutePath()
-                        + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets\\42edit\\cache\\capes")).mkdirs();
-        }
 
         if(opticapes) {
             boolean connect = false;
@@ -145,14 +122,6 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void clearCapes() {
         capeNames.clear();
         capeNames2.clear();
-        final MinecraftClient client = MinecraftClient.getInstance();
-        File capeCacheFolder = new File(client.runDirectory.getAbsolutePath()
-                + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets\\42edit\\cache\\capes");
-        if (capeCacheFolder.exists())
-            try {
-                FileUtils.deleteDirectory(capeCacheFolder);
-            } catch (IOException | IllegalArgumentException e) {
-            }
         checkCapesEnabled();
     }
 
@@ -175,19 +144,19 @@ public class FortytwoEdit implements ClientModInitializer {
             con.setConnectTimeout(500);
             con.setReadTimeout(500);
             NativeImage capeInp = NativeImage.read(con.getInputStream());
+            con.disconnect();
             NativeImage cape = new NativeImage(128, 64, true);
 
             for (int x = 0; x < capeInp.getWidth(); x++)
                 for (int y = 0; y < capeInp.getHeight(); y++)
                     cape.setColor(x, y, capeInp.getColor(x, y));
+
             capeInp.close();
-            cape.writeTo(Path.of(client.runDirectory.getAbsolutePath()
-                    + "\\resourcepacks\\§5§lMinekvlt §8- ULTIMATE EDITION\\assets\\42edit\\cache\\capes\\"
-                    + name.toLowerCase()));
+            client.getTextureManager().registerTexture(new Identifier("42edit:cache/capes/"+name.toLowerCase()), new NativeImageBackedTexture(cape));
             cape.close();
             capeNames2.add(name);
             return true;
-        } catch (IOException e) {
+        } catch (Exception e) {
             return false;
         }
     }
@@ -203,27 +172,28 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean clientSkinSlim = false;
     public static String customSkinName = "";
     public static Identifier customSkinID = new Identifier("42edit:cache/custom_skin");
-    private static NativeImage skin = new NativeImage(64,64,true);
 
     public static boolean setCustomSkin(File file) {
-        try {
-            FileInputStream inp = new FileInputStream(file);
-            NativeImage skinFile = NativeImage.read(inp);
-            skin = new NativeImage(skinFile.getWidth(),skinFile.getHeight(),true);
+        if(file.isFile() && file.getName().endsWith(".png")) {
+            try {
+                FileInputStream inp = new FileInputStream(file);
+                NativeImage skinFile = NativeImage.read(inp);
+                inp.close();
+                NativeImage skin = new NativeImage(skinFile.getWidth(),skinFile.getHeight(),true);
 
-            for (int x = 0; x < skinFile.getWidth(); x++)
-                for (int y = 0; y < skinFile.getHeight(); y++)
-                    skin.setColor(x, y, skinFile.getColor(x, y));
+                for (int x = 0; x < skinFile.getWidth(); x++)
+                    for (int y = 0; y < skinFile.getHeight(); y++)
+                        skin.setColor(x, y, skinFile.getColor(x, y));
 
-            customSkinName = file.getName();
-            inp.close();
-            skinFile.close();
-            final MinecraftClient client = MinecraftClient.getInstance();
-            client.getTextureManager().registerTexture(customSkinID, new NativeImageBackedTexture(skin));
-            return true;
-        } catch(Exception e) {
-            return false;
+                skinFile.close();
+                final MinecraftClient client = MinecraftClient.getInstance();
+                customSkinName = file.getName();
+                client.getTextureManager().registerTexture(customSkinID, new NativeImageBackedTexture(skin));
+                skin.close();
+                return true;
+            } catch(Exception e) {}
         }
+        return false;
     }
 
     //freelook

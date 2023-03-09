@@ -31,12 +31,14 @@ public class Capes extends GenericScreen {
             FortytwoEdit.opticapesOn = (boolean)trackOutput;
             FortytwoEdit.updateOptions();
             FortytwoEdit.clearCapes();
+            this.resize(this.client,this.width,this.height);
         }));
         this.addDrawableChild(ButtonWidget.builder(Text.of("Refresh"), button -> this.btnReloadCapes()).dimensions(x+20+80+5,y+22*2+1,60,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Edit"), button -> this.btnEditCape()).dimensions(x+20+80+5+60+5,y+22*2+1,40,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Custom [On]"), Text.literal("Custom [Off]")).initially(FortytwoEdit.showClientCape).omitKeyText().build(x+20,y+22*3+1,80,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.showClientCape = (boolean)trackOutput;
             FortytwoEdit.updateOptions();
+            this.resize(this.client,this.width,this.height);
         }));
         this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnDecCustom()).dimensions(x+20+80+5,y+22*3+1,15,20).build());
         this.txtCustom = new TextFieldWidget(this.textRenderer,x+20+1+80+5+15,y+22*3+1,90-2,20,Text.of(""));
@@ -47,9 +49,11 @@ public class Capes extends GenericScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnIncCustom()).dimensions(x+20+80+5+15+90,y+22*3+1,15,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Custom [On]"), Text.literal("Custom [Off]")).initially(FortytwoEdit.showClientSkin).omitKeyText().build(x+20,y+22*5+1,80,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.showClientSkin = (boolean)trackOutput;
+            this.resize(this.client,this.width,this.height);
         }));
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("3px"), Text.literal("4px")).initially(FortytwoEdit.clientSkinSlim).omitKeyText().build(x+20+80+5,y+22*5+1,30,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.clientSkinSlim = (boolean)trackOutput;
+            this.resize(this.client,this.width,this.height);
         }));
         this.txtCustomSkin = new TextFieldWidget(this.textRenderer,x+20+1,y+22*6+1,200-2,20,Text.of(""));
         this.txtCustomSkin.setMaxLength(2048);
@@ -66,6 +70,7 @@ public class Capes extends GenericScreen {
         client.player.sendMessage(Text.of("Cleared "+FortytwoEdit.debugCapeNamesSize()+" cached names."),false);
         client.player.sendMessage(Text.of("Deleted "+FortytwoEdit.debugCapeNames2Size()+" cached capes."),false);
         FortytwoEdit.clearCapes();
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnEditCape() {
@@ -78,22 +83,23 @@ public class Capes extends GenericScreen {
             String url = "https://optifine.net/capeChange?u="+client.getSession().getUuid()+"&n="+client.getSession().getUsername()+"&s="+serverId;
             Util.getOperatingSystem().open(url);
         } catch (Exception ex) {}
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnDecCustom() {
         FortytwoEdit.clientCape--;
         if(FortytwoEdit.clientCape<0)
             FortytwoEdit.clientCape=FortytwoEdit.clientCapeList.length-1;
-        txtCustom.setText(FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]);
         FortytwoEdit.updateOptions();
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnIncCustom() {
         FortytwoEdit.clientCape++;
         if(FortytwoEdit.clientCape>=FortytwoEdit.clientCapeList.length)
             FortytwoEdit.clientCape=0;
-        txtCustom.setText(FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]);
         FortytwoEdit.updateOptions();
+        this.resize(this.client,this.width,this.height);
     }
 
     @Override
@@ -104,8 +110,9 @@ public class Capes extends GenericScreen {
                 BufferedImage skin = ImageIO.read(file);
                 if((skin.getWidth()==64 && skin.getHeight()==64) || (skin.getWidth()==128 && skin.getHeight()==128)) {
                     if(FortytwoEdit.setCustomSkin(file)) {
-                        txtCustomSkin.setText(FortytwoEdit.customSkinName);
+                        FortytwoEdit.showClientSkin = true;
                         SystemToast.add(client.getToastManager(), SystemToast.Type.PACK_COPY_FAILURE, Text.of("Custom skin loaded"), Text.of(file.getName()));
+                        this.resize(this.client,this.width,this.height);
                     }
                 }
             }

@@ -38,6 +38,7 @@ public class Hacks extends GenericScreen {
                 FortytwoEdit.randoMode = false;
             else if((boolean)trackOutput && FortytwoEdit.randoSlots != null)
                 FortytwoEdit.randoMode = true;
+            this.resize(this.client,this.width,this.height);
         }));
         this.txtRando = new TextFieldWidget(this.textRenderer,x+105+1,y+44+1,100-2,20,Text.of(""));
         this.txtRando.setMaxLength(15);
@@ -55,6 +56,7 @@ public class Hacks extends GenericScreen {
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Xray [On]"), Text.literal("Xray [Off]")).initially(FortytwoEdit.seeInvis).omitKeyText().build(x+20,y+22*4+1,100,20, Text.of(""), (button, trackOutput) -> {
             client.worldRenderer.reload();
             FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
+            this.resize(this.client,this.width,this.height);
         }));
         this.addDrawableChild(ButtonWidget.builder(Text.of("Find Invis Entities"), button -> this.btnFindInvis()).dimensions(x+20+100+5,y+22*4+1,100,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Death Pos"), button -> this.btnDeathPos()).dimensions(x+20,y+22*5+1,100,20).build());
@@ -95,7 +97,7 @@ public class Hacks extends GenericScreen {
             FortytwoEdit.randoMode = true;
         }
 
-        this.init(client, width, height);
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnGetEntity() {
@@ -172,6 +174,7 @@ public class Hacks extends GenericScreen {
                 client.player.playerScreenHandler.sendContentUpdates();
             }
         }
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnGetEntityFull() {
@@ -230,6 +233,7 @@ public class Hacks extends GenericScreen {
                 client.player.playerScreenHandler.sendContentUpdates();
             }
         }
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnFindInvis() {
@@ -264,6 +268,7 @@ public class Hacks extends GenericScreen {
                 }
             }
         }
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnDeathPos() {
@@ -275,10 +280,12 @@ public class Hacks extends GenericScreen {
         else {
             client.player.sendMessage(Text.of("No death pos recorded"),false);
         }
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnLookN() {
         client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),180f,0f);
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnLookR() {
@@ -286,17 +293,20 @@ public class Hacks extends GenericScreen {
         if(yaw>=360)
             yaw=yaw-360;
         client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),yaw,client.player.getPitch());
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnPano() {
         File location = new File(client.runDirectory.getAbsolutePath());
         client.takePanorama(location,1024,1024);
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnScreenshots() {
         File screenshots = new File(client.runDirectory.getAbsolutePath()+"\\screenshots");
         if(screenshots.exists() && screenshots.isDirectory())
             try{ Util.getOperatingSystem().open(screenshots); } catch(Exception e) {}
+        this.resize(this.client,this.width,this.height);
     }
     
     @Override

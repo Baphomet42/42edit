@@ -78,11 +78,13 @@ public class MagickGui extends GenericScreen {
                 client.player.playerScreenHandler.sendContentUpdates();
             }
         }
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnSuperSecretSettings() {
         client.gameRenderer.cycleSuperSecretSetting();
         FortytwoEdit.secretSound();
+        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnCapes() {
@@ -109,7 +111,7 @@ public class MagickGui extends GenericScreen {
         else {
             FortytwoEdit.updateAutoClick(false,false,true,1500);
         }
-        setAutoClickMessage();
+        this.resize(this.client,this.width,this.height);
     }
 
     private void setAutoClickMessage() {
