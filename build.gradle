@@ -45,6 +45,7 @@ dependencies {
 	//	.\gradlew vscode
 	//	java project clean workspace
 	//	update example mod files
+	//	update FortytwoEdit.FEATURES
 
 	//	TOOLS
 	//	Ctrl-P search MC classes starting with #

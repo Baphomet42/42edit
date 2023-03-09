@@ -61,13 +61,13 @@ public class EntityMixin implements CameraOverriddenEntity {
     }
 
 
-    @Unique
-    public float getYaw() {
-        return this.yaw;
-    }
+    // @Unique
+    // public float getYaw() {
+    //     return this.yaw;
+    // }
 
-    @Unique
-    public float getPitch() {
-        return this.pitch;
-    }
+    // @Unique
+    // public float getPitch() {
+    //     return this.pitch;
+    // }
 }
