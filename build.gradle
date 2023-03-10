@@ -34,6 +34,7 @@ dependencies {
 	//	./gradlew --stop
 	//	./gradlew genSources --refresh-dependencies
 	//	./gradlew build
+	
 	//	UPDATE LAUNCHER
 	//	download new fabric API mod (from https://www.curseforge.com/minecraft/mc-mods/fabric-api)
 	//	use fabric installer to get new launcher profile

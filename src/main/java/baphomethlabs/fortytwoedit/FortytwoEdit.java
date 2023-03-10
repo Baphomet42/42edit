@@ -2,7 +2,6 @@ package baphomethlabs.fortytwoedit;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -18,6 +17,10 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.nbt.NbtByte;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtInt;
 import net.minecraft.registry.Registries;
 import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.resource.featuretoggle.FeatureSet;
@@ -52,6 +55,9 @@ public class FortytwoEdit implements ClientModInitializer {
 
     //gui
     public static KeyBinding magickGuiKey;
+
+    //options
+    private static NbtCompound optionsExtra;
 
     // zoom
     public static boolean zoomed = false;
@@ -355,14 +361,14 @@ public class FortytwoEdit implements ClientModInitializer {
         if(autoMove || autoClicker || randoMode) {
             final MinecraftClient client = MinecraftClient.getInstance();
             TextRenderer renderer = client.textRenderer;
-            int x = 350; // 350;
-            int y = 220; //220;
+            int x = client.getWindow().getScaledWidth()-80;
+            int y = client.getWindow().getScaledHeight()-15;
             if (autoMove)
-                renderer.draw(m, "[Auto Move]", x, y + 5, 0xffffff);
+                renderer.draw(m, "[Auto Move]", x, y - 20, 0xffffff);
             if (autoClicker)
-                renderer.draw(m, "[Auto Click]", x, y - 5, 0xffffff);
+                renderer.draw(m, "[Auto Click]", x, y - 10, 0xffffff);
             if (randoMode)
-                renderer.draw(m, "[Rando Mode]", x, y - 15, 0xffffff);
+                renderer.draw(m, "[Rando Mode]", x, y, 0xffffff);
         }
     }
 
@@ -385,64 +391,122 @@ public class FortytwoEdit implements ClientModInitializer {
 
     private static void readOptions() {
         final MinecraftClient client = MinecraftClient.getInstance();
-        if (!(new File(client.runDirectory.getAbsolutePath() + "\\42options.txt")).exists())
-            try {
-                (new File(client.runDirectory.getAbsolutePath() + "\\42options.txt")).createNewFile();
-            } catch (IOException e) {}
+        String optionsString = "";
         try {
-            File optionsFile = new File(client.runDirectory.getAbsolutePath() + "\\42options.txt");
-            Scanner options = new Scanner(optionsFile);
-            while (options.hasNext()) {
-                String line = options.nextLine();
-                if (line.length()>11 && line.substring(0, 11).equals("customCape:")) {
-                    if (line.substring(11).equals("true"))
-                        showClientCape = true;
-                } else if (line.length()>5 && line.substring(0, 5).equals("cape:")) {
-                    String val = line.substring(5);
-                    try{
-                        clientCape = Integer.parseInt(val);
-                        if(clientCape<0)
-                            clientCape=0;
-                        else if(clientCape>=clientCapeList.length)
-                            clientCape=0;
-                    } catch(NumberFormatException e) {
-                        clientCape=0;
-                    }
-                } else if (line.length()>9 && line.substring(0, 9).equals("optiCape:")) {
-                    if (line.substring(11).equals("false"))
-                        opticapesOn = false;
-                }
+            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
+            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).createNewFile();
+                
+            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt"));
+            if(scan.hasNextLine())
+                optionsString = scan.nextLine();
+            scan.close();
+        } catch (Exception e) {}
+
+        if(BlackMagick.elementFromString(optionsString) != null && BlackMagick.elementFromString(optionsString).getType()==NbtElement.COMPOUND_TYPE) {
+            NbtCompound json = (NbtCompound)BlackMagick.elementFromString(optionsString);
+
+            if(json.contains("CustomCapeToggle",NbtElement.BYTE_TYPE))
+                showClientCape = ((NbtByte)json.get("CustomCapeToggle")).byteValue() == 1;
+            if(json.contains("CustomCape",NbtElement.INT_TYPE))
+                clientCape = ((NbtInt)json.get("CustomCape")).intValue();
+            if(clientCape<0)
+                clientCape = 0;
+            else if(clientCape>=clientCapeList.length)
+                clientCape = 0;
+            if(json.contains("OptiCapeToggle",NbtElement.BYTE_TYPE))
+                opticapesOn = ((NbtByte)json.get("OptiCapeToggle")).byteValue() == 1;
+
+            json.remove("CustomCapeToggle");
+            json.remove("CustomCape");
+            json.remove("OptiCapeToggle");
+
+            if(json.asString().length()>2) {
+                Log.warn(LogCategory.GENERAL,"[42edit] Config file contains unknown keys: "+json.asString());
+                optionsExtra = json;
             }
-            options.close();
-        } catch (FileNotFoundException e) {}
+        }
+        else
+            Log.warn(LogCategory.GENERAL,"[42edit] Creating new config file");
+
+        updateOptions();
     }
 
     public static void updateOptions() {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        if (!(new File(client.runDirectory.getAbsolutePath() + "\\42options.txt")).exists())
-            try {
-                (new File(client.runDirectory.getAbsolutePath() + "\\42options.txt")).createNewFile();
-            } catch (IOException e) {}
         try {
-            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\42options.txt", false);
-            String line = "customCape:";
-            if (showClientCape)
-                line = line + "true";
-            else
-                line = line + "false";
-            writer.write(line);
-            writer.write(System.lineSeparator());
-            line = "cape:" + clientCape;
-            writer.append(line);
-            writer.write(System.lineSeparator());
-            line = "optiCape:";
-            if (opticapesOn)
-                line = line + "true";
-            else
-                line = line + "false";
-            writer.append(line);
+
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
+            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).createNewFile();
+
+            String options = "{CustomCapeToggle:"+ (showClientCape ? "1b" : "0b")
+                +",CustomCape:"+ clientCape
+                +",OptiCapeToggle:"+ (opticapesOn ? "1b" : "0b");
+            
+            if(optionsExtra != null && optionsExtra.asString().length()>2)
+                options += "," + optionsExtra.asString().substring(1,optionsExtra.asString().length()-1);
+
+            options += "}";
+
+            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt", false);
+            writer.write(options);
             writer.close();
-        } catch (IOException e) {}
+
+        } catch (Exception e) {
+            Log.warn(LogCategory.GENERAL,"[42edit] Failed to edit config file");
+        }
+    }
+
+    public static NbtCompound getSavedItems() {
+        final MinecraftClient client = MinecraftClient.getInstance();
+        String savedString = "";
+        try {
+            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
+            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).exists()) {
+                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).createNewFile();
+                FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", false);
+                writer.write("{}");
+                writer.close();
+            }
+                
+            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt"));
+            if(scan.hasNextLine())
+                savedString = scan.nextLine();
+            scan.close();
+        } catch (Exception e) {}
+
+        if(BlackMagick.elementFromString(savedString) != null && BlackMagick.elementFromString(savedString).getType()==NbtElement.COMPOUND_TYPE)
+            return (NbtCompound)BlackMagick.elementFromString(savedString);
+        else
+            Log.warn(LogCategory.GENERAL,"[42edit] Failed to read saved items");
+
+        return null;
+    }
+
+    public static void setSavedItems(NbtCompound nbt) {
+        try {
+
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
+            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).createNewFile();
+
+            String items = "{}";
+            if(nbt != null)
+                items = nbt.asString();
+
+            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", false);
+            writer.write(items);
+            writer.close();
+
+        } catch (Exception e) {
+            Log.warn(LogCategory.GENERAL,"[42edit] Failed to edit saved items file");
+        }
     }
 
 }
