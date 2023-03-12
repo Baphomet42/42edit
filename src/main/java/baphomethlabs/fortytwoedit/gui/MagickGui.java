@@ -131,7 +131,7 @@ public class MagickGui extends GenericScreen {
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.JIGSAW), x+6, y+6);
-        MagickGui.drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("\u00a75\u00a7lBlack Magick by BaphomethLabs"), this.width / 2, y+11, 0xFFFFFF);
+        drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("\u00a75\u00a7lBlack Magick by BaphomethLabs"), this.width / 2, y+11, 0xFFFFFF);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.SPONGE),x+20+2,y+44+1+2);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+20+2,y+22*3+1+2);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.DIAMOND_HELMET),x+20+2,y+22*4+1+2);
@@ -143,11 +143,11 @@ public class MagickGui extends GenericScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (super.keyPressed(keyCode, scanCode, modifiers)) {
-            return true;
-        }
         if (keyCode == KeyBindingHelper.getBoundKeyOf(FortytwoEdit.magickGuiKey).getCode() || keyCode == KeyBindingHelper.getBoundKeyOf(client.options.inventoryKey).getCode()) {
             this.client.setScreen(null);
+            return true;
+        }
+        if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
         return false;

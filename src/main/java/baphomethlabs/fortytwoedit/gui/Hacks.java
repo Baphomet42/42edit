@@ -4,7 +4,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.lwjgl.glfw.GLFW;
+
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
@@ -25,7 +29,8 @@ import net.minecraft.util.math.GlobalPos;
 
 public class Hacks extends GenericScreen {
 
-    TextFieldWidget txtRando;
+    protected TextFieldWidget txtRando;
+    protected boolean unsaved = false;
     
     public Hacks() {}
 
@@ -34,6 +39,7 @@ public class Hacks extends GenericScreen {
         super.init();
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Mix [On]"), Text.literal("Mix [Off]")).initially(FortytwoEdit.randoMode).omitKeyText().build(x+20,y+22*2+1,80,20, Text.of(""), (button, trackOutput) -> {
+            setTxtRando();
             if(!(boolean)trackOutput)
                 FortytwoEdit.randoMode = false;
             else if((boolean)trackOutput && FortytwoEdit.randoSlots != null)
@@ -49,8 +55,8 @@ public class Hacks extends GenericScreen {
             }
             txtRando.setText(keys);
         }
+        this.txtRando.setChangedListener(this::editTxtRando);
         this.addSelectableChild(this.txtRando);
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Set"), button -> this.btnSetRando()).dimensions(x+20+190,y+22*2+1,20,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Get Entity"), button -> this.btnGetEntity()).dimensions(x+20,y+22*3+1,80,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Full Data"), button -> this.btnGetEntityFull()).dimensions(x+20+80+5,y+22*3+1,60,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Xray [On]"), Text.literal("Xray [Off]")).initially(FortytwoEdit.seeInvis).omitKeyText().build(x+20,y+22*4+1,100,20, Text.of(""), (button, trackOutput) -> {
@@ -67,37 +73,35 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnBack() {
+        saveAll();
         client.setScreen(new MagickGui());
     }
 
-    protected void btnSetRando() {
-        if(txtRando.getText() != null && !txtRando.getText().equals("")) {
-            String inp = txtRando.getText();
-            inp = inp.replaceAll("[^1-9]","");
-            if(inp.length()>0) {
-                int[] slots = new int[inp.length()];
-                for(int i=0; i<slots.length; i++) {
-                    try{
-                        slots[i]=Integer.parseInt(""+inp.charAt(i));
-                    }
-                    catch(NumberFormatException ex) {}
-                }
-                FortytwoEdit.randoSlots = slots;
-            }
-            else
-                FortytwoEdit.randoSlots = null;
-        }
-        else
+    protected void editTxtRando(String text) {
+        unsaved = true;
+    }
+
+    protected void setTxtRando() {
+        if(unsaved) {
             FortytwoEdit.randoSlots = null;
+            if(txtRando.getText() != null && !txtRando.getText().equals("")) {
+                String inp = txtRando.getText().replaceAll("[^1-9]","");
+                if(inp.length()>0) {
+                    int[] slots = new int[inp.length()];
+                    for(int i=0; i<slots.length; i++) {
+                        try{
+                            slots[i]=Integer.parseInt(""+inp.charAt(i));
+                        }
+                        catch(NumberFormatException ex) {}
+                    }
+                    FortytwoEdit.randoSlots = slots;
+                }
+            }
 
-        if(FortytwoEdit.randoSlots == null) {
-            FortytwoEdit.randoMode = false;
+            FortytwoEdit.randoMode = (FortytwoEdit.randoSlots!=null);
+            unsaved = false;
+            this.resize(this.client,this.width,this.height);
         }
-        else {
-            FortytwoEdit.randoMode = true;
-        }
-
-        this.resize(this.client,this.width,this.height);
     }
 
     protected void btnGetEntity() {
@@ -308,12 +312,16 @@ public class Hacks extends GenericScreen {
             try{ Util.getOperatingSystem().open(screenshots); } catch(Exception e) {}
         this.resize(this.client,this.width,this.height);
     }
+
+    protected void saveAll() {
+        setTxtRando();
+    }
     
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
         this.drawBackground(matrices, delta, mouseX, mouseY);
-        MagickGui.drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("Hacks"), this.width / 2, y+11, 0xFFFFFF);
+        drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("Hacks"), this.width / 2, y+11, 0xFFFFFF);
         this.txtRando.render(matrices, mouseX, mouseY, delta);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+22*2+1+2);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),x+20+2,y+22*3+1+2);
@@ -324,9 +332,32 @@ public class Hacks extends GenericScreen {
     
     @Override
     public void resize(MinecraftClient client, int width, int height) {
-        String txt = this.txtRando.getText();
+        saveAll();
         this.init(client, width, height);
-        this.txtRando.setText(txt);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            saveAll();
+        }
+        if (keyCode == KeyBindingHelper.getBoundKeyOf(FortytwoEdit.magickGuiKey).getCode() || keyCode == KeyBindingHelper.getBoundKeyOf(client.options.inventoryKey).getCode()) {
+            if(!txtRando.isActive()) {
+                saveAll();
+                this.client.setScreen(null);
+                return true;
+            }
+        }
+        if (super.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void tick() {
+        if(!txtRando.isActive())
+            setTxtRando();
     }
 
 }

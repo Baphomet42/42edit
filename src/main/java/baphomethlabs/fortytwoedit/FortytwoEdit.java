@@ -21,6 +21,7 @@ import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtInt;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.Registries;
 import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.resource.featuretoggle.FeatureSet;
@@ -61,7 +62,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     // zoom
     public static boolean zoomed = false;
-    private boolean smooth = false;
+    private static boolean smooth = false;
 
     // visiblebarriers
     public static boolean seeInvis = false;
@@ -94,7 +95,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean opticapes = true;
     public static boolean opticapesOn = true;
 
-    public static void checkCapesEnabled() {
+    private static void checkCapesEnabled() {
         opticapes = false;
         if(opticapesOn)
             opticapes = true;
@@ -229,6 +230,9 @@ public class FortytwoEdit implements ClientModInitializer {
         }
     }
 
+    //saved items
+    public static final int SAVED_ROWS = 9;
+
 
 
     @Override
@@ -258,8 +262,11 @@ public class FortytwoEdit implements ClientModInitializer {
         clientUsername = gameClient.getSession().getUsername();
         clearCapes();
 
-        // options
+        //options
         readOptions();
+
+        //saved items
+        getSavedItems();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
 
@@ -351,7 +358,10 @@ public class FortytwoEdit implements ClientModInitializer {
         autoAttack = attack;
         attackWait = wait;
         if(wait < 1)
-            attackWait = 1500;
+            attackWait = 1;
+        else if(wait > 9999)
+            attackWait = 9999;
+
 
         KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.useKey), false);
         KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.attackKey), false);
@@ -460,7 +470,7 @@ public class FortytwoEdit implements ClientModInitializer {
         }
     }
 
-    public static NbtCompound getSavedItems() {
+    public static NbtList getSavedItems() {
         final MinecraftClient client = MinecraftClient.getInstance();
         String savedString = "";
         try {
@@ -469,7 +479,7 @@ public class FortytwoEdit implements ClientModInitializer {
             if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).exists()) {
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).createNewFile();
                 FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", false);
-                writer.write("{}");
+                writer.write("[]");
                 writer.close();
             }
                 
@@ -479,15 +489,28 @@ public class FortytwoEdit implements ClientModInitializer {
             scan.close();
         } catch (Exception e) {}
 
-        if(BlackMagick.elementFromString(savedString) != null && BlackMagick.elementFromString(savedString).getType()==NbtElement.COMPOUND_TYPE)
-            return (NbtCompound)BlackMagick.elementFromString(savedString);
-        else
-            Log.warn(LogCategory.GENERAL,"[42edit] Failed to read saved items");
+        if(BlackMagick.elementFromString(savedString) != null && BlackMagick.elementFromString(savedString).getType()==NbtElement.LIST_TYPE) {
+            NbtList nbt = (NbtList)BlackMagick.elementFromString(savedString);
+            if(nbt.size()>0 && nbt.get(0).getType()!=NbtElement.COMPOUND_TYPE) {
+                Log.warn(LogCategory.GENERAL,"[42edit] Failed to read saved items");
+                return null;
+            }
+            while(nbt.size()<9*SAVED_ROWS) {
+                NbtCompound air = new NbtCompound();
+                air.putString("id","air");
+                air.putInt("Count",0);
+                nbt.add(air);
+            }
+            return nbt;
+        }
 
+        Log.warn(LogCategory.GENERAL,"[42edit] Failed to read saved items");
         return null;
     }
 
-    public static void setSavedItems(NbtCompound nbt) {
+    public static NbtList setSavedItems(NbtList nbt) {
+        if(nbt == null)
+            return null;
         try {
 
             final MinecraftClient client = MinecraftClient.getInstance();
@@ -496,17 +519,19 @@ public class FortytwoEdit implements ClientModInitializer {
             if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).exists())
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).createNewFile();
 
-            String items = "{}";
+            String items = "[]";
             if(nbt != null)
                 items = nbt.asString();
 
             FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", false);
             writer.write(items);
             writer.close();
+            return getSavedItems();
 
-        } catch (Exception e) {
-            Log.warn(LogCategory.GENERAL,"[42edit] Failed to edit saved items file");
-        }
+        } catch (Exception e) {}
+
+        Log.warn(LogCategory.GENERAL,"[42edit] Failed to edit saved items file");
+        return null;
     }
 
 }

@@ -13,6 +13,7 @@ public abstract class GenericScreen extends Screen {
     protected int backgroundHeight = 9*22;
     protected int x;
     protected int y;
+    protected static final int LABEL_COLOR = 0x606060;
     
     public GenericScreen() {
         super(NarratorManager.EMPTY);
