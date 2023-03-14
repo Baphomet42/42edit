@@ -2,10 +2,8 @@ package baphomethlabs.fortytwoedit;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-
-import baphomethlabs.fortytwoedit.gui.legacy.ItemBuilder;
+//import baphomethlabs.fortytwoedit.gui.legacy.ItemBuilder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtByte;
@@ -53,7 +51,7 @@ public class BlackMagick {
             if(inp.equals(""))
                 inp="stone";
             if(!client.player.getMainHandStack().isEmpty())
-                item = client.player.getMainHandStack();
+                item = client.player.getMainHandStack().copy();
             else {
                 NbtCompound nbt = new NbtCompound();
                 nbt.putString("id",inp);
@@ -63,7 +61,6 @@ public class BlackMagick {
                     return null;
                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                 client.player.playerScreenHandler.sendContentUpdates();
-                ItemBuilder.updateItem(item);
                 return item;
             }
             NbtCompound nbt = new NbtCompound();
@@ -80,7 +77,6 @@ public class BlackMagick {
                 return item;
             client.interactionManager.clickCreativeStack(newItem, 36 + client.player.getInventory().selectedSlot);
             client.player.playerScreenHandler.sendContentUpdates();
-            ItemBuilder.updateItem(newItem);
             return newItem;
         } else
             return null;
@@ -97,7 +93,7 @@ public class BlackMagick {
         if (client.player.getAbilities().creativeMode) {
             ItemStack item;
             if(!client.player.getMainHandStack().isEmpty())
-                item = client.player.getMainHandStack();
+                item = client.player.getMainHandStack().copy();
             else
                 return null;
             int inp = 1;
@@ -118,7 +114,6 @@ public class BlackMagick {
                 item.setCount(inp);
             client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
             client.player.playerScreenHandler.sendContentUpdates();
-            ItemBuilder.updateItem(item);
             return item;
         } else
             return null;
@@ -158,7 +153,7 @@ public class BlackMagick {
                 if(overrideItem!=null)
                     item = overrideItem;
                 else if(!client.player.getMainHandStack().isEmpty())
-                    item = client.player.getMainHandStack();
+                    item = client.player.getMainHandStack().copy();
                 else
                     return null;
                 NbtCompound nbtTag = new NbtCompound();
@@ -179,7 +174,7 @@ public class BlackMagick {
                 NbtCompound nbtTag = new NbtCompound();
                 if(client.player.getOffHandStack().isEmpty())
                     return null;
-                ItemStack offItem = client.player.getOffHandStack();
+                ItemStack offItem = client.player.getOffHandStack().copy();
                 if(offItem.hasNbt()) {
                     nbtTag=offItem.getNbt().copy();
                     nbtBase.put("tag",nbtTag);
@@ -274,7 +269,7 @@ public class BlackMagick {
         if(overrideItem!=null)
             item = overrideItem;
         else if(!client.player.getMainHandStack().isEmpty())
-            item = client.player.getMainHandStack();
+            item = client.player.getMainHandStack().copy();
         else
             return null;
         if(inp == null)
@@ -309,7 +304,7 @@ public class BlackMagick {
             if(overrideItem!=null)
                 item = overrideItem;
             else if(!client.player.getMainHandStack().isEmpty())
-                item = client.player.getMainHandStack();
+                item = client.player.getMainHandStack().copy();
             else
                 return null;
             if(inp !=null && inpKey.equals("")) {
@@ -351,7 +346,6 @@ public class BlackMagick {
                         item.setNbt(nbt);
                         client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                         client.player.playerScreenHandler.sendContentUpdates();
-                        ItemBuilder.updateItem(item);
                         return item;
                     }
                     int[] type = new int[keyList.size()];
@@ -426,7 +420,6 @@ public class BlackMagick {
                         item.setNbt(nbt);
                         client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                         client.player.playerScreenHandler.sendContentUpdates();
-                        ItemBuilder.updateItem(item);
                         return item;
                     }
                     else {
@@ -614,7 +607,6 @@ public class BlackMagick {
                         item.setNbt(nbt);
                         client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                         client.player.playerScreenHandler.sendContentUpdates();
-                        ItemBuilder.updateItem(item);
                         return item;
                     }
                 }
@@ -625,7 +617,6 @@ public class BlackMagick {
                 item.setNbt(nbt);
                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                 client.player.playerScreenHandler.sendContentUpdates();
-                ItemBuilder.updateItem(item);
                 return item;
             }
             else
@@ -648,7 +639,7 @@ public class BlackMagick {
                 if(overrideItem!=null)
                     item = overrideItem;
                 else if(!client.player.getMainHandStack().isEmpty())
-                    item = client.player.getMainHandStack();
+                    item = client.player.getMainHandStack().copy();
                 else
                     return null;
                 boolean noInpKey = inpKey.equals("");
@@ -656,7 +647,6 @@ public class BlackMagick {
                     item.setNbt(new NbtCompound());
                     client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                     client.player.playerScreenHandler.sendContentUpdates();
-                    ItemBuilder.updateItem(item);
                     return item;
                 }
                 else if(!noInpKey && item.hasNbt()) {
@@ -683,7 +673,6 @@ public class BlackMagick {
                             item.removeSubNbt(keyList.get(keyList.size()-1));
                             client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                             client.player.playerScreenHandler.sendContentUpdates();
-                            ItemBuilder.updateItem(item);
                             return item;
                         }
                         int[] type = new int[keyList.size()];
@@ -741,13 +730,11 @@ public class BlackMagick {
                         item.setNbt(nbt);
                         client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                         client.player.playerScreenHandler.sendContentUpdates();
-                        ItemBuilder.updateItem(item);
                         return item;
                     }
                     item.removeSubNbt(inpKey);
                     client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                     client.player.playerScreenHandler.sendContentUpdates();
-                    ItemBuilder.updateItem(item);
                     return item;
                 }
                 else

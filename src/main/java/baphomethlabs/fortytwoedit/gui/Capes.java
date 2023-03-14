@@ -7,13 +7,16 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
+import org.joml.Quaternionf;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.toast.SystemToast;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 
@@ -21,6 +24,8 @@ public class Capes extends GenericScreen {
 
     protected TextFieldWidget txtCustom;
     protected TextFieldWidget txtCustomSkin;
+    protected int playerX;
+    protected int playerY;
     
     public Capes() {}
 
@@ -59,6 +64,8 @@ public class Capes extends GenericScreen {
         this.txtCustomSkin.setMaxLength(2048);
         this.txtCustomSkin.setEditable(false);
         this.txtCustomSkin.setText(FortytwoEdit.customSkinName.equals("") ? "<Drag and drop skin into this window>" : FortytwoEdit.customSkinName);
+        playerX = x + 240+40;
+        playerY = this.height/2 + 30;
     }
 
     protected void btnBack() {
@@ -117,6 +124,30 @@ public class Capes extends GenericScreen {
             }
         } catch (Exception e) {}
     }
+
+    private static void drawPlayer(MatrixStack matrices, int x, int y, int size, float mouseX, float mouseY, LivingEntity entity) {
+        float f = (float)Math.atan(mouseX / 40.0f);
+        float g = (float)Math.atan(mouseY / 40.0f);
+        Quaternionf quaternionf = new Quaternionf().rotateZ((float)Math.PI);
+        Quaternionf quaternionf2 = new Quaternionf().rotateX(g * 20.0f * ((float)Math.PI / 180));
+        quaternionf.mul(quaternionf2);
+        float h = entity.bodyYaw;
+        float i = entity.getYaw();
+        float j = entity.getPitch();
+        float k = entity.prevHeadYaw;
+        float l = entity.headYaw;
+        entity.bodyYaw = 0.0f + f * 20.0f;
+        entity.setYaw(0.0f + f * 40.0f);
+        entity.setPitch(-g * 20.0f);
+        entity.headYaw = entity.getYaw();
+        entity.prevHeadYaw = entity.getYaw();
+        InventoryScreen.drawEntity(matrices, x, y, size, quaternionf, quaternionf2, entity);
+        entity.bodyYaw = h;
+        entity.setYaw(i);
+        entity.setPitch(j);
+        entity.prevHeadYaw = k;
+        entity.headYaw = l;
+    }
     
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
@@ -127,6 +158,7 @@ public class Capes extends GenericScreen {
         drawTextWithShadow(matrices, this.textRenderer, Text.of("Skin"), x+20,y+7+22*5, 0xFFFFFF);
         this.txtCustom.render(matrices, mouseX, mouseY, delta);
         this.txtCustomSkin.render(matrices, mouseX, mouseY, delta);
+        drawPlayer(matrices, playerX, playerY, 60, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
         super.render(matrices, mouseX, mouseY, delta);
     }
 

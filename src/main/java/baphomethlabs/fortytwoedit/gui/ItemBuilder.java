@@ -3,9 +3,11 @@ package baphomethlabs.fortytwoedit.gui;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.gui.navigation.GuiNavigationPath;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -23,6 +25,10 @@ public class ItemBuilder extends GenericScreen {
     protected Item[] tabsItem = {Items.GOLDEN_SWORD,Items.NAME_TAG,Items.BARREL,Items.ENDER_DRAGON_SPAWN_EGG,
         Items.PLAYER_HEAD,Items.COMMAND_BLOCK,Items.JIGSAW};
     protected ButtonWidget[] tabs = new ButtonWidget[tabsLbl.length];
+    protected int playerX;
+    protected int playerY;
+    protected ItemStack item = null;
+    protected ButtonWidget itemBtn;
     
     public ItemBuilder() {}
 
@@ -48,6 +54,10 @@ public class ItemBuilder extends GenericScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnChangeSlot(false)).dimensions(width/2,y+5,15,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Q"), button -> this.btnThrow(false)).dimensions(width/2 + 15,y+5,15,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Q*"), button -> this.btnThrow(true)).dimensions(width/2 + 30,y+5,20,20).build());
+        playerX = x + 240+40;
+        playerY = y + 40;
+        itemBtn = this.addDrawableChild(ButtonWidget.builder(Text.of(""), button -> this.btnCopyNbt()).dimensions(x+240-20-5,y+5,20,20).build());
+        updateItem();
 
         //general
         if(tab==0) {
@@ -86,6 +96,7 @@ public class ItemBuilder extends GenericScreen {
                     mainhand=client.player.getMainHandStack().copy();
                 if(!client.player.getOffHandStack().isEmpty())
                     offhand=client.player.getOffHandStack().copy();
+
                 if(mainhand!=null && offhand!=null) {
                     client.interactionManager.clickCreativeStack(mainhand, 45);
                     client.interactionManager.clickCreativeStack(offhand, 36 + client.player.getInventory().selectedSlot);
@@ -105,11 +116,19 @@ public class ItemBuilder extends GenericScreen {
                     client.interactionManager.clickCreativeStack(offhand, 36 + client.player.getInventory().selectedSlot);
                     client.player.playerScreenHandler.sendContentUpdates();
                 }
+
             }
-            else if(!client.player.getMainHandStack().isEmpty()) {
-                ItemStack item=client.player.getMainHandStack().copy();
-                client.interactionManager.clickCreativeStack(item, 45);
-                client.player.playerScreenHandler.sendContentUpdates();
+            else {
+                if(!client.player.getMainHandStack().isEmpty()) {
+                    ItemStack item=client.player.getMainHandStack().copy();
+                    client.interactionManager.clickCreativeStack(item, 45);
+                    client.player.playerScreenHandler.sendContentUpdates();
+                }
+                else if(!client.player.getOffHandStack().isEmpty()) {
+                    ItemStack item=client.player.getOffHandStack().copy();
+                    client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
+                    client.player.playerScreenHandler.sendContentUpdates();
+                }
             }
         }
         unsel = true;
@@ -148,6 +167,113 @@ public class ItemBuilder extends GenericScreen {
         tab = i;
         this.resize(this.client,this.width,this.height);
     }
+
+    protected void btnCopyNbt() {
+        if(client.player.getMainHandStack() != null && !client.player.getMainHandStack().isEmpty()) {
+            String itemData = client.player.getMainHandStack().getItem().toString();
+            if(client.player.getMainHandStack().hasNbt())
+                itemData += client.player.getMainHandStack().getNbt().asString();
+            client.player.sendMessage(Text.of(itemData),false);
+            client.keyboard.setClipboard(itemData);
+        }
+        unsel = true;
+    }
+    
+    private void updateItem() {
+        client.player.playerScreenHandler.sendContentUpdates();
+        updateItem(client.player.getMainHandStack().copy());
+    }
+
+    private void updateItem(ItemStack i) {
+        client.player.playerScreenHandler.sendContentUpdates();
+        item = i.copy();
+        if(item==null || item.isEmpty()) {
+            itemBtn.active = false;
+            itemBtn.setTooltip(Tooltip.of(Text.of("")));
+        }
+        else {
+            itemBtn.active = true;
+
+            String itemData = "";
+            if(item.hasNbt()) {
+                itemData += item.getNbt().asString();
+            }
+            //remove SkullOwner Properties
+            while(itemData.contains("Properties:{textures:")) {
+                int propertiesIndex = itemData.indexOf("Properties:{textures:");
+                String firstHalf = itemData.substring(0,propertiesIndex)+"Properties:{...}";
+                String secondHalf = itemData.substring(propertiesIndex+21);
+                int bracketCount = 1;
+                int nextOpenBracket;
+                int nextCloseBracket;
+                while(bracketCount!=0 && secondHalf.length()>0) {
+                    nextOpenBracket = secondHalf.indexOf('{');
+                    nextCloseBracket = secondHalf.indexOf('}');
+                    if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
+                        bracketCount++;
+                        secondHalf = secondHalf.substring(nextOpenBracket+1);
+                    }
+                    else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
+                        bracketCount--;
+                        secondHalf = secondHalf.substring(nextCloseBracket+1);
+                    }
+                    else
+                        secondHalf = "";
+                }
+                itemData = firstHalf + secondHalf;
+            }
+            //remove SkullOwner UUID
+            while(itemData.contains("Id:[I;")) {
+                int idIndex = itemData.indexOf("Id:[I;");
+                String firstHalf = itemData.substring(0,idIndex)+"Id:[...]";
+                String secondHalf = itemData.substring(idIndex+6);
+                int bracketCount = 1;
+                int nextOpenBracket;
+                int nextCloseBracket;
+                while(bracketCount!=0 && secondHalf.length()>0) {
+                    nextOpenBracket = secondHalf.indexOf('[');
+                    nextCloseBracket = secondHalf.indexOf(']');
+                    if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
+                        bracketCount++;
+                        secondHalf = secondHalf.substring(nextOpenBracket+1);
+                    }
+                    else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
+                        bracketCount--;
+                        secondHalf = secondHalf.substring(nextCloseBracket+1);
+                    }
+                    else
+                        secondHalf = "";
+                }
+                itemData = firstHalf + secondHalf;
+            }
+            //remove SkullOwnerOrig
+            while(itemData.contains("SkullOwnerOrig:[I;")) {
+                int origIndex = itemData.indexOf("SkullOwnerOrig:[I;");
+                String firstHalf = itemData.substring(0,origIndex)+"\u00a74\u26a0\u00a7rSkullOwnerOrig:[...]";
+                String secondHalf = itemData.substring(origIndex+18);
+                int bracketCount = 1;
+                int nextOpenBracket;
+                int nextCloseBracket;
+                while(bracketCount!=0 && secondHalf.length()>0) {
+                    nextOpenBracket = secondHalf.indexOf('[');
+                    nextCloseBracket = secondHalf.indexOf(']');
+                    if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
+                        bracketCount++;
+                        secondHalf = secondHalf.substring(nextOpenBracket+1);
+                    }
+                    else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
+                        bracketCount--;
+                        secondHalf = secondHalf.substring(nextCloseBracket+1);
+                    }
+                    else
+                        secondHalf = "";
+                }
+                itemData = firstHalf + secondHalf;
+            }
+            
+            itemBtn.setTooltip(Tooltip.of(Text.of(item.getItem().toString()+itemData)));
+        }
+    }
     
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
@@ -155,6 +281,8 @@ public class ItemBuilder extends GenericScreen {
         this.drawBackground(matrices, delta, mouseX, mouseY);
         for(int i=0; i<tabsItem.length; i++)
 		    this.itemRenderer.renderInGui(matrices, new ItemStack(tabsItem[i]),x-TAB_SIZE+(TAB_SIZE/2-8),y+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*i+(TAB_SIZE/2-8));
+        InventoryScreen.drawEntity(matrices, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
+        this.itemRenderer.renderInGui(matrices, item, x+240-20-5+2, y+5+2);
         super.render(matrices, mouseX, mouseY, delta);
     }
 
@@ -172,6 +300,7 @@ public class ItemBuilder extends GenericScreen {
 
     @Override
     public void tick() {
+        updateItem();
         if(unsel) {
             GuiNavigationPath guiNavigationPath = this.getFocusedPath();
             if (guiNavigationPath != null) {
