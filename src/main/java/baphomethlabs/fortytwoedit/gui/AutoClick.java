@@ -40,7 +40,7 @@ public class AutoClick extends GenericScreen {
         this.txtAttackCooldown.setMaxLength(4);
         this.txtAttackCooldown.setText(""+FortytwoEdit.attackWait);
         this.txtAttackCooldown.setChangedListener(this::editTxtAttackCooldown);
-        this.addSelectableChild(this.txtAttackCooldown);
+        this.addDrawableChild(this.txtAttackCooldown);
     }
 
     protected void btnBack() {
@@ -77,7 +77,6 @@ public class AutoClick extends GenericScreen {
         this.renderBackground(matrices);
         this.drawBackground(matrices, delta, mouseX, mouseY);
         drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("Auto Clicker"), this.width / 2, y+11, 0xFFFFFF);
-        this.txtAttackCooldown.render(matrices, mouseX, mouseY, delta);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.FISHING_ROD),x+20+2,y+44+1+2);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.NETHERITE_PICKAXE),x+20+2,y+22*3+1+2);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+22*4+1+2);

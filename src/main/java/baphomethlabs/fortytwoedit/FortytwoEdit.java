@@ -17,6 +17,7 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -229,6 +230,18 @@ public class FortytwoEdit implements ClientModInitializer {
             client.player.playSound(SoundEvent.of(SECRETSOUNDS[i]), SoundCategory.MASTER, 1f, .5f);
         }
     }
+    
+    //items
+    public static final ItemStack HEAD42 =
+        ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;456917768,-717075144,-1332545803,-1234799884],"+
+        "Name:\"42Richtofen42\",Properties:{textures:[{Value:\"ewogICJ0aW1lc3RhbXAiIDogMTY3MzkxMzQ0ODkzNCwKICAicHJvZmlsZUlkIiA6ICIxYjNjMDMwOGQ1NDI0ZDM4YjA5MmY2"+
+        "ZjViNjY2NzJmNCIsCiAgInByb2ZpbGVOYW1lIiA6ICI0MlJpY2h0b2ZlbjQyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogIC"+
+        "AgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2U0OWI2OWI1ZTczNWViNTIyYjI0YzY5NzM1NDlkZGE4MzNiMTVkOTFiODc0MzU2NGNmYjE3ZDBmOTYxYzBm"+
+        "NTQiCiAgICB9LAogICAgIkNBUEUiIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzIzNDBjMGUwM2RkMjRhMTFiMTVhOGIzM2MyYTdlOWUzMm"+
+        "FiYjIwNTFiMjQ4MWQwYmE3ZGVmZDYzNWNhN2E5MzMiCiAgICB9CiAgfQp9\"}]}}}}"));
+    public static final ItemStack BANNER42 =
+        ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:red_banner,Count:1,tag:{BlockEntityTag:{Patterns:[{Color:15,Pattern:\"cbo\"},"+
+        "{Color:15,Pattern:\"bri\"},{Color:14,Pattern:\"bt\"},{Color:15,Pattern:\"bt\"},{Color:10,Pattern:\"flo\"},{Color:15,Pattern:\"gra\"}],id:\"minecraft:banner\"}}}"));
 
     //saved items
     public static final int SAVED_ROWS = 9;

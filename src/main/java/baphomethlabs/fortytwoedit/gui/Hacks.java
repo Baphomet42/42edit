@@ -56,7 +56,7 @@ public class Hacks extends GenericScreen {
             txtRando.setText(keys);
         }
         this.txtRando.setChangedListener(this::editTxtRando);
-        this.addSelectableChild(this.txtRando);
+        this.addDrawableChild(this.txtRando);
         this.addDrawableChild(ButtonWidget.builder(Text.of("Get Entity"), button -> this.btnGetEntity()).dimensions(x+20,y+22*3+1,80,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Full Data"), button -> this.btnGetEntityFull()).dimensions(x+20+80+5,y+22*3+1,60,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Xray [On]"), Text.literal("Xray [Off]")).initially(FortytwoEdit.seeInvis).omitKeyText().build(x+20,y+22*4+1,100,20, Text.of(""), (button, trackOutput) -> {
@@ -134,7 +134,7 @@ public class Hacks extends GenericScreen {
                         nbtEntityTag.remove("Health");
                     }
                     else {
-                        nbt.putString("id","bat_spawn_egg");
+                        nbt.putString("id","ender_dragon_spawn_egg");
                         nbtEntityTag.putString("id",current.getType().toString().replace("entity.minecraft.",""));
                         NbtCompound nbtDisplay = new NbtCompound();
                         nbtTag.put("display",nbtDisplay);
@@ -207,7 +207,7 @@ public class Hacks extends GenericScreen {
                         nbt.putString("id","armor_stand");
                     }
                     else {
-                        nbt.putString("id","bat_spawn_egg");
+                        nbt.putString("id","ender_dragon_spawn_egg");
                         nbtEntityTag.putString("id",current.getType().toString().replace("entity.minecraft.",""));
                         NbtCompound nbtDisplay = new NbtCompound();
                         nbtTag.put("display",nbtDisplay);
@@ -322,7 +322,6 @@ public class Hacks extends GenericScreen {
         this.renderBackground(matrices);
         this.drawBackground(matrices, delta, mouseX, mouseY);
         drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("Hacks"), this.width / 2, y+11, 0xFFFFFF);
-        this.txtRando.render(matrices, mouseX, mouseY, delta);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+22*2+1+2);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),x+20+2,y+22*3+1+2);
 		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.BARRIER),x+20+2,y+22*4+1+2);

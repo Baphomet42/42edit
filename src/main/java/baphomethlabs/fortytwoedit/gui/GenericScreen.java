@@ -9,6 +9,7 @@ import net.minecraft.util.Identifier;
 public abstract class GenericScreen extends Screen {
 
     private static final Identifier TEXTURE = new Identifier("42edit", "textures/generic_gui.png");
+    private static final Identifier TEXTURE1 = new Identifier("42edit", "textures/nbt_gui.png");
     protected int backgroundWidth = 12*20;
     protected int backgroundHeight = 9*22;
     protected int x;
@@ -27,7 +28,14 @@ public abstract class GenericScreen extends Screen {
     }
     
     protected void drawBackground(MatrixStack matrices, float delta, int mouseX, int mouseY) {
-        RenderSystem.setShaderTexture(0, TEXTURE);
+        drawBackground(matrices, delta, mouseX, mouseY, 0);
+    }
+    
+    protected void drawBackground(MatrixStack matrices, float delta, int mouseX, int mouseY, int gui) {
+        if(gui==0)
+            RenderSystem.setShaderTexture(0, TEXTURE);
+        else if(gui==1)
+            RenderSystem.setShaderTexture(0, TEXTURE1);
         int i = this.x;
         int j = (this.height - this.backgroundHeight) / 2;
         GenericScreen.drawTexture(matrices, i, j, 0, 0, this.backgroundWidth, this.backgroundHeight);
