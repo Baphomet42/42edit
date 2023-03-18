@@ -6,6 +6,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 //import baphomethlabs.fortytwoedit.gui.legacy.ItemBuilder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtByteArray;
 import net.minecraft.nbt.NbtCompound;
@@ -47,37 +48,45 @@ public class BlackMagick {
     public static ItemStack setId(String inp) {
         final MinecraftClient client = MinecraftClient.getInstance();
         if (client.player.getAbilities().creativeMode) {
-            ItemStack item;
-            if(inp.equals(""))
-                inp="stone";
-            if(!client.player.getMainHandStack().isEmpty())
-                item = client.player.getMainHandStack().copy();
-            else {
-                NbtCompound nbt = new NbtCompound();
-                nbt.putString("id",inp);
-                nbt.putInt("Count",1);
-                item = ItemStack.fromNbt(nbt);
-                if(item.isEmpty())
-                    return null;
+            if(inp.equals("air")) {
+                ItemStack item = new ItemStack(Items.AIR);
                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                 client.player.playerScreenHandler.sendContentUpdates();
                 return item;
             }
-            NbtCompound nbt = new NbtCompound();
-            NbtCompound nbtTag = new NbtCompound();
-            int count = item.getCount();
-            if(item.hasNbt()) {
-                nbtTag=item.getNbt().copy();
-                nbt.put("tag",nbtTag);
+            else {
+                ItemStack item;
+                if(inp.equals(""))
+                    inp="stone";
+                if(!client.player.getMainHandStack().isEmpty())
+                    item = client.player.getMainHandStack().copy();
+                else {
+                    NbtCompound nbt = new NbtCompound();
+                    nbt.putString("id",inp);
+                    nbt.putInt("Count",1);
+                    item = ItemStack.fromNbt(nbt);
+                    if(item.isEmpty())
+                        return null;
+                    client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
+                    client.player.playerScreenHandler.sendContentUpdates();
+                    return item;
+                }
+                NbtCompound nbt = new NbtCompound();
+                NbtCompound nbtTag = new NbtCompound();
+                int count = item.getCount();
+                if(item.hasNbt()) {
+                    nbtTag=item.getNbt().copy();
+                    nbt.put("tag",nbtTag);
+                }
+                nbt.putString("id",inp);
+                nbt.putInt("Count",count);
+                ItemStack newItem = ItemStack.fromNbt(nbt);
+                if(newItem.isEmpty())
+                    return item;
+                client.interactionManager.clickCreativeStack(newItem, 36 + client.player.getInventory().selectedSlot);
+                client.player.playerScreenHandler.sendContentUpdates();
+                return newItem;
             }
-            nbt.putString("id",inp);
-            nbt.putInt("Count",count);
-            ItemStack newItem = ItemStack.fromNbt(nbt);
-            if(newItem.isEmpty())
-                return item;
-            client.interactionManager.clickCreativeStack(newItem, 36 + client.player.getInventory().selectedSlot);
-            client.player.playerScreenHandler.sendContentUpdates();
-            return newItem;
         } else
             return null;
     }
@@ -151,7 +160,7 @@ public class BlackMagick {
             if(keyList.get(0).equals("0:")) {
                 ItemStack item;
                 if(overrideItem!=null)
-                    item = overrideItem;
+                    item = overrideItem.copy();
                 else if(!client.player.getMainHandStack().isEmpty())
                     item = client.player.getMainHandStack().copy();
                 else
@@ -267,7 +276,7 @@ public class BlackMagick {
         MinecraftClient client = MinecraftClient.getInstance();
         ItemStack item;
         if(overrideItem!=null)
-            item = overrideItem;
+            item = overrideItem.copy();
         else if(!client.player.getMainHandStack().isEmpty())
             item = client.player.getMainHandStack().copy();
         else
@@ -302,7 +311,7 @@ public class BlackMagick {
         if (client.player.getAbilities().creativeMode) {
             ItemStack item;
             if(overrideItem!=null)
-                item = overrideItem;
+                item = overrideItem.copy();
             else if(!client.player.getMainHandStack().isEmpty())
                 item = client.player.getMainHandStack().copy();
             else
@@ -310,6 +319,8 @@ public class BlackMagick {
             if(inp !=null && inpKey.equals("")) {
                 if(inp.getType()==NbtElement.COMPOUND_TYPE) {
                     item.setNbt((NbtCompound)inp);
+                    client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
+                    client.player.playerScreenHandler.sendContentUpdates();
                     return item;
                 }
             }
@@ -627,7 +638,10 @@ public class BlackMagick {
     }
 
 
+
     
+
+
     //deletes nbt at specified path and returns updated item
     //if no path given, deletes all nbt
     //if path not found, nothing changes
@@ -637,7 +651,7 @@ public class BlackMagick {
             if (client.player.getAbilities().creativeMode) {
                 ItemStack item;
                 if(overrideItem!=null)
-                    item = overrideItem;
+                    item = overrideItem.copy();
                 else if(!client.player.getMainHandStack().isEmpty())
                     item = client.player.getMainHandStack().copy();
                 else
@@ -744,6 +758,383 @@ public class BlackMagick {
                 return null;
     }
 
+
+
+
+
+    
+    //return banner item from char and colors (and sets item)
+    //if invalid char, returns null and sets item to baseColor banner with no nbt
+    public static ItemStack createBanner(int baseColor, int charColor, String text, String baseColorString, String charColorString) {
+        ItemStack item = BlackMagick.setId(baseColorString+"_banner");
+        BlackMagick.removeNbt(item,"");
+        switch(text.substring(0,1)) {
+            case "A": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("mr"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("ms"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
+            case "B": item = BlackMagick.setId(charColorString+"_banner");
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("cbo"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("mc"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ms"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "C": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("mr"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "D": item = BlackMagick.setId(charColorString+"_banner");
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("mr"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("cbo"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("vh"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "E": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ms"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
+            case "F": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ms"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "G": item = BlackMagick.setId(charColorString+"_banner");
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("vh"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hh"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
+            case "H": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ms"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
+            case "I": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("cs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
+            case "J": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hh"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "K": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("drs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hh"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("dls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "L": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("vh"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bo"));break;
+            case "M": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("tt"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("tts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "N": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("drs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
+            case "O": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "P": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hhb"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ms"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
+            case "Q": item = BlackMagick.setId(charColorString+"_banner");
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("mr"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("br"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
+            case "R": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hhb"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("drs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
+            case "S": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("mr"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("drs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("cbo"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
+            case "T": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("cs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bo"));break;
+            case "U": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
+            case "V": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("rd"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("dls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
+            case "W": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("bt"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "X": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("drs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("dls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bo"));break;
+            case "Y": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("drs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hhb"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("dls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
+            case "Z": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("dls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
+            case "0": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("mr"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
+            case "1": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("tl"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("cbo"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("cs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "2": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("dls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("cbo"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "3": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ms"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("cbo"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/6:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/6:/Pattern",NbtString.of("bo"));break;
+            case "4": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hhb"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ms"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "5": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("mr"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("drs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
+            case "6": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hh"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("ms"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/6:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/6:/Pattern",NbtString.of("bo"));break;
+            case "7": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("dls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bo"));break;
+            case "8": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("mr"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("drs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("dls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
+            case "9": BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hhb"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("ms"));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
+                BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
+            default: return null;
+        }
+        return item;
+    }
 
 
 }
