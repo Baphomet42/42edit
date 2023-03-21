@@ -21,7 +21,6 @@ public class MagickGui extends GenericScreen {
     protected void init() {
         super.init();
         this.addDrawableChild(ButtonWidget.builder(Text.of("42edit..."), button -> this.btnItem()).dimensions(x+20,y+44+1,80,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Elder..."), button -> this.btnItemOld()).dimensions(x+20+80+5,y+44+1,80,20).build());//TODO
         this.addDrawableChild(ButtonWidget.builder(Text.of("Hacks..."), button -> this.btnHacks()).dimensions(x+20,y+66+1,80,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Hat"), button -> this.btnHat()).dimensions(x+20,y+22*4+1,60,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Super Secret Settings..."), button -> this.btnSuperSecretSettings()).dimensions(x+20,y+22*5+1,165,20).build());
@@ -33,10 +32,6 @@ public class MagickGui extends GenericScreen {
 
     protected void btnItem() {
         client.setScreen(new ItemBuilder());
-    }
-
-    protected void btnItemOld() {//TODO
-        client.setScreen(new baphomethlabs.fortytwoedit.gui.legacy.framework.MagickScreen(new baphomethlabs.fortytwoedit.gui.legacy.ItemBuilder()));
     }
 
     protected void btnHacks() {

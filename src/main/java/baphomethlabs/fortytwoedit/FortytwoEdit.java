@@ -242,6 +242,11 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final ItemStack BANNER42 =
         ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:red_banner,Count:1,tag:{BlockEntityTag:{Patterns:[{Color:15,Pattern:\"cbo\"},"+
         "{Color:15,Pattern:\"bri\"},{Color:14,Pattern:\"bt\"},{Color:15,Pattern:\"bt\"},{Color:10,Pattern:\"flo\"},{Color:15,Pattern:\"gra\"}],id:\"minecraft:banner\"}}}"));
+    public static final ItemStack UNKNOWN_ITEM =
+        ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;456917768,-717075144,-1332545803,-1234799884],"+
+        "Properties:{textures:[{Value:\"ewogICJ0aW1lc3RhbXAiIDogMTY3OTM4NTI5MzU1NywKICAicHJvZmlsZUlkIiA6ICIxYjNjMDMwOGQ1NDI0ZDM4YjA5MmY2ZjViNjY2NzJmNCIsCiAgInB"+
+        "yb2ZpbGVOYW1lIiA6ICI0MlJpY2h0b2ZlbjQyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwO"+
+        "i8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2FlMTgyMzY3MTE5NjMxMzE3NjkyMzQzNzg4Y2Q1Yzg1NGMxM2I0NDlkMzZlNjIyYjg1NTRhNTYzOGVkMzg1OTMiCiAgICB9CiAgfQp9\"}]}}}}"));
 
     //saved items
     public static final int SAVED_ROWS = 9;
@@ -514,6 +519,8 @@ public class FortytwoEdit implements ClientModInitializer {
                 air.putInt("Count",0);
                 nbt.add(air);
             }
+            if(nbt.size()>9*SAVED_ROWS)
+                Log.warn(LogCategory.GENERAL,"[42edit] Saved items file outdated");
             return nbt;
         }
 

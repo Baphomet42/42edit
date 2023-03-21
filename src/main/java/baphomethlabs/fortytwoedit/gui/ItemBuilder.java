@@ -17,6 +17,7 @@ import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.EditBoxWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -59,6 +60,9 @@ public class ItemBuilder extends GenericScreen {
     private final ArrayList<ArrayList<NbtWidget>> widgets = new ArrayList<ArrayList<NbtWidget>>();
     private final Set<ClickableWidget> unsavedTxtWidgets = Sets.newHashSet();
     private final Set<ClickableWidget> allTxtWidgets = Sets.newHashSet();
+    public boolean savedModeSet = false;
+    private NbtList savedItems = null;
+    private boolean savedError = false;
     public final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
     
     public ItemBuilder() {}
@@ -103,7 +107,7 @@ public class ItemBuilder extends GenericScreen {
             this.tabWidget.setRenderHorizontalShadows(false);
             this.addDrawableChild(this.tabWidget);
         }
-        else {
+        if(tab == 3) {
             if(noScrollWidgets.get(3).size()>=3) {
                 noScrollWidgets.get(3).get(0).setX(x+15-3);
                 noScrollWidgets.get(3).get(0).setY(y+35);
@@ -112,8 +116,18 @@ public class ItemBuilder extends GenericScreen {
                 noScrollWidgets.get(3).get(2).setX(x+15-3+5+60);
                 noScrollWidgets.get(3).get(2).setY(y+35+22*6+1);
             }
-            for(int i=0; i<noScrollWidgets.get(tab).size(); i++)
-                this.addDrawableChild(noScrollWidgets.get(tab).get(i));
+            for(int i=0; i<noScrollWidgets.get(3).size(); i++)
+                this.addDrawableChild(noScrollWidgets.get(3).get(i));
+        }
+        if(tab == 4) {
+            if(savedItems == null)
+                updateSaved();
+            if(noScrollWidgets.get(4).size()>=1) {
+                noScrollWidgets.get(4).get(0).setX(x+15-3);
+                noScrollWidgets.get(4).get(0).setY(y+35+1);
+            }
+            for(int i=0; i<noScrollWidgets.get(4).size(); i++)
+                this.addDrawableChild(noScrollWidgets.get(4).get(i));
         }
 
     }
@@ -221,89 +235,11 @@ public class ItemBuilder extends GenericScreen {
         item = client.player.getMainHandStack().copy();
         if(item==null || item.isEmpty()) {
             itemBtn.active = false;
-            itemBtn.setTooltip(Tooltip.of(Text.of("")));
+            itemBtn.setTooltip(null);
         }
         else {
-            itemBtn.active = true;
-
-            String itemData = "";
-            if(item.hasNbt()) {
-                itemData += item.getNbt().asString();
-            }
-            //remove SkullOwner Properties
-            while(itemData.contains("Properties:{textures:")) {
-                int propertiesIndex = itemData.indexOf("Properties:{textures:");
-                String firstHalf = itemData.substring(0,propertiesIndex)+"Properties:{...}";
-                String secondHalf = itemData.substring(propertiesIndex+21);
-                int bracketCount = 1;
-                int nextOpenBracket;
-                int nextCloseBracket;
-                while(bracketCount!=0 && secondHalf.length()>0) {
-                    nextOpenBracket = secondHalf.indexOf('{');
-                    nextCloseBracket = secondHalf.indexOf('}');
-                    if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
-                        bracketCount++;
-                        secondHalf = secondHalf.substring(nextOpenBracket+1);
-                    }
-                    else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
-                        bracketCount--;
-                        secondHalf = secondHalf.substring(nextCloseBracket+1);
-                    }
-                    else
-                        secondHalf = "";
-                }
-                itemData = firstHalf + secondHalf;
-            }
-            //remove SkullOwner UUID
-            while(itemData.contains("Id:[I;")) {
-                int idIndex = itemData.indexOf("Id:[I;");
-                String firstHalf = itemData.substring(0,idIndex)+"Id:[...]";
-                String secondHalf = itemData.substring(idIndex+6);
-                int bracketCount = 1;
-                int nextOpenBracket;
-                int nextCloseBracket;
-                while(bracketCount!=0 && secondHalf.length()>0) {
-                    nextOpenBracket = secondHalf.indexOf('[');
-                    nextCloseBracket = secondHalf.indexOf(']');
-                    if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
-                        bracketCount++;
-                        secondHalf = secondHalf.substring(nextOpenBracket+1);
-                    }
-                    else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
-                        bracketCount--;
-                        secondHalf = secondHalf.substring(nextCloseBracket+1);
-                    }
-                    else
-                        secondHalf = "";
-                }
-                itemData = firstHalf + secondHalf;
-            }
-            //remove SkullOwnerOrig
-            while(itemData.contains("SkullOwnerOrig:[I;")) {
-                int origIndex = itemData.indexOf("SkullOwnerOrig:[I;");
-                String firstHalf = itemData.substring(0,origIndex)+"\u00a74\u26a0\u00a7rSkullOwnerOrig:[...]";
-                String secondHalf = itemData.substring(origIndex+18);
-                int bracketCount = 1;
-                int nextOpenBracket;
-                int nextCloseBracket;
-                while(bracketCount!=0 && secondHalf.length()>0) {
-                    nextOpenBracket = secondHalf.indexOf('[');
-                    nextCloseBracket = secondHalf.indexOf(']');
-                    if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
-                        bracketCount++;
-                        secondHalf = secondHalf.substring(nextOpenBracket+1);
-                    }
-                    else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
-                        bracketCount--;
-                        secondHalf = secondHalf.substring(nextCloseBracket+1);
-                    }
-                    else
-                        secondHalf = "";
-                }
-                itemData = firstHalf + secondHalf;
-            }
-            
-            itemBtn.setTooltip(Tooltip.of(Text.of(item.getItem().toString()+itemData)));
+            itemBtn.active = true;            
+            itemBtn.setTooltip(makeItemTooltip(item));
         }
     }
 
@@ -1125,7 +1061,14 @@ public class ItemBuilder extends GenericScreen {
 
         num = 0; tabNum++;
         //saved items
-        //TODO
+        {
+            noScrollWidgets.get(tabNum).add(CyclingButtonWidget.onOffBuilder(Text.literal("C"), Text.literal("V")).initially(savedModeSet).omitKeyText().build(x+15-3, y+35+1,20,20, Text.of(""), (button, trackOutput) -> {
+                savedModeSet = (boolean)trackOutput;
+                ItemBuilder.this.unsel = true;
+            }));
+        }
+        for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
+            widgets.get(tabNum).add(new NbtWidget(i));
 
         num = 0; tabNum++;
         //entity data
@@ -1820,12 +1763,202 @@ public class ItemBuilder extends GenericScreen {
                 return true;
         return false;
     }
+
+    protected Tooltip makeItemTooltip(ItemStack stack) {
+        if(stack==null || stack.isEmpty())
+            return Tooltip.of(Text.of("Failed to read item"));
+        String itemData = "";
+        if(stack.hasNbt()) {
+            itemData += stack.getNbt().asString();
+        }
+        //remove SkullOwner Properties
+        while(itemData.contains("Properties:{textures:")) {
+            int propertiesIndex = itemData.indexOf("Properties:{textures:");
+            String firstHalf = itemData.substring(0,propertiesIndex)+"Properties:{...}";
+            String secondHalf = itemData.substring(propertiesIndex+21);
+            int bracketCount = 1;
+            int nextOpenBracket;
+            int nextCloseBracket;
+            while(bracketCount!=0 && secondHalf.length()>0) {
+                nextOpenBracket = secondHalf.indexOf('{');
+                nextCloseBracket = secondHalf.indexOf('}');
+                if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
+                    bracketCount++;
+                    secondHalf = secondHalf.substring(nextOpenBracket+1);
+                }
+                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
+                    bracketCount--;
+                    secondHalf = secondHalf.substring(nextCloseBracket+1);
+                }
+                else
+                    secondHalf = "";
+            }
+            itemData = firstHalf + secondHalf;
+        }
+        //remove SkullOwner UUID
+        while(itemData.contains("Id:[I;")) {
+            int idIndex = itemData.indexOf("Id:[I;");
+            String firstHalf = itemData.substring(0,idIndex)+"Id:[...]";
+            String secondHalf = itemData.substring(idIndex+6);
+            int bracketCount = 1;
+            int nextOpenBracket;
+            int nextCloseBracket;
+            while(bracketCount!=0 && secondHalf.length()>0) {
+                nextOpenBracket = secondHalf.indexOf('[');
+                nextCloseBracket = secondHalf.indexOf(']');
+                if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
+                    bracketCount++;
+                    secondHalf = secondHalf.substring(nextOpenBracket+1);
+                }
+                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
+                    bracketCount--;
+                    secondHalf = secondHalf.substring(nextCloseBracket+1);
+                }
+                else
+                    secondHalf = "";
+            }
+            itemData = firstHalf + secondHalf;
+        }
+        //remove SkullOwnerOrig
+        while(itemData.contains("SkullOwnerOrig:[I;")) {
+            int origIndex = itemData.indexOf("SkullOwnerOrig:[I;");
+            String firstHalf = itemData.substring(0,origIndex)+"\u00a74\u26a0\u00a7rSkullOwnerOrig:[...]";
+            String secondHalf = itemData.substring(origIndex+18);
+            int bracketCount = 1;
+            int nextOpenBracket;
+            int nextCloseBracket;
+            while(bracketCount!=0 && secondHalf.length()>0) {
+                nextOpenBracket = secondHalf.indexOf('[');
+                nextCloseBracket = secondHalf.indexOf(']');
+                if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
+                    bracketCount++;
+                    secondHalf = secondHalf.substring(nextOpenBracket+1);
+                }
+                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
+                    bracketCount--;
+                    secondHalf = secondHalf.substring(nextCloseBracket+1);
+                }
+                else
+                    secondHalf = "";
+            }
+            itemData = firstHalf + secondHalf;
+        }
+        if(stack.getCount()>1)
+            itemData += " " + stack.getCount();
+        
+        return Tooltip.of(Text.empty().append(stack.getName()).append(Text.of("\n"+stack.getItem().toString()+itemData)));
+
+    }
+
+    protected Tooltip makeItemTooltip(NbtCompound nbt) {
+        if(nbt==null)
+            return Tooltip.of(Text.of("Failed to read item"));
+        String itemData = "";
+        if(nbt.contains("tag",NbtElement.COMPOUND_TYPE)) {
+            itemData += nbt.get("tag").asString();
+        }
+        //remove SkullOwner Properties
+        while(itemData.contains("Properties:{textures:")) {
+            int propertiesIndex = itemData.indexOf("Properties:{textures:");
+            String firstHalf = itemData.substring(0,propertiesIndex)+"Properties:{...}";
+            String secondHalf = itemData.substring(propertiesIndex+21);
+            int bracketCount = 1;
+            int nextOpenBracket;
+            int nextCloseBracket;
+            while(bracketCount!=0 && secondHalf.length()>0) {
+                nextOpenBracket = secondHalf.indexOf('{');
+                nextCloseBracket = secondHalf.indexOf('}');
+                if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
+                    bracketCount++;
+                    secondHalf = secondHalf.substring(nextOpenBracket+1);
+                }
+                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
+                    bracketCount--;
+                    secondHalf = secondHalf.substring(nextCloseBracket+1);
+                }
+                else
+                    secondHalf = "";
+            }
+            itemData = firstHalf + secondHalf;
+        }
+        //remove SkullOwner UUID
+        while(itemData.contains("Id:[I;")) {
+            int idIndex = itemData.indexOf("Id:[I;");
+            String firstHalf = itemData.substring(0,idIndex)+"Id:[...]";
+            String secondHalf = itemData.substring(idIndex+6);
+            int bracketCount = 1;
+            int nextOpenBracket;
+            int nextCloseBracket;
+            while(bracketCount!=0 && secondHalf.length()>0) {
+                nextOpenBracket = secondHalf.indexOf('[');
+                nextCloseBracket = secondHalf.indexOf(']');
+                if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
+                    bracketCount++;
+                    secondHalf = secondHalf.substring(nextOpenBracket+1);
+                }
+                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
+                    bracketCount--;
+                    secondHalf = secondHalf.substring(nextCloseBracket+1);
+                }
+                else
+                    secondHalf = "";
+            }
+            itemData = firstHalf + secondHalf;
+        }
+        //remove SkullOwnerOrig
+        while(itemData.contains("SkullOwnerOrig:[I;")) {
+            int origIndex = itemData.indexOf("SkullOwnerOrig:[I;");
+            String firstHalf = itemData.substring(0,origIndex)+"\u00a74\u26a0\u00a7rSkullOwnerOrig:[...]";
+            String secondHalf = itemData.substring(origIndex+18);
+            int bracketCount = 1;
+            int nextOpenBracket;
+            int nextCloseBracket;
+            while(bracketCount!=0 && secondHalf.length()>0) {
+                nextOpenBracket = secondHalf.indexOf('[');
+                nextCloseBracket = secondHalf.indexOf(']');
+                if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
+                    bracketCount++;
+                    secondHalf = secondHalf.substring(nextOpenBracket+1);
+                }
+                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
+                    bracketCount--;
+                    secondHalf = secondHalf.substring(nextCloseBracket+1);
+                }
+                else
+                    secondHalf = "";
+            }
+            itemData = firstHalf + secondHalf;
+        }
+        if(nbt.contains("Count",NbtElement.INT_TYPE) && ((NbtInt)nbt.get("Count")).intValue() >1)
+            itemData += " " + nbt.get("Count").asString();
+        if(nbt.contains("id",NbtElement.STRING_TYPE))
+            return Tooltip.of(Text.empty().append("Unknown Item").append(Text.of("\n"+nbt.get("id").asString()+itemData)));
+        else return Tooltip.of(Text.of("Failed to read item"));
+    }
+
+    private void updateSaved() {
+        savedItems = FortytwoEdit.getSavedItems();
+        if(savedItems == null) {
+            savedError = true;
+            NbtList nbt = new NbtList();
+            while(nbt.size()<9*FortytwoEdit.SAVED_ROWS) {
+                NbtCompound air = new NbtCompound();
+                air.putString("id","air");
+                air.putInt("Count",0);
+                nbt.add(air);
+            }
+            savedItems = nbt;
+        }
+        if(widgets.get(4).size() == FortytwoEdit.SAVED_ROWS)
+            for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
+                widgets.get(4).get(i).updateSavedDisplay();
+    }
     
     ///////////////////////////////////////////////////////////////////////////////////////////////
     private class TabWidget
     extends ElementListWidget<AbstractWidget> {
         public TabWidget(final int tab) {
-            super(ItemBuilder.this.client, ItemBuilder.this.width-30, ItemBuilder.this.height, ItemBuilder.this.y+32, ItemBuilder.this.y + ItemBuilder.this.backgroundHeight - 5, 22);
+            super(ItemBuilder.this.client, ItemBuilder.this.width-30, ItemBuilder.this.height, ItemBuilder.this.y+32, ItemBuilder.this.y + ItemBuilder.this.backgroundHeight - 5, tab == 4 ? 20 : 22);
             
             for(int i=0; i<widgets.get(tab).size(); i++)
                 this.addEntry((AbstractWidget)ItemBuilder.this.widgets.get(tab).get(i));
@@ -1851,6 +1984,8 @@ public class ItemBuilder extends GenericScreen {
         private int[] txtX;
         private String lbl;
         private boolean lblCentered;
+        private ItemStack[] savedStacks;
+        private int savedRow = -1;
 
         //btn(size) txt
         public NbtWidget(String name, int size, String tooltip, PressAction onPress) {
@@ -1966,6 +2101,53 @@ public class ItemBuilder extends GenericScreen {
             }
         }
 
+        //saved row (9 btns)
+        public NbtWidget(int row) {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+
+            this.savedRow = row;
+            this.savedStacks = new ItemStack[9];
+            this.btns = new ButtonWidget[9];
+            this.btnX = new int[9];
+            int currentX = 15+30;
+            for(int i=0; i<9; i++) {
+                this.btnX[i] = currentX;
+                final int index = row*9+i;
+                this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
+                    ItemBuilder.this.unsel = true;
+                    if(savedModeSet) {
+                        ItemBuilder.this.savedError = false;
+                        NbtCompound nbt = new NbtCompound();
+                        if(client.player.getMainHandStack().isEmpty()) {
+                            nbt.putString("id","air");
+                            nbt.putInt("Count",0);
+                        }
+                        else {
+                            nbt = (NbtCompound)BlackMagick.getNbtFromPath(null,"0:");
+                        }
+                        savedItems.set(index,nbt);
+                        FortytwoEdit.setSavedItems(savedItems);
+                        updateSaved();
+                    }
+                    else {
+                        if(client.player.getAbilities().creativeMode) {
+                            ItemStack item = ItemStack.fromNbt((NbtCompound)(savedItems.get(index)));
+                            if(item!=null && !item.isEmpty()) {
+                                client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
+                                client.player.playerScreenHandler.sendContentUpdates();
+                            }
+                        }
+                    }
+                }).dimensions(currentX,5,20,20).build();
+                currentX += 20;
+                this.btns[i].active = false;
+
+                this.children.add(this.btns[i]);
+            }
+        }
+
         private void setup() {
             btns = new ButtonWidget[0];
             btnX = new int[0];
@@ -1982,6 +2164,27 @@ public class ItemBuilder extends GenericScreen {
             }
             ItemBuilder.this.unsel = true;
             return texts;
+        }
+
+        public void updateSavedDisplay() {
+            for(int i=0; i<9; i++) {
+                if(!ItemStack.fromNbt((NbtCompound)(savedItems.get(savedRow*9+i))).isEmpty()) {
+                    this.btns[i].setTooltip(makeItemTooltip(ItemStack.fromNbt((NbtCompound)(savedItems.get(savedRow*9+i)))));
+                    savedStacks[i] = ItemStack.fromNbt((NbtCompound)(savedItems.get(savedRow*9+i)));
+                }
+                else {
+                    if(((NbtCompound)(savedItems.get(savedRow*9+i))).contains("id",NbtElement.STRING_TYPE) && 
+                            ((NbtCompound)(savedItems.get(savedRow*9+i))).get("id").asString().equals("air")) {
+                        this.btns[i].setTooltip(null);
+                        savedStacks[i] = new ItemStack(Items.AIR);
+                    }
+                    else {
+                        this.btns[i].setTooltip(makeItemTooltip((NbtCompound)(savedItems.get(savedRow*9+i))));
+                        savedStacks[i] = FortytwoEdit.UNKNOWN_ITEM;
+                    }
+                }
+                this.btns[i].active = true;
+            }
         }
 
         @Override
@@ -2012,7 +2215,9 @@ public class ItemBuilder extends GenericScreen {
                 else
                     drawTextWithShadow(matrices, ItemBuilder.this.textRenderer, Text.of(this.lbl), ItemBuilder.this.x+15+3, y+6, LABEL_COLOR);
             }
-
+            if(this.savedStacks != null && this.savedStacks.length == 9)
+                for(int i=0; i<9; i++)
+                    ItemBuilder.this.itemRenderer.renderInGui(matrices, this.savedStacks[i],x+this.btnX[i]+2,y+2);
         }
     }
 
@@ -2041,6 +2246,8 @@ public class ItemBuilder extends GenericScreen {
         this.itemRenderer.renderInGui(matrices, item, x+240-20-5+2, y+5+2);
         if(!this.unsavedTxtWidgets.isEmpty())
             drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
+        if(savedError)
+            drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
         super.render(matrices, mouseX, mouseY, delta);
     }
 
