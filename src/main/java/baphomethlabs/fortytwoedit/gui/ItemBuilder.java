@@ -51,6 +51,7 @@ public class ItemBuilder extends GenericScreen {
     protected final ItemStack[] tabsItem = {new ItemStack(Items.GOLDEN_SWORD),new ItemStack(Items.PURPLE_SHULKER_BOX),
         FortytwoEdit.HEAD42,new ItemStack(Items.COMMAND_BLOCK),new ItemStack(Items.JIGSAW),new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),FortytwoEdit.BANNER42};
     protected final ButtonWidget[] tabs = new ButtonWidget[tabsLbl.length];
+    private final int LEFT_TABS = 5;
     protected int playerX;
     protected int playerY;
     protected ItemStack item = null;
@@ -74,10 +75,10 @@ public class ItemBuilder extends GenericScreen {
         //tabs
         for(int i = 0; i<tabs.length; i++) {
             int tabNum = i;
-            if(i<5)
+            if(i<LEFT_TABS)
                 tabs[i] = ButtonWidget.builder(Text.of(""), button -> this.btnTab(tabNum)).dimensions(x-TAB_SIZE,y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*i,TAB_SIZE,TAB_SIZE).build();
             else
-                tabs[i] = ButtonWidget.builder(Text.of(""), button -> this.btnTab(tabNum)).dimensions(x+240,y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(i-5),TAB_SIZE,TAB_SIZE).build();
+                tabs[i] = ButtonWidget.builder(Text.of(""), button -> this.btnTab(tabNum)).dimensions(x+240,y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(i-LEFT_TABS),TAB_SIZE,TAB_SIZE).build();
             tabs[i].setTooltip(Tooltip.of(Text.of(tabsLbl[i])));
             if(tab==i)
                 tabs[i].active = false;
@@ -305,9 +306,21 @@ public class ItemBuilder extends GenericScreen {
                     if(element!=null && element.getType()==NbtElement.LIST_TYPE) {
                         NbtList jsonList = (NbtList)element;
                         if(jsonList.size()>0 && jsonList.get(0).getType()==NbtElement.STRING_TYPE) {
-                            jsonList.add(NbtString.of("{\"text\":\"\"}"));
-                            jsonList.add(NbtString.of("{\"text\":\"BaphomethLabs\",\"color\":\"gold\"}"));
-                            BlackMagick.setNbt(null,"display/Lore",jsonList);
+                            if(jsonList.size()>=2 && jsonList.get(jsonList.size()-1).asString().equals("{\"text\":\"BaphomethLabs\",\"color\":\"gold\"}") &&
+                                    jsonList.get(jsonList.size()-2).asString().equals("{\"text\":\"\"}")) {
+                                if(jsonList.size()==2)
+                                    BlackMagick.removeNbt(null,"display/Lore");
+                                else {
+                                    jsonList.remove(jsonList.size()-1);
+                                    jsonList.remove(jsonList.size()-1);
+                                    BlackMagick.setNbt(null,"display/Lore",jsonList);
+                                }
+                            }
+                            else {
+                                jsonList.add(NbtString.of("{\"text\":\"\"}"));
+                                jsonList.add(NbtString.of("{\"text\":\"BaphomethLabs\",\"color\":\"gold\"}"));
+                                BlackMagick.setNbt(null,"display/Lore",jsonList);
+                            }
                         }
                         else {
                             jsonList = new NbtList();
@@ -2237,10 +2250,10 @@ public class ItemBuilder extends GenericScreen {
         this.renderBackground(matrices);
         this.drawBackground(matrices, delta, mouseX, mouseY, 1);
         for(int i=0; i<tabsItem.length; i++) {
-            if(i<5)
+            if(i<LEFT_TABS)
                 this.itemRenderer.renderInGui(matrices, tabsItem[i],x-TAB_SIZE+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*i+(TAB_SIZE/2-8));
             else
-                this.itemRenderer.renderInGui(matrices, tabsItem[i],x+240+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(i-5)+(TAB_SIZE/2-8));
+                this.itemRenderer.renderInGui(matrices, tabsItem[i],x+240+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(i-LEFT_TABS)+(TAB_SIZE/2-8));
         }
         InventoryScreen.drawEntity(matrices, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
         this.itemRenderer.renderInGui(matrices, item, x+240-20-5+2, y+5+2);

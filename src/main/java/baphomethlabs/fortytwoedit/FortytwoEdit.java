@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Set;
@@ -496,12 +497,12 @@ public class FortytwoEdit implements ClientModInitializer {
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
             if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).exists()) {
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).createNewFile();
-                FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", false);
+                FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", StandardCharsets.UTF_8, false);
                 writer.write("[]");
                 writer.close();
             }
                 
-            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt"));
+            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt"), StandardCharsets.UTF_8);
             if(scan.hasNextLine())
                 savedString = scan.nextLine();
             scan.close();
@@ -543,7 +544,7 @@ public class FortytwoEdit implements ClientModInitializer {
             if(nbt != null)
                 items = nbt.asString();
 
-            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", false);
+            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", StandardCharsets.UTF_8, false);
             writer.write(items);
             writer.close();
             return getSavedItems();
