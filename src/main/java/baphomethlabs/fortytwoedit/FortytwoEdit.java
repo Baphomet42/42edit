@@ -427,7 +427,7 @@ public class FortytwoEdit implements ClientModInitializer {
             if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).exists())
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).createNewFile();
                 
-            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt"));
+            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt"), StandardCharsets.UTF_8);
             if(scan.hasNextLine())
                 optionsString = scan.nextLine();
             scan.close();
@@ -480,7 +480,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
             options += "}";
 
-            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt", false);
+            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt", StandardCharsets.UTF_8, false);
             writer.write(options);
             writer.close();
 
