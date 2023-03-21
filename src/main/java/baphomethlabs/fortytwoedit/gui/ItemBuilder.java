@@ -925,39 +925,26 @@ public class ItemBuilder extends GenericScreen {
                     String sound = inp.trim();
                     sound = sound.replaceAll("[^a-zA-Z0-9.]","");
                     if(!sound.equals("")) {
-                        if(client.player.getMainHandStack().isEmpty()) {
-                            NbtCompound nbt = new NbtCompound();
-                            nbt.putString("id","player_head");
-                            nbt.putInt("Count",1);
-                            NbtCompound tag = new NbtCompound();
-                            NbtCompound BET = new NbtCompound();
-                            BET.putString("note_block_sound",sound);
-                            tag.put("BlockEntityTag",BET);
-                            NbtList lore = new NbtList();
-                            lore.add(NbtString.of("{\"text\":\"Note block sound:\",\"italic\":false,\"color\":\"gray\"}"));
-                            lore.add(NbtString.of("{\"text\":\""+sound+"\",\"italic\":false,\"color\":\"gray\"}"));
-                            NbtCompound display = new NbtCompound();
-                            display.put("Lore",lore);
-                            tag.put("display",display);
-                            nbt.put("tag",tag);
-                            ItemStack item = ItemStack.fromNbt(nbt);
-                            if(item != null && client.player.getAbilities().creativeMode) {
-                                client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-                                client.player.playerScreenHandler.sendContentUpdates();
-                            }
-                        }
-                        else {
-                            BlackMagick.setNbt(null,"BlockEntityTag/note_block_sound",NbtString.of(sound));
-                            NbtList lore = new NbtList();
-                            lore.add(NbtString.of("{\"text\":\"Note block sound:\",\"italic\":false,\"color\":\"gray\"}"));
-                            lore.add(NbtString.of("{\"text\":\""+sound+"\",\"italic\":false,\"color\":\"gray\"}"));
-                            BlackMagick.setNbt(null,"display/Lore",lore);
+                        NbtCompound nbt = new NbtCompound();
+                        nbt.putString("id","player_head");
+                        nbt.putInt("Count",1);
+                        NbtCompound tag = new NbtCompound();
+                        NbtCompound BET = new NbtCompound();
+                        BET.putString("note_block_sound",sound);
+                        tag.put("BlockEntityTag",BET);
+                        NbtList lore = new NbtList();
+                        lore.add(NbtString.of("{\"text\":\"Note block sound:\",\"italic\":false,\"color\":\"gray\"}"));
+                        lore.add(NbtString.of("{\"text\":\""+sound+"\",\"italic\":false,\"color\":\"gray\"}"));
+                        NbtCompound display = new NbtCompound();
+                        display.put("Lore",lore);
+                        tag.put("display",display);
+                        nbt.put("tag",tag);
+                        ItemStack item = ItemStack.fromNbt(nbt);
+                        if(item != null && client.player.getAbilities().creativeMode) {
+                            client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
+                            client.player.playerScreenHandler.sendContentUpdates();
                         }
                     }
-                }
-                else {
-                    BlackMagick.removeNbt(null,"BlockEntityTag/note_block_sound");
-                    BlackMagick.removeNbt(null,"display/Lore");
                 }
             })); num++;
         }
