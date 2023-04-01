@@ -729,21 +729,21 @@ public class ItemBuilder extends GenericScreen {
                         ItemStack item;
                         if(client.player.getMainHandStack().isEmpty()) {
                             item = BlackMagick.setId("player_head");
-                            BlackMagick.setNbt(item,"SkullOwner/Properties/textures/0:/Value",BlackMagick.elementFromString(value))
-                            .getNbt().getCompound("SkullOwner").putIntArray("Id",idArray);
+                            item = BlackMagick.setNbt(item,"SkullOwner/Properties/textures/0:/Value",BlackMagick.elementFromString(value));
+                            item.getNbt().getCompound("SkullOwner").putIntArray("Id",idArray);
                         }
                         else {
                             item = client.player.getMainHandStack().copy();
-                            BlackMagick.setNbt(item,"SkullOwner/Properties/textures/0:/Value",BlackMagick.elementFromString(value))
-                            .getNbt().getCompound("SkullOwner").putIntArray("Id",idArray);
+                            item = BlackMagick.setNbt(item,"SkullOwner/Properties/textures/0:/Value",BlackMagick.elementFromString(value));
+                            item.getNbt().getCompound("SkullOwner").putIntArray("Id",idArray);
                         }
                         client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                         client.player.playerScreenHandler.sendContentUpdates();
                     }
                 }
                 else if(id.equals("")) {
-                    BlackMagick.removeNbt(null,"SkullOwner/Id");
-                    BlackMagick.removeNbt(null,"SkullOwner/Properties");
+                    ItemStack stack = BlackMagick.removeNbt(null,"SkullOwner/Id");
+                    BlackMagick.removeNbt(stack,"SkullOwner/Properties");
                 }
             })); num++;
         }
