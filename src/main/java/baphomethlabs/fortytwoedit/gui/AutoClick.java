@@ -5,10 +5,10 @@ import org.lwjgl.glfw.GLFW;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
@@ -73,15 +73,15 @@ public class AutoClick extends GenericScreen {
     }
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        this.drawBackground(matrices, delta, mouseX, mouseY);
-        drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("Auto Clicker"), this.width / 2, y+11, 0xFFFFFF);
-		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.FISHING_ROD),x+20+2,y+44+1+2);
-		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.NETHERITE_PICKAXE),x+20+2,y+22*3+1+2);
-		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+22*4+1+2);
-        drawTextWithShadow(matrices, this.textRenderer, Text.of("Attack Cooldown:"), x+20+3,y+7+22*6, LABEL_COLOR);
-        super.render(matrices, mouseX, mouseY, delta);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        this.renderBackground(context);
+        this.drawBackground(context, delta, mouseX, mouseY);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Auto Clicker"), this.width / 2, y+11, 0xFFFFFF);
+		context.drawItem(new ItemStack(Items.FISHING_ROD),x+20+2,y+44+1+2);
+		context.drawItem(new ItemStack(Items.NETHERITE_PICKAXE),x+20+2,y+22*3+1+2);
+		context.drawItem(new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+22*4+1+2);
+        context.drawTextWithShadow(this.textRenderer, Text.of("Attack Cooldown:"), x+20+3,y+7+22*6, LABEL_COLOR);
+        super.render(context, mouseX, mouseY, delta);
     }
     
     @Override

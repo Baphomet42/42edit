@@ -10,6 +10,7 @@ import com.google.common.collect.Sets;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.navigation.GuiNavigationPath;
@@ -22,7 +23,6 @@ import net.minecraft.client.gui.widget.EditBoxWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.ButtonWidget.PressAction;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -1965,8 +1965,8 @@ public class ItemBuilder extends GenericScreen {
         }
 
         @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            super.render(matrices, mouseX, mouseY, delta);
+        public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+            super.render(context, mouseX, mouseY, delta);
             AbstractWidget abstractRuleWidget = (AbstractWidget)this.getHoveredEntry();
             if (abstractRuleWidget != null && abstractRuleWidget.description != null) {
                 ItemBuilder.this.setTooltip(abstractRuleWidget.description);
@@ -2198,26 +2198,26 @@ public class ItemBuilder extends GenericScreen {
         }
 
         @Override
-        public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             for(int i=0; i<btns.length; i++) {
                 this.btns[i].setX(x+this.btnX[i]);
                 this.btns[i].setY(y);
-                this.btns[i].render(matrices, mouseX, mouseY, tickDelta);
+                this.btns[i].render(context, mouseX, mouseY, tickDelta);
             }
             for(int i=0; i<txts.length; i++) {
                 this.txts[i].setX(x+this.txtX[i]);
                 this.txts[i].setY(y);
-                this.txts[i].render(matrices, mouseX, mouseY, tickDelta);
+                this.txts[i].render(context, mouseX, mouseY, tickDelta);
             }
             if(lbl != null) {
                 if(lblCentered)
-                    drawCenteredTextWithShadow(matrices, ItemBuilder.this.textRenderer, Text.of(this.lbl), ItemBuilder.this.width/2, y+6, LABEL_COLOR);
+                    context.drawCenteredTextWithShadow(ItemBuilder.this.textRenderer, Text.of(this.lbl), ItemBuilder.this.width/2, y+6, LABEL_COLOR);
                 else
-                    drawTextWithShadow(matrices, ItemBuilder.this.textRenderer, Text.of(this.lbl), ItemBuilder.this.x+15+3, y+6, LABEL_COLOR);
+                    context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.of(this.lbl), ItemBuilder.this.x+15+3, y+6, LABEL_COLOR);
             }
             if(this.savedStacks != null && this.savedStacks.length == 9)
                 for(int i=0; i<9; i++)
-                    ItemBuilder.this.itemRenderer.renderInGui(matrices, this.savedStacks[i],x+this.btnX[i]+2,y+2);
+                    context.drawItem(this.savedStacks[i],x+this.btnX[i]+2,y+2);
         }
     }
 
@@ -2233,22 +2233,22 @@ public class ItemBuilder extends GenericScreen {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        this.drawBackground(matrices, delta, mouseX, mouseY, 1);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        this.renderBackground(context);
+        this.drawBackground(context, delta, mouseX, mouseY, 1);
         for(int i=0; i<tabsItem.length; i++) {
             if(i<LEFT_TABS)
-                this.itemRenderer.renderInGui(matrices, tabsItem[i],x-TAB_SIZE+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*i+(TAB_SIZE/2-8));
+                context.drawItem(tabsItem[i],x-TAB_SIZE+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*i+(TAB_SIZE/2-8));
             else
-                this.itemRenderer.renderInGui(matrices, tabsItem[i],x+240+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(i-LEFT_TABS)+(TAB_SIZE/2-8));
+                context.drawItem(tabsItem[i],x+240+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(i-LEFT_TABS)+(TAB_SIZE/2-8));
         }
-        InventoryScreen.drawEntity(matrices, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
-        this.itemRenderer.renderInGui(matrices, item, x+240-20-5+2, y+5+2);
+        InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
+        context.drawItem(item, x+240-20-5+2, y+5+2);
         if(!this.unsavedTxtWidgets.isEmpty())
-            drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
         if(savedError)
-            drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
-        super.render(matrices, mouseX, mouseY, delta);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
+        super.render(context, mouseX, mouseY, delta);
     }
 
     @Override

@@ -4,16 +4,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import org.lwjgl.glfw.GLFW;
-
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.command.EntityDataObject;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -318,15 +316,15 @@ public class Hacks extends GenericScreen {
     }
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        this.drawBackground(matrices, delta, mouseX, mouseY);
-        drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("Hacks"), this.width / 2, y+11, 0xFFFFFF);
-		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+22*2+1+2);
-		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),x+20+2,y+22*3+1+2);
-		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.BARRIER),x+20+2,y+22*4+1+2);
-		this.itemRenderer.renderInGui(matrices, new ItemStack(Items.SKELETON_SKULL),x+20+2,y+22*5+1+2);
-        super.render(matrices, mouseX, mouseY, delta);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        this.renderBackground(context);
+        this.drawBackground(context, delta, mouseX, mouseY);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Hacks"), this.width / 2, y+11, 0xFFFFFF);
+		context.drawItem(new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+22*2+1+2);
+		context.drawItem(new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),x+20+2,y+22*3+1+2);
+		context.drawItem(new ItemStack(Items.BARRIER),x+20+2,y+22*4+1+2);
+		context.drawItem(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+22*5+1+2);
+        super.render(context, mouseX, mouseY, delta);
     }
     
     @Override

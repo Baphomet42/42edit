@@ -11,13 +11,14 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Set;
 import org.lwjgl.glfw.GLFW;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
@@ -33,16 +34,12 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.EntityHitResult;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.fabricmc.loader.impl.util.log.Log;
-import net.fabricmc.loader.impl.util.log.LogCategory;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import baphomethlabs.fortytwoedit.gui.MagickGui;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 
 public class FortytwoEdit implements ClientModInitializer {
 
@@ -55,6 +52,8 @@ public class FortytwoEdit implements ClientModInitializer {
      *  Visible Barriers from https://github.com/AmyMialeeMods/visible-barriers (xyz.amymialee.visiblebarriers) Copyright (c) 2022 AmyMialee All rights reserved.
      *------------------------------------------
      */
+
+	public static final Logger LOGGER = LoggerFactory.getLogger("42edit");
 
     //gui
     public static KeyBinding magickGuiKey;
@@ -112,7 +111,7 @@ public class FortytwoEdit implements ClientModInitializer {
             } catch(IOException e) {}
             if(!connect) {
                 opticapes = false;
-                Log.warn(LogCategory.GENERAL,"[42edit] Failed connection to OptiFine capes");
+                LOGGER.warn("Failed connection to OptiFine capes");
             }
         }
     }
@@ -210,7 +209,7 @@ public class FortytwoEdit implements ClientModInitializer {
     private static Perspective lastPerspective;
 
     //see feature items
-    public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE,FeatureFlags.UPDATE_1_20);
+    public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE);
 
     //supersecretsettings
     private static final Identifier[] SECRETSOUNDS = getSecretSounds();
@@ -257,6 +256,9 @@ public class FortytwoEdit implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
 
+        final MinecraftClient gameClient = MinecraftClient.getInstance();
+
+        //keybinds
         magickGuiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.openMagickGui",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_J, "ftedit.key.categories.ftedit"));
         KeyBinding zoom = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.zoom",
@@ -273,11 +275,7 @@ public class FortytwoEdit implements ClientModInitializer {
         BlockRenderLayerMap.INSTANCE.putBlock(Blocks.STRUCTURE_VOID, RenderLayer.getTranslucent());
         BlockRenderLayerMap.INSTANCE.putBlock(Blocks.LIGHT, RenderLayer.getTranslucent());
 
-        // hud text
-        HudRenderCallback.EVENT.register(FortytwoEdit::drawText);
-
         // custom capes
-        final MinecraftClient gameClient = MinecraftClient.getInstance();
         clientUsername = gameClient.getSession().getUsername();
         clearCapes();
 
@@ -386,21 +384,6 @@ public class FortytwoEdit implements ClientModInitializer {
         KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.attackKey), false);
     }
 
-    private static void drawText(MatrixStack m, float t) {
-        if(autoMove || autoClicker || randoMode) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            TextRenderer renderer = client.textRenderer;
-            int x = client.getWindow().getScaledWidth()-80;
-            int y = client.getWindow().getScaledHeight()-15;
-            if (autoMove)
-                renderer.draw(m, "[Auto Move]", x, y - 20, 0xffffff);
-            if (autoClicker)
-                renderer.draw(m, "[Auto Click]", x, y - 10, 0xffffff);
-            if (randoMode)
-                renderer.draw(m, "[Rando Mode]", x, y, 0xffffff);
-        }
-    }
-
     private static boolean testRandoSlot() {
         final MinecraftClient client = MinecraftClient.getInstance();
         int selected = client.player.getInventory().selectedSlot + 1;
@@ -452,12 +435,12 @@ public class FortytwoEdit implements ClientModInitializer {
             json.remove("OptiCapeToggle");
 
             if(json.asString().length()>2) {
-                Log.warn(LogCategory.GENERAL,"[42edit] Config file contains unknown keys: "+json.asString());
+                LOGGER.warn("Config file contains unknown keys: "+json.asString());
                 optionsExtra = json;
             }
         }
         else
-            Log.warn(LogCategory.GENERAL,"[42edit] Creating new config file");
+            LOGGER.info("Creating new config file");
 
         updateOptions();
     }
@@ -485,7 +468,7 @@ public class FortytwoEdit implements ClientModInitializer {
             writer.close();
 
         } catch (Exception e) {
-            Log.warn(LogCategory.GENERAL,"[42edit] Failed to edit config file");
+            LOGGER.warn("Failed to edit config file");
         }
     }
 
@@ -511,7 +494,7 @@ public class FortytwoEdit implements ClientModInitializer {
         if(BlackMagick.elementFromString(savedString) != null && BlackMagick.elementFromString(savedString).getType()==NbtElement.LIST_TYPE) {
             NbtList nbt = (NbtList)BlackMagick.elementFromString(savedString);
             if(nbt.size()>0 && nbt.get(0).getType()!=NbtElement.COMPOUND_TYPE) {
-                Log.warn(LogCategory.GENERAL,"[42edit] Failed to read saved items");
+                LOGGER.warn("Failed to read saved items");
                 return null;
             }
             while(nbt.size()<9*SAVED_ROWS) {
@@ -521,11 +504,11 @@ public class FortytwoEdit implements ClientModInitializer {
                 nbt.add(air);
             }
             if(nbt.size()>9*SAVED_ROWS)
-                Log.warn(LogCategory.GENERAL,"[42edit] Saved items file outdated");
+                LOGGER.warn("Saved items file outdated");
             return nbt;
         }
 
-        Log.warn(LogCategory.GENERAL,"[42edit] Failed to read saved items");
+        LOGGER.warn("Failed to read saved items");
         return null;
     }
 
@@ -551,7 +534,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         } catch (Exception e) {}
 
-        Log.warn(LogCategory.GENERAL,"[42edit] Failed to edit saved items file");
+        LOGGER.warn("Failed to edit saved items file");
         return null;
     }
 

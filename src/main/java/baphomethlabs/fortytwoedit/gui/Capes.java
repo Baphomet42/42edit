@@ -10,12 +10,12 @@ import javax.imageio.ImageIO;
 import org.joml.Quaternionf;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.toast.SystemToast;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
@@ -125,7 +125,7 @@ public class Capes extends GenericScreen {
         } catch (Exception e) {}
     }
 
-    private static void drawPlayer(MatrixStack matrices, int x, int y, int size, float mouseX, float mouseY, LivingEntity entity) {
+    private static void drawPlayer(DrawContext context, int x, int y, int size, float mouseX, float mouseY, LivingEntity entity) {
         float f = (float)Math.atan(mouseX / 40.0f);
         float g = (float)Math.atan(mouseY / 40.0f);
         Quaternionf quaternionf = new Quaternionf().rotateZ((float)Math.PI);
@@ -141,7 +141,7 @@ public class Capes extends GenericScreen {
         entity.setPitch(-g * 20.0f);
         entity.headYaw = entity.getYaw();
         entity.prevHeadYaw = entity.getYaw();
-        InventoryScreen.drawEntity(matrices, x, y, size, quaternionf, quaternionf2, entity);
+        InventoryScreen.drawEntity(context, x, y, size, quaternionf, quaternionf2, entity);
         entity.bodyYaw = h;
         entity.setYaw(i);
         entity.setPitch(j);
@@ -150,16 +150,16 @@ public class Capes extends GenericScreen {
     }
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        this.drawBackground(matrices, delta, mouseX, mouseY);
-        drawCenteredTextWithShadow(matrices, this.textRenderer, Text.of("Client Capes & Skins"), this.width / 2, y+11, 0xFFFFFF);
-        drawTextWithShadow(matrices, this.textRenderer, Text.of("Capes"), x+20,y+7+22*2, 0xFFFFFF);
-        drawTextWithShadow(matrices, this.textRenderer, Text.of("Skin"), x+20,y+7+22*5, 0xFFFFFF);
-        this.txtCustom.render(matrices, mouseX, mouseY, delta);
-        this.txtCustomSkin.render(matrices, mouseX, mouseY, delta);
-        drawPlayer(matrices, playerX, playerY, 60, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
-        super.render(matrices, mouseX, mouseY, delta);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        this.renderBackground(context);
+        this.drawBackground(context, delta, mouseX, mouseY);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Client Capes & Skins"), this.width / 2, y+11, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, Text.of("Capes"), x+20,y+7+22*2, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, Text.of("Skin"), x+20,y+7+22*5, 0xFFFFFF);
+        this.txtCustom.render(context, mouseX, mouseY, delta);
+        this.txtCustomSkin.render(context, mouseX, mouseY, delta);
+        drawPlayer(context, playerX, playerY, 60, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
+        super.render(context, mouseX, mouseY, delta);
     }
 
     @Override
