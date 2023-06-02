@@ -251,6 +251,10 @@ public class FortytwoEdit implements ClientModInitializer {
     //saved items
     public static final int SAVED_ROWS = 9;
 
+    //cache tools
+    public static boolean cacheToolsMode = false;    //show gui button
+    public static boolean cacheToolsSuggs = false;
+
 
 
     @Override
