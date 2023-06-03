@@ -25,8 +25,6 @@ public class MagickGui extends GenericScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.of("Super Secret Settings..."), button -> this.btnSuperSecretSettings()).dimensions(x+20,y+22*5+1,165,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Capes..."), button -> this.btnCapes()).dimensions(x+20,y+22*6+1,80,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("AutoClick..."), button -> this.btnAutoClickSettings()).dimensions(x+20,y+22*7+1,90,20).build());
-        if(FortytwoEdit.cacheToolsMode)
-            this.addDrawableChild(ButtonWidget.builder(Text.of("Cache Tools..."), button -> this.btnCacheTools()).dimensions(x+20,y+22*8+1,80,20).build());
         btnWgtAutoClick = this.addDrawableChild(ButtonWidget.builder(Text.of(""), button -> this.btnAutoClick()).dimensions(x+20+90+5,y+22*7+1,70,20).build());
         setAutoClickMessage();
     }
@@ -121,10 +119,6 @@ public class MagickGui extends GenericScreen {
             btnWgtAutoClick.setMessage(Text.of("[Attack .65]"));
         else
             btnWgtAutoClick.setMessage(Text.of("[Custom]"));
-    }
-
-    private void btnCacheTools() {
-        client.setScreen(new CacheTools());
     }
     
     @Override

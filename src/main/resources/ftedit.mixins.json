@@ -5,10 +5,10 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "AbstractClientPlayerEntityMixin",
-    "ChatInputSuggestorMixin",
     "CreativeInventoryScreenMixin",
     "IconsMixin",
     "InGameHudMixin",
+    "KeyBindingMixin",
     "SharedConstantsMixin"
   ],
   "injectors": {

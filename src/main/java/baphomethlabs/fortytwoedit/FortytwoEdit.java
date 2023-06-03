@@ -8,6 +8,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import org.lwjgl.glfw.GLFW;
@@ -76,6 +78,9 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean autoMine = false;
     public static int attackWait = 1500;
     private static long lastAttack = 0;
+    private static long lastSpam = 0;
+    public static KeyBinding modKey;
+    public static KeyBinding spamClick;
 
     // randomizer mode
     public static int[] randoSlots;
@@ -251,9 +256,14 @@ public class FortytwoEdit implements ClientModInitializer {
     //saved items
     public static final int SAVED_ROWS = 9;
 
-    //cache tools
-    public static boolean cacheToolsMode = false;    //show gui button
-    public static boolean cacheToolsSuggs = false;
+    //registry suggestions
+    public static final String[] BLOCKS = getCacheBlocks();
+    public static final String[] ITEMS = getCacheItems();
+    public static final String[] EFFECTS = getCacheEffects();
+    public static final String[] ENCHANTS = getCacheEnchants();
+    public static final String[] ENTITIES = getCacheEntities();
+    public static final String[] PARTICLES = getCacheParticles();
+    public static final String[] SOUNDS = getCacheSounds();
 
 
 
@@ -267,12 +277,16 @@ public class FortytwoEdit implements ClientModInitializer {
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_J, "ftedit.key.categories.ftedit"));
         KeyBinding zoom = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.zoom",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "ftedit.key.categories.ftedit"));
+        KeyBinding freeLook = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.freeLook",
+                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "ftedit.key.categories.ftedit"));
+        spamClick = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.spamClick",
+                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F13, "ftedit.key.categories.ftedit"));
+        modKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.modKey",
+                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F14, "ftedit.key.categories.ftedit"));
         KeyBinding afkMove = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.afkMove",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_EQUAL, "ftedit.key.categories.ftedit"));
         KeyBinding afkClick = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.afkClick",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_MINUS, "ftedit.key.categories.ftedit"));
-        KeyBinding freeLook = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.freeLook",
-                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "ftedit.key.categories.ftedit"));
                 
         // visiblebarriers
         BlockRenderLayerMap.INSTANCE.putBlock(Blocks.BARRIER, RenderLayer.getTranslucent());
@@ -356,6 +370,15 @@ public class FortytwoEdit implements ClientModInitializer {
                 client.options.setPerspective(lastPerspective);
             }
 
+            //spam
+            if(spamClick.isPressed() && System.currentTimeMillis()>=lastSpam + 20) {
+                if(modKey.isPressed())
+                    KeyBinding.onKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.attackKey));
+                else
+                    KeyBinding.onKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.useKey));
+                lastSpam = System.currentTimeMillis();
+            }
+
             //capes
             if (capeNames.size() > 0 && MinecraftClient.getInstance().player == null) {
                 clearCapes();
@@ -403,6 +426,83 @@ public class FortytwoEdit implements ClientModInitializer {
         int slot = (int) (Math.random() * randoSlots.length);
         slot = randoSlots[slot];
         client.player.getInventory().selectedSlot = slot - 1;
+    }
+
+    private static String[] getCacheBlocks() {
+        List<String> list = new ArrayList<>();
+
+        Registries.BLOCK.forEach(b -> {
+            list.add(Registries.BLOCK.getId(b).getPath());
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    private static String[] getCacheItems() {
+        List<String> list = new ArrayList<>();
+
+        Registries.ITEM.forEach(i -> {
+            list.add(Registries.ITEM.getId(i).getPath());
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    private static String[] getCacheEffects() {
+        List<String> list = new ArrayList<>();
+
+        Registries.STATUS_EFFECT.forEach(e -> {
+            list.add(Registries.STATUS_EFFECT.getId(e).getPath());
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    private static String[] getCacheEnchants() {
+        List<String> list = new ArrayList<>();
+
+        Registries.ENCHANTMENT.forEach(e -> {
+            list.add(Registries.ENCHANTMENT.getId(e).getPath());
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    private static String[] getCacheEntities() {
+        List<String> list = new ArrayList<>();
+
+        Registries.ENTITY_TYPE.forEach(e -> {
+            list.add(Registries.ENTITY_TYPE.getId(e).getPath());
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    private static String[] getCacheParticles() {
+        List<String> list = new ArrayList<>();
+
+        Registries.PARTICLE_TYPE.forEach(p -> {
+            list.add(Registries.PARTICLE_TYPE.getId(p).getPath());
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    private static String[] getCacheSounds() {
+        List<String> list = new ArrayList<>();
+
+        Registries.SOUND_EVENT.forEach(s -> {
+            list.add(Registries.SOUND_EVENT.getId(s).getPath());
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
     }
 
     private static void readOptions() {

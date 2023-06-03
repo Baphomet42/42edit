@@ -4,5 +4,7 @@
     "ftedit.key.zoom":"Zoom",
     "ftedit.key.afkMove":"Auto Move",
     "ftedit.key.afkClick":"Auto Click",
-    "ftedit.key.freeLook":"Free Look"
+    "ftedit.key.freeLook":"Free Look",
+    "ftedit.key.spamClick":"Spam Click",
+    "ftedit.key.modKey":"Mod Key"
 }

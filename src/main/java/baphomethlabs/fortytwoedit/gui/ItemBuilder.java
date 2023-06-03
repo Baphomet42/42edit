@@ -271,7 +271,7 @@ public class ItemBuilder extends GenericScreen {
             widgets.get(tabNum).add(new NbtWidget("id",40,null,btn -> {
                 String inp = widgets.get(i).get(j).btn()[0];
                 BlackMagick.setId(inp);
-            }, CacheTools.ITEMS)); num++;
+            }, FortytwoEdit.ITEMS)); num++;
         }
         {
             final int i = tabNum; final int j = num;
@@ -426,7 +426,7 @@ public class ItemBuilder extends GenericScreen {
             num++;
         }
         {
-            widgets.get(tabNum).add(new NbtWidget("Block:", 40, CacheTools.BLOCKS));
+            widgets.get(tabNum).add(new NbtWidget("Block:", 40, FortytwoEdit.BLOCKS));
             num++;
         }
         {
@@ -620,7 +620,7 @@ public class ItemBuilder extends GenericScreen {
                         client.player.playerScreenHandler.sendContentUpdates();
                     }
                 }
-            }, CacheTools.ITEMS)); num++;
+            }, FortytwoEdit.ITEMS)); num++;
         }
         {
             widgets.get(tabNum).add(new NbtWidget("Item Frames"));
@@ -927,7 +927,7 @@ public class ItemBuilder extends GenericScreen {
                         client.player.playSound(SoundEvent.of(new Identifier(sound)), SoundCategory.MASTER, 1, 1);
                     }
                 }
-            }, CacheTools.SOUNDS)); num++;
+            }, FortytwoEdit.SOUNDS)); num++;
         }
         {
             final int i = tabNum; final int j = num;
@@ -944,12 +944,11 @@ public class ItemBuilder extends GenericScreen {
                         NbtCompound BET = new NbtCompound();
                         BET.putString("note_block_sound",sound);
                         tag.put("BlockEntityTag",BET);
-                        NbtList lore = new NbtList();
-                        lore.add(NbtString.of("{\"text\":\"Note block sound:\",\"italic\":false,\"color\":\"gray\"}"));
-                        lore.add(NbtString.of("{\"text\":\""+sound+"\",\"italic\":false,\"color\":\"gray\"}"));
-                        NbtCompound display = new NbtCompound();
-                        display.put("Lore",lore);
-                        tag.put("display",display);
+                        NbtCompound SkullOwner = new NbtCompound();
+                        SkullOwner.putString("Name","\u00a77[\u00a7f"+sound+"\u00a77]\u00a7r");
+                        SkullOwner.put("Id",BlackMagick.elementFromString("[I;-78097021,-2092610827,-2037916490,-261835205]"));
+                        SkullOwner.put("Properties",BlackMagick.elementFromString("{textures:[{Value:\"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGNlZWI3N2Q0ZDI1NzI0YTljYWYyYzdjZGYyZDg4Mzk5YjE0MTdjNmI5ZmY1MjEzNjU5YjY1M2JlNDM3NmUzIn19fQ==\"}]}"));
+                        tag.put("SkullOwner",SkullOwner);
                         nbt.put("tag",tag);
                         ItemStack item = ItemStack.fromNbt(nbt);
                         if(item != null && client.player.getAbilities().creativeMode) {
@@ -1179,7 +1178,7 @@ public class ItemBuilder extends GenericScreen {
                 }
                 else
                     BlackMagick.removeNbt(item,"EntityTag/id");
-            }, CacheTools.ENTITIES)); num++;
+            }, FortytwoEdit.ENTITIES)); num++;
         }
         {
             final int i = tabNum; final int j = num;
@@ -2183,7 +2182,7 @@ public class ItemBuilder extends GenericScreen {
             this.savedStacks = new ItemStack[9];
             this.btns = new ButtonWidget[9];
             this.btnX = new int[9];
-            int currentX = 15+30;
+            int currentX = 10+30;
             for(int i=0; i<9; i++) {
                 this.btnX[i] = currentX;
                 final int index = row*9+i;
@@ -2354,7 +2353,6 @@ public class ItemBuilder extends GenericScreen {
         if (suggs != null && suggs.mouseScrolled(amount)) {
             return true;
         }
-        suggs = null;
         return super.mouseScrolled(mouseX, mouseY, amount);
     }
 
