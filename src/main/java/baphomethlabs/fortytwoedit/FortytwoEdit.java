@@ -35,6 +35,7 @@ import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Property;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
@@ -223,6 +224,14 @@ public class FortytwoEdit implements ClientModInitializer {
 
     //see feature items
     public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE);
+
+    //format codes
+    public static final Text formatTooltip = Text.of("Formatting\n"+
+        "0-black§r 1-§1dark_blue§r 2-§2dark_green§r 3-§3dark_aqua§r 4-§4dark_red§r 5-§5dark_purple§r "+
+        "6-§6gold§r 7-§7gray§r 8-§8dark_gray§r 9-§9blue§r a-§agreen§r b-§baqua§r "+
+        "c-§cred§r d-§dlight_purple§r e-§eyellow§r f-§fwhite§r\n"+
+        "r-§rreset§r k-obfuscated§r l-§lbold§r m-§mstrikethrough§r n-§nunderlined§r o-§oitalic§r\n\n"+
+        "Fonts\ndefault, uniform, alt, illageralt");
 
     //supersecretsettings
     private static final Identifier[] SECRETSOUNDS = getSecretSounds();

@@ -58,6 +58,7 @@ public class ItemBuilder extends GenericScreen {
     protected int playerY;
     protected ItemStack item = null;
     protected ButtonWidget itemBtn;
+    private TextFieldWidget txtFormat;
     private TabWidget tabWidget;
     private final ArrayList<ArrayList<ClickableWidget>> noScrollWidgets = new ArrayList<ArrayList<ClickableWidget>>();
     private final ArrayList<ArrayList<NbtWidget>> widgets = new ArrayList<ArrayList<NbtWidget>>();
@@ -95,6 +96,10 @@ public class ItemBuilder extends GenericScreen {
 
         //main
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
+        txtFormat = new TextFieldWidget(this.textRenderer,x+50,y+5+2,15,16,Text.of(""));
+        txtFormat.setEditable(false);
+        txtFormat.setText("\u00a7");
+        txtFormat.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
         this.addDrawableChild(ButtonWidget.builder(Text.of("c*"), button -> this.btnSwapOff(true)).dimensions(width/2 - 50,y+5,20,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("c"), button -> this.btnSwapOff(false)).dimensions(width/2 - 30,y+5,15,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnChangeSlot(true)).dimensions(width/2 - 15,y+5,15,20).build());
@@ -2351,6 +2356,7 @@ public class ItemBuilder extends GenericScreen {
         else
             InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
         context.drawItem(item, x+240-20-5+2, y+5+2);
+        txtFormat.render(context, mouseX, mouseY, delta);
         if(!this.unsavedTxtWidgets.isEmpty())
             context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
         if(savedError)
