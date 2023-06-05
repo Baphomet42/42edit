@@ -25,6 +25,7 @@ import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.ButtonWidget.PressAction;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtByte;
@@ -65,6 +66,8 @@ public class ItemBuilder extends GenericScreen {
     public boolean savedModeSet = false;
     private NbtList savedItems = null;
     private boolean savedError = false;
+    private ArmorStandEntity renderArmorStand;
+    private boolean editArmorStand = false;
     public final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
     public final String[] BANNER_CHAR_LIST = new String[BANNER_PRESET_CHARS.replaceAll("\\s","").length()];
     public final String[] DYES = {"black","blue","brown","cyan","gray","green","light_blue","light_gray","lime","magenta","orange","pink","purple","red","white","yellow"};
@@ -136,6 +139,14 @@ public class ItemBuilder extends GenericScreen {
                 this.addDrawableChild(noScrollWidgets.get(4).get(i));
         }
 
+        //armor stand
+        renderArmorStand = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
+        renderArmorStand.bodyYaw = 210.0f;
+        renderArmorStand.setPitch(25.0f);
+        renderArmorStand.headYaw = renderArmorStand.getYaw();
+        renderArmorStand.prevHeadYaw = renderArmorStand.getYaw();
+
+        //banner
         int i=0;
         for(char c : BANNER_PRESET_CHARS.replaceAll("\\s","").toCharArray()) {
             BANNER_CHAR_LIST[i] = ""+c;
@@ -1973,6 +1984,28 @@ public class ItemBuilder extends GenericScreen {
         }
         suggs = null;
     }
+
+    private void updateArmorStand(ItemStack stand) {
+        resetArmorStand();
+        if(stand != null && stand.hasNbt()) {
+            NbtCompound tag = stand.getNbt();
+            if(tag.contains("EntityTag",NbtElement.COMPOUND_TYPE)) {
+                NbtCompound entity = tag.getCompound("EntityTag");
+                entity.put("Pos",BlackMagick.elementFromString("[0d,0d,0d]"));
+                entity.put("Motion",BlackMagick.elementFromString("[0d,0d,0d]"));
+                entity.put("Rotation",BlackMagick.elementFromString("[0f,0f]"));
+                renderArmorStand.readNbt(entity);
+            }
+        }
+    }
+
+    private void resetArmorStand() {
+        renderArmorStand = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
+        renderArmorStand.bodyYaw = 210.0f;
+        renderArmorStand.setPitch(25.0f);
+        renderArmorStand.headYaw = renderArmorStand.getYaw();
+        renderArmorStand.prevHeadYaw = renderArmorStand.getYaw();
+    }
     
     ///////////////////////////////////////////////////////////////////////////////////////////////
     private class TabWidget
@@ -2313,7 +2346,10 @@ public class ItemBuilder extends GenericScreen {
             else
                 context.drawItem(tabsItem[i],x+240+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(i-LEFT_TABS)+(TAB_SIZE/2-8));
         }
-        InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
+        if(tab == 5)
+            InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)renderArmorStand);
+        else
+            InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
         context.drawItem(item, x+240-20-5+2, y+5+2);
         if(!this.unsavedTxtWidgets.isEmpty())
             context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
@@ -2368,6 +2404,13 @@ public class ItemBuilder extends GenericScreen {
     @Override
     public void tick() {
         updateItem();
+        if(item.getItem().toString().equals("armor_stand")) {
+            editArmorStand = true;
+            updateArmorStand(item);
+        }
+        else if(editArmorStand) {
+            resetArmorStand();
+        }
         if(unsel) {
             GuiNavigationPath guiNavigationPath = this.getFocusedPath();
             if (guiNavigationPath != null) {

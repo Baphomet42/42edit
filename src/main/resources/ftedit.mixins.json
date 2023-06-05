@@ -10,7 +10,8 @@
     "InGameHudMixin",
     "KeyBindingMixin",
     "MinecraftClientMixin",
-    "SharedConstantsMixin"
+    "SharedConstantsMixin",
+    "TooltipMixin"
   ],
   "injectors": {
     "defaultRequire": 1
