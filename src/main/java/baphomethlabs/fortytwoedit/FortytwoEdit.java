@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import org.lwjgl.glfw.GLFW;
@@ -27,19 +28,25 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtInt;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.registry.Registries;
 import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.state.property.Property;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import baphomethlabs.fortytwoedit.gui.MagickGui;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 
@@ -81,6 +88,7 @@ public class FortytwoEdit implements ClientModInitializer {
     private static long lastSpam = 0;
     public static KeyBinding modKey;
     public static KeyBinding spamClick;
+    public static boolean xrayEntity = false;
 
     // randomizer mode
     public static int[] randoSlots;
@@ -426,6 +434,49 @@ public class FortytwoEdit implements ClientModInitializer {
         int slot = (int) (Math.random() * randoSlots.length);
         slot = randoSlots[slot];
         client.player.getInventory().selectedSlot = slot - 1;
+    }
+
+    public static ItemStack copyLookAt() {
+        final MinecraftClient client = MinecraftClient.getInstance();
+        HitResult hitResult = client.crosshairTarget;
+        if (hitResult == null) {
+            return null;
+        }
+        if(hitResult.getType() == HitResult.Type.BLOCK) {
+            BlockPos blockPos = ((BlockHitResult)hitResult).getBlockPos();
+            BlockState blockState = client.player.getWorld().getBlockState(blockPos);
+            
+            if (!blockState.getProperties().isEmpty()) {
+                NbtCompound stack = new NbtCompound();
+                stack.put("id",NbtString.of(blockState.getBlock().asItem().toString()));
+                stack.put("Count",NbtInt.of(1));
+                NbtCompound tag = new NbtCompound();
+
+                String states = "";
+                states += "{";
+                boolean bl = false;
+                for (Map.Entry<Property<?>,Comparable<?>> entry : blockState.getEntries().entrySet()) {
+                    if (bl) {
+                        states += ",";
+                    }
+                    states += entry.getKey().getName();
+                    states += ":";
+                    states += "\""+getValueString(blockState,entry.getKey())+"\"";
+                    bl = true;
+                }
+                states += "}";
+
+                tag.put("display",BlackMagick.elementFromString("{Lore:['{\"text\":\"(+BlockStateTag)\"}']}"));
+                tag.put("BlockStateTag",BlackMagick.elementFromString(states));
+                stack.put("tag",tag);
+                return ItemStack.fromNbt(stack);
+            }
+        }
+        return null;
+    }
+
+    private static <T extends Comparable<T>> String getValueString(BlockState state, Property<T> property) {
+        return property.name(state.get(property));
     }
 
     private static String[] getCacheBlocks() {

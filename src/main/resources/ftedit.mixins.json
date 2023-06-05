@@ -9,6 +9,7 @@
     "IconsMixin",
     "InGameHudMixin",
     "KeyBindingMixin",
+    "MinecraftClientMixin",
     "SharedConstantsMixin"
   ],
   "injectors": {
