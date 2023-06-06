@@ -22,6 +22,7 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.EditBoxWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
+import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.ButtonWidget.PressAction;
 import net.minecraft.entity.LivingEntity;
@@ -32,6 +33,7 @@ import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtDouble;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtFloat;
 import net.minecraft.nbt.NbtInt;
 import net.minecraft.nbt.NbtIntArray;
 import net.minecraft.nbt.NbtList;
@@ -49,9 +51,9 @@ public class ItemBuilder extends GenericScreen {
     protected final int TAB_OFFSET = 5;
     protected final int TAB_SIZE = 24;
     protected final int TAB_SPACING = 2;
-    protected final String[] tabsLbl = {"General","Blocks","Misc","Custom NBT","Saved Items","Entity Data","Banner Maker"};
-    protected final ItemStack[] tabsItem = {new ItemStack(Items.GOLDEN_SWORD),new ItemStack(Items.PURPLE_SHULKER_BOX),
-        FortytwoEdit.HEAD42,new ItemStack(Items.COMMAND_BLOCK),new ItemStack(Items.JIGSAW),new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),FortytwoEdit.BANNER42};
+    protected final String[] tabsLbl = {"General","Blocks","Misc","Custom NBT","Saved Items","Entity Data","Armor Pose","Banner Maker"};
+    protected final ItemStack[] tabsItem = {new ItemStack(Items.GOLDEN_SWORD),new ItemStack(Items.PURPLE_SHULKER_BOX),FortytwoEdit.HEAD42,new ItemStack(Items.COMMAND_BLOCK),
+        new ItemStack(Items.JIGSAW),new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),new ItemStack(Items.ARMOR_STAND),FortytwoEdit.BANNER42};
     protected final ButtonWidget[] tabs = new ButtonWidget[tabsLbl.length];
     private final int LEFT_TABS = 5;
     protected int playerX;
@@ -68,7 +70,11 @@ public class ItemBuilder extends GenericScreen {
     private NbtList savedItems = null;
     private boolean savedError = false;
     private ArmorStandEntity renderArmorStand;
+    private ArmorStandEntity renderArmorPose;
+    private ArrayList<NbtWidget> sliders = new ArrayList<>();
     private boolean editArmorStand = false;
+    private boolean unsavedPose = false;
+    private float[][] armorPose;
     public final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
     public final String[] BANNER_CHAR_LIST = new String[BANNER_PRESET_CHARS.replaceAll("\\s","").length()];
     public final String[] DYES = {"black","blue","brown","cyan","gray","green","light_blue","light_gray","lime","magenta","orange","pink","purple","red","white","yellow"};
@@ -106,8 +112,8 @@ public class ItemBuilder extends GenericScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnChangeSlot(false)).dimensions(width/2,y+5,15,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Q"), button -> this.btnThrow(false)).dimensions(width/2 + 15,y+5,15,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Q*"), button -> this.btnThrow(true)).dimensions(width/2 + 30,y+5,20,20).build());
-        playerX = x + 240+40;
-        playerY = y + 40;
+        playerX = x + 240+50;
+        playerY = y + 50;
         itemBtn = this.addDrawableChild(ButtonWidget.builder(Text.of(""), button -> this.btnCopyNbt()).dimensions(x+240-20-5,y+5,20,20).build());
         updateItem();
 
@@ -143,6 +149,20 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<noScrollWidgets.get(4).size(); i++)
                 this.addDrawableChild(noScrollWidgets.get(4).get(i));
         }
+        if(tab == 6) {
+            if(noScrollWidgets.get(6).size()>=3) {
+                noScrollWidgets.get(6).get(0).setX(x+15-3);
+                noScrollWidgets.get(6).get(0).setY(y+35+1);
+
+                noScrollWidgets.get(6).get(1).setX(x+15-3);
+                noScrollWidgets.get(6).get(1).setY(y+35+1+20);
+
+                noScrollWidgets.get(6).get(2).setX(x+15-3);
+                noScrollWidgets.get(6).get(2).setY(y+35+1+20+20);
+            }
+            for(int i=0; i<noScrollWidgets.get(6).size(); i++)
+                this.addDrawableChild(noScrollWidgets.get(6).get(i));
+        }
 
         //armor stand
         renderArmorStand = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
@@ -150,6 +170,12 @@ public class ItemBuilder extends GenericScreen {
         renderArmorStand.setPitch(25.0f);
         renderArmorStand.headYaw = renderArmorStand.getYaw();
         renderArmorStand.prevHeadYaw = renderArmorStand.getYaw();
+        //pose
+        renderArmorPose = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
+        renderArmorPose.bodyYaw = 210.0f;
+        renderArmorPose.setPitch(25.0f);
+        renderArmorPose.headYaw = renderArmorPose.getYaw();
+        renderArmorPose.prevHeadYaw = renderArmorPose.getYaw();
 
         //banner
         int i=0;
@@ -1091,11 +1117,13 @@ public class ItemBuilder extends GenericScreen {
         {
             noScrollWidgets.get(tabNum).add(CyclingButtonWidget.onOffBuilder(Text.literal("C"), Text.literal("V")).initially(savedModeSet).omitKeyText().build(x+15-3, y+35+1,20,20, Text.of(""), (button, trackOutput) -> {
                 savedModeSet = (boolean)trackOutput;
+                setSavedModeTooltip();
                 ItemBuilder.this.unsel = true;
             }));
         }
         for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
             widgets.get(tabNum).add(new NbtWidget(i));
+        setSavedModeTooltip();
 
         num = 0; tabNum++;
         //entity data
@@ -1697,6 +1725,139 @@ public class ItemBuilder extends GenericScreen {
         }
 
         num = 0; tabNum++;
+        //armor stand pose  //TODO
+        {
+            ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2611"), button -> this.btnSetPose()).dimensions(x+15-3, y+35+1,20,20).build();
+            newButton.setTooltip(Tooltip.of(Text.of("Set Pose")));
+            noScrollWidgets.get(tabNum).add(newButton);
+        }
+        {
+            ButtonWidget newButton = ButtonWidget.builder(Text.of("^"), button -> this.btnGetPose()).dimensions(x+15-3, y+55+1,20,20).build();
+            newButton.setTooltip(Tooltip.of(Text.of("Get from item")));
+            noScrollWidgets.get(tabNum).add(newButton);
+        }
+        {
+            ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2612"), button -> this.btnResetPose()).dimensions(x+15-3, y+75+1,20,20).build();
+            newButton.setTooltip(Tooltip.of(Text.of("Undo changes")));
+            noScrollWidgets.get(tabNum).add(newButton);
+        }
+        {
+            widgets.get(tabNum).add(new NbtWidget("Head"));
+            num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(0,0);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(0,1);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(0,2);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            widgets.get(tabNum).add(new NbtWidget("Right Arm"));
+            num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(1,0);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(1,1);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(1,2);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            widgets.get(tabNum).add(new NbtWidget("Left Arm"));
+            num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(2,0);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(2,1);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(2,2);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            widgets.get(tabNum).add(new NbtWidget("Right Leg"));
+            num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(3,0);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(3,1);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(3,2);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            widgets.get(tabNum).add(new NbtWidget("Left Leg"));
+            num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(4,0);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(4,1);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(4,2);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            widgets.get(tabNum).add(new NbtWidget("Body"));
+            num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(5,0);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(5,1);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        {
+            NbtWidget newSlider = new NbtWidget(5,2);
+            sliders.add(newSlider);
+            widgets.get(tabNum).add(newSlider); num++;
+        }
+        btnResetPose();
+
+        num = 0; tabNum++;
         //banner maker
         {
             final int i = tabNum; final int j = num;
@@ -1981,6 +2142,13 @@ public class ItemBuilder extends GenericScreen {
                 widgets.get(4).get(i).updateSavedDisplay();
     }
 
+    private void setSavedModeTooltip() {
+        if(savedModeSet)
+            noScrollWidgets.get(4).get(0).setTooltip(Tooltip.of(Text.of("C - Save to slot")));
+        else
+            noScrollWidgets.get(4).get(0).setTooltip(Tooltip.of(Text.of("V - Get item")));
+    }
+
     private void resetSuggs() {
         if(!currentTxt.isEmpty()) {
             // for(TextFieldWidget t : currentTxt)
@@ -1990,18 +2158,23 @@ public class ItemBuilder extends GenericScreen {
         suggs = null;
     }
 
-    private void updateArmorStand(ItemStack stand) {
+    private NbtCompound updateArmorStand(ItemStack stand) {
         resetArmorStand();
         if(stand != null && stand.hasNbt()) {
-            NbtCompound tag = stand.getNbt();
+            NbtCompound tag = stand.getNbt().copy();
             if(tag.contains("EntityTag",NbtElement.COMPOUND_TYPE)) {
                 NbtCompound entity = tag.getCompound("EntityTag");
                 entity.put("Pos",BlackMagick.elementFromString("[0d,0d,0d]"));
                 entity.put("Motion",BlackMagick.elementFromString("[0d,0d,0d]"));
                 entity.put("Rotation",BlackMagick.elementFromString("[0f,0f]"));
-                renderArmorStand.readNbt(entity);
+                renderArmorStand.readNbt(entity.copy());
+                updatePose();
+                if(entity.contains("Pose",NbtElement.COMPOUND_TYPE)) {
+                    return (NbtCompound)entity.get("Pose").copy();
+                }
             }
         }
+        return null;
     }
 
     private void resetArmorStand() {
@@ -2010,6 +2183,177 @@ public class ItemBuilder extends GenericScreen {
         renderArmorStand.setPitch(25.0f);
         renderArmorStand.headYaw = renderArmorStand.getYaw();
         renderArmorStand.prevHeadYaw = renderArmorStand.getYaw();
+        editArmorStand = false;
+    }
+
+    protected NbtCompound updatePose() {//TODO
+        renderArmorPose = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
+        renderArmorPose.bodyYaw = 210f;
+        renderArmorPose.setPitch(25f);
+        renderArmorPose.headYaw = renderArmorPose.getYaw();
+        renderArmorPose.prevHeadYaw = renderArmorPose.getYaw();
+        NbtCompound nbt = new NbtCompound();
+        if(renderArmorStand != null)
+            nbt = renderArmorStand.writeNbt(new NbtCompound());
+        NbtCompound pose = new NbtCompound();
+        if(nbt.contains("Pose",NbtElement.COMPOUND_TYPE))
+            pose = (NbtCompound)nbt.get("Pose");
+
+        if(armorPose == null) {
+            renderArmorPose.readNbt(nbt.copy());
+            return pose;
+        }
+
+        if(armorPose[0] != null) {
+            NbtList l = new NbtList();
+            for(int i=0; i<3; i++)
+                l.add(NbtFloat.of(armorPose[0][i]));
+            pose.put("Head",l);
+        }
+        else if(pose.contains("Head"))
+            pose.remove("Head");
+
+        if(armorPose[1] != null) {
+            NbtList l = new NbtList();
+            for(int i=0; i<3; i++)
+                l.add(NbtFloat.of(armorPose[1][i]));
+            pose.put("RightArm",l);
+        }
+        else if(pose.contains("RightArm"))
+            pose.remove("RightArm");
+
+        if(armorPose[2] != null) {
+            NbtList l = new NbtList();
+            for(int i=0; i<3; i++)
+                l.add(NbtFloat.of(armorPose[2][i]));
+            pose.put("LeftArm",l);
+        }
+        else if(pose.contains("LeftArm"))
+            pose.remove("LeftArm");
+
+        if(armorPose[3] != null) {
+            NbtList l = new NbtList();
+            for(int i=0; i<3; i++)
+                l.add(NbtFloat.of(armorPose[3][i]));
+            pose.put("RightLeg",l);
+        }
+        else if(pose.contains("RightLeg"))
+            pose.remove("RightLeg");
+
+        if(armorPose[4] != null) {
+            NbtList l = new NbtList();
+            for(int i=0; i<3; i++)
+                l.add(NbtFloat.of(armorPose[4][i]));
+            pose.put("LeftLeg",l);
+        }
+        else if(pose.contains("LeftLeg"))
+            pose.remove("LeftLeg");
+
+        if(armorPose[5] != null) {
+            NbtList l = new NbtList();
+            for(int i=0; i<3; i++)
+                l.add(NbtFloat.of(armorPose[5][i]));
+            pose.put("Body",l);
+        }
+        else if(pose.contains("Body"))
+            pose.remove("Body");
+
+        nbt.put("Pose",pose.copy());
+        renderArmorPose.readNbt(nbt.copy());
+
+        return pose.copy();
+    }
+
+    private void btnResetPose() {
+        for(int i=0; i<sliders.size(); i++)
+            sliders.get(i).setSlider(0f);
+        armorPose = null;
+        updatePose();
+        unsavedPose = false;
+        unsel = true;
+    }
+
+    private void btnGetPose() {
+        btnResetPose();
+        if(client.player.getMainHandStack().getItem().toString().equals("armor_stand") && sliders.size()==6*3) {
+            NbtCompound pose = updateArmorStand(client.player.getMainHandStack().copy());
+            if(pose != null) {
+                armorPose = new float[6][];
+
+                String part = "Head";
+                int partNum = 0;
+                if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
+                        && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
+                    NbtList list = (NbtList)pose.get(part);
+                    armorPose[partNum] = new float[3];
+                    for(int i=0; i<3; i++)
+                        sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
+                }
+                
+                part = "RightArm";
+                partNum = 1;
+                if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
+                        && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
+                    NbtList list = (NbtList)pose.get(part);
+                    armorPose[partNum] = new float[3];
+                    for(int i=0; i<3; i++)
+                        sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
+                }
+                
+                part = "LeftArm";
+                partNum = 2;
+                if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
+                        && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
+                    NbtList list = (NbtList)pose.get(part);
+                    armorPose[partNum] = new float[3];
+                    for(int i=0; i<3; i++)
+                        sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
+                }
+                
+                part = "RightLeg";
+                partNum = 3;
+                if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
+                        && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
+                    NbtList list = (NbtList)pose.get(part);
+                    armorPose[partNum] = new float[3];
+                    for(int i=0; i<3; i++)
+                        sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
+                }
+                
+                part = "LeftLeg";
+                partNum = 4;
+                if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
+                        && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
+                    NbtList list = (NbtList)pose.get(part);
+                    armorPose[partNum] = new float[3];
+                    for(int i=0; i<3; i++)
+                        sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
+                }
+                
+                part = "Body";
+                partNum = 5;
+                if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
+                        && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
+                    NbtList list = (NbtList)pose.get(part);
+                    armorPose[partNum] = new float[3];
+                    for(int i=0; i<3; i++)
+                        sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
+                }
+
+            }
+        }
+        updatePose();
+        unsavedPose = false;
+        unsel = true;
+    }
+
+    private void btnSetPose() {
+        if(armorPose != null) {
+            ItemStack item = BlackMagick.setId("armor_stand");
+            BlackMagick.setNbt(item,"EntityTag/Pose",updatePose());
+            unsavedPose = false;
+            unsel = true;
+        }
     }
     
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -2044,6 +2388,7 @@ public class ItemBuilder extends GenericScreen {
         private boolean lblCentered;
         private ItemStack[] savedStacks;
         private int savedRow = -1;
+        private PoseSlider slider;
 
         //btn(size) txt
         public NbtWidget(String name, int size, String tooltip, PressAction onPress, String[] suggestions) {
@@ -2257,6 +2602,17 @@ public class ItemBuilder extends GenericScreen {
             }
         }
 
+        //slider
+        public NbtWidget(int part, int num) {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+
+            this.slider = new PoseSlider(part,num);
+
+            this.children.add(this.slider);
+        }
+
         private void setup() {
             btns = new ButtonWidget[0];
             btnX = new int[0];
@@ -2296,6 +2652,11 @@ public class ItemBuilder extends GenericScreen {
             }
         }
 
+        public void setSlider(float val) {
+            if(this.slider != null)
+                this.slider.setVal(val);
+        }
+
         @Override
         public List<? extends Element> children() {
             return this.children;
@@ -2324,6 +2685,11 @@ public class ItemBuilder extends GenericScreen {
                 else
                     context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.of(this.lbl), ItemBuilder.this.x+15+3, y+6, LABEL_COLOR);
             }
+            if(slider != null) {
+                this.slider.render(context, mouseX, mouseY, tickDelta);
+                this.slider.setX(ItemBuilder.this.x+2+10+20+5);
+                this.slider.setY(y);
+            }
             if(this.savedStacks != null && this.savedStacks.length == 9)
                 for(int i=0; i<9; i++)
                     context.drawItem(this.savedStacks[i],x+this.btnX[i]+2,y+2);
@@ -2340,6 +2706,69 @@ public class ItemBuilder extends GenericScreen {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
+    class PoseSlider
+    extends SliderWidget {
+        private final double min;
+        private final double max;
+        public float val;
+        private final int part;
+        private final int num;
+
+        public PoseSlider(int part, int num) {
+            super(0, 0, 180, 20, Text.of(""), 0.0);
+            this.min = -180f;
+            this.max = 180f;
+            this.part = part;
+            this.num = num;
+            this.value = (0f - min) / (max - min);
+            this.applyValue();
+            this.updateMessage();
+        }
+
+        @Override
+        public void applyValue() {
+            val = (float)((int)(this.value*(max-min)+min));
+
+            if(ItemBuilder.this.armorPose == null)
+                ItemBuilder.this.armorPose = new float[6][];
+
+            if(ItemBuilder.this.armorPose[part] == null)
+                ItemBuilder.this.armorPose[part] = new float[3];
+
+            ItemBuilder.this.armorPose[part][num] = (float)val;
+            updatePose();
+            ItemBuilder.this.unsavedPose = true;
+        }
+
+        @Override
+        protected void updateMessage() {
+            if((float)((int)val) == val)
+                this.setMessage(Text.of(""+(int)val));
+            else
+                this.setMessage(Text.of(""+val));
+        }
+
+        public void setVal(float newVal) {
+            while(newVal > 180)
+                newVal -= 360;
+            while(newVal < -180)
+                newVal += 360;
+            this.value = (double)((newVal - min)/(max-min));
+            val = newVal;
+
+            if(ItemBuilder.this.armorPose == null)
+                ItemBuilder.this.armorPose = new float[6][];
+
+            if(ItemBuilder.this.armorPose[part] == null)
+                ItemBuilder.this.armorPose[part] = new float[3];
+
+            ItemBuilder.this.armorPose[part][num] = val;
+            updatePose();
+            updateMessage();
+            ItemBuilder.this.unsavedPose = true;
+        }
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -2351,13 +2780,16 @@ public class ItemBuilder extends GenericScreen {
             else
                 context.drawItem(tabsItem[i],x+240+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(i-LEFT_TABS)+(TAB_SIZE/2-8));
         }
-        if(tab == 5)
+        if(tab == 5 && editArmorStand)
             InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)renderArmorStand);
+        else if(tab == 6) {
+            InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)renderArmorPose);
+        }
         else
             InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
         context.drawItem(item, x+240-20-5+2, y+5+2);
         txtFormat.render(context, mouseX, mouseY, delta);
-        if(!this.unsavedTxtWidgets.isEmpty())
+        if(!this.unsavedTxtWidgets.isEmpty() || unsavedPose)
             context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
         if(savedError)
             context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
@@ -2379,7 +2811,7 @@ public class ItemBuilder extends GenericScreen {
         }
         suggs = null;
         if (keyCode == KeyBindingHelper.getBoundKeyOf(FortytwoEdit.magickGuiKey).getCode() || keyCode == KeyBindingHelper.getBoundKeyOf(client.options.inventoryKey).getCode()) {
-            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt()) {
+            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !unsavedPose) {
                 this.client.setScreen(null);
                 return true;
             }
@@ -2410,12 +2842,15 @@ public class ItemBuilder extends GenericScreen {
     @Override
     public void tick() {
         updateItem();
-        if(item.getItem().toString().equals("armor_stand")) {
-            editArmorStand = true;
-            updateArmorStand(item);
-        }
-        else if(editArmorStand) {
-            resetArmorStand();
+        if(tab == 5 || tab == 6) {
+            if(item.getItem().toString().equals("armor_stand")) {
+                updateArmorStand(item.copy());
+                editArmorStand = true;
+            }
+            else if(editArmorStand) {
+                resetArmorStand();
+                updatePose();
+            }
         }
         if(unsel) {
             GuiNavigationPath guiNavigationPath = this.getFocusedPath();
