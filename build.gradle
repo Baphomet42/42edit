@@ -27,7 +27,7 @@ dependencies {
 	//	paste gradle.properties Fabric Properties and Dependencies and manually update Mod Properties
 	//	loom version set above (from https://github.com/FabricMC/fabric-example-mod)
 	//	update fabric.mod.json depends minecraft version
-	//	./gradlew cleanloom			./gradlew --stop
+	//	./gradlew clean			./gradlew --stop
 	//	./gradlew genSources --refresh-dependencies
 	//	./gradlew build
 	
