@@ -226,12 +226,14 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE);
 
     //format codes
-    public static final Text formatTooltip = Text.of("Formatting\n"+
+    public static final Text formatTooltip = Text.Serializer.fromJson("[{\"text\":\"Formatting\n"+
         "0-black§r 1-§1dark_blue§r 2-§2dark_green§r 3-§3dark_aqua§r 4-§4dark_red§r 5-§5dark_purple§r "+
         "6-§6gold§r 7-§7gray§r 8-§8dark_gray§r 9-§9blue§r a-§agreen§r b-§baqua§r "+
-        "c-§cred§r d-§dlight_purple§r e-§eyellow§r f-§fwhite§r\n"+
-        "r-§rreset§r k-obfuscated§r l-§lbold§r m-§mstrikethrough§r n-§nunderlined§r o-§oitalic§r\n\n"+
-        "Fonts\ndefault, uniform, alt, illageralt");
+        "c-§cred§r d-§dlight_purple§r e-§eyellow§r f-§fwhite§r #420666-\"},{\"text\":\"0xRRGGBB\",\"color\":\"#420666\"},"+
+        "{\"text\":\"\nr-§rreset§r k-obfuscated§r l-§lbold§r m-§mstrikethrough§r n-§nunderlined§r o-§oitalic§r\"},"+
+        "{\"text\":\"\n\nFonts\ndefault- ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\nuniform- \"},{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\n\",\"font\":\"uniform\"},"+
+        "{\"text\":\"alt- \"},{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\n\",\"font\":\"alt\"},{\"text\":\"illageralt- \"},"+
+        "{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\",\"font\":\"illageralt\"}]");
 
     //supersecretsettings
     private static final Identifier[] SECRETSOUNDS = getSecretSounds();

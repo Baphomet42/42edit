@@ -72,6 +72,8 @@ public class ItemBuilder extends GenericScreen {
     private ArmorStandEntity renderArmorStand;
     private ArmorStandEntity renderArmorPose;
     private ArrayList<NbtWidget> sliders = new ArrayList<>();
+    private ArrayList<NbtWidget> sliderBtns = new ArrayList<>();
+    private ButtonWidget setPoseButton;
     private boolean editArmorStand = false;
     private boolean unsavedPose = false;
     private float[][] armorPose;
@@ -333,7 +335,7 @@ public class ItemBuilder extends GenericScreen {
                 }
                 else
                     BlackMagick.removeNbt(null,"display/Name");
-            },null)); num++;
+            },new String[] {"{\"text\":\"\"}"})); num++;
         }
         {
             final int i = tabNum; final int j = num;
@@ -548,7 +550,7 @@ public class ItemBuilder extends GenericScreen {
                 }
                 else
                     BlackMagick.removeNbt(null,"BlockEntityTag/CustomName");
-            },null)); num++;
+            },new String[] {"{\"text\":\"\"}"})); num++;
         }
         {
             final int i = tabNum; final int j = num;
@@ -989,7 +991,8 @@ public class ItemBuilder extends GenericScreen {
                         NbtCompound SkullOwner = new NbtCompound();
                         SkullOwner.putString("Name","\u00a77[\u00a7f"+sound+"\u00a77]\u00a7r");
                         SkullOwner.put("Id",BlackMagick.elementFromString("[I;-78097021,-2092610827,-2037916490,-261835205]"));
-                        SkullOwner.put("Properties",BlackMagick.elementFromString("{textures:[{Value:\"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGNlZWI3N2Q0ZDI1NzI0YTljYWYyYzdjZGYyZDg4Mzk5YjE0MTdjNmI5ZmY1MjEzNjU5YjY1M2JlNDM3NmUzIn19fQ==\"}]}"));
+                        SkullOwner.put("Properties",BlackMagick.elementFromString("{textures:[{Value:\"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dX"+
+                            "Jlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGNlZWI3N2Q0ZDI1NzI0YTljYWYyYzdjZGYyZDg4Mzk5YjE0MTdjNmI5ZmY1MjEzNjU5YjY1M2JlNDM3NmUzIn19fQ==\"}]}"));
                         tag.put("SkullOwner",SkullOwner);
                         nbt.put("tag",tag);
                         ItemStack item = ItemStack.fromNbt(nbt);
@@ -1235,7 +1238,7 @@ public class ItemBuilder extends GenericScreen {
                 }
                 else
                     BlackMagick.removeNbt(null,"EntityTag/CustomName");
-            },null)); num++;
+            },new String[] {"{\"text\":\"\"}"})); num++;
         }
         {
             final int i = tabNum; final int j = num;
@@ -1725,10 +1728,11 @@ public class ItemBuilder extends GenericScreen {
         }
 
         num = 0; tabNum++;
-        //armor stand pose  //TODO
+        //armor stand pose
         {
             ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2611"), button -> this.btnSetPose()).dimensions(x+15-3, y+35+1,20,20).build();
             newButton.setTooltip(Tooltip.of(Text.of("Set Pose")));
+            setPoseButton = newButton;
             noScrollWidgets.get(tabNum).add(newButton);
         }
         {
@@ -1738,11 +1742,13 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2612"), button -> this.btnResetPose()).dimensions(x+15-3, y+75+1,20,20).build();
-            newButton.setTooltip(Tooltip.of(Text.of("Undo changes")));
+            newButton.setTooltip(Tooltip.of(Text.of("Clear All")));
             noScrollWidgets.get(tabNum).add(newButton);
         }
         {
-            widgets.get(tabNum).add(new NbtWidget("Head"));
+            NbtWidget newButton = new NbtWidget(0,"Head");
+            sliderBtns.add(newButton);
+            widgets.get(tabNum).add(newButton);
             num++;
         }
         {
@@ -1761,7 +1767,9 @@ public class ItemBuilder extends GenericScreen {
             widgets.get(tabNum).add(newSlider); num++;
         }
         {
-            widgets.get(tabNum).add(new NbtWidget("Right Arm"));
+            NbtWidget newButton = new NbtWidget(1,"Right Arm");
+            sliderBtns.add(newButton);
+            widgets.get(tabNum).add(newButton);
             num++;
         }
         {
@@ -1780,7 +1788,9 @@ public class ItemBuilder extends GenericScreen {
             widgets.get(tabNum).add(newSlider); num++;
         }
         {
-            widgets.get(tabNum).add(new NbtWidget("Left Arm"));
+            NbtWidget newButton = new NbtWidget(2,"Left Arm");
+            sliderBtns.add(newButton);
+            widgets.get(tabNum).add(newButton);
             num++;
         }
         {
@@ -1799,7 +1809,9 @@ public class ItemBuilder extends GenericScreen {
             widgets.get(tabNum).add(newSlider); num++;
         }
         {
-            widgets.get(tabNum).add(new NbtWidget("Right Leg"));
+            NbtWidget newButton = new NbtWidget(3,"Right Leg");
+            sliderBtns.add(newButton);
+            widgets.get(tabNum).add(newButton);
             num++;
         }
         {
@@ -1818,7 +1830,9 @@ public class ItemBuilder extends GenericScreen {
             widgets.get(tabNum).add(newSlider); num++;
         }
         {
-            widgets.get(tabNum).add(new NbtWidget("Left Leg"));
+            NbtWidget newButton = new NbtWidget(4,"Left Leg");
+            sliderBtns.add(newButton);
+            widgets.get(tabNum).add(newButton);
             num++;
         }
         {
@@ -1837,7 +1851,9 @@ public class ItemBuilder extends GenericScreen {
             widgets.get(tabNum).add(newSlider); num++;
         }
         {
-            widgets.get(tabNum).add(new NbtWidget("Body"));
+            NbtWidget newButton = new NbtWidget(5,"Body");
+            sliderBtns.add(newButton);
+            widgets.get(tabNum).add(newButton);
             num++;
         }
         {
@@ -2186,7 +2202,7 @@ public class ItemBuilder extends GenericScreen {
         editArmorStand = false;
     }
 
-    protected NbtCompound updatePose() {//TODO
+    protected NbtCompound updatePose() {
         renderArmorPose = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
         renderArmorPose.bodyYaw = 210f;
         renderArmorPose.setPitch(25f);
@@ -2199,10 +2215,8 @@ public class ItemBuilder extends GenericScreen {
         if(nbt.contains("Pose",NbtElement.COMPOUND_TYPE))
             pose = (NbtCompound)nbt.get("Pose");
 
-        if(armorPose == null) {
-            renderArmorPose.readNbt(nbt.copy());
-            return pose;
-        }
+        if(armorPose == null)
+            armorPose = new float[6][];
 
         if(armorPose[0] != null) {
             NbtList l = new NbtList();
@@ -2261,12 +2275,19 @@ public class ItemBuilder extends GenericScreen {
         nbt.put("Pose",pose.copy());
         renderArmorPose.readNbt(nbt.copy());
 
+        setPoseButton.setTooltip(Tooltip.of(Text.of("Set Pose\n\nPose:"+pose.asString())));
         return pose.copy();
     }
 
     private void btnResetPose() {
         for(int i=0; i<sliders.size(); i++)
             sliders.get(i).setSlider(0f);
+
+        for(int i=0; i<sliderBtns.size(); i++) {
+            sliderBtns.get(i).btns[0].setTooltip(Tooltip.of(Text.of("No pose")));
+            sliderBtns.get(i).btns[0].active = false;
+        }
+
         armorPose = null;
         updatePose();
         unsavedPose = false;
@@ -2345,15 +2366,37 @@ public class ItemBuilder extends GenericScreen {
         updatePose();
         unsavedPose = false;
         unsel = true;
+
+        for(int i=0; i<armorPose.length; i++) {
+            if(armorPose[i] == null) {
+                sliderBtns.get(i).btns[0].setTooltip(Tooltip.of(Text.of("No pose")));
+                sliderBtns.get(i).btns[0].active = false;
+            }
+            else {
+                sliderBtns.get(i).btns[0].setTooltip(Tooltip.of(Text.of("Remove Pose")));
+                sliderBtns.get(i).btns[0].active = true;
+            }
+        }
     }
 
     private void btnSetPose() {
+        ItemStack item = BlackMagick.setId("armor_stand");
         if(armorPose != null) {
-            ItemStack item = BlackMagick.setId("armor_stand");
-            BlackMagick.setNbt(item,"EntityTag/Pose",updatePose());
-            unsavedPose = false;
-            unsel = true;
+            boolean empty = true;
+            for(int i=0; i<armorPose.length; i++)
+                if(armorPose[i] != null)
+                    empty = false;
+
+            if(!empty) {
+                BlackMagick.setNbt(item,"EntityTag/Pose",updatePose());
+                unsavedPose = false;
+                unsel = true;
+                return;
+            }
         }
+        BlackMagick.removeNbt(item,"EntityTag/Pose");
+        unsavedPose = false;
+        unsel = true;
     }
     
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -2613,6 +2656,27 @@ public class ItemBuilder extends GenericScreen {
             this.children.add(this.slider);
         }
 
+        //slider btn
+        public NbtWidget(int part, String name) {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+
+            this.btns = new ButtonWidget[]{ButtonWidget.builder(Text.of(name), btn -> {
+                for(int i=0; i<3; i++)
+                    sliders.get(part*3+i).setSlider(0f);
+                if(armorPose != null)
+                    armorPose[part] = null;
+                this.btns[0].setTooltip(Tooltip.of(Text.of("No pose")));
+                this.btns[0].active = false;
+                updatePose();
+                unsavedPose = true;
+            }).dimensions(ItemBuilder.this.x+15,5,60,20).build()};
+            this.btnX = new int[]{100};
+
+            this.children.add(this.btns[0]);
+        }
+
         private void setup() {
             btns = new ButtonWidget[0];
             btnX = new int[0];
@@ -2738,6 +2802,11 @@ public class ItemBuilder extends GenericScreen {
             ItemBuilder.this.armorPose[part][num] = (float)val;
             updatePose();
             ItemBuilder.this.unsavedPose = true;
+
+            if(sliderBtns.size() > part) {
+                sliderBtns.get(part).btns[0].setTooltip(Tooltip.of(Text.of("Remove Pose")));
+                sliderBtns.get(part).btns[0].active = true;
+            }
         }
 
         @Override

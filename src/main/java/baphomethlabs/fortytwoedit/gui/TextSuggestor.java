@@ -15,6 +15,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.Rect2i;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.math.ColorHelper;
@@ -213,9 +214,11 @@ public class TextSuggestor {
                     bl52 = true;
                 }
                 //context.drawTextWithShadow(TextSuggestor.this.textRenderer, suggestion.getText(), this.area.getX() + 1, this.area.getY() + 2 + 12 * l, l + this.inWindowIndex == this.selection ? -256 : -5592406);
-                Text t = Text.Serializer.fromJson("{\"text\":\""+suggestion.getText()+"\"}");
-                if(l + this.inWindowIndex == this.selection)
-                    t = Text.Serializer.fromJson("{\"text\":\""+suggestion.getText()+"\",\"color\":\"yellow\"}");
+                Text t = Text.of(suggestion.getText());
+                if(l + this.inWindowIndex == this.selection) {
+                    Text temp = Text.Serializer.fromJson("{\"text\":\"temp\",\"color\":\"yellow\"}");
+                    t = ((MutableText)t).setStyle(temp.getStyle());
+                }
                 textList.add(t);
                 width = Math.max(width, textRenderer.getWidth(suggestion.getText()));
             }
