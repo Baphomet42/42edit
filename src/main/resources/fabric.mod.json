@@ -24,7 +24,6 @@
   },
   "mixins": [
     "ftedit.mixins.json",
-    "logical_zoom.mixins.json",
     "freelook.mixins.json",
     "visiblebarriers.mixins.json"
   ],

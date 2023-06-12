@@ -15,8 +15,7 @@ public abstract class AbstractClientPlayerEntityMixin {
 
     @Shadow protected abstract PlayerListEntry getPlayerListEntry();
     
-    @Inject(method="Lnet/minecraft/client/network/AbstractClientPlayerEntity;getCapeTexture()Lnet/minecraft/util/Identifier;",
-        at=@At("RETURN"), cancellable = true)
+    @Inject(method="Lnet/minecraft/client/network/AbstractClientPlayerEntity;getCapeTexture()Lnet/minecraft/util/Identifier;", at=@At("RETURN"), cancellable = true)
     public void getCapeTexture(CallbackInfoReturnable<Identifier> cir) {
         if(FortytwoEdit.opticapes) {
             String name = this.getPlayerListEntry().getProfile().getName();
@@ -32,16 +31,14 @@ public abstract class AbstractClientPlayerEntityMixin {
         }
     }
     
-    @Inject(method="Lnet/minecraft/client/network/AbstractClientPlayerEntity;getSkinTexture()Lnet/minecraft/util/Identifier;",
-        at=@At("RETURN"), cancellable = true)
+    @Inject(method="Lnet/minecraft/client/network/AbstractClientPlayerEntity;getSkinTexture()Lnet/minecraft/util/Identifier;", at=@At("RETURN"), cancellable = true)
     public void getSkinTexture(CallbackInfoReturnable<Identifier> cir) {
         if(FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && this.getPlayerListEntry().getProfile().getName().equals(FortytwoEdit.clientUsername)) {
             cir.setReturnValue(FortytwoEdit.customSkinID);
         }
     }
     
-    @Inject(method="Lnet/minecraft/client/network/AbstractClientPlayerEntity;getModel()Ljava/lang/String;",
-        at=@At("RETURN"), cancellable = true)
+    @Inject(method="Lnet/minecraft/client/network/AbstractClientPlayerEntity;getModel()Ljava/lang/String;", at=@At("RETURN"), cancellable = true)
     public void getModel(CallbackInfoReturnable<String> cir) {
         if(FortytwoEdit.showClientSkin && this.getPlayerListEntry().getProfile().getName().equals(FortytwoEdit.clientUsername)) {
             if(FortytwoEdit.clientSkinSlim)

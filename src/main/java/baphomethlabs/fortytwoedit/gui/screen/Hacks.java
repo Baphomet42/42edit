@@ -1,4 +1,4 @@
-package baphomethlabs.fortytwoedit.gui;
+package baphomethlabs.fortytwoedit.gui.screen;
 
 import java.io.File;
 import java.util.ArrayList;

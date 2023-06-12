@@ -1,4 +1,4 @@
-package baphomethlabs.fortytwoedit.gui;
+package baphomethlabs.fortytwoedit.gui.screen;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

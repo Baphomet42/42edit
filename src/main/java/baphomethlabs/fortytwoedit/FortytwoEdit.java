@@ -16,6 +16,7 @@ import java.util.Set;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.RenderLayer;
@@ -46,7 +47,6 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import baphomethlabs.fortytwoedit.gui.MagickGui;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -57,7 +57,6 @@ public class FortytwoEdit implements ClientModInitializer {
      *  Incorporated works
      *  
      *  Example Mod from https://github.com/FabricMC/fabric-example-mod Creative Commons Zero v1.0 Universal
-     *  Logical Zoom from https://github.com/LogicalGeekBoy/logical_zoom (com.logicalgeekboy.logical_zoom) MIT License
      *  Freelook from https://github.com/Celibistrial/freelook (celibistrial.freelook) GNU Affero General Public License v3.0
      *  Visible Barriers from https://github.com/AmyMialeeMods/visible-barriers (xyz.amymialee.visiblebarriers) Copyright (c) 2022 AmyMialee All rights reserved.
      *------------------------------------------

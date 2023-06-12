@@ -6,11 +6,14 @@
   "client": [
     "AbstractClientPlayerEntityMixin",
     "CreativeInventoryScreenMixin",
+    "GameRendererMixin",
+    "HandledScreenMixin",
     "IconsMixin",
     "InGameHudMixin",
     "KeyBindingMixin",
     "MinecraftClientMixin",
     "SharedConstantsMixin",
+    "TooltipComponentMixin",
     "TooltipMixin"
   ],
   "injectors": {
