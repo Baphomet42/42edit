@@ -21,6 +21,8 @@ public abstract class KeyBindingMixin {
 
             if(key.equals(KeyBindingHelper.getBoundKeyOf(client.options.attackKey))) {
                 KeyBinding.onKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.useKey));
+                if(FortytwoEdit.randoMode)
+                        FortytwoEdit.changeRandoSlot();
             }
             else if(key.equals(KeyBindingHelper.getBoundKeyOf(client.options.pickItemKey))) {
                 ItemStack item = FortytwoEdit.copyLookAt();

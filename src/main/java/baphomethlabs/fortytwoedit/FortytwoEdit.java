@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -80,8 +81,8 @@ public class FortytwoEdit implements ClientModInitializer {
     // hacks
     public static boolean autoMove = false;
     public static boolean autoClicker = false;
-    public static boolean autoClick = false;
-    public static boolean autoAttack = true;
+    public static boolean autoClick = true;
+    public static boolean autoAttack = false;
     public static boolean autoMine = false;
     public static int attackWait = 1500;
     private static long lastAttack = 0;
@@ -91,6 +92,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean xrayEntity = false;
 
     // randomizer mode
+    private static SecureRandom rand = new SecureRandom();
     public static int[] randoSlots;
     public static boolean randoMode = false;
 
@@ -392,8 +394,11 @@ public class FortytwoEdit implements ClientModInitializer {
             if(spamClick.isPressed() && System.currentTimeMillis()>=lastSpam + 20) {
                 if(modKey.isPressed())
                     KeyBinding.onKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.attackKey));
-                else
+                else {
                     KeyBinding.onKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.useKey));
+                    if(randoMode)
+                        changeRandoSlot();
+                }
                 lastSpam = System.currentTimeMillis();
             }
 
@@ -404,7 +409,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
             // rando
             if (randoMode) {
-                if (client.mouse.wasLeftButtonClicked() && randoSlots != null && testRandoSlot())
+                if (client.options.useKey.isPressed())
                     changeRandoSlot();
             }
 
@@ -439,11 +444,13 @@ public class FortytwoEdit implements ClientModInitializer {
         return false;
     }
 
-    private static void changeRandoSlot() {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        int slot = (int) (Math.random() * randoSlots.length);
-        slot = randoSlots[slot];
-        client.player.getInventory().selectedSlot = slot - 1;
+    public static void changeRandoSlot() {
+        if(randoSlots != null && testRandoSlot()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            int slot = (int) (rand.nextDouble() * randoSlots.length);
+            slot = randoSlots[slot];
+            client.player.getInventory().selectedSlot = slot - 1;
+        }
     }
 
     public static ItemStack copyLookAt() {

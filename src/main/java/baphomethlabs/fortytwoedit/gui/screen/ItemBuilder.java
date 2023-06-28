@@ -59,8 +59,10 @@ public class ItemBuilder extends GenericScreen {
     private final int LEFT_TABS = 5;
     protected int playerX;
     protected int playerY;
-    protected ItemStack item = null;
+    protected ItemStack selItem = null;
     protected ButtonWidget itemBtn;
+    protected int itemsEqual = -1;
+    protected ButtonWidget swapBtn;
     private TextFieldWidget txtFormat;
     private TabWidget tabWidget;
     private final ArrayList<ArrayList<ClickableWidget>> noScrollWidgets = new ArrayList<ArrayList<ClickableWidget>>();
@@ -110,7 +112,7 @@ public class ItemBuilder extends GenericScreen {
         txtFormat.setText("\u00a7");
         txtFormat.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
         this.addDrawableChild(ButtonWidget.builder(Text.of("c*"), button -> this.btnSwapOff(true)).dimensions(width/2 - 50,y+5,20,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("c"), button -> this.btnSwapOff(false)).dimensions(width/2 - 30,y+5,15,20).build());
+        swapBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("c"), button -> this.btnSwapOff(false)).dimensions(width/2 - 30,y+5,15,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnChangeSlot(true)).dimensions(width/2 - 15,y+5,15,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnChangeSlot(false)).dimensions(width/2,y+5,15,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Q"), button -> this.btnThrow(false)).dimensions(width/2 + 15,y+5,15,20).build());
@@ -290,14 +292,60 @@ public class ItemBuilder extends GenericScreen {
 
     private void updateItem() {
         client.player.playerScreenHandler.sendContentUpdates();
-        item = client.player.getMainHandStack().copy();
-        if(item==null || item.isEmpty()) {
+        selItem = client.player.getMainHandStack().copy();
+        if(selItem==null || selItem.isEmpty()) {
             itemBtn.active = false;
             itemBtn.setTooltip(null);
         }
         else {
             itemBtn.active = true;            
-            itemBtn.setTooltip(makeItemTooltip(item));
+            itemBtn.setTooltip(makeItemTooltip(selItem));
+        }
+    }
+
+    private void compareItems() {
+        
+        if(!client.player.getMainHandStack().isEmpty() && !client.player.getOffHandStack().isEmpty()) {
+
+            String itemData = client.player.getMainHandStack().getItem().toString();
+            if(client.player.getMainHandStack().hasNbt())
+                itemData += client.player.getMainHandStack().getNbt().asString();
+
+            String itemData2 = client.player.getOffHandStack().getItem().toString();
+            if(client.player.getOffHandStack().hasNbt())
+                itemData2 += client.player.getOffHandStack().getNbt().asString();
+
+            if(itemData.equals(itemData2)) {
+                if(itemsEqual != 1) {
+                    itemsEqual = 1;
+                    updateCompareItems();
+                }
+            }
+            else {
+                if(itemsEqual != 0) {
+                    itemsEqual = 0;
+                    updateCompareItems();
+                }
+            }
+        }
+        else {
+            if(itemsEqual != -1) {
+                itemsEqual = -1;
+                updateCompareItems();
+            }
+        }
+
+    }
+
+    private void updateCompareItems() {
+        if(itemsEqual == -1) {
+            swapBtn.setMessage(Text.of("c"));
+        }
+        else if(itemsEqual == 0) {
+            swapBtn.setMessage(Text.of("\u00a7cc"));
+        }
+        else if(itemsEqual == 1) {
+            swapBtn.setMessage(Text.of("\u00a7ac"));
         }
     }
 
@@ -356,7 +404,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"BaphomethLabs","Compare Items"},new int[]{100,100},new String[]{null,null},null,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new String[]{"BaphomethLabs"},new int[]{100},new String[]{null},null,btn -> {
                 widgets.get(i).get(j).btn();
                 if(!client.player.getMainHandStack().isEmpty()) {
                     NbtElement element = BlackMagick.getNbtFromPath(null,"0:/tag/display/Lore");
@@ -393,25 +441,6 @@ public class ItemBuilder extends GenericScreen {
                         BlackMagick.setNbt(null,"display/Lore",jsonList);
                     }
                 }
-            }, btn -> {
-                widgets.get(i).get(j).btn();
-                if(!client.player.getMainHandStack().isEmpty() && !client.player.getOffHandStack().isEmpty()) {
-
-                    String itemData = client.player.getMainHandStack().getItem().toString();
-                    if(client.player.getMainHandStack().hasNbt())
-                        itemData += client.player.getMainHandStack().getNbt().asString();
-
-                    String itemData2 = client.player.getOffHandStack().getItem().toString();
-                    if(client.player.getOffHandStack().hasNbt())
-                        itemData2 += client.player.getOffHandStack().getNbt().asString();
-
-                    if(itemData.equals(itemData2))
-                        widgets.get(i).get(j).btns[1].setMessage(Text.of("Compare Items \u2611"));
-                    else
-                        widgets.get(i).get(j).btns[1].setMessage(Text.of("Compare Items \u2612"));
-                }
-                else
-                    widgets.get(i).get(j).btns[1].setMessage(Text.of("Compare Items"));
             })); num++;
         }
         {
@@ -420,17 +449,16 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget("Unbreakable",80,null,btn -> {
-                String inp = widgets.get(i).get(j).btn()[0];
-                NbtElement inpEl;
-                if(!inp.equals("")) {
-                    inpEl = BlackMagick.elementFromString(inp);
-                    BlackMagick.setNbt(null,"Unbreakable",inpEl,NbtElement.NUMBER_TYPE);
+            widgets.get(tabNum).add(new NbtWidget(new String[]{"Unbreakable"},new int[]{80},new String[]{null},null,btn -> {
+                widgets.get(i).get(j).btn();
+                if(BlackMagick.getNbtFromPath(null,"0:/tag/Unbreakable")!=null &&
+                BlackMagick.getNbtFromPath(null,"0:/tag/Unbreakable").getType()==NbtElement.BYTE_TYPE &&
+                BlackMagick.getNbtFromPath(null,"0:/tag/Unbreakable").asString().equals("1b")) {
+                    BlackMagick.removeNbt(null,"Unbreakable");
                 }
                 else
-                    BlackMagick.removeNbt(null,"Unbreakable");
-
-            },null)); num++;
+                    BlackMagick.setNbt(null,"Unbreakable",NbtByte.of(true));
+            })); num++;
         }
         {
             final int i = tabNum; final int j = num;
@@ -1119,7 +1147,8 @@ public class ItemBuilder extends GenericScreen {
         num = 0; tabNum++;
         //saved items
         {
-            noScrollWidgets.get(tabNum).add(CyclingButtonWidget.onOffBuilder(Text.literal("C"), Text.literal("V")).initially(savedModeSet).omitKeyText().build(x+15-3, y+35+1,20,20, Text.of(""), (button, trackOutput) -> {
+            noScrollWidgets.get(tabNum).add(CyclingButtonWidget.onOffBuilder(Text.literal("C"),
+                    Text.literal("V")).initially(savedModeSet).omitKeyText().build(x+15-3, y+35+1,20,20, Text.of(""), (button, trackOutput) -> {
                 savedModeSet = (boolean)trackOutput;
                 setSavedModeTooltip();
                 ItemBuilder.this.unsel = true;
@@ -1216,8 +1245,10 @@ public class ItemBuilder extends GenericScreen {
                 String inp = widgets.get(i).get(j).btn()[0];
                 NbtElement inpEl;
                 ItemStack item;
-                if(client.player.getMainHandStack().isEmpty())
+                if(client.player.getMainHandStack().isEmpty()) {
                     item = BlackMagick.setId("ender_dragon_spawn_egg");
+                    item = BlackMagick.setNbt(item,"display/Name",BlackMagick.elementFromString("'{\"text\":\"Custom Spawn Egg\",\"italic\":false}'"));
+                }
                 else
                     item = client.player.getMainHandStack().copy();
                 if(!inp.equals("")) {
@@ -2844,12 +2875,14 @@ public class ItemBuilder extends GenericScreen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context);
         this.drawBackground(context, delta, mouseX, mouseY, 1);
+
         for(int i=0; i<tabsItem.length; i++) {
             if(i<LEFT_TABS)
                 context.drawItem(tabsItem[i],x-TAB_SIZE+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*i+(TAB_SIZE/2-8));
             else
                 context.drawItem(tabsItem[i],x+240+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(i-LEFT_TABS)+(TAB_SIZE/2-8));
         }
+
         if(tab == 5 && editArmorStand)
             InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)renderArmorStand);
         else if(tab == 6) {
@@ -2857,12 +2890,19 @@ public class ItemBuilder extends GenericScreen {
         }
         else
             InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
-        context.drawItem(item, x+240-20-5+2, y+5+2);
+
+        context.drawItem(selItem, x+240-20-5+2, y+5+2);
         txtFormat.render(context, mouseX, mouseY, delta);
         if(!this.unsavedTxtWidgets.isEmpty() || unsavedPose)
             context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
         if(savedError)
             context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
+
+        // if(itemsEqual == 0)
+        //     context.drawCenteredTextWithShadow(this.textRenderer, Text.of("\u2612"), this.width / 2-40, y-11, 0xFFFFFF);
+        // else if(itemsEqual == 1)
+        //     context.drawCenteredTextWithShadow(this.textRenderer, Text.of("\u2611"), this.width / 2-40, y-11, 0xFFFFFF);
+
         super.render(context, mouseX, mouseY, delta);
         if(suggs != null)
             suggs.render(context, mouseX, mouseY);
@@ -2912,9 +2952,10 @@ public class ItemBuilder extends GenericScreen {
     @Override
     public void tick() {
         updateItem();
+        compareItems();
         if(tab == 5 || tab == 6) {
-            if(item.getItem().toString().equals("armor_stand")) {
-                updateArmorStand(item.copy());
+            if(selItem.getItem().toString().equals("armor_stand")) {
+                updateArmorStand(selItem.copy());
                 editArmorStand = true;
             }
             else if(editArmorStand) {
