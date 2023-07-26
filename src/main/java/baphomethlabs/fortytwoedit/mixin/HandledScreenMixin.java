@@ -8,6 +8,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.ContainerTooltipData;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -23,6 +25,7 @@ import net.minecraft.nbt.NbtInt;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 
@@ -42,6 +45,12 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
 
     @Shadow
     protected abstract List<Text> getTooltipFromItem(ItemStack stack);
+
+    @Shadow
+    protected abstract void onMouseClick(Slot slot, int slotId, int button, SlotActionType actionType);
+    
+    @Shadow
+    private Slot getSlotAt(double x, double y) {return null;}
     
     @Inject(method="drawMouseoverTooltip(Lnet/minecraft/client/gui/DrawContext;II)V", at=@At("HEAD"), cancellable = true)
     private void drawContainerTooltip(DrawContext context, int x, int y, CallbackInfo c) {
@@ -119,6 +128,37 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                 }
             }
         }
+    }
+
+    @Inject(method="keyPressed(III)Z", at=@At("HEAD"), cancellable = true)
+    private void keyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
+
+        if(FortytwoEdit.spamClick.matchesKey(keyCode, scanCode)) {
+
+            double d = client.mouse.getX() * (double)this.client.getWindow().getScaledWidth() / (double)this.client.getWindow().getWidth();
+            double e = client.mouse.getY() * (double)this.client.getWindow().getScaledHeight() / (double)this.client.getWindow().getHeight();
+            Slot slot = this.getSlotAt(d, e);
+
+            if (slot != null && ((ScreenHandler)this.handler).canInsertIntoSlot(ItemStack.EMPTY, slot)) {
+                
+                if(slot.hasStack()) {
+                    ItemStack stack = slot.getStack().copy();
+                    for (Slot slot2 : ((ScreenHandler)this.handler).slots) {
+                        if (slot2 == null || !slot2.canTakeItems(this.client.player) || !slot2.hasStack() || slot2.inventory != slot.inventory || !ScreenHandler.canInsertItemIntoSlot(slot2, stack, true)) continue;
+                        this.onMouseClick(slot2, slot2.id, 0, SlotActionType.QUICK_MOVE);
+                    }
+                }
+                else {
+                    for (Slot slot2 : ((ScreenHandler)this.handler).slots) {
+                        if (slot2 == null || !slot2.canTakeItems(this.client.player) || !slot2.hasStack() || slot2.inventory != slot.inventory) continue;
+                        this.onMouseClick(slot2, slot2.id, 0, SlotActionType.QUICK_MOVE);
+                    }
+                }
+
+                cir.setReturnValue(true);
+            }
+        }
+
     }
 
 }

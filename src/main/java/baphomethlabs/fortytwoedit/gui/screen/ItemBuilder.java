@@ -52,9 +52,9 @@ public class ItemBuilder extends GenericScreen {
     protected final int TAB_OFFSET = 5;
     protected final int TAB_SIZE = 24;
     protected final int TAB_SPACING = 2;
-    protected final String[] tabsLbl = {"General","Blocks","Misc","Custom NBT","Saved Items","Entity Data","Armor Pose","Banner Maker"};
+    protected final String[] tabsLbl = {"General","Blocks","Misc","Custom NBT","Saved Items","Entity Data","Armor Pose","Banner Maker","Attributes"};
     protected final ItemStack[] tabsItem = {new ItemStack(Items.GOLDEN_SWORD),new ItemStack(Items.PURPLE_SHULKER_BOX),FortytwoEdit.HEAD42,new ItemStack(Items.COMMAND_BLOCK),
-        new ItemStack(Items.JIGSAW),new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),new ItemStack(Items.ARMOR_STAND),FortytwoEdit.BANNER42};
+        new ItemStack(Items.JIGSAW),new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),new ItemStack(Items.ARMOR_STAND),FortytwoEdit.BANNER42,new ItemStack(Items.ENCHANTED_BOOK)};
     protected final ButtonWidget[] tabs = new ButtonWidget[tabsLbl.length];
     private final int LEFT_TABS = 5;
     protected int playerX;
