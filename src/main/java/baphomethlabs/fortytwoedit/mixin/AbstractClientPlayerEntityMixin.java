@@ -2,6 +2,8 @@ package baphomethlabs.fortytwoedit.mixin;
 
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.util.SkinTextures;
+import net.minecraft.client.util.SkinTextures.Model;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -15,36 +17,54 @@ public abstract class AbstractClientPlayerEntityMixin {
 
     @Shadow protected abstract PlayerListEntry getPlayerListEntry();
     
-    @Inject(method="Lnet/minecraft/client/network/AbstractClientPlayerEntity;getCapeTexture()Lnet/minecraft/util/Identifier;", at=@At("RETURN"), cancellable = true)
-    public void getCapeTexture(CallbackInfoReturnable<Identifier> cir) {
-        if(FortytwoEdit.opticapes) {
-            String name = this.getPlayerListEntry().getProfile().getName();
-            if(FortytwoEdit.capeCached(name)) {
-                cir.setReturnValue(new Identifier("42edit:cache/capes/"+name.toLowerCase()));
+    @Inject(method="method_52814()Lnet/minecraft/client/util/SkinTextures", at=@At("RETURN"), cancellable = true)
+    public void getSkinTextures(CallbackInfoReturnable<SkinTextures> cir) {
+
+        PlayerListEntry playerEntry = this.getPlayerListEntry();
+        if(playerEntry != null) {
+            
+            SkinTextures skin = playerEntry.getSkinTextures();
+            Identifier texture = skin.texture();
+            Identifier cape = skin.capeTexture();
+            Model model = skin.model();
+            String name = playerEntry.getProfile().getName();
+            boolean changed = false;
+
+            //cape
+            if(FortytwoEdit.opticapes) {
+                if(FortytwoEdit.capeCached(name)) {
+                    cape = new Identifier("42edit:cache/capes/"+name.toLowerCase());
+                    changed = true;
+                }
+                else if(!FortytwoEdit.nameCached(name) && FortytwoEdit.capeTimeCheck()) {
+                    FortytwoEdit.tryLoadCape(name);
+                }
             }
-            else if(!FortytwoEdit.nameCached(name) && FortytwoEdit.capeTimeCheck()) {
-                FortytwoEdit.tryLoadCape(name);
+            if(FortytwoEdit.showClientCape && name.equals(FortytwoEdit.clientUsername)) {
+                cape = new Identifier("42edit:textures/capes/"+FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]+".png");
+                changed = true;
             }
-        }
-        if(FortytwoEdit.showClientCape && this.getPlayerListEntry().getProfile().getName().equals(FortytwoEdit.clientUsername)) {
-            cir.setReturnValue(new Identifier("42edit:textures/capes/"+FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]+".png"));
-        }
-    }
-    
-    @Inject(method="Lnet/minecraft/client/network/AbstractClientPlayerEntity;getSkinTexture()Lnet/minecraft/util/Identifier;", at=@At("RETURN"), cancellable = true)
-    public void getSkinTexture(CallbackInfoReturnable<Identifier> cir) {
-        if(FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && this.getPlayerListEntry().getProfile().getName().equals(FortytwoEdit.clientUsername)) {
-            cir.setReturnValue(FortytwoEdit.customSkinID);
-        }
-    }
-    
-    @Inject(method="Lnet/minecraft/client/network/AbstractClientPlayerEntity;getModel()Ljava/lang/String;", at=@At("RETURN"), cancellable = true)
-    public void getModel(CallbackInfoReturnable<String> cir) {
-        if(FortytwoEdit.showClientSkin && this.getPlayerListEntry().getProfile().getName().equals(FortytwoEdit.clientUsername)) {
-            if(FortytwoEdit.clientSkinSlim)
-                cir.setReturnValue("slim");
-            else
-                cir.setReturnValue("default");
+
+            //skin
+            if(FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && name.equals(FortytwoEdit.clientUsername)) {
+                texture = FortytwoEdit.customSkinID;
+                changed = true;
+            }
+
+
+            //model
+            if(FortytwoEdit.showClientSkin && name.equals(FortytwoEdit.clientUsername)) {
+                if(FortytwoEdit.clientSkinSlim)
+                    model = Model.SLIM;
+                else
+                    model = Model.WIDE;
+
+                changed = true;
+            }
+
+            if(changed) {
+                cir.setReturnValue(new SkinTextures(texture, null, cape, cape, model, false));
+            }
 
         }
     }

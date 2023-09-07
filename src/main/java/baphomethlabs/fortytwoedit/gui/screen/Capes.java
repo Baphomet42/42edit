@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.gui.DrawContext;
@@ -26,6 +27,7 @@ public class Capes extends GenericScreen {
     protected TextFieldWidget txtCustomSkin;
     protected int playerX;
     protected int playerY;
+    private static final Vector3f vec = new Vector3f();
     
     public Capes() {}
 
@@ -85,8 +87,8 @@ public class Capes extends GenericScreen {
             BigInteger random1Bi = new BigInteger(128, new Random());
             BigInteger random2Bi = new BigInteger(128, new Random(System.identityHashCode(new Object())));
             String serverId = random1Bi.xor(random2Bi).toString(16);
-            client.getSessionService().joinServer(client.getSession().getProfile(),client.getSession().getAccessToken(),serverId);
-            String url = "https://optifine.net/capeChange?u="+client.getSession().getUuid()+"&n="+client.getSession().getUsername()+"&s="+serverId;
+            client.getSessionService().joinServer(client.getSession().getUuidOrNull(),client.getSession().getAccessToken(),serverId);
+            String url = "https://optifine.net/capeChange?u="+client.getSession().getUuidOrNull()+"&n="+client.getSession().getUsername()+"&s="+serverId;
             Util.getOperatingSystem().open(url);
         } catch (Exception ex) {}
         this.resize(this.client,this.width,this.height);
@@ -141,7 +143,7 @@ public class Capes extends GenericScreen {
         entity.setPitch(-g * 20.0f);
         entity.headYaw = entity.getYaw();
         entity.prevHeadYaw = entity.getYaw();
-        InventoryScreen.drawEntity(context, x, y, size, quaternionf, quaternionf2, entity);
+        InventoryScreen.drawEntity(context, x, y, size, vec, quaternionf, quaternionf2, entity);
         entity.bodyYaw = h;
         entity.setYaw(i);
         entity.setPitch(j);
@@ -151,15 +153,19 @@ public class Capes extends GenericScreen {
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
-        this.drawBackground(context, delta, mouseX, mouseY);
+        super.render(context, mouseX, mouseY, delta);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Client Capes & Skins"), this.width / 2, y+11, 0xFFFFFF);
         context.drawTextWithShadow(this.textRenderer, Text.of("Capes"), x+20,y+7+22*2, 0xFFFFFF);
         context.drawTextWithShadow(this.textRenderer, Text.of("Skin"), x+20,y+7+22*5, 0xFFFFFF);
         this.txtCustom.render(context, mouseX, mouseY, delta);
         this.txtCustomSkin.render(context, mouseX, mouseY, delta);
         drawPlayer(context, playerX, playerY, 60, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
-        super.render(context, mouseX, mouseY, delta);
+    }
+
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        super.renderBackground(context, mouseX, mouseY, delta);
+        drawBackground(context, delta, mouseX, mouseY, 0);
     }
 
     @Override

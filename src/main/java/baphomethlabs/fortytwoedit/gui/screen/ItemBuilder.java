@@ -57,8 +57,6 @@ public class ItemBuilder extends GenericScreen {
         new ItemStack(Items.JIGSAW),new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),new ItemStack(Items.ARMOR_STAND),FortytwoEdit.BANNER42,new ItemStack(Items.ENCHANTED_BOOK)};
     protected final ButtonWidget[] tabs = new ButtonWidget[tabsLbl.length];
     private final int LEFT_TABS = 5;
-    protected int playerX;
-    protected int playerY;
     protected ItemStack selItem = null;
     protected ButtonWidget itemBtn;
     protected int itemsEqual = -1;
@@ -74,6 +72,9 @@ public class ItemBuilder extends GenericScreen {
     private boolean savedError = false;
     private ArmorStandEntity renderArmorStand;
     private ArmorStandEntity renderArmorPose;
+    protected final int playerX = x + 240+10;
+    protected final int playerY = y - 10;
+    private final int RENDER_SIZE = 35;
     private ArrayList<NbtWidget> sliders = new ArrayList<>();
     private ArrayList<NbtWidget> sliderBtns = new ArrayList<>();
     private ButtonWidget setPoseButton;
@@ -117,8 +118,6 @@ public class ItemBuilder extends GenericScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnChangeSlot(false)).dimensions(width/2,y+5,15,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Q"), button -> this.btnThrow(false)).dimensions(width/2 + 15,y+5,15,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Q*"), button -> this.btnThrow(true)).dimensions(width/2 + 30,y+5,20,20).build());
-        playerX = x + 240+50;
-        playerY = y + 50;
         itemBtn = this.addDrawableChild(ButtonWidget.builder(Text.of(""), button -> this.btnCopyNbt()).dimensions(x+240-20-5,y+5,20,20).build());
         updateItem();
 
@@ -129,7 +128,6 @@ public class ItemBuilder extends GenericScreen {
         if(tab != 3) {
             this.tabWidget = new TabWidget(tab);
             this.tabWidget.setRenderBackground(false);
-            this.tabWidget.setRenderHorizontalShadows(false);
             this.addDrawableChild(this.tabWidget);
         }
         if(tab == 3) {
@@ -2873,8 +2871,7 @@ public class ItemBuilder extends GenericScreen {
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
-        this.drawBackground(context, delta, mouseX, mouseY, 1);
+        super.render(context, mouseX, mouseY, delta);
 
         for(int i=0; i<tabsItem.length; i++) {
             if(i<LEFT_TABS)
@@ -2884,12 +2881,12 @@ public class ItemBuilder extends GenericScreen {
         }
 
         if(tab == 5 && editArmorStand)
-            InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)renderArmorStand);
+            InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)renderArmorStand);
         else if(tab == 6) {
-            InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)renderArmorPose);
+            InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)renderArmorPose);
         }
         else
-            InventoryScreen.drawEntity(context, playerX, playerY, 30, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
+            InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)this.client.player);
 
         context.drawItem(selItem, x+240-20-5+2, y+5+2);
         txtFormat.render(context, mouseX, mouseY, delta);
@@ -2903,9 +2900,14 @@ public class ItemBuilder extends GenericScreen {
         // else if(itemsEqual == 1)
         //     context.drawCenteredTextWithShadow(this.textRenderer, Text.of("\u2611"), this.width / 2-40, y-11, 0xFFFFFF);
 
-        super.render(context, mouseX, mouseY, delta);
         if(suggs != null)
             suggs.render(context, mouseX, mouseY);
+    }
+
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        super.renderBackground(context, mouseX, mouseY, delta);
+        drawBackground(context, delta, mouseX, mouseY, 1);
     }
     
     @Override
@@ -2933,11 +2935,11 @@ public class ItemBuilder extends GenericScreen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        if (suggs != null && suggs.mouseScrolled(amount)) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (suggs != null && suggs.mouseScrolled(verticalAmount)) {
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, amount);
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     @Override

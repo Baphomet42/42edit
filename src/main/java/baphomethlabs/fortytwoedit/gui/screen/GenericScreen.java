@@ -26,10 +26,6 @@ public abstract class GenericScreen extends Screen {
         y = (this.height - this.backgroundHeight) / 2;
     }
     
-    protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
-        drawBackground(context, delta, mouseX, mouseY, 0);
-    }
-    
     protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY, int gui) {
         int i = this.x;
         int j = (this.height - this.backgroundHeight) / 2;

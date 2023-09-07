@@ -318,14 +318,18 @@ public class Hacks extends GenericScreen {
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
-        this.drawBackground(context, delta, mouseX, mouseY);
+        super.render(context, mouseX, mouseY, delta);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Hacks"), this.width / 2, y+11, 0xFFFFFF);
 		context.drawItem(new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+22*2+1+2);
 		context.drawItem(new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),x+20+2,y+22*3+1+2);
 		context.drawItem(new ItemStack(Items.BARRIER),x+20+2,y+22*4+1+2);
 		context.drawItem(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+22*5+1+2);
-        super.render(context, mouseX, mouseY, delta);
+    }
+
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        super.renderBackground(context, mouseX, mouseY, delta);
+        drawBackground(context, delta, mouseX, mouseY, 0);
     }
     
     @Override

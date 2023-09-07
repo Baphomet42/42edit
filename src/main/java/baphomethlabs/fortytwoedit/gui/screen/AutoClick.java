@@ -74,14 +74,18 @@ public class AutoClick extends GenericScreen {
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
-        this.drawBackground(context, delta, mouseX, mouseY);
+        super.render(context, mouseX, mouseY, delta);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Auto Clicker"), this.width / 2, y+11, 0xFFFFFF);
 		context.drawItem(new ItemStack(Items.FISHING_ROD),x+20+2,y+44+1+2);
 		context.drawItem(new ItemStack(Items.NETHERITE_PICKAXE),x+20+2,y+22*3+1+2);
 		context.drawItem(new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+22*4+1+2);
         context.drawTextWithShadow(this.textRenderer, Text.of("Attack Cooldown:"), x+20+3,y+7+22*6, LABEL_COLOR);
-        super.render(context, mouseX, mouseY, delta);
+    }
+
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        super.renderBackground(context, mouseX, mouseY, delta);
+        drawBackground(context, delta, mouseX, mouseY, 0);
     }
     
     @Override
