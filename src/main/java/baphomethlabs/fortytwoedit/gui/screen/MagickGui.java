@@ -13,6 +13,7 @@ import net.minecraft.text.Text;
 public class MagickGui extends GenericScreen {
 
     ButtonWidget btnWgtAutoClick;
+    ButtonWidget btnWgtHat;
     
     public MagickGui() {}
 
@@ -21,7 +22,9 @@ public class MagickGui extends GenericScreen {
         super.init();
         this.addDrawableChild(ButtonWidget.builder(Text.of("42edit..."), button -> this.btnItem()).dimensions(x+20,y+44+1,80,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Hacks..."), button -> this.btnHacks()).dimensions(x+20,y+66+1,80,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Hat"), button -> this.btnHat()).dimensions(x+20,y+22*4+1,60,20).build());
+        btnWgtHat = this.addDrawableChild(ButtonWidget.builder(Text.of("Hat"), button -> this.btnHat()).dimensions(x+20,y+22*4+1,60,20).build());
+        if(!client.player.getAbilities().creativeMode)
+            btnWgtHat.active = false;
         this.addDrawableChild(ButtonWidget.builder(Text.of("Super Secret Settings..."), button -> this.btnSuperSecretSettings()).dimensions(x+20,y+22*5+1,165,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Capes..."), button -> this.btnCapes()).dimensions(x+20,y+22*6+1,80,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("AutoClick..."), button -> this.btnAutoClickSettings()).dimensions(x+20,y+22*7+1,90,20).build());

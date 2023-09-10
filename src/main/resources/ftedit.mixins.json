@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "AbstractClientPlayerEntityMixin",
+    "BrewingStandScreenMixin",
     "CreativeInventoryScreenMixin",
     "GameRendererMixin",
     "HandledScreenMixin",

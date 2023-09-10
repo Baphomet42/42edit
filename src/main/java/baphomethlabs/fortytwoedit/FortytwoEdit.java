@@ -25,6 +25,7 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootTables;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -60,6 +61,7 @@ public class FortytwoEdit implements ClientModInitializer {
      *  Example Mod from https://github.com/FabricMC/fabric-example-mod Creative Commons Zero v1.0 Universal
      *  Freelook from https://github.com/Celibistrial/freelook (celibistrial.freelook) GNU Affero General Public License v3.0
      *  Visible Barriers from https://github.com/AmyMialeeMods/visible-barriers (xyz.amymialee.visiblebarriers) Copyright (c) 2022 AmyMialee All rights reserved.
+     *  Brewing Guide from https://www.curseforge.com/minecraft/texture-packs/in-game-brewing-guide
      *------------------------------------------
      */
 
@@ -277,11 +279,13 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final int SAVED_ROWS = 9;
 
     //registry suggestions
+    public static final String[] ATTRIBUTES = getCacheAttributes();
     public static final String[] BLOCKS = getCacheBlocks();
     public static final String[] ITEMS = getCacheItems();
     public static final String[] EFFECTS = getCacheEffects();
     public static final String[] ENCHANTS = getCacheEnchants();
     public static final String[] ENTITIES = getCacheEntities();
+    public static final String[] LOOT = getCacheLootTables();
     public static final String[] PARTICLES = getCacheParticles();
     public static final String[] SOUNDS = getCacheSounds();
 
@@ -327,7 +331,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
             // magickgui
             if (magickGuiKey.wasPressed())
-                MinecraftClient.getInstance().setScreen(new MagickGui());
+                client.setScreen(new MagickGui());
 
             // zoom
             if (zoom.isPressed() && !zoomed) {
@@ -496,6 +500,17 @@ public class FortytwoEdit implements ClientModInitializer {
         return property.name(state.get(property));
     }
 
+    private static String[] getCacheAttributes() {
+        List<String> list = new ArrayList<>();
+
+        Registries.ATTRIBUTE.forEach(a -> {
+            list.add(Registries.ATTRIBUTE.getId(a).getPath());
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
     private static String[] getCacheBlocks() {
         List<String> list = new ArrayList<>();
 
@@ -545,6 +560,17 @@ public class FortytwoEdit implements ClientModInitializer {
 
         Registries.ENTITY_TYPE.forEach(e -> {
             list.add(Registries.ENTITY_TYPE.getId(e).getPath());
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    private static String[] getCacheLootTables() {  //TODO incomplete list
+        List<String> list = new ArrayList<>();
+
+        LootTables.getAll().forEach(l -> {
+            list.add(l.getPath());
         });
 
         Collections.sort(list);

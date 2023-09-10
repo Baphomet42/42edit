@@ -27,6 +27,7 @@ import net.minecraft.util.math.GlobalPos;
 
 public class Hacks extends GenericScreen {
 
+    protected ButtonWidget btnWgtFindInvis;
     protected TextFieldWidget txtRando;
     protected boolean unsaved = false;
     
@@ -63,7 +64,9 @@ public class Hacks extends GenericScreen {
             FortytwoEdit.xrayEntity = FortytwoEdit.seeInvis;
             this.resize(this.client,this.width,this.height);
         }));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Find Invis Entities"), button -> this.btnFindInvis()).dimensions(x+20+100+5,y+22*4+1,100,20).build());
+        btnWgtFindInvis = this.addDrawableChild(ButtonWidget.builder(Text.of("Find Invis Entities"), button -> this.btnFindInvis()).dimensions(x+20+100+5,y+22*4+1,100,20).build());
+        if(!client.player.getAbilities().creativeMode)
+            btnWgtFindInvis.active = false;
         this.addDrawableChild(ButtonWidget.builder(Text.of("Death Pos"), button -> this.btnDeathPos()).dimensions(x+20,y+22*5+1,100,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Look N"), button -> this.btnLookN()).dimensions(x+20,y+22*7+1,40,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Rotate"), button -> this.btnLookR()).dimensions(x+20+40+5,y+22*7+1,40,20).build());
@@ -104,75 +107,81 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnGetEntity() {
-        if (client.player.getAbilities().creativeMode) {
-            Iterator<Entity> entities = client.world.getEntities().iterator();
-            List<NbtCompound> items = new ArrayList<>();
-            double x = client.player.getX();
-            double y = client.player.getY();
-            double z = client.player.getZ();
-            double range = 2.5;
-            while (entities.hasNext()) {
-                Entity current = entities.next();
-                if(current.getType() != EntityType.PLAYER
-                && current.getX()>x-range && current.getX()<x+range
-                && current.getY()>y-range && current.getY()<y+range
-                && current.getZ()>z-range && current.getZ()<z+range) {
-                    NbtCompound nbt = new NbtCompound();
-                    nbt.putInt("Count",1);
-                    NbtCompound nbtTag = new NbtCompound();
-                    nbt.put("tag",nbtTag);
-                    NbtCompound nbtEntityTag = new NbtCompound();
-                    if((new EntityDataObject(current)).getNbt()!=null)
-                        nbtEntityTag = (new EntityDataObject(current)).getNbt();
-                    nbtTag.put("EntityTag",nbtEntityTag);
-                    if(current.getType() == EntityType.ARMOR_STAND) {
-                        nbt.putString("id","armor_stand");
-                        nbtEntityTag.remove("Attributes");
-                        nbtEntityTag.remove("Brain");
-                        nbtEntityTag.remove("FallFlying");
-                        nbtEntityTag.remove("Health");
-                    }
-                    else {
-                        nbt.putString("id","ender_dragon_spawn_egg");
-                        nbtEntityTag.putString("id",current.getType().toString().replace("entity.minecraft.",""));
-                        NbtCompound nbtDisplay = new NbtCompound();
-                        nbtTag.put("display",nbtDisplay);
-                        NbtList nbtLore = new NbtList();
-                        nbtDisplay.put("Lore",nbtLore);
-                        nbtLore.add(NbtString.of("{\"text\":\""+
-                            current.getType().toString().replace("entity.minecraft.","")+"\",\"color\":\"gray\",\"italic\":false}"));
-                    }
-                    nbtEntityTag.remove("Air");
-                    nbtEntityTag.remove("FallDistance");
-                    nbtEntityTag.remove("Fire");
-                    nbtEntityTag.remove("Motion");
-                    nbtEntityTag.remove("OnGround");
-                    nbtEntityTag.remove("PortalCooldown");
-                    nbtEntityTag.remove("Pos");
-                    nbtEntityTag.remove("Rotation");
-                    nbtEntityTag.remove("TicksFrozen");
-                    nbtEntityTag.remove("UUID");
-                    nbtEntityTag.remove("AbsorptionAmount");
-                    nbtEntityTag.remove("DeathTime");
-                    nbtEntityTag.remove("HurtByTimestamp");
-                    nbtEntityTag.remove("HurtTime");
-                    items.add(nbt);
-                }
-            }
-            if(items.size()>0) {
+        Iterator<Entity> entities = client.world.getEntities().iterator();
+        List<NbtCompound> items = new ArrayList<>();
+        double x = client.player.getX();
+        double y = client.player.getY();
+        double z = client.player.getZ();
+        double range = 2.5;
+        while (entities.hasNext()) {
+            Entity current = entities.next();
+            if(current.getType() != EntityType.PLAYER
+            && current.getX()>x-range && current.getX()<x+range
+            && current.getY()>y-range && current.getY()<y+range
+            && current.getZ()>z-range && current.getZ()<z+range) {
                 NbtCompound nbt = new NbtCompound();
-                nbt.putString("id","bundle");
                 nbt.putInt("Count",1);
                 NbtCompound nbtTag = new NbtCompound();
                 nbt.put("tag",nbtTag);
-                NbtList nbtItems = new NbtList();
-                nbtTag.put("Items",nbtItems);
-                for(int i=0; i<items.size(); i++) {
-                    nbtItems.add(items.get(i));
+                NbtCompound nbtEntityTag = new NbtCompound();
+                if((new EntityDataObject(current)).getNbt()!=null)
+                    nbtEntityTag = (new EntityDataObject(current)).getNbt();
+                nbtTag.put("EntityTag",nbtEntityTag);
+                if(current.getType() == EntityType.ARMOR_STAND) {
+                    nbt.putString("id","armor_stand");
+                    nbtEntityTag.remove("Attributes");
+                    nbtEntityTag.remove("Brain");
+                    nbtEntityTag.remove("FallFlying");
+                    nbtEntityTag.remove("Health");
                 }
-                ItemStack item = ItemStack.fromNbt(nbt);
-                if(items.size()==1)
-                    item = ItemStack.fromNbt((NbtCompound)nbtItems.get(0));
+                else {
+                    nbt.putString("id","ender_dragon_spawn_egg");
+                    nbtEntityTag.putString("id",current.getType().toString().replace("entity.minecraft.",""));
+                    NbtCompound nbtDisplay = new NbtCompound();
+                    nbtTag.put("display",nbtDisplay);
+                    NbtList nbtLore = new NbtList();
+                    nbtDisplay.put("Lore",nbtLore);
+                    nbtLore.add(NbtString.of("{\"text\":\""+
+                        current.getType().toString().replace("entity.minecraft.","")+"\",\"color\":\"gray\",\"italic\":false}"));
+                }
+                nbtEntityTag.remove("Air");
+                nbtEntityTag.remove("FallDistance");
+                nbtEntityTag.remove("Fire");
+                nbtEntityTag.remove("Motion");
+                nbtEntityTag.remove("OnGround");
+                nbtEntityTag.remove("PortalCooldown");
+                nbtEntityTag.remove("Pos");
+                nbtEntityTag.remove("Rotation");
+                nbtEntityTag.remove("TicksFrozen");
+                nbtEntityTag.remove("UUID");
+                nbtEntityTag.remove("AbsorptionAmount");
+                nbtEntityTag.remove("DeathTime");
+                nbtEntityTag.remove("HurtByTimestamp");
+                nbtEntityTag.remove("HurtTime");
+                items.add(nbt);
+            }
+        }
+        if(items.size()>0) {
+            NbtCompound nbt = new NbtCompound();
+            nbt.putString("id","bundle");
+            nbt.putInt("Count",1);
+            NbtCompound nbtTag = new NbtCompound();
+            nbt.put("tag",nbtTag);
+            NbtList nbtItems = new NbtList();
+            nbtTag.put("Items",nbtItems);
+            for(int i=0; i<items.size(); i++) {
+                nbtItems.add(items.get(i));
+            }
+            ItemStack item = ItemStack.fromNbt(nbt);
+            if(items.size()==1)
+                item = ItemStack.fromNbt((NbtCompound)nbtItems.get(0));
+
+            String itemData = item.getItem().toString();
+            if(item.hasNbt())
+                itemData += item.getNbt().asString();
+            client.keyboard.setClipboard(itemData);
+
+            if (client.player.getAbilities().creativeMode) {
                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                 client.player.playerScreenHandler.sendContentUpdates();
             }
@@ -181,57 +190,63 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnGetEntityFull() {
-        if (client.player.getAbilities().creativeMode) {
-            Iterator<Entity> entities = client.world.getEntities().iterator();
-            List<NbtCompound> items = new ArrayList<>();
-            double x = client.player.getX();
-            double y = client.player.getY();
-            double z = client.player.getZ();
-            double range = 2.5;
-            while (entities.hasNext()) {
-                Entity current = entities.next();
-                if(current.getType() != EntityType.PLAYER
-                && current.getX()>x-range && current.getX()<x+range
-                && current.getY()>y-range && current.getY()<y+range
-                && current.getZ()>z-range && current.getZ()<z+range) {
-                    NbtCompound nbt = new NbtCompound();
-                    nbt.putInt("Count",1);
-                    NbtCompound nbtTag = new NbtCompound();
-                    nbt.put("tag",nbtTag);
-                    NbtCompound nbtEntityTag = new NbtCompound();
-                    if((new EntityDataObject(current)).getNbt()!=null)
-                        nbtEntityTag = (new EntityDataObject(current)).getNbt();
-                    nbtTag.put("EntityTag",nbtEntityTag);
-                    if(current.getType() == EntityType.ARMOR_STAND) {
-                        nbt.putString("id","armor_stand");
-                    }
-                    else {
-                        nbt.putString("id","ender_dragon_spawn_egg");
-                        nbtEntityTag.putString("id",current.getType().toString().replace("entity.minecraft.",""));
-                        NbtCompound nbtDisplay = new NbtCompound();
-                        nbtTag.put("display",nbtDisplay);
-                        NbtList nbtLore = new NbtList();
-                        nbtDisplay.put("Lore",nbtLore);
-                        nbtLore.add(NbtString.of("{\"text\":\""+
-                            current.getType().toString().replace("entity.minecraft.","")+"\",\"color\":\"gray\",\"italic\":false}"));
-                    }
-                    items.add(nbt);
-                }
-            }
-            if(items.size()>0) {
+        Iterator<Entity> entities = client.world.getEntities().iterator();
+        List<NbtCompound> items = new ArrayList<>();
+        double x = client.player.getX();
+        double y = client.player.getY();
+        double z = client.player.getZ();
+        double range = 2.5;
+        while (entities.hasNext()) {
+            Entity current = entities.next();
+            if(current.getType() != EntityType.PLAYER
+            && current.getX()>x-range && current.getX()<x+range
+            && current.getY()>y-range && current.getY()<y+range
+            && current.getZ()>z-range && current.getZ()<z+range) {
                 NbtCompound nbt = new NbtCompound();
-                nbt.putString("id","bundle");
                 nbt.putInt("Count",1);
                 NbtCompound nbtTag = new NbtCompound();
                 nbt.put("tag",nbtTag);
-                NbtList nbtItems = new NbtList();
-                nbtTag.put("Items",nbtItems);
-                for(int i=0; i<items.size(); i++) {
-                    nbtItems.add(items.get(i));
+                NbtCompound nbtEntityTag = new NbtCompound();
+                if((new EntityDataObject(current)).getNbt()!=null)
+                    nbtEntityTag = (new EntityDataObject(current)).getNbt();
+                nbtTag.put("EntityTag",nbtEntityTag);
+                if(current.getType() == EntityType.ARMOR_STAND) {
+                    nbt.putString("id","armor_stand");
                 }
-                ItemStack item = ItemStack.fromNbt(nbt);
-                if(items.size()==1)
-                    item = ItemStack.fromNbt((NbtCompound)nbtItems.get(0));
+                else {
+                    nbt.putString("id","ender_dragon_spawn_egg");
+                    nbtEntityTag.putString("id",current.getType().toString().replace("entity.minecraft.",""));
+                    NbtCompound nbtDisplay = new NbtCompound();
+                    nbtTag.put("display",nbtDisplay);
+                    NbtList nbtLore = new NbtList();
+                    nbtDisplay.put("Lore",nbtLore);
+                    nbtLore.add(NbtString.of("{\"text\":\""+
+                        current.getType().toString().replace("entity.minecraft.","")+"\",\"color\":\"gray\",\"italic\":false}"));
+                }
+                items.add(nbt);
+            }
+        }
+        if(items.size()>0) {
+            NbtCompound nbt = new NbtCompound();
+            nbt.putString("id","bundle");
+            nbt.putInt("Count",1);
+            NbtCompound nbtTag = new NbtCompound();
+            nbt.put("tag",nbtTag);
+            NbtList nbtItems = new NbtList();
+            nbtTag.put("Items",nbtItems);
+            for(int i=0; i<items.size(); i++) {
+                nbtItems.add(items.get(i));
+            }
+            ItemStack item = ItemStack.fromNbt(nbt);
+            if(items.size()==1)
+                item = ItemStack.fromNbt((NbtCompound)nbtItems.get(0));
+
+            String itemData = item.getItem().toString();
+            if(item.hasNbt())
+                itemData += item.getNbt().asString();
+            client.keyboard.setClipboard(itemData);
+
+            if (client.player.getAbilities().creativeMode) {
                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                 client.player.playerScreenHandler.sendContentUpdates();
             }
