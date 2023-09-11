@@ -14,6 +14,7 @@
     "KeyBindingMixin",
     "MinecraftClientMixin",
     "SharedConstantsMixin",
+    "StructureBlockScreenMixin",
     "TooltipComponentMixin",
     "TooltipMixin"
   ],

@@ -96,6 +96,10 @@ public class ItemBuilder extends GenericScreen {
     public final String[] DYES = {"black","blue","brown","cyan","gray","green","light_blue","light_gray","lime","magenta","orange","pink","purple","red","white","yellow"};
     private TextSuggestor suggs;
     private Set<TextFieldWidget> currentTxt = Sets.newHashSet();
+    private int[] rgb = new int[3];
+    private ArrayList<NbtWidget> rgbSliders = new ArrayList<>();
+    private boolean rgbChanged = true;
+    private ItemStack[] rgbItems = new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
     
     public ItemBuilder() {}
 
@@ -409,6 +413,33 @@ public class ItemBuilder extends GenericScreen {
         return null;
     }
 
+    private void updateRgbSliders() {
+        for(int i=0; i<rgb.length; i++)
+            rgbSliders.get(i).setSlider(rgb[i]);
+        rgbChanged = true;
+    }
+
+    private void updateRgbItems() {
+        rgbItems[0] = ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:leather_chestplate,Count:1,tag:{display:{color:"+getRgbDec()+"}}}"));
+        rgbItems[1] = ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:potion,Count:1,tag:{CustomPotionColor:"+getRgbDec()+"}}"));
+        rgbItems[2] = ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:filled_map,Count:1,tag:{display:{MapColor:"+getRgbDec()+"}}}"));
+    }
+
+    private int getRgbDec() {
+        return rgb[0]*256*256+rgb[1]*256+rgb[2];
+    }
+
+    private String getRgbHex() {
+        String hex = "#";
+        for(int i=0; i<3; i++) {
+            String current = Integer.toHexString(rgb[i]).toUpperCase();
+            if(current.length()==1)
+                current = "0" + current;
+            hex += current;
+        }
+        return hex;
+    }
+
     private void createWidgets() {
         widgets.clear();
         unsavedTxtWidgets.clear();
@@ -624,6 +655,87 @@ public class ItemBuilder extends GenericScreen {
                     BlackMagick.removeNbt(null,"CanDestroy");
             })); num++;
         }
+        {
+            widgets.get(tabNum).add(new NbtWidget("Display Color"));
+            num++;
+        }
+        {
+            final int i = tabNum; final int j = num;
+            NbtWidget w = new NbtWidget(0, "^", 20, null, btn -> {
+                widgets.get(i).get(j).btn();
+                boolean found = false;
+
+                NbtElement el = BlackMagick.getNbtFromPath(null,"0:/tag/display/color");
+                if(el != null && el.getType() == NbtElement.INT_TYPE)
+                    found = true;
+                
+                if(!found) {
+                    el = BlackMagick.getNbtFromPath(null,"0:/tag/CustomPotionColor");
+                    if(el != null && el.getType() == NbtElement.INT_TYPE)
+                        found = true;
+                }
+                
+                if(!found) {
+                    el = BlackMagick.getNbtFromPath(null,"0:/tag/display/MapColor");
+                    if(el != null && el.getType() == NbtElement.INT_TYPE)
+                        found = true;
+                }
+
+                if(found) {
+                    int c = ((NbtInt)el).intValue();
+                    if(c<0)
+                        c=0;
+                    if(c>16777215)
+                        c=16777215;
+                    rgb[0] = (int)Math.floor(c / (256*256));
+                    rgb[1] = (int)(Math.floor(c / 256) % 256);
+                    rgb[2] = c % 256;
+                    updateRgbSliders();
+                }
+            },true);
+            rgbSliders.add(w);
+            widgets.get(tabNum).add(w);
+            num++;
+        }
+        {
+            NbtWidget w = new NbtWidget(1, null, 0, null, null,true);
+            rgbSliders.add(w);
+            widgets.get(tabNum).add(w);
+            num++;
+        }
+        {
+            NbtWidget w = new NbtWidget(2, null, 0, null, null,true);
+            rgbSliders.add(w);
+            widgets.get(tabNum).add(w);
+            num++;
+        }
+        updateRgbSliders();
+        {
+            final int i = tabNum; final int j = num;
+            widgets.get(tabNum).add(new NbtWidget(new String[]{"","",""},new int[]{20,20,20},new String[]{null,null,null},null,false,btn -> {
+                widgets.get(i).get(j).btn();
+                NbtElement el = BlackMagick.getNbtFromPath(null,"0:/tag/display/color");
+                if(el != null && el.getType()==NbtElement.INT_TYPE && ((NbtInt)el).intValue()==getRgbDec())
+                    BlackMagick.removeNbt(null,"display/color");
+                else
+                    BlackMagick.setNbt(null,"display/color",NbtInt.of(getRgbDec()));
+            },btn -> {
+                widgets.get(i).get(j).btn();
+                NbtElement el = BlackMagick.getNbtFromPath(null,"0:/tag/CustomPotionColor");
+                if(el != null && el.getType()==NbtElement.INT_TYPE && ((NbtInt)el).intValue()==getRgbDec())
+                    BlackMagick.removeNbt(null,"CustomPotionColor");
+                else
+                    BlackMagick.setNbt(null,"CustomPotionColor",NbtInt.of(getRgbDec()));
+            },btn -> {
+                widgets.get(i).get(j).btn();
+                NbtElement el = BlackMagick.getNbtFromPath(null,"0:/tag/display/MapColor");
+                if(el != null && el.getType()==NbtElement.INT_TYPE && ((NbtInt)el).intValue()==getRgbDec())
+                    BlackMagick.removeNbt(null,"display/MapColor");
+                else
+                    BlackMagick.setNbt(null,"display/MapColor",NbtInt.of(getRgbDec()));
+            })); num++;
+        }
+
 
         num = 0; tabNum++;
         //block data
@@ -681,7 +793,7 @@ public class ItemBuilder extends GenericScreen {
                 }
                 else
                     BlackMagick.removeNbt(null,"BlockEntityTag/LootTable");
-            },FortytwoEdit.LOOT,false)); num++;
+            },1,false)); num++;
         }
         {
             widgets.get(tabNum).add(new NbtWidget("Utilities"));
@@ -2547,7 +2659,9 @@ public class ItemBuilder extends GenericScreen {
         private boolean lblCentered;
         private ItemStack[] savedStacks;
         private int savedRow = -1;
-        private PoseSlider slider;
+        private PoseSlider poseSlider;
+        private RgbSlider rgbSlider;
+        private int rgbNum;
 
         //btn(size) txt
         public NbtWidget(String name, int size, String tooltip, PressAction onPress, String[] suggestions, boolean survival) {
@@ -2587,6 +2701,62 @@ public class ItemBuilder extends GenericScreen {
                         suggs = new TextSuggestor(client, this.txts[0], textRenderer);
                         if(suggestions != null && suggestions.length > 0)
                             suggs.setSuggestions(suggestions);
+                    }
+                }
+            });
+            this.txts[0].setMaxLength(131072);
+            for(int i=0; i<btns.length; i++)
+                this.children.add(this.btns[i]);
+            for(int i=0; i<txts.length; i++) {
+                this.children.add(this.txts[i]);
+                ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
+            }
+        }
+
+        //btn(size) txt [custom suggs]
+        public NbtWidget(String name, int size, String tooltip, PressAction onPress, int suggsNum, boolean survival) {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+
+            this.btns = new ButtonWidget[]{ButtonWidget.builder(Text.of(name), onPress).dimensions(ItemBuilder.this.x+15,5,size,20).build()};
+            this.btnX = new int[]{15};
+            if(tooltip != null)
+                this.btns[0].setTooltip(Tooltip.of(Text.of(tooltip)));
+            if(!client.player.getAbilities().creativeMode && !survival)
+                this.btns[0].active = false;
+            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, ItemBuilder.this.x+15+5+1+size, 5, 240-41-2-size, 20, Text.of(""))};
+            this.txtX = new int[]{15+5+1+size};
+            this.txts[0].setChangedListener(value -> {
+                if(value != null && !value.equals("")) {
+                    this.txts[0].setEditableColor(0xFFFFFF);
+                    ItemBuilder.this.markUnsaved(this.txts[0]);
+                }
+                else {
+                    this.txts[0].setEditableColor(LABEL_COLOR);
+                    ItemBuilder.this.markSaved(this.txts[0]);
+                }
+                if(!currentTxt.contains(this.txts[0])) {
+                    resetSuggs();
+                    currentTxt.add(this.txts[0]);
+                    suggs = new TextSuggestor(client, this.txts[0], textRenderer);
+                    if(suggsNum == 1) {
+                        FortytwoEdit.setCommandSuggs("loot spawn ~ ~ ~ loot ", suggs, FortytwoEdit.LOOT);
+                    }
+                    else
+                        resetSuggs();
+                }
+                else{
+                    if(suggs != null)
+                        suggs.refresh();
+                    else {
+                        resetSuggs();
+                        suggs = new TextSuggestor(client, this.txts[0], textRenderer);
+                        if(suggsNum == 1) {
+                            FortytwoEdit.setCommandSuggs("loot spawn ~ ~ ~ loot ", suggs, FortytwoEdit.LOOT);
+                        }
+                        else
+                            resetSuggs();
                     }
                 }
             });
@@ -2846,18 +3016,18 @@ public class ItemBuilder extends GenericScreen {
             }
         }
 
-        //slider
+        //pose slider
         public NbtWidget(int part, int num) {
             super();
             this.children = Lists.newArrayList();
             setup();
 
-            this.slider = new PoseSlider(part,num);
+            this.poseSlider = new PoseSlider(part,num);
 
-            this.children.add(this.slider);
+            this.children.add(this.poseSlider);
         }
 
-        //slider btn
+        //pose slider btn
         public NbtWidget(int part, String name) {
             super();
             this.children = Lists.newArrayList();
@@ -2876,6 +3046,34 @@ public class ItemBuilder extends GenericScreen {
             this.btnX = new int[]{100};
 
             this.children.add(this.btns[0]);
+        }
+
+        //btn? rgbSlider
+        public NbtWidget(int rgbNum, String name, int size, String tooltip, PressAction onPress, boolean survival) {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+
+            this.rgbSlider = new RgbSlider(rgbNum);
+            this.rgbNum = rgbNum;
+
+            if(size>0) {
+                this.btns = new ButtonWidget[]{ButtonWidget.builder(Text.of(name), onPress).dimensions(ItemBuilder.this.x+15,5,size,20).build()};
+                this.btnX = new int[]{15};
+                if(tooltip != null)
+                    this.btns[0].setTooltip(Tooltip.of(Text.of(tooltip)));
+                if(!client.player.getAbilities().creativeMode && !survival)
+                    this.btns[0].active = false;
+                this.children.add(this.btns[0]);
+            }
+            if(rgbNum == 1 || rgbNum ==2) {
+                this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, ItemBuilder.this.x+15, 5, 60, 20, Text.of(""))};
+                this.txtX = new int[]{15};
+                this.txts[0].setMaxLength(16);
+                this.children.add(this.txts[0]);
+            }
+
+            this.children.add(this.rgbSlider);
         }
 
         private void setup() {
@@ -2922,8 +3120,13 @@ public class ItemBuilder extends GenericScreen {
         }
 
         public void setSlider(float val) {
-            if(this.slider != null)
-                this.slider.setVal(val);
+            if(this.poseSlider != null)
+                this.poseSlider.setVal(val);
+        }
+
+        public void setSlider(int val) {
+            if(this.rgbSlider != null)
+                this.rgbSlider.setVal(val);
         }
 
         @Override
@@ -2954,14 +3157,37 @@ public class ItemBuilder extends GenericScreen {
                 else
                     context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.of(this.lbl), ItemBuilder.this.x+15+3, y+6, LABEL_COLOR);
             }
-            if(slider != null) {
-                this.slider.render(context, mouseX, mouseY, tickDelta);
-                this.slider.setX(ItemBuilder.this.x+2+10+20+5);
-                this.slider.setY(y);
+            if(poseSlider != null) {
+                this.poseSlider.render(context, mouseX, mouseY, tickDelta);
+                this.poseSlider.setX(ItemBuilder.this.x+2+10+20+5);
+                this.poseSlider.setY(y);
+            }
+            if(rgbSlider != null) {
+                this.rgbSlider.render(context, mouseX, mouseY, tickDelta);
+                this.rgbSlider.setX(ItemBuilder.this.x+2+10+20+5+40);
+                this.rgbSlider.setY(y);
             }
             if(this.savedStacks != null && this.savedStacks.length == 9)
                 for(int i=0; i<9; i++)
                     context.drawItem(this.savedStacks[i],x+this.btnX[i]+2,y+2);
+            if(rgbNum == 1) {
+                context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.Serializer.fromJson("[{\"text\":\""+getRgbDec()+"\",\"color\":\""+getRgbHex()+"\"}]"),
+                    ItemBuilder.this.x+15+1, y+6, LABEL_COLOR);
+                if(rgbChanged)
+                    this.txts[0].setText(""+getRgbDec());
+            }
+            if(rgbNum == 2) {
+                context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.Serializer.fromJson("[{\"text\":\""+getRgbHex()+"\",\"color\":\""+getRgbHex()+"\"}]"),
+                    ItemBuilder.this.x+15+1, y+6, LABEL_COLOR);
+                if(rgbChanged) {
+                    this.txts[0].setText(""+getRgbHex());
+                    updateRgbItems();
+                    rgbChanged = false;
+                }
+                for(int i=0; i<3; i++)
+                    context.drawItem(rgbItems[i], x+15+2+i*25, y+2+22);
+            }
+
         }
     }
 
@@ -3044,6 +3270,51 @@ public class ItemBuilder extends GenericScreen {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
+    class RgbSlider
+    extends SliderWidget {
+        private final double min;
+        private final double max;
+        public int num;
+
+        public RgbSlider(int num) {
+            super(0, 0, 180-40, 20, Text.of(""), 0.0);
+            this.min = 0f;
+            this.max = 255f;
+            this.num = num;
+            this.value = (rgb[num] - min) / (max - min);
+            this.applyValue();
+            this.updateMessage();
+        }
+
+        @Override
+        public void applyValue() {
+            rgb[num] = (int)(this.value*(max-min)+min);
+            rgbChanged = true;
+        }
+
+        @Override
+        protected void updateMessage() {
+            String color = "\u00a7";
+            if(num == 0)
+                color += "4";
+            else if(num == 1)
+                color += "2";
+            else
+                color += "1";
+            this.setMessage(Text.of(color+rgb[num]));
+        }
+
+        public void setVal(int newVal) {
+            if(newVal > 255)
+                newVal = 255;
+            else if(newVal < 0)
+                newVal = 0;
+            rgb[num] = newVal;
+            this.value = (double)((newVal - min)/(max-min));
+            updateMessage();
+        }
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -3097,7 +3368,7 @@ public class ItemBuilder extends GenericScreen {
         if (suggs != null && suggs.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        suggs = null;
+        //suggs = null;
         if (keyCode == KeyBindingHelper.getBoundKeyOf(FortytwoEdit.magickGuiKey).getCode() || keyCode == KeyBindingHelper.getBoundKeyOf(client.options.inventoryKey).getCode()) {
             if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !unsavedPose) {
                 this.client.setScreen(null);

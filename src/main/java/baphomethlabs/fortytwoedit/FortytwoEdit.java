@@ -4,19 +4,28 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.suggestion.Suggestions;
+import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
@@ -24,8 +33,8 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.command.CommandSource;
 import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTables;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -33,6 +42,9 @@ import net.minecraft.nbt.NbtInt;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.registry.Registries;
+import net.minecraft.resource.InputSupplier;
+import net.minecraft.resource.ResourceType;
+import net.minecraft.resource.VanillaDataPackProvider;
 import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.sound.SoundCategory;
@@ -288,7 +300,36 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final String[] LOOT = getCacheLootTables();
     public static final String[] PARTICLES = getCacheParticles();
     public static final String[] SOUNDS = getCacheSounds();
+    public static final String[] STRUCTURES = getCacheStructures();
 
+    //live command suggestions
+    public static void setCommandSuggs(String cmd, TextSuggestor suggs, String[] joinList) {
+        final MinecraftClient client = MinecraftClient.getInstance();
+        CommandDispatcher<CommandSource> commandDispatcher = client.player.networkHandler.getCommandDispatcher();
+        ParseResults<CommandSource> cmdSuggsParse = commandDispatcher.parse(cmd, (CommandSource)client.player.networkHandler.getCommandSource());
+        CompletableFuture<Suggestions> cmdSuggsPendingSuggestions = commandDispatcher.getCompletionSuggestions(cmdSuggsParse, cmd.length());
+
+        suggs.setSuggestions(new String[]{""});
+
+        cmdSuggsPendingSuggestions.thenRun(() -> {
+            List<String> list = new ArrayList<>();
+
+            if(joinList != null && joinList.length>0)
+                for(int i=0; i<joinList.length; i++)
+                    list.add(joinList[i]);
+
+            Suggestions suggestions;
+            if (cmdSuggsPendingSuggestions != null && cmdSuggsPendingSuggestions.isDone() && !(suggestions = cmdSuggsPendingSuggestions.join()).isEmpty()) {
+                for (Suggestion suggestion : suggestions.getList())
+                    list.add(suggestion.getText().replace("minecraft:",""));                
+            }
+
+            list = new ArrayList<String>((new HashSet<String>(list)));
+            Collections.sort(list);
+            if(list.size()>0)
+                suggs.setSuggestions(list.toArray(new String[0]));
+        });
+    }
 
 
     @Override
@@ -566,11 +607,13 @@ public class FortytwoEdit implements ClientModInitializer {
         return list.toArray(new String[0]);
     }
 
-    private static String[] getCacheLootTables() {  //TODO incomplete list
+    private static String[] getCacheLootTables() {
         List<String> list = new ArrayList<>();
 
-        LootTables.getAll().forEach(l -> {
-            list.add(l.getPath());
+        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "loot_tables", map::putIfAbsent);
+        map.keySet().forEach(l -> {
+            list.add(l.getPath().replaceFirst("loot_tables/","").replaceFirst(".json",""));
         });
 
         Collections.sort(list);
@@ -593,6 +636,19 @@ public class FortytwoEdit implements ClientModInitializer {
 
         Registries.SOUND_EVENT.forEach(s -> {
             list.add(Registries.SOUND_EVENT.getId(s).getPath());
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    private static String[] getCacheStructures() {
+        List<String> list = new ArrayList<>();
+
+        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "structures", map::putIfAbsent);
+        map.keySet().forEach(s -> {
+            list.add(s.getPath().replaceFirst("structures/","").replaceFirst(".nbt",""));
         });
 
         Collections.sort(list);

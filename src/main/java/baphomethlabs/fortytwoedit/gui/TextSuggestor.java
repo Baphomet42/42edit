@@ -9,6 +9,9 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import org.lwjgl.glfw.GLFW;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -251,24 +254,29 @@ public class TextSuggestor {
         }
 
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (keyCode == 265) {
+            if (keyCode == 265) {//arrow up
                 this.scroll(-1);
                 this.completed = false;
                 return true;
             }
-            if (keyCode == 264) {
+            if (keyCode == 264) {//arrow down
                 this.scroll(1);
                 this.completed = false;
                 return true;
             }
-            if (keyCode == 258) {
+            if (keyCode == 258) {//tab
                 if (this.completed) {
                     this.scroll(Screen.hasShiftDown() ? -1 : 1);
                 }
                 this.complete();
                 return true;
             }
-            if (keyCode == 256) {
+            if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {//enter
+                this.complete();
+                TextSuggestor.this.clearWindow();
+                return true;
+            }
+            if (keyCode == 256) {//escape
                 TextSuggestor.this.clearWindow();
                 return true;
             }
