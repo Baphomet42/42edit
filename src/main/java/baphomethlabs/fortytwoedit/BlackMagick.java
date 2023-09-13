@@ -761,6 +761,67 @@ public class BlackMagick {
 
 
 
+
+    //move an element in a list up or down
+    public static ItemStack moveListElement(ItemStack overrideItem, String inpKey, int index, boolean up) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player.getAbilities().creativeMode) {
+            ItemStack item;
+            if(overrideItem!=null)
+                item = overrideItem.copy();
+            else if(!client.player.getMainHandStack().isEmpty())
+                item = client.player.getMainHandStack().copy();
+            else
+                return null;
+            if(getNbtFromPath(item, "0:/tag/"+inpKey) != null && getNbtFromPath(item, "0:/tag/"+inpKey).getType()==NbtElement.LIST_TYPE) {
+                NbtList list = ((NbtList)getNbtFromPath(item, "0:/tag/"+inpKey)).copy();
+                if(list.size()>index && index>=0 && !((index==0 && up) || (index==list.size()-1 && !up))) {
+                    NbtElement el = list.remove(index);
+                    if(up)
+                        list.add(index-1,el);
+                    else
+                        list.add(index+1,el);
+                    return setNbt(item, inpKey, list.copy());
+                }
+            }
+            return item;
+        }
+        return null;
+    }
+
+
+
+
+
+
+    //clone an element of a list to the adjacent index
+    public static ItemStack cloneListElement(ItemStack overrideItem, String inpKey, int index) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player.getAbilities().creativeMode) {
+            ItemStack item;
+            if(overrideItem!=null)
+                item = overrideItem.copy();
+            else if(!client.player.getMainHandStack().isEmpty())
+                item = client.player.getMainHandStack().copy();
+            else
+                return null;
+            if(getNbtFromPath(item, "0:/tag/"+inpKey) != null && getNbtFromPath(item, "0:/tag/"+inpKey).getType()==NbtElement.LIST_TYPE) {
+                NbtList list = ((NbtList)getNbtFromPath(item, "0:/tag/"+inpKey)).copy();
+                if(list.size()>index && index>=0) {
+                    NbtElement el = list.get(index).copy();
+                    list.add(index,el);
+                    return setNbt(item, inpKey, list.copy());
+                }
+            }
+            return item;
+        }
+        return null;
+    }
+
+
+
+
+
     
     //return banner item from char and colors (and sets item)
     //if invalid char, returns null and sets item to baseColor banner with no nbt

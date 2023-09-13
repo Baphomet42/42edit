@@ -46,6 +46,7 @@ import net.minecraft.nbt.NbtString;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Property;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -58,10 +59,11 @@ public class ItemBuilder extends GenericScreen {
     protected final int TAB_OFFSET = 5;
     protected final int TAB_SIZE = 24;
     protected final int TAB_SPACING = 2;
-    protected final String[] tabsLbl = {"General","Blocks","Misc","Custom NBT","Saved Items","Entity Data","Armor Pose","Banner Maker","Attributes"};
-    protected final ItemStack[] tabsItem = {new ItemStack(Items.GOLDEN_SWORD),new ItemStack(Items.PURPLE_SHULKER_BOX),FortytwoEdit.HEAD42,new ItemStack(Items.COMMAND_BLOCK),
-        new ItemStack(Items.JIGSAW),new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),new ItemStack(Items.ARMOR_STAND),FortytwoEdit.BANNER42,new ItemStack(Items.ENCHANTED_BOOK)};
-    protected final ButtonWidget[] tabs = new ButtonWidget[tabsLbl.length];
+    protected final Tab[] tabs = new Tab[]{new Tab(0,"General",new ItemStack(Items.GOLDEN_SWORD)), new Tab(1,"Blocks",new ItemStack(Items.PURPLE_SHULKER_BOX)),
+        new Tab(2,"Misc",FortytwoEdit.HEAD42), new Tab(8,"Custom NBT",new ItemStack(Items.COMMAND_BLOCK)),
+        new Tab(9,"Saved Items",new ItemStack(Items.JIGSAW)), new Tab(3,"Entity Data",new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG)),
+        new Tab(5,"Armor Pose",new ItemStack(Items.ARMOR_STAND)), new Tab(4,"Banner Maker",FortytwoEdit.BANNER42),
+        new Tab(7,"Text",new ItemStack(Items.NAME_TAG)), new Tab("Text2",true), new Tab(6,"Attributes",new ItemStack(Items.ENCHANTED_BOOK))};
     private final int LEFT_TABS = 5;
     protected ItemStack selItem = null;
     protected String cacheBlock = "";
@@ -73,7 +75,7 @@ public class ItemBuilder extends GenericScreen {
     protected ButtonWidget throwCopyBtn;
     private TextFieldWidget txtFormat;
     private TabWidget tabWidget;
-    private final ArrayList<ArrayList<ClickableWidget>> noScrollWidgets = new ArrayList<ArrayList<ClickableWidget>>();
+    private final ArrayList<ArrayList<PosWidget>> noScrollWidgets = new ArrayList<ArrayList<PosWidget>>();
     private final ArrayList<ArrayList<NbtWidget>> widgets = new ArrayList<ArrayList<NbtWidget>>();
     private final Set<ClickableWidget> unsavedTxtWidgets = Sets.newHashSet();
     private final Set<ClickableWidget> allTxtWidgets = Sets.newHashSet();
@@ -100,6 +102,15 @@ public class ItemBuilder extends GenericScreen {
     private ArrayList<NbtWidget> rgbSliders = new ArrayList<>();
     private boolean rgbChanged = true;
     private ItemStack[] rgbItems = new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
+    private String jsonItem = "";
+    private NbtString jsonName = null;
+    private NbtList jsonLore = null;
+    private NbtList jsonPages = null;
+    private NbtString jsonCurrent = null;
+    private String jsonCurrentPath = "";
+    private int jsonCurrentIndex = -1;
+    public static final String[] JSON_KEYS = new String[]{"text","keybind","selector","translate","fallback","with","score","separator","color","bold","italic","underlined","strikethrough","obfuscated","font",
+        "insertion","clickEvent","hoverEvent","action","value","contents","id","count","tag","name","type","objective","extra"};
     
     public ItemBuilder() {}
 
@@ -107,39 +118,44 @@ public class ItemBuilder extends GenericScreen {
     protected void init() {
         super.init();
         
-        //tabs
-        for(int i = 0; i<tabs.length; i++) {
-            int tabNum = i;
-            if(i<LEFT_TABS)
-                tabs[i] = ButtonWidget.builder(Text.of(""), button -> this.btnTab(tabNum)).dimensions(x-TAB_SIZE,y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*i,TAB_SIZE,TAB_SIZE).build();
-            else
-                tabs[i] = ButtonWidget.builder(Text.of(""), button -> this.btnTab(tabNum)).dimensions(x+240,y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(i-LEFT_TABS),TAB_SIZE,TAB_SIZE).build();
-            tabs[i].setTooltip(Tooltip.of(Text.of(tabsLbl[i])));
-            if(tab==i)
-                tabs[i].active = false;
-            this.addDrawableChild(tabs[i]);
-        }
+        if(!tabs[tab].hideTabs) {
+            //tabs
+            for(int i = 0; i<tabs.length; i++) {
+                if(tabs[i].pos>=0) {
+                    int tabNum = i;
+                    ButtonWidget w;
+                    if(tabs[i].pos<LEFT_TABS)
+                        w = ButtonWidget.builder(Text.of(""), button -> this.btnTab(tabNum)).dimensions(x-TAB_SIZE,y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*tabs[i].pos,TAB_SIZE,TAB_SIZE).build();
+                    else
+                        w = ButtonWidget.builder(Text.of(""), button -> this.btnTab(tabNum)).dimensions(x+240,y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(tabs[i].pos-LEFT_TABS),TAB_SIZE,TAB_SIZE).build();
+                    w.setTooltip(Tooltip.of(Text.of(tabs[i].lbl)));
+                    if(tab==i)
+                        w.active = false;
+                    this.addDrawableChild(w);
+                }
+            }
 
-        //main
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
-        txtFormat = new TextFieldWidget(this.textRenderer,x+50,y+5+2,15,16,Text.of(""));
-        txtFormat.setEditable(false);
-        txtFormat.setText("\u00a7");
-        txtFormat.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
-        swapCopyBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("c*"), button -> this.btnSwapOff(true)).dimensions(width/2 - 50,y+5,20,20).build());
-        swapBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("c"), button -> this.btnSwapOff(false)).dimensions(width/2 - 30,y+5,15,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnChangeSlot(true)).dimensions(width/2 - 15,y+5,15,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnChangeSlot(false)).dimensions(width/2,y+5,15,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Q"), button -> this.btnThrow(false)).dimensions(width/2 + 15,y+5,15,20).build());
-        throwCopyBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("Q*"), button -> this.btnThrow(true)).dimensions(width/2 + 30,y+5,20,20).build());
-        
-        if(!client.player.getAbilities().creativeMode) {
-            swapCopyBtn.active = false;
-            throwCopyBtn.active = false;
-            swapBtn.active = false;
-        }
+            //main
+            this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
+            txtFormat = new TextFieldWidget(this.textRenderer,x+50,y+5+1,15,18,Text.of(""));
+            txtFormat.setEditable(false);
+            txtFormat.setText("\u00a7");
+            txtFormat.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
+            swapCopyBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("c*"), button -> this.btnSwapOff(true)).dimensions(width/2 - 50,y+5,20,20).build());
+            swapBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("c"), button -> this.btnSwapOff(false)).dimensions(width/2 - 30,y+5,15,20).build());
+            this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnChangeSlot(true)).dimensions(width/2 - 15,y+5,15,20).build());
+            this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnChangeSlot(false)).dimensions(width/2,y+5,15,20).build());
+            this.addDrawableChild(ButtonWidget.builder(Text.of("Q"), button -> this.btnThrow(false)).dimensions(width/2 + 15,y+5,15,20).build());
+            throwCopyBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("Q*"), button -> this.btnThrow(true)).dimensions(width/2 + 30,y+5,20,20).build());
+            
+            if(!client.player.getAbilities().creativeMode) {
+                swapCopyBtn.active = false;
+                throwCopyBtn.active = false;
+                swapBtn.active = false;
+            }
 
-        itemBtn = this.addDrawableChild(ButtonWidget.builder(Text.of(""), button -> this.btnCopyNbt()).dimensions(x+240-20-5,y+5,20,20).build());
+            itemBtn = this.addDrawableChild(ButtonWidget.builder(Text.of(""), button -> this.btnCopyNbt()).dimensions(x+240-20-5,y+5,20,20).build());
+        }
         updateItem();
 
         //tabs
@@ -151,41 +167,11 @@ public class ItemBuilder extends GenericScreen {
             this.tabWidget.setRenderBackground(false);
             this.addDrawableChild(this.tabWidget);
         }
-        if(tab == 3) {
-            if(noScrollWidgets.get(3).size()>=3) {
-                noScrollWidgets.get(3).get(0).setX(x+15-3);
-                noScrollWidgets.get(3).get(0).setY(y+35);
-                noScrollWidgets.get(3).get(1).setX(x+15-3);
-                noScrollWidgets.get(3).get(1).setY(y+35+22*6+1);
-                noScrollWidgets.get(3).get(2).setX(x+15-3+5+60);
-                noScrollWidgets.get(3).get(2).setY(y+35+22*6+1);
-            }
-            for(int i=0; i<noScrollWidgets.get(3).size(); i++)
-                this.addDrawableChild(noScrollWidgets.get(3).get(i));
-        }
-        if(tab == 4) {
-            if(savedItems == null)
-                updateSaved();
-            if(noScrollWidgets.get(4).size()>=1) {
-                noScrollWidgets.get(4).get(0).setX(x+15-3);
-                noScrollWidgets.get(4).get(0).setY(y+35+1);
-            }
-            for(int i=0; i<noScrollWidgets.get(4).size(); i++)
-                this.addDrawableChild(noScrollWidgets.get(4).get(i));
-        }
-        if(tab == 6) {
-            if(noScrollWidgets.get(6).size()>=3) {
-                noScrollWidgets.get(6).get(0).setX(x+15-3);
-                noScrollWidgets.get(6).get(0).setY(y+35+1);
-
-                noScrollWidgets.get(6).get(1).setX(x+15-3);
-                noScrollWidgets.get(6).get(1).setY(y+35+1+20);
-
-                noScrollWidgets.get(6).get(2).setX(x+15-3);
-                noScrollWidgets.get(6).get(2).setY(y+35+1+20+20);
-            }
-            for(int i=0; i<noScrollWidgets.get(6).size(); i++)
-                this.addDrawableChild(noScrollWidgets.get(6).get(i));
+        for(int i=0; i<noScrollWidgets.get(tab).size(); i++) {
+            PosWidget p = noScrollWidgets.get(tab).get(i);
+            p.w.setX(x+p.x);
+            p.w.setY(y+p.y);
+            this.addDrawableChild(p.w);
         }
 
         //armor stand
@@ -440,16 +426,49 @@ public class ItemBuilder extends GenericScreen {
         return hex;
     }
 
-    private void createWidgets() {
-        widgets.clear();
-        unsavedTxtWidgets.clear();
-        for(int i=0; i<tabsLbl.length; i++) {
-            widgets.add(new ArrayList<NbtWidget>());
-            noScrollWidgets.add(new ArrayList<ClickableWidget>());
+    private void updateJsonTab() {
+
+        String itemData = "air";
+        if(!client.player.getMainHandStack().isEmpty()) {
+            itemData = client.player.getMainHandStack().getItem().toString();
+            if(client.player.getMainHandStack().hasNbt())
+                itemData += client.player.getMainHandStack().getNbt().asString();
+        }
+        if(!jsonItem.equals(itemData)) {
+            jsonItem = itemData;
+
+            jsonName = null;
+            NbtElement el = BlackMagick.getNbtFromPath(null, "0:/tag/display/Name");
+            if(el != null && el.getType() == NbtElement.STRING_TYPE)
+                jsonName = (NbtString)el;
+
+            jsonLore = null;
+            el = BlackMagick.getNbtFromPath(null, "0:/tag/display/Lore");
+            if(el != null && el.getType() == NbtElement.LIST_TYPE && ((NbtList)el).size()>0 && ((NbtList)el).get(0).getType()==NbtElement.STRING_TYPE)
+                jsonLore = (NbtList)el;
+
+            jsonPages = null;
+            el = BlackMagick.getNbtFromPath(null, "0:/tag/pages");
+            if(el != null && el.getType() == NbtElement.LIST_TYPE && ((NbtList)el).size()>0 && ((NbtList)el).get(0).getType()==NbtElement.STRING_TYPE)
+                jsonPages = (NbtList)el;
+
+            createWidgets(8);
+            btnTab(8);
         }
 
-        int tabNum = 0; int num = 0;
-        //general
+    }
+
+    private void createWidgets() {
+        widgets.clear();
+        noScrollWidgets.clear();
+        unsavedTxtWidgets.clear();
+        for(int i=0; i<tabs.length; i++) {
+            widgets.add(new ArrayList<NbtWidget>());
+            noScrollWidgets.add(new ArrayList<PosWidget>());
+        }
+
+        int tabNum = 0; int num = 0; int num2 = 0;
+        //createBlock general
         {
             final int i = tabNum; final int j = num;
             widgets.get(tabNum).add(new NbtWidget("id",40,null,btn -> {
@@ -495,7 +514,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"BaphomethLabs"},new int[]{100},new String[]{null},null,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("BaphomethLabs")},new int[]{100},new String[]{null},null,false,btn -> {
                 widgets.get(i).get(j).btn();
                 if(!client.player.getMainHandStack().isEmpty()) {
                     NbtElement element = BlackMagick.getNbtFromPath(null,"0:/tag/display/Lore");
@@ -540,7 +559,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"Unbreakable"},new int[]{80},new String[]{null},null,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Unbreakable")},new int[]{80},new String[]{null},null,false,btn -> {
                 widgets.get(i).get(j).btn();
                 if(BlackMagick.getNbtFromPath(null,"0:/tag/Unbreakable")!=null &&
                 BlackMagick.getNbtFromPath(null,"0:/tag/Unbreakable").getType()==NbtElement.BYTE_TYPE &&
@@ -595,7 +614,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"CanPlaceOn","CanDestroy"},new int[]{80,80},new String[]{null,null},null,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("CanPlaceOn"),Text.of("CanDestroy")},new int[]{80,80},new String[]{null,null},null,false,btn -> {
                 String inp = widgets.get(i).get(j-1).btn()[0];
                 NbtElement inpEl;
                 NbtList list;
@@ -661,7 +680,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            NbtWidget w = new NbtWidget(0, "^", 20, null, btn -> {
+            NbtWidget w = new NbtWidget(0, "\u2227", 20, null, btn -> {
                 widgets.get(i).get(j).btn();
                 boolean found = false;
 
@@ -712,7 +731,7 @@ public class ItemBuilder extends GenericScreen {
         updateRgbSliders();
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"","",""},new int[]{20,20,20},new String[]{null,null,null},null,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of(""),Text.of(""),Text.of("")},new int[]{20,20,20},new String[]{null,null,null},null,false,btn -> {
                 widgets.get(i).get(j).btn();
                 NbtElement el = BlackMagick.getNbtFromPath(null,"0:/tag/display/color");
                 if(el != null && el.getType()==NbtElement.INT_TYPE && ((NbtInt)el).intValue()==getRgbDec())
@@ -737,8 +756,8 @@ public class ItemBuilder extends GenericScreen {
         }
 
 
-        num = 0; tabNum++;
-        //block data
+        num = 0; num2 = 0; tabNum++;
+        //createBlock block data
         {
             final int i = tabNum; final int j = num;
             widgets.get(tabNum).add(new NbtWidget("Name",40,"Example: {\"text\":\"Box\"}",btn -> {
@@ -769,7 +788,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"BlockState"},new int[]{60,70,69},new String[]{"Key | Value"},1,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("BlockState")},new int[]{60,70,69},new String[]{"Key | Value"},1,false,btn -> {
                 String[] inps = widgets.get(i).get(j).btn();
                 NbtElement inpEl;
                 if(!inps[1].equals("") && !inps[0].equals("")) {
@@ -801,7 +820,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"Fill Container","Box to Bundle"},new int[]{100,80},
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Fill Container"),Text.of("Box to Bundle")},new int[]{100,80},
                     new String[]{"Set count for all container items to 64",null},null,false,btn -> {
                 widgets.get(i).get(j).btn();
                 if(client.player.getAbilities().creativeMode) {
@@ -841,7 +860,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"Bee Count [0]"},new int[]{100},new String[]{null},null,true,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Bee Count [0]")},new int[]{100},new String[]{null},null,true,btn -> {
                 widgets.get(i).get(j).btn();
                 ItemStack item = client.player.getMainHandStack().copy();
                 widgets.get(i).get(j).btns[0].setMessage(Text.of("Bee Count [0]"));
@@ -901,7 +920,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"Item","Invis","Fixed"},new int[]{60,60,60},
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Item"),Text.of("Invis"),Text.of("Fixed")},new int[]{60,60,60},
                     new String[]{"Set display item as offhand",null,null},null,false,btn -> {
                 widgets.get(i).get(j).btn();
                 if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Item")!=null &&
@@ -931,8 +950,8 @@ public class ItemBuilder extends GenericScreen {
             })); num++;
         }
 
-        num = 0; tabNum++;
-        //misc
+        num = 0; num2 = 0; tabNum++;
+        //createBlock misc
         {
             widgets.get(tabNum).add(new NbtWidget("Player Heads"));
             num++;
@@ -1192,7 +1211,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"Head Sound"},new int[]{80},new String[]{null},null,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Head Sound")},new int[]{80},new String[]{null},null,false,btn -> {
                 String inp = widgets.get(i).get(j-1).btn()[0];
                 if(!inp.trim().equals("")) {
                     String sound = inp.trim();
@@ -1222,11 +1241,11 @@ public class ItemBuilder extends GenericScreen {
             })); num++;
         }
 
-        num = 0; tabNum++;
-        //nbt
+        num = 0; num2 = 0; tabNum++;
+        //createBlock nbt
         {
             EditBoxWidget w = new EditBoxWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, x+15-3, y+35, 240-36, 22*6, Text.of(""), Text.of(""));
-            noScrollWidgets.get(tabNum).add(w);
+            noScrollWidgets.get(tabNum).add(new PosWidget(w,15-3,35));
             this.allTxtWidgets.add(w);
             w.setChangeListener(value -> {
                 if(value != null && !value.equals("")) {
@@ -1236,29 +1255,29 @@ public class ItemBuilder extends GenericScreen {
                     ItemBuilder.this.markSaved(w);
                 }
             });
-            num++;
+            num2++;
         }
         {
-            final int i = tabNum;
-            noScrollWidgets.get(tabNum).add(ButtonWidget.builder(Text.of("Get"), button -> {
+            final int i = tabNum; final int j = num2;
+            noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Get"), button -> {
                 if(!client.player.getMainHandStack().isEmpty()) {
                     String itemData = client.player.getMainHandStack().getItem().toString();
                     if(client.player.getMainHandStack().hasNbt())
                         itemData += client.player.getMainHandStack().getNbt().asString();
                     if(client.player.getMainHandStack().getCount()>1)
                         itemData += " " + client.player.getMainHandStack().getCount();
-                    ((EditBoxWidget)noScrollWidgets.get(i).get(0)).setText(itemData);
-                    ItemBuilder.this.markUnsaved((EditBoxWidget)noScrollWidgets.get(i).get(0));
+                    ((EditBoxWidget)noScrollWidgets.get(i).get(j-1).w).setText(itemData);
+                    ItemBuilder.this.markUnsaved((EditBoxWidget)noScrollWidgets.get(i).get(j-1).w);
                 }
                 ItemBuilder.this.unsel = true;
-            }).dimensions(x+15-3,y+35+22*6+1,60,20).build());
-            num++;
+            }).dimensions(x+15-3,y+35+22*6+1,60,20).build(),15-3,35+22*6+1));
+            num2++;
         }
         {
-            final int i = tabNum;
+            final int i = tabNum; final int j = num2;
             ButtonWidget w = ButtonWidget.builder(Text.of("Set"), button -> {
-                String inp = ((EditBoxWidget)noScrollWidgets.get(i).get(0)).getText();
-                ItemBuilder.this.markSaved((EditBoxWidget)noScrollWidgets.get(i).get(0));
+                String inp = ((EditBoxWidget)noScrollWidgets.get(i).get(j-2).w).getText();
+                ItemBuilder.this.markSaved((EditBoxWidget)noScrollWidgets.get(i).get(j-2).w);
                 ItemBuilder.this.unsel = true;
 
                 if(inp.contains("/") && inp.indexOf("/")==0)
@@ -1331,35 +1350,35 @@ public class ItemBuilder extends GenericScreen {
             }).dimensions(x+15-3+5+60,y+35+22*6+1,60,20).build();
             if(!client.player.getAbilities().creativeMode)
                 w.active = false;
-            noScrollWidgets.get(tabNum).add(w);
-            num++;
+            noScrollWidgets.get(tabNum).add(new PosWidget(w,15-3+5+60,35+22*6+1));
+            num2++;
         }
 
-        num = 0; tabNum++;
-        //saved items
+        num = 0; num2 = 0; tabNum++;
+        //createBlock saved items
         {
-            noScrollWidgets.get(tabNum).add(CyclingButtonWidget.onOffBuilder(Text.literal("C"),
+            noScrollWidgets.get(tabNum).add(new PosWidget(CyclingButtonWidget.onOffBuilder(Text.literal("C"),
                     Text.literal("V")).initially(savedModeSet).omitKeyText().build(x+15-3, y+35+1,20,20, Text.of(""), (button, trackOutput) -> {
                 savedModeSet = (boolean)trackOutput;
                 setSavedModeTooltip();
                 updateSaved();
                 ItemBuilder.this.unsel = true;
-            }));
+            }),15-3,35+1));
         }
         for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
             widgets.get(tabNum).add(new NbtWidget(i));
         setSavedModeTooltip();
         updateSaved();
 
-        num = 0; tabNum++;
-        //entity data
+        num = 0; num2 = 0; tabNum++;
+        //createBlock entity data
         {
             widgets.get(tabNum).add(new NbtWidget("Armor Stands"));
             num++;
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"BasePlate","ShowArms","Small"},new int[]{60,60,60},new String[]{null,null,null},null,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("BasePlate"),Text.of("ShowArms"),Text.of("Small")},new int[]{60,60,60},new String[]{null,null,null},null,false,btn -> {
                 widgets.get(i).get(j).btn();
                 ItemStack item = BlackMagick.setId("armor_stand");
                 if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/NoBasePlate")!=null &&
@@ -1393,7 +1412,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"Marker","Invisible"},new int[]{60,60},new String[]{null,null},null,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Marker"),Text.of("Invisible")},new int[]{60,60},new String[]{null,null},null,false,btn -> {
                 widgets.get(i).get(j).btn();
                 ItemStack item = BlackMagick.setId("armor_stand");
                 if(BlackMagick.getNbtFromPath(item,"0:/tag/EntityTag/Marker")!=null &&
@@ -1467,7 +1486,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"ShowName","NoGravity","Glowing"},new int[]{60,60,60},new String[]{null,null,null},null,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("ShowName"),Text.of("NoGravity"),Text.of("Glowing")},new int[]{60,60,60},new String[]{null,null,null},null,false,btn -> {
                 widgets.get(i).get(j).btn();
                 if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/CustomNameVisible")!=null &&
                 BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/CustomNameVisible").getType()==NbtElement.BYTE_TYPE &&
@@ -1498,7 +1517,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"VisualFire","Silent","NoAI"},new int[]{60,60,60},new String[]{null,null,null},null,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("VisualFire"),Text.of("Silent"),Text.of("NoAI")},new int[]{60,60,60},new String[]{null,null,null},null,false,btn -> {
                 widgets.get(i).get(j).btn();
                 if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/HasVisualFire")!=null &&
                 BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/HasVisualFire").getType()==NbtElement.BYTE_TYPE &&
@@ -1529,7 +1548,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"Invulnerable","Persistence"},new int[]{80,80},new String[]{null,null},null,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Invulnerable"),Text.of("Persistence")},new int[]{80,80},new String[]{null,null},null,false,btn -> {
                 widgets.get(i).get(j).btn();
                 if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invulnerable")!=null &&
                 BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/Invulnerable").getType()==NbtElement.BYTE_TYPE &&
@@ -1940,7 +1959,7 @@ public class ItemBuilder extends GenericScreen {
         }
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"Show Bottom"},new int[]{80},new String[]{null},null,false,btn -> {
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Show Bottom")},new int[]{80},new String[]{null},null,false,btn -> {
                 widgets.get(i).get(j).btn();
                 if(BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/ShowBottom")!=null &&
                 BlackMagick.getNbtFromPath(null,"0:/tag/EntityTag/ShowBottom").getType()==NbtElement.BYTE_TYPE &&
@@ -1952,25 +1971,28 @@ public class ItemBuilder extends GenericScreen {
             })); num++;
         }
 
-        num = 0; tabNum++;
-        //armor stand pose
+        num = 0; num2 = 0; tabNum++;
+        //createBlock armor stand pose
         {
             ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2611"), button -> this.btnSetPose()).dimensions(x+15-3, y+35+1,20,20).build();
             newButton.setTooltip(Tooltip.of(Text.of("Set Pose")));
             if(!client.player.getAbilities().creativeMode)
                 newButton.active = false;
             setPoseButton = newButton;
-            noScrollWidgets.get(tabNum).add(newButton);
+            noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1));
+            num2++;
         }
         {
-            ButtonWidget newButton = ButtonWidget.builder(Text.of("^"), button -> this.btnGetPose()).dimensions(x+15-3, y+55+1,20,20).build();
+            ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2227"), button -> this.btnGetPose()).dimensions(x+15-3, y+35+1+22,20,20).build();
             newButton.setTooltip(Tooltip.of(Text.of("Get from item")));
-            noScrollWidgets.get(tabNum).add(newButton);
+            noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1+22));
+            num2++;
         }
         {
-            ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2612"), button -> this.btnResetPose()).dimensions(x+15-3, y+75+1,20,20).build();
+            ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2612"), button -> this.btnResetPose()).dimensions(x+15-3, y+35+1+22*2,20,20).build();
             newButton.setTooltip(Tooltip.of(Text.of("Clear All")));
-            noScrollWidgets.get(tabNum).add(newButton);
+            noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1+22*2));
+            num2++;
         }
         {
             NbtWidget newButton = new NbtWidget(0,"Head");
@@ -2100,11 +2122,11 @@ public class ItemBuilder extends GenericScreen {
         }
         btnResetPose();
 
-        num = 0; tabNum++;
-        //banner maker
+        num = 0; num2 = 0; tabNum++;
+        //createBlock banner maker
         {
             final int i = tabNum; final int j = num;
-            widgets.get(tabNum).add(new NbtWidget(new String[]{"Preset"},new int[]{40,55,49,55},
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Preset")},new int[]{40,55,49,55},
                     new String[]{"Char Color | Chars | Base Color"+"\n\n"+BANNER_PRESET_CHARS},new String[][] {DYES,BANNER_CHAR_LIST,DYES},false,btn -> {
                 String[] inps = widgets.get(i).get(j).btn();
                 CLICK:{
@@ -2177,6 +2199,98 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }
             })); num++;
+        }
+
+        num = 0; num2 = 0; tabNum++;
+        //createBlock json
+        //see createWidgets(8)
+
+        num = 0; num2 = 0; tabNum++;
+        //createBlock json2
+        //see createWidgets(9)
+
+        num = 0; num2 = 0; tabNum++;
+        //createBlock attributes/enchants
+
+    }
+
+    public void createWidgets(int tabNum) {
+        widgets.get(tabNum).clear();
+        noScrollWidgets.get(tabNum).clear();
+        if(tabNum == 8) {
+            {
+                widgets.get(tabNum).add(new NbtWidget("Name",new ItemStack(Items.NAME_TAG),50));
+            }
+            if(jsonName != null) {
+                widgets.get(tabNum).add(new NbtWidget(jsonName.copy(),0,0,0));
+            }
+            else {
+                widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("+")},new int[]{20},new String[]{null},null,false,btn -> {
+                    BlackMagick.setNbt(null,"display/Name",NbtString.of("{\"text\":\"\"}"));
+                    ItemBuilder.this.unsel = true;
+                }));
+            }
+            {
+                widgets.get(tabNum).add(new NbtWidget("Lore",new ItemStack(Items.PAPER),50));
+            }
+            if(jsonLore != null)
+                for(int k=0; k<jsonLore.size(); k++) {
+                    final int index = k;
+                    widgets.get(tabNum).add(new NbtWidget(((NbtString)jsonLore.get(k)).copy(),1,index,jsonLore.size()-1));
+                }
+            {
+                widgets.get(tabNum).add(new NbtWidget(jsonLore,"display/Lore",0));
+            }
+            if(jsonItem.startsWith("written_book")) {
+                {
+                    widgets.get(tabNum).add(new NbtWidget("pages",new ItemStack(Items.WRITTEN_BOOK),50));
+                }
+                if(jsonPages != null)
+                    for(int k=0; k<jsonPages.size(); k++) {
+                        final int index = k;
+                        widgets.get(tabNum).add(new NbtWidget(((NbtString)jsonPages.get(k)).copy(),2,index,jsonPages.size()-1));
+                    }
+                {
+                    widgets.get(tabNum).add(new NbtWidget(jsonPages,"pages",0));
+                }
+            }
+        }
+        else if(tabNum == 9) {
+            int num = 0;
+            {
+                noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Cancel"), btn -> this.btnTab(8)).dimensions(x+5,y+5,40,20).build(),5,5));
+            }
+            {
+                ButtonWidget w = ButtonWidget.builder(Text.of("Delete"), btn -> {
+                    BlackMagick.removeNbt(null,jsonCurrentPath+"/"+jsonCurrentIndex+":");
+                    this.btnTab(8);
+                }).dimensions(x+120-40-10,y+5,40,20).build();
+                if(!client.player.getAbilities().creativeMode)
+                    w.active = false;
+                noScrollWidgets.get(tabNum).add(new PosWidget(w,120-40-10,5));
+            }
+            {
+                ButtonWidget w = ButtonWidget.builder(Text.of("Clone"), btn -> {
+                    BlackMagick.cloneListElement(null,jsonCurrentPath,jsonCurrentIndex);
+                    this.btnTab(8);
+                }).dimensions(x+120+10,y+5,40,20).build();
+                if(!client.player.getAbilities().creativeMode)
+                    w.active = false;
+                noScrollWidgets.get(tabNum).add(new PosWidget(w,120+10,5));
+            }
+            {
+                ButtonWidget w = ButtonWidget.builder(Text.of("Save"), btn -> {
+                    //TODO
+                    this.btnTab(8);
+                }).dimensions(x+240-5-40,y+5,40,20).build();
+                if(!client.player.getAbilities().creativeMode)
+                    w.active = false;
+                noScrollWidgets.get(tabNum).add(new PosWidget(w,240-5-40,5));
+            }
+            {
+                widgets.get(tabNum).add(new NbtWidget(jsonCurrent.asString()));//TODO txtwid
+                num++;
+            }
         }
     }
 
@@ -2387,15 +2501,13 @@ public class ItemBuilder extends GenericScreen {
 
     private void setSavedModeTooltip() {
         if(savedModeSet)
-            noScrollWidgets.get(4).get(0).setTooltip(Tooltip.of(Text.of("C - Save to slot")));
+            noScrollWidgets.get(4).get(0).w.setTooltip(Tooltip.of(Text.of("C - Save to slot")));
         else
-            noScrollWidgets.get(4).get(0).setTooltip(Tooltip.of(Text.of("V - Get item")));
+            noScrollWidgets.get(4).get(0).w.setTooltip(Tooltip.of(Text.of("V - Get item")));
     }
 
     private void resetSuggs() {
         if(!currentTxt.isEmpty()) {
-            // for(TextFieldWidget t : currentTxt)
-            //     t.setSuggestion(null);
             currentTxt.clear();
         }
         suggs = null;
@@ -2653,6 +2765,7 @@ public class ItemBuilder extends GenericScreen {
         protected final List<ClickableWidget> children;
         private ButtonWidget[] btns;
         private int[] btnX;
+        private int[] btnY = null;
         private TextFieldWidget[] txts;
         private int[] txtX;
         private String lbl;
@@ -2662,6 +2775,8 @@ public class ItemBuilder extends GenericScreen {
         private PoseSlider poseSlider;
         private RgbSlider rgbSlider;
         private int rgbNum;
+        private ItemStack item = null;
+        private int itemXoff = 0;
 
         //btn(size) txt
         public NbtWidget(String name, int size, String tooltip, PressAction onPress, String[] suggestions, boolean survival) {
@@ -2675,8 +2790,8 @@ public class ItemBuilder extends GenericScreen {
                 this.btns[0].setTooltip(Tooltip.of(Text.of(tooltip)));
             if(!client.player.getAbilities().creativeMode && !survival)
                 this.btns[0].active = false;
-            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, ItemBuilder.this.x+15+5+1+size, 5, 240-41-2-size, 20, Text.of(""))};
-            this.txtX = new int[]{15+5+1+size};
+            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, ItemBuilder.this.x+15+5+size, 5, 240-41-size, 20, Text.of(""))};
+            this.txtX = new int[]{15+5+size};
             this.txts[0].setChangedListener(value -> {
                 if(value != null && !value.equals("")) {
                     this.txts[0].setEditableColor(0xFFFFFF);
@@ -2725,8 +2840,8 @@ public class ItemBuilder extends GenericScreen {
                 this.btns[0].setTooltip(Tooltip.of(Text.of(tooltip)));
             if(!client.player.getAbilities().creativeMode && !survival)
                 this.btns[0].active = false;
-            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, ItemBuilder.this.x+15+5+1+size, 5, 240-41-2-size, 20, Text.of(""))};
-            this.txtX = new int[]{15+5+1+size};
+            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, ItemBuilder.this.x+15+5+size, 5, 240-41-size, 20, Text.of(""))};
+            this.txtX = new int[]{15+5+size};
             this.txts[0].setChangedListener(value -> {
                 if(value != null && !value.equals("")) {
                     this.txts[0].setEditableColor(0xFFFFFF);
@@ -2779,14 +2894,26 @@ public class ItemBuilder extends GenericScreen {
             lblCentered = true;
         }
 
+        //ItemStack centered lbl
+        public NbtWidget(String label, ItemStack item, int itemX) {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+
+            lbl = label;
+            lblCentered = true;
+            this.item = item;
+            this.itemXoff = itemX;
+        }
+
         //lbl(size) txt
         public NbtWidget(String name, int size, String[] suggestions) {
             super();
             this.children = Lists.newArrayList();
             setup();
 
-            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, ItemBuilder.this.x+15+5+1+size, 5, 240-41-2-size, 20, Text.of(""))};
-            this.txtX = new int[]{15+5+1+size};
+            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, ItemBuilder.this.x+15+5+size, 5, 240-41-size, 20, Text.of(""))};
+            this.txtX = new int[]{15+5+size};
             this.txts[0].setChangedListener(value -> {
                 if(value != null && !value.equals("")) {
                     this.txts[0].setEditableColor(0xFFFFFF);
@@ -2824,7 +2951,7 @@ public class ItemBuilder extends GenericScreen {
         }
 
         //btn...(sizes) txt...(sizes)
-        public NbtWidget(String[] names, int[] sizes, String[] tooltips, String[][] suggestions, boolean survival, PressAction... onPressActions) {
+        public NbtWidget(Text[] names, int[] sizes, String[] tooltips, String[][] suggestions, boolean survival, PressAction... onPressActions) {
             super();
             this.children = Lists.newArrayList();
             setup();
@@ -2838,7 +2965,7 @@ public class ItemBuilder extends GenericScreen {
                 int currentX = 15;
                 for(int i=0; i<this.btns.length; i++) {
                     this.btnX[i] = currentX;
-                    this.btns[i] = ButtonWidget.builder(Text.of(names[i]), onPressActions[i]).dimensions(currentX,5,sizes[i],20).build();
+                    this.btns[i] = ButtonWidget.builder(names[i], onPressActions[i]).dimensions(currentX,5,sizes[i],20).build();
                     currentX += 5 + sizes[i];
                     if(tooltips[i] != null)
                         this.btns[i].setTooltip(Tooltip.of(Text.of(tooltips[i])));
@@ -2848,8 +2975,8 @@ public class ItemBuilder extends GenericScreen {
                     this.children.add(this.btns[i]);
                 }
                 for(int i=0; i<this.txts.length; i++) {
-                    this.txtX[i] = currentX+1;
-                    this.txts[i] = new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, currentX+1, 5, sizes[this.btns.length+i]-2, 20, Text.of(""));
+                    this.txtX[i] = currentX;
+                    this.txts[i] = new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, currentX, 5, sizes[this.btns.length+i], 20, Text.of(""));
                     currentX += sizes[this.btns.length+i];
 
                     final int ii = i;
@@ -2889,7 +3016,7 @@ public class ItemBuilder extends GenericScreen {
         }
 
         //btn...(sizes) txt...(sizes) [custom suggs]
-        public NbtWidget(String[] names, int[] sizes, String[] tooltips, int suggsNum, boolean survival, PressAction... onPressActions) {
+        public NbtWidget(Text[] names, int[] sizes, String[] tooltips, int suggsNum, boolean survival, PressAction... onPressActions) {
             super();
             this.children = Lists.newArrayList();
             setup();
@@ -2903,7 +3030,7 @@ public class ItemBuilder extends GenericScreen {
                 int currentX = 15;
                 for(int i=0; i<this.btns.length; i++) {
                     this.btnX[i] = currentX;
-                    this.btns[i] = ButtonWidget.builder(Text.of(names[i]), onPressActions[i]).dimensions(currentX,5,sizes[i],20).build();
+                    this.btns[i] = ButtonWidget.builder(names[i], onPressActions[i]).dimensions(currentX,5,sizes[i],20).build();
                     currentX += 5 + sizes[i];
                     if(tooltips[i] != null)
                         this.btns[i].setTooltip(Tooltip.of(Text.of(tooltips[i])));
@@ -2913,8 +3040,8 @@ public class ItemBuilder extends GenericScreen {
                     this.children.add(this.btns[i]);
                 }
                 for(int i=0; i<this.txts.length; i++) {
-                    this.txtX[i] = currentX+1;
-                    this.txts[i] = new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, currentX+1, 5, sizes[this.btns.length+i]-2, 20, Text.of(""));
+                    this.txtX[i] = currentX;
+                    this.txts[i] = new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, currentX, 5, sizes[this.btns.length+i], 20, Text.of(""));
                     currentX += sizes[this.btns.length+i];
 
                     final int ii = i;
@@ -3076,6 +3203,105 @@ public class ItemBuilder extends GenericScreen {
             this.children.add(this.rgbSlider);
         }
 
+        //json btn
+        //type: 0 name (italic), 1 lore (purple/italic), 2 pages (linefeeds)
+        public NbtWidget(NbtString nbt, int type, int index, int maxIndex) {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+
+            if(type==0) {
+                this.btns = new ButtonWidget[1];
+                this.btnX = new int[]{15};
+            }
+            else {
+                this.btns = new ButtonWidget[3];
+                this.btnX = new int[]{15,15+190,15+190};
+                this.btnY = new int[]{0,0,10};
+            }
+            final int jsonType = type;
+
+            if(type == 0 || type == 1 || type == 2) {
+                Text preview = Text.Serializer.fromJson("{\"text\":\"Invalid JSON\",\"color\":\"red\"}");
+                try {
+                    preview = Text.Serializer.fromJson(nbt.asString());
+                    if(type == 0)
+                        preview = ((MutableText)Text.Serializer.fromJson("{\"text\":\"\",\"italic\":true}")).append(preview.copy());
+                    else if(type == 1)
+                        preview = ((MutableText)Text.Serializer.fromJson("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}")).append(preview.copy());
+                    else if(type == 2) {
+                        //TODO replace linefeeds with spaces
+                    }
+                }catch(Exception ex) {
+                    preview = Text.Serializer.fromJson("{\"text\":\"Invalid JSON\",\"color\":\"red\"}");
+                }
+                final NbtString copyList = nbt.copy();
+                this.btns[0] = ButtonWidget.builder(preview, btn -> {
+                    ItemBuilder.this.unsel = true;
+                    jsonCurrent = copyList.copy();
+                    if(jsonType==0)
+                        jsonCurrentPath = "display/Name";
+                    else if(jsonType==1)
+                        jsonCurrentPath = "display/Lore";
+                    else
+                        jsonCurrentPath = "pages";
+                    jsonCurrentIndex = index;
+                    createWidgets(9);
+                    btnTab(9);
+                }).dimensions(this.btnX[0],5,190,20).build();
+                this.btns[0].setTooltip(Tooltip.of(Text.of(nbt.asString())));
+            }
+            if(type>0) {
+                this.btns[1] = ButtonWidget.builder(Text.of("\u2227"), btn -> {
+                    if(jsonType==1)
+                        BlackMagick.moveListElement(null,"display/Lore",index,true);
+                    else if(jsonType==2)
+                        BlackMagick.moveListElement(null,"pages",index,true);
+                    ItemBuilder.this.unsel = true;
+                }).dimensions(this.btnX[1],5+this.btnY[1],20,10).build();
+                if(index==0 || !client.player.getAbilities().creativeMode)
+                    this.btns[1].active = false;
+                this.btns[2] = ButtonWidget.builder(Text.of("\u2228"), btn -> {
+                    if(jsonType==1)
+                        BlackMagick.moveListElement(null,"display/Lore",index,false);
+                    else if(jsonType==2)
+                        BlackMagick.moveListElement(null,"pages",index,false);
+                    ItemBuilder.this.unsel = true;
+                }).dimensions(this.btnX[2],5+this.btnY[2],20,10).build();
+                if(index==maxIndex || !client.player.getAbilities().creativeMode)
+                    this.btns[2].active = false;
+            }
+
+            for(int i=0; i<btns.length; i++)
+                this.children.add(this.btns[i]);
+        }
+
+        //list create new btn
+        //type: 0 json
+        public NbtWidget(NbtList nbt, String path, int type) {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+
+            this.btns = new ButtonWidget[1];
+            this.btnX = new int[]{15};
+            
+            int index = 0;
+            if(nbt != null)
+                index = nbt.size();
+            final int i = index;
+
+            this.btns[0] = ButtonWidget.builder(Text.of("+"), btn -> {
+                if(type==0)
+                    BlackMagick.setNbt(null,path+"/"+i+":",NbtString.of("{\"text\":\"\"}"));
+                ItemBuilder.this.unsel = true;
+            }).dimensions(this.btnX[0],5,20,20).build();
+            if(!client.player.getAbilities().creativeMode)
+                this.btns[0].active = false;
+
+            this.children.add(this.btns[0]);
+        }
+
         private void setup() {
             btns = new ButtonWidget[0];
             btnX = new int[0];
@@ -3143,7 +3369,10 @@ public class ItemBuilder extends GenericScreen {
         public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             for(int i=0; i<btns.length; i++) {
                 this.btns[i].setX(x+this.btnX[i]);
-                this.btns[i].setY(y);
+                if(this.btnY == null)
+                    this.btns[i].setY(y);
+                else
+                    this.btns[i].setY(y+this.btnY[i]);
                 this.btns[i].render(context, mouseX, mouseY, tickDelta);
             }
             for(int i=0; i<txts.length; i++) {
@@ -3156,6 +3385,9 @@ public class ItemBuilder extends GenericScreen {
                     context.drawCenteredTextWithShadow(ItemBuilder.this.textRenderer, Text.of(this.lbl), ItemBuilder.this.width/2, y+6, LABEL_COLOR);
                 else
                     context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.of(this.lbl), ItemBuilder.this.x+15+3, y+6, LABEL_COLOR);
+            }
+            if(item != null) {
+                context.drawItem(item,x+15+2+itemXoff,y+2);
             }
             if(poseSlider != null) {
                 this.poseSlider.render(context, mouseX, mouseY, tickDelta);
@@ -3171,16 +3403,15 @@ public class ItemBuilder extends GenericScreen {
                 for(int i=0; i<9; i++)
                     context.drawItem(this.savedStacks[i],x+this.btnX[i]+2,y+2);
             if(rgbNum == 1) {
-                context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.Serializer.fromJson("[{\"text\":\""+getRgbDec()+"\",\"color\":\""+getRgbHex()+"\"}]"),
-                    ItemBuilder.this.x+15+1, y+6, LABEL_COLOR);
-                if(rgbChanged)
+                if(rgbChanged) {
                     this.txts[0].setText(""+getRgbDec());
+                    this.txts[0].setEditableColor(getRgbDec());
+                }
             }
             if(rgbNum == 2) {
-                context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.Serializer.fromJson("[{\"text\":\""+getRgbHex()+"\",\"color\":\""+getRgbHex()+"\"}]"),
-                    ItemBuilder.this.x+15+1, y+6, LABEL_COLOR);
                 if(rgbChanged) {
                     this.txts[0].setText(""+getRgbHex());
+                    this.txts[0].setEditableColor(getRgbDec());
                     updateRgbItems();
                     rgbChanged = false;
                 }
@@ -3315,37 +3546,77 @@ public class ItemBuilder extends GenericScreen {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    
+    private class Tab {
+        public int pos;
+        public String lbl;
+        public ItemStack display;
+        public boolean hideTabs;
+
+        public Tab(int pos, String lbl, ItemStack display) {
+            this.pos = pos;
+            this.lbl = lbl;
+            this.display = display;
+
+            if(lbl == null)
+                this.lbl = "";
+            if(display == null)
+                this.display = new ItemStack(Items.BARRIER);
+        }
+
+        public Tab(String lbl, boolean hideTabs) {
+            this.pos = -1;
+            this.lbl = lbl;
+            this.display = new ItemStack(Items.BARRIER);
+            this.hideTabs = hideTabs;
+
+            if(lbl == null)
+                this.lbl = "";
+        }
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    private class PosWidget {
+        public ClickableWidget w;
+        public int x;
+        public int y;
+
+        public PosWidget(ClickableWidget w, int x, int y) {
+            this.w = w;
+            this.x = x;
+            this.y = y;
+        }
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
-        for(int i=0; i<tabsItem.length; i++) {
-            if(i<LEFT_TABS)
-                context.drawItem(tabsItem[i],x-TAB_SIZE+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*i+(TAB_SIZE/2-8));
+        if(!tabs[tab].hideTabs) {
+            for(Tab t: tabs) {
+                if(t.pos>=0) {
+                    if(t.pos<LEFT_TABS)
+                        context.drawItem(t.display,x-TAB_SIZE+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*t.pos+(TAB_SIZE/2-8));
+                    else
+                        context.drawItem(t.display,x+240+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(t.pos-LEFT_TABS)+(TAB_SIZE/2-8));
+                }
+            }
+
+            if(tab == 5 && editArmorStand)
+                InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)renderArmorStand);
+            else if(tab == 6) {
+                InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)renderArmorPose);
+            }
             else
-                context.drawItem(tabsItem[i],x+240+(TAB_SIZE/2-8),y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(i-LEFT_TABS)+(TAB_SIZE/2-8));
+                InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)this.client.player);
+
+            context.drawItem(selItem, x+240-20-5+2, y+5+2);
+            txtFormat.render(context, mouseX, mouseY, delta);
+            if(!this.unsavedTxtWidgets.isEmpty() || unsavedPose)
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
+            if(savedError)
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
         }
-
-        if(tab == 5 && editArmorStand)
-            InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)renderArmorStand);
-        else if(tab == 6) {
-            InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)renderArmorPose);
-        }
-        else
-            InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)this.client.player);
-
-        context.drawItem(selItem, x+240-20-5+2, y+5+2);
-        txtFormat.render(context, mouseX, mouseY, delta);
-        if(!this.unsavedTxtWidgets.isEmpty() || unsavedPose)
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
-        if(savedError)
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
-
-        // if(itemsEqual == 0)
-        //     context.drawCenteredTextWithShadow(this.textRenderer, Text.of("\u2612"), this.width / 2-40, y-11, 0xFFFFFF);
-        // else if(itemsEqual == 1)
-        //     context.drawCenteredTextWithShadow(this.textRenderer, Text.of("\u2611"), this.width / 2-40, y-11, 0xFFFFFF);
 
         if(suggs != null)
             suggs.render(context, mouseX, mouseY);
@@ -3411,6 +3682,9 @@ public class ItemBuilder extends GenericScreen {
                 resetArmorStand();
                 updatePose();
             }
+        }
+        else if(tab == 8) {
+            updateJsonTab();
         }
         if(unsel) {
             GuiNavigationPath guiNavigationPath = this.getFocusedPath();
