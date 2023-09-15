@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import baphomethlabs.fortytwoedit.BlackMagick;
@@ -55,16 +57,17 @@ import net.minecraft.util.Util;
 public class ItemBuilder extends GenericScreen {
 
     protected boolean unsel = false;
-    protected int tab = 0;
-    protected final int TAB_OFFSET = 5;
-    protected final int TAB_SIZE = 24;
-    protected final int TAB_SPACING = 2;
-    protected final Tab[] tabs = new Tab[]{new Tab(0,"General",new ItemStack(Items.GOLDEN_SWORD)), new Tab(1,"Blocks",new ItemStack(Items.PURPLE_SHULKER_BOX)),
+    protected static int tab = 0;
+    private boolean firstInit = true;
+    protected static final int TAB_OFFSET = 5;
+    protected static final int TAB_SIZE = 24;
+    protected static final int TAB_SPACING = 2;
+    protected static final Tab[] tabs = new Tab[]{new Tab(0,"General",new ItemStack(Items.GOLDEN_SWORD)), new Tab(1,"Blocks",new ItemStack(Items.PURPLE_SHULKER_BOX)),
         new Tab(2,"Misc",FortytwoEdit.HEAD42), new Tab(8,"Custom NBT",new ItemStack(Items.COMMAND_BLOCK)),
         new Tab(9,"Saved Items",new ItemStack(Items.JIGSAW)), new Tab(3,"Entity Data",new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG)),
         new Tab(5,"Armor Pose",new ItemStack(Items.ARMOR_STAND)), new Tab(4,"Banner Maker",FortytwoEdit.BANNER42),
         new Tab(7,"Text",new ItemStack(Items.NAME_TAG)), new Tab("Text2",true), new Tab(6,"Attributes",new ItemStack(Items.ENCHANTED_BOOK))};
-    private final int LEFT_TABS = 5;
+    private static final int LEFT_TABS = 5;
     protected ItemStack selItem = null;
     protected String cacheBlock = "";
     protected ArrayList<ArrayList<String>> cacheStates = new ArrayList<>();
@@ -79,29 +82,29 @@ public class ItemBuilder extends GenericScreen {
     private final ArrayList<ArrayList<NbtWidget>> widgets = new ArrayList<ArrayList<NbtWidget>>();
     private final Set<ClickableWidget> unsavedTxtWidgets = Sets.newHashSet();
     private final Set<ClickableWidget> allTxtWidgets = Sets.newHashSet();
-    public boolean savedModeSet = false;
+    public static boolean savedModeSet = false;
     private NbtList savedItems = null;
     private boolean savedError = false;
     private ArmorStandEntity renderArmorStand;
     private ArmorStandEntity renderArmorPose;
     protected final int playerX = x + 240+10;
     protected final int playerY = y - 10;
-    private final int RENDER_SIZE = 35;
+    private static final int RENDER_SIZE = 35;
     private ArrayList<NbtWidget> sliders = new ArrayList<>();
     private ArrayList<NbtWidget> sliderBtns = new ArrayList<>();
     private ButtonWidget setPoseButton;
     private boolean editArmorStand = false;
     private boolean unsavedPose = false;
     private float[][] armorPose;
-    public final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
-    public final String[] BANNER_CHAR_LIST = new String[BANNER_PRESET_CHARS.replaceAll("\\s","").length()];
-    public final String[] DYES = {"black","blue","brown","cyan","gray","green","light_blue","light_gray","lime","magenta","orange","pink","purple","red","white","yellow"};
+    public static final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
+    public static final String[] BANNER_CHAR_LIST = new String[BANNER_PRESET_CHARS.replaceAll("\\s","").length()];
+    public static final String[] DYES = {"black","blue","brown","cyan","gray","green","light_blue","light_gray","lime","magenta","orange","pink","purple","red","white","yellow"};
     private TextSuggestor suggs;
     private Set<TextFieldWidget> currentTxt = Sets.newHashSet();
-    private int[] rgb = new int[3];
+    private static int[] rgb = new int[]{66,6,102};
     private ArrayList<NbtWidget> rgbSliders = new ArrayList<>();
     private boolean rgbChanged = true;
-    private ItemStack[] rgbItems = new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
+    private static final ItemStack[] rgbItems = new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
     private String jsonItem = "";
     private NbtString jsonName = null;
     private NbtList jsonLore = null;
@@ -112,7 +115,8 @@ public class ItemBuilder extends GenericScreen {
     private boolean jsonUnsaved = false;
     private int jsonBoxI = -1;
     private Text jsonPreview = Text.of("");
-    private double[] tabScroll = new double[tabs.length];
+    private static double[] tabScroll = new double[tabs.length];
+    private boolean pauseSaveScroll = false;
     
     public ItemBuilder() {}
 
@@ -120,11 +124,12 @@ public class ItemBuilder extends GenericScreen {
     protected void init() {
         super.init();
 
-        if(tabScroll.length == 0) {
-            tabScroll = new double[tabs.length];
-            for(int i = 0; i<tabs.length; i++)
-                tabScroll[i]=0.0;
+        if(firstInit) {
+            if(tab == 9)
+                tab = 8;
+            firstInit = false;
         }
+        pauseSaveScroll = false;
         
         if(!tabs[tab].hideTabs) {
 
@@ -177,7 +182,7 @@ public class ItemBuilder extends GenericScreen {
             p.w.setY(y+p.y);
             this.addDrawableChild(p.w);
         }
-        if(tab != 3 && tab != 9) {
+        if(tab != 3 && tab != 9 && widgets.get(tab).size()!=0) {
             this.tabWidget = new TabWidget(tab);
             this.tabWidget.setRenderBackground(false);
             this.tabWidget.setScrollAmount(tabScroll[tab]);
@@ -288,6 +293,10 @@ public class ItemBuilder extends GenericScreen {
     }
 
     protected void btnTab(int i) {
+        if(!pauseSaveScroll && tabWidget != null) {
+            tabScroll[tab] = tabWidget.getScrollAmount();
+            pauseSaveScroll = true;
+        }
         tab = i;
         suggs = null;
         this.resize(this.client,this.width,this.height);
@@ -2608,6 +2617,10 @@ public class ItemBuilder extends GenericScreen {
     }
 
     public void createWidgets(int tabNum) {
+        if(!pauseSaveScroll && tabWidget != null) {
+            tabScroll[tab] = tabWidget.getScrollAmount();
+            pauseSaveScroll = true;
+        }
         widgets.get(tabNum).clear();
         noScrollWidgets.get(tabNum).clear();
         if(tabNum == 8) {
@@ -2666,7 +2679,7 @@ public class ItemBuilder extends GenericScreen {
                 noScrollWidgets.get(tabNum).add(new PosWidget(w,120-40-10,5));
             }
             {
-                ButtonWidget w = ButtonWidget.builder(Text.of("Clone"), btn -> {//TODO
+                ButtonWidget w = ButtonWidget.builder(Text.of("Clone"), btn -> {
                     ItemStack temp = BlackMagick.cloneListElement(null,jsonCurrentPath,jsonCurrentIndex);
                     if(temp != null && jsonUnsaved) {
                         BlackMagick.setNbt(temp,jsonCurrentPath+"/"+(jsonCurrentIndex+1)+":",NbtString.of(((EditBoxWidget)noScrollWidgets.get(9).get(jsonBoxI).w).getText()));
@@ -3608,7 +3621,7 @@ public class ItemBuilder extends GenericScreen {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    private class Tab {
+    private static class Tab {
         public int pos;
         public String lbl;
         public ItemStack display;
@@ -3694,6 +3707,10 @@ public class ItemBuilder extends GenericScreen {
     
     @Override
     public void resize(MinecraftClient client, int width, int height) {
+        if(!pauseSaveScroll && tabWidget != null) {
+            tabScroll[tab] = tabWidget.getScrollAmount();
+            pauseSaveScroll = true;
+        }
         suggs = null;
         super.resize(client, width, height);
     }
@@ -3703,11 +3720,18 @@ public class ItemBuilder extends GenericScreen {
         if (suggs != null && suggs.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        //suggs = null;
         if (keyCode == KeyBindingHelper.getBoundKeyOf(FortytwoEdit.magickGuiKey).getCode() || keyCode == KeyBindingHelper.getBoundKeyOf(client.options.inventoryKey).getCode()) {
             if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !unsavedPose && !(tab == 9 && jsonUnsaved)) {
+                if(!pauseSaveScroll && tabWidget != null) {
+                    tabScroll[tab] = tabWidget.getScrollAmount();
+                }
                 this.client.setScreen(null);
                 return true;
+            }
+        }
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            if(!pauseSaveScroll && tabWidget != null) {
+                tabScroll[tab] = tabWidget.getScrollAmount();
             }
         }
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
@@ -3737,8 +3761,6 @@ public class ItemBuilder extends GenericScreen {
     public void tick() {
         updateItem();
         compareItems();
-        if(tabWidget != null)
-            tabScroll[tab] = tabWidget.getScrollAmount();
         if(tab == 5 || tab == 6) {
             if(selItem.getItem().toString().equals("armor_stand")) {
                 updateArmorStand(selItem.copy());
