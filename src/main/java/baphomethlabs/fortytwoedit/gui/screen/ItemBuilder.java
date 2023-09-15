@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import baphomethlabs.fortytwoedit.BlackMagick;
@@ -66,7 +65,8 @@ public class ItemBuilder extends GenericScreen {
         new Tab(2,"Misc",FortytwoEdit.HEAD42), new Tab(8,"Custom NBT",new ItemStack(Items.COMMAND_BLOCK)),
         new Tab(9,"Saved Items",new ItemStack(Items.JIGSAW)), new Tab(3,"Entity Data",new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG)),
         new Tab(5,"Armor Pose",new ItemStack(Items.ARMOR_STAND)), new Tab(4,"Banner Maker",FortytwoEdit.BANNER42),
-        new Tab(7,"Text",new ItemStack(Items.NAME_TAG)), new Tab("Text2",true), new Tab(6,"Attributes",new ItemStack(Items.ENCHANTED_BOOK))};
+        new Tab(7,"Text",new ItemStack(Items.NAME_TAG)), new Tab("TextEdit",true), new Tab("TextEffect",true),
+        new Tab(6,"Attributes",new ItemStack(Items.ENCHANTED_BOOK))};
     private static final int LEFT_TABS = 5;
     protected ItemStack selItem = null;
     protected String cacheBlock = "";
@@ -101,9 +101,9 @@ public class ItemBuilder extends GenericScreen {
     public static final String[] DYES = {"black","blue","brown","cyan","gray","green","light_blue","light_gray","lime","magenta","orange","pink","purple","red","white","yellow"};
     private TextSuggestor suggs;
     private Set<TextFieldWidget> currentTxt = Sets.newHashSet();
-    private static int[] rgb = new int[]{66,6,102};
+    private static int[] rgb = new int[]{66,6,102,0,0,0};
     private ArrayList<NbtWidget> rgbSliders = new ArrayList<>();
-    private boolean rgbChanged = true;
+    private boolean rgbChanged[] = {true,true};//used to update txtwids {general rgb dec, general rgb hex}
     private static final ItemStack[] rgbItems = new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
     private String jsonItem = "";
     private NbtString jsonName = null;
@@ -113,8 +113,13 @@ public class ItemBuilder extends GenericScreen {
     private String jsonCurrentPath = "";
     private int jsonCurrentIndex = -1;
     private boolean jsonUnsaved = false;
+    private boolean json2Unsaved = false;
     private int jsonBoxI = -1;
     private Text jsonPreview = Text.of("");
+    private Text jsonPreview2 = Text.of("");
+    private boolean jsonEffectValid = false;
+    private String jsonEffectFull = "";
+    private int[] jsonEffects = new int[5];//bold,italic,underlined,strikethrough,radgrad
     private static double[] tabScroll = new double[tabs.length];
     private boolean pauseSaveScroll = false;
     
@@ -125,7 +130,7 @@ public class ItemBuilder extends GenericScreen {
         super.init();
 
         if(firstInit) {
-            if(tab == 9)
+            if(tab == 9 || tab == 10)
                 tab = 8;
             firstInit = false;
         }
@@ -864,9 +869,13 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private void updateRgbSliders() {
-        for(int i=0; i<rgb.length; i++)
-            rgbSliders.get(i).setSlider(rgb[i]);
-        rgbChanged = true;
+        for(int i=0; i<rgbSliders.size(); i++)
+            if(i<3)
+                rgbSliders.get(i).setSlider(rgb[i]);
+            else
+                rgbSliders.get(i).setSlider(rgb[i-3]);
+        for(int i=0; i<rgbChanged.length; i++)
+            rgbChanged[i] = true;
     }
 
     private void updateRgbItems() {
@@ -922,12 +931,40 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private void updateJsonPreview() {
+        updateJsonPreview(null,false);
+    }
+    private void updateJsonPreview(String jsonEffect, boolean oneEffect) {
+        jsonEffectValid = false;
         if(jsonBoxI>=0)
             try {
                 jsonPreview = Text.Serializer.fromJson(((EditBoxWidget)noScrollWidgets.get(9).get(jsonBoxI).w).getText());
+                jsonPreview2 = Text.Serializer.fromJson(((EditBoxWidget)noScrollWidgets.get(9).get(jsonBoxI).w).getText());
+                if(jsonEffect != null) {
+                    jsonPreview2 = Text.Serializer.fromJson(appendJsonEffect(((EditBoxWidget)noScrollWidgets.get(9).get(jsonBoxI).w).getText(),jsonEffect,oneEffect));
+                    if(!jsonEffect.equals("{\"text\":\"\"}"))
+                        jsonEffectValid = true;
+                    jsonEffectFull = appendJsonEffect(((EditBoxWidget)noScrollWidgets.get(9).get(jsonBoxI).w).getText(),jsonEffect,oneEffect);
+                }
             } catch(Exception ex) {
                 jsonPreview = Text.Serializer.fromJson("{\"text\":\"Invalid JSON\",\"color\":\"red\"}");
+                jsonPreview2 = Text.Serializer.fromJson("{\"text\":\"Invalid JSON\",\"color\":\"red\"}");
             }
+        if(noScrollWidgets.size() > 10 && noScrollWidgets.get(10).size() > 1)
+            ((ButtonWidget)noScrollWidgets.get(10).get(1).w).active = (jsonEffectValid && client.player.getAbilities().creativeMode);
+    }
+
+    private String appendJsonEffect(String jsonBase, String jsonEffect, boolean oneEffect) {
+        if(jsonBase.length()>=4 && jsonBase.charAt(0)=='[' && jsonBase.charAt(jsonBase.length()-1)==']'
+        && jsonBase.charAt(1)=='{' && jsonBase.charAt(jsonBase.length()-2)=='}')
+            return jsonBase.substring(0,jsonBase.length()-1) +","+ jsonEffect +"]";
+        else if(jsonBase.length()>=2 && jsonBase.charAt(0)=='{' && jsonBase.charAt(jsonBase.length()-1)=='}')
+            return "["+jsonBase+","+jsonEffect+"]";
+        else if(jsonBase.length()==0 || jsonBase.equals("[]")) {
+            if(oneEffect)
+                return jsonEffect;
+            return "["+jsonEffect+"]";
+        }
+        return "{\"text\":\"Invalid JSON\",\"color\":\"red\"}";
     }
 
     private void createWidgets() {
@@ -2608,8 +2645,12 @@ public class ItemBuilder extends GenericScreen {
         //see createWidgets(8)
 
         tabNum++;
-        //createBlock json2
+        //createBlock jsonEdit
         //see createWidgets(9)
+
+        tabNum++;
+        //createBlock jsonEffects
+        //see createWidgets(10)
 
         tabNum++;
         //createBlock attributes/enchants
@@ -2624,6 +2665,7 @@ public class ItemBuilder extends GenericScreen {
         widgets.get(tabNum).clear();
         noScrollWidgets.get(tabNum).clear();
         if(tabNum == 8) {
+            boolean noItem = client.player.getMainHandStack().isEmpty();
             {
                 widgets.get(tabNum).add(new NbtWidget("Name",new ItemStack(Items.NAME_TAG),50));
             }
@@ -2631,10 +2673,7 @@ public class ItemBuilder extends GenericScreen {
                 widgets.get(tabNum).add(new NbtWidget(jsonName.copy(),0,0,0));
             }
             else {
-                widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("+")},new int[]{20},new String[]{null},null,false,btn -> {
-                    BlackMagick.setNbt(null,"display/Name",NbtString.of("{\"text\":\"\"}"));
-                    ItemBuilder.this.unsel = true;
-                }));
+                widgets.get(tabNum).add(new NbtWidget(null,"display/Name",1,noItem));
             }
             {
                 widgets.get(tabNum).add(new NbtWidget("Lore",new ItemStack(Items.PAPER),50));
@@ -2645,7 +2684,7 @@ public class ItemBuilder extends GenericScreen {
                     widgets.get(tabNum).add(new NbtWidget(((NbtString)jsonLore.get(k)).copy(),1,index,jsonLore.size()-1));
                 }
             {
-                widgets.get(tabNum).add(new NbtWidget(jsonLore,"display/Lore",0));
+                widgets.get(tabNum).add(new NbtWidget(jsonLore,"display/Lore",0,noItem));
             }
             if(jsonItem.startsWith("written_book")) {
                 {
@@ -2657,7 +2696,7 @@ public class ItemBuilder extends GenericScreen {
                         widgets.get(tabNum).add(new NbtWidget(((NbtString)jsonPages.get(k)).copy(),2,index,jsonPages.size()-1));
                     }
                 {
-                    widgets.get(tabNum).add(new NbtWidget(jsonPages,"pages",0));
+                    widgets.get(tabNum).add(new NbtWidget(jsonPages,"pages",0,noItem));
                 }
             }
         }
@@ -2722,6 +2761,188 @@ public class ItemBuilder extends GenericScreen {
                 this.allTxtWidgets.add(w);
                 updateJsonPreview();//TODO show book for written_books
             }
+            {
+                noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Effect"), button -> {
+                    createWidgets(10);
+                    this.btnTab(10);
+                    ItemBuilder.this.unsel = true;
+                }).dimensions(x+15-3,y+35+22*6+1,60,20).build(),15-3,35+22*6+1));
+            }
+        }
+        else if(tabNum == 10) {
+            json2Unsaved = false;
+            updateJsonPreview();
+            {
+                noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Cancel"), btn -> {
+                    json2Unsaved = false;
+                    this.btnTab(9);
+                    updateJsonPreview();
+                }).dimensions(x+5,y+5,40,20).build(),5,5));
+            }
+            {
+                ButtonWidget w = ButtonWidget.builder(Text.of("Add"), btn -> {
+                    if(jsonEffectValid) {
+                        String setPath = jsonCurrentPath + "";
+                        if(!setPath.equals("display/Name"))
+                            setPath += "/"+jsonCurrentIndex+":";
+                        BlackMagick.setNbt(null,setPath,NbtString.of(jsonEffectFull));
+                        jsonUnsaved = false;
+                        json2Unsaved = false;
+                        this.btnTab(8);
+                    }
+                }).dimensions(x+240-5-40,y+5,40,20).build();
+                w.active = false;
+                noScrollWidgets.get(tabNum).add(new PosWidget(w,240-5-40,5));
+            }
+            {  
+                TextFieldWidget w = new TextFieldWidget(this.textRenderer,x-15,y+5+1,15,18,Text.of(""));
+                w.setEditable(false);
+                w.setText("\u00a7");
+                w.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
+                noScrollWidgets.get(tabNum).add(new PosWidget(w,-15,5+1));
+            }
+            {
+                widgets.get(tabNum).add(new NbtWidget("Gradient"));
+            }
+            {
+                TextFieldWidget w = new TextFieldWidget(this.textRenderer,x+15-3,y+35,240-36,20,Text.of(""));
+                w.setMaxLength(131072);
+                w.setChangedListener(value -> {
+                    json2Unsaved = true;
+                    String val = "";
+                    boolean firstPart = true;
+                    boolean oneEffect = true;
+                    if(rgb[0]==rgb[3] && rgb[1]==rgb[4] && rgb[2]==rgb[5]) {
+                        val+="{\"text\":\"";
+                        for(int i=0; i<value.length(); i++) {
+                            String thisChar = ""+value.charAt(i);
+                            if(thisChar.equals("\\") || thisChar.equals("\""))
+                                thisChar = "\\"+thisChar;
+                            val+=thisChar;
+                        }
+                        val+="\",\"color\":\"#"+getRgbHex()+"\"";
+                        if(jsonEffects[0]==1)
+                            val+=",\"bold\":true";
+                        else if(jsonEffects[0]==2)
+                            val+=",\"bold\":false";
+                        if(jsonEffects[1]==1)
+                            val+=",\"italic\":true";
+                        else if(jsonEffects[1]==2)
+                            val+=",\"italic\":false";
+                        if(jsonEffects[2]==1)
+                            val+=",\"underlined\":true";
+                        else if(jsonEffects[2]==2)
+                            val+=",\"underlined\":false";
+                        if(jsonEffects[3]==1)
+                            val+=",\"strikethrough\":true";
+                        else if(jsonEffects[3]==2)
+                            val+=",\"strikethrough\":false";
+                        val+="}";
+                    }
+                    else {
+                        for(int i=0; i<value.length(); i++) {
+                            if(!firstPart) {
+                                val+=",";
+                                oneEffect = false;
+                            }
+                            String thisChar = ""+value.charAt(i);
+                            if(thisChar.equals("\\") || thisChar.equals("\""))
+                                thisChar = "\\"+thisChar;
+                            val+="{\"text\":\""+thisChar+"\",\"color\":\"#";
+                            for(int c=0; c<3; c++) {
+                                int col = 0;
+                                if(jsonEffects[4]==0)
+                                    col = rgb[c] + (int)((rgb[c+3]-rgb[c])*i/((double)(value.length()-1)));
+                                else {
+                                    if(value.length()%2==0) {
+                                        if(i<value.length()/2)
+                                            col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*i/((double)(value.length()/2.0-1)));
+                                        else
+                                            col = rgb[c] + (int)((rgb[c+3]-rgb[c])*(i-(value.length()/2))/((double)(value.length()/2.0-1)));
+                                    }
+                                    else {
+                                        if(i<=value.length()/2)
+                                            col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*i/((double)(value.length()/2.0-1)));
+                                        else
+                                            col = rgb[c] + (int)((rgb[c+3]-rgb[c])*(i-(value.length()/2)-2)/((double)(value.length()/2.0-1)));
+                                    }
+                                }
+                                
+                                String current = Integer.toHexString(col).toUpperCase();
+                                if(current.length()==1)
+                                    current = "0" + current;
+                                val += current;
+                            }
+                            val+="\"";
+                            if(jsonEffects[0]==1)
+                                val+=",\"bold\":true";
+                            else if(jsonEffects[0]==2)
+                                val+=",\"bold\":false";
+                            if(jsonEffects[1]==1)
+                                val+=",\"italic\":true";
+                            else if(jsonEffects[1]==2)
+                                val+=",\"italic\":false";
+                            if(jsonEffects[2]==1)
+                                val+=",\"underlined\":true";
+                            else if(jsonEffects[2]==2)
+                                val+=",\"underlined\":false";
+                            if(jsonEffects[3]==1)
+                                val+=",\"strikethrough\":true";
+                            else if(jsonEffects[3]==2)
+                                val+=",\"strikethrough\":false";
+                            val+="}";
+                            firstPart = false;
+                        }
+                    }
+                    if(value == null || value.equals("")) {
+                        oneEffect = true;
+                        val = "{\"text\":\"\"}";
+                    }
+                    updateJsonPreview(val,oneEffect);
+                });
+                widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0)}));
+                this.allTxtWidgets.add(w);
+            }
+            {
+                final int i = tabNum; final int j = widgets.get(tabNum).size();
+                widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("bold"),Text.of("italic"),Text.of("underlined"),Text.of("strikethrough")},
+                new int[]{30,40,70,80},new String[]{"none | true | false","none | true | false","none | true | false","none | true | false"},null,true,btn -> {
+                    unsel = true;
+                    jsonEffects[0]++;
+                    if(jsonEffects[0]>2)
+                        jsonEffects[0]=0;
+                    ((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).setText(((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).getText());
+                },btn -> {
+                    unsel = true;
+                    jsonEffects[1]++;
+                    if(jsonEffects[1]>2)
+                        jsonEffects[1]=0;
+                    ((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).setText(((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).getText());
+                },btn -> {
+                    unsel = true;
+                    jsonEffects[2]++;
+                    if(jsonEffects[2]>2)
+                        jsonEffects[2]=0;
+                    ((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).setText(((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).getText());
+                },btn -> {
+                    unsel = true;
+                    jsonEffects[3]++;
+                    if(jsonEffects[3]>2)
+                        jsonEffects[3]=0;
+                    ((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).setText(((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).getText());
+                }));
+            }
+            {
+                final int i = tabNum; final int j = widgets.get(tabNum).size();
+                widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Style")},
+                new int[]{40},new String[]{"Radial | Linear"},null,true,btn -> {
+                    unsel = true;
+                    jsonEffects[4]++;
+                    if(jsonEffects[4]>1)
+                        jsonEffects[4]=0;
+                    ((TextFieldWidget)widgets.get(i).get(j-2).wids[0].w).setText(((TextFieldWidget)widgets.get(i).get(j-2).wids[0].w).getText());
+                }));
+            }
         }
     }
     
@@ -2763,6 +2984,7 @@ public class ItemBuilder extends GenericScreen {
         private int rgbNum;
         private ItemStack item = null;
         private int itemXoff = 0;
+        private PosWidget[] wids;
 
         //btn(size) txt
         public NbtWidget(String name, int size, String tooltip, PressAction onPress, String[] suggestions, boolean survival) {
@@ -3263,8 +3485,8 @@ public class ItemBuilder extends GenericScreen {
         }
 
         //list create new btn
-        //type: 0 json
-        public NbtWidget(NbtList nbt, String path, int type) {
+        //type: 0 json, 1 displayName
+        public NbtWidget(NbtList nbt, String path, int type, boolean disabledBtns) {
             super();
             this.children = Lists.newArrayList();
             setup();
@@ -3285,6 +3507,8 @@ public class ItemBuilder extends GenericScreen {
             this.btns[0] = ButtonWidget.builder(Text.of("+"), btn -> {
                 if(type==0)
                     BlackMagick.setNbt(null,path+"/"+j+":",NbtString.of("{\"text\":\"\"}"));
+                else if(type==1)
+                    BlackMagick.setNbt(null,"display/Name",NbtString.of("{\"text\":\"\"}"));
                 ItemBuilder.this.unsel = true;
             }).dimensions(this.btnX[0],5,20,20).build();
 
@@ -3371,9 +3595,22 @@ public class ItemBuilder extends GenericScreen {
             }
 
             for(int i=0; i<btns.length; i++) {
-                if(!client.player.getAbilities().creativeMode)
+                if(!client.player.getAbilities().creativeMode || disabledBtns)
                     this.btns[i].active = false;
                 this.children.add(this.btns[i]);
+            }
+        }
+
+        //PosWidgets
+        public NbtWidget(PosWidget[] p) {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+
+            wids = p;
+
+            for(int i=0; i<p.length; i++) {
+                this.children.add(p[i].w);
             }
         }
 
@@ -3382,6 +3619,7 @@ public class ItemBuilder extends GenericScreen {
             btnX = new int[0];
             txts = new TextFieldWidget[0];
             txtX = new int[0];
+            wids = new PosWidget[0];
         }
 
         public String[] btn() {
@@ -3455,6 +3693,11 @@ public class ItemBuilder extends GenericScreen {
                 this.txts[i].setY(y);
                 this.txts[i].render(context, mouseX, mouseY, tickDelta);
             }
+            for(int i=0; i<wids.length; i++) {
+                this.wids[i].w.setX(x+this.wids[i].x);
+                this.wids[i].w.setY(y+this.wids[i].y);
+                this.wids[i].w.render(context, mouseX, mouseY, tickDelta);
+            }
             if(lbl != null) {
                 if(lblCentered)
                     context.drawCenteredTextWithShadow(ItemBuilder.this.textRenderer, Text.of(this.lbl), ItemBuilder.this.width/2, y+6, LABEL_COLOR);
@@ -3478,17 +3721,19 @@ public class ItemBuilder extends GenericScreen {
                 for(int i=0; i<9; i++)
                     context.drawItem(this.savedStacks[i],x+this.btnX[i]+2,y+2);
             if(rgbNum == 1) {
-                if(rgbChanged) {
+                if(rgbChanged[0]) {
                     this.txts[0].setText(""+getRgbDec());
                     this.txts[0].setEditableColor(getRgbDec());
+                    updateRgbItems();
+                    rgbChanged[0] = false;
                 }
             }
             if(rgbNum == 2) {
-                if(rgbChanged) {
+                if(rgbChanged[1]) {
                     this.txts[0].setText(""+getRgbHex());
                     this.txts[0].setEditableColor(getRgbDec());
                     updateRgbItems();
-                    rgbChanged = false;
+                    rgbChanged[1] = false;
                 }
                 for(int i=0; i<3; i++)
                     context.drawItem(rgbItems[i], x+15+2+i*25, y+2+22);
@@ -3595,7 +3840,8 @@ public class ItemBuilder extends GenericScreen {
         @Override
         public void applyValue() {
             rgb[num] = (int)(this.value*(max-min)+min);
-            rgbChanged = true;
+            for(int i=0; i<rgbChanged.length; i++)
+                rgbChanged[i] = true;
         }
 
         @Override
@@ -3692,8 +3938,10 @@ public class ItemBuilder extends GenericScreen {
             if(savedError)
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
         }
-        if(tab==9)
+        if(tab == 9 && jsonPreview != null)
             context.drawCenteredTextWithShadow(this.textRenderer, jsonPreview, this.width / 2, y-14, 0xFFFFFF);
+        else if(tab == 10 && jsonPreview2 != null)
+            context.drawCenteredTextWithShadow(this.textRenderer, jsonPreview2, this.width / 2, y-14, 0xFFFFFF);
 
         if(suggs != null)
             suggs.render(context, mouseX, mouseY);
@@ -3721,7 +3969,7 @@ public class ItemBuilder extends GenericScreen {
             return true;
         }
         if (keyCode == KeyBindingHelper.getBoundKeyOf(FortytwoEdit.magickGuiKey).getCode() || keyCode == KeyBindingHelper.getBoundKeyOf(client.options.inventoryKey).getCode()) {
-            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !unsavedPose && !(tab == 9 && jsonUnsaved)) {
+            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !unsavedPose && !((tab == 9 || tab == 10) && jsonUnsaved) && !(tab == 10 && json2Unsaved)) {
                 if(!pauseSaveScroll && tabWidget != null) {
                     tabScroll[tab] = tabWidget.getScrollAmount();
                 }

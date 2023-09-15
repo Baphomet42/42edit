@@ -88,7 +88,7 @@ public class Capes extends GenericScreen {
             BigInteger random2Bi = new BigInteger(128, new Random(System.identityHashCode(new Object())));
             String serverId = random1Bi.xor(random2Bi).toString(16);
             client.getSessionService().joinServer(client.getSession().getUuidOrNull(),client.getSession().getAccessToken(),serverId);
-            String url = "https://optifine.net/capeChange?u="+client.getSession().getUuidOrNull()+"&n="+client.getSession().getUsername()+"&s="+serverId;
+            String url = "https://optifine.net/capeChange?u="+client.getSession().getUuidOrNull().toString().replaceAll("-","")+"&n="+client.getSession().getUsername()+"&s="+serverId;
             Util.getOperatingSystem().open(url);
         } catch (Exception ex) {}
         this.resize(this.client,this.width,this.height);

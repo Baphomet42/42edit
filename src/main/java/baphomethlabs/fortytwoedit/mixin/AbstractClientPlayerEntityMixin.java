@@ -17,7 +17,7 @@ public abstract class AbstractClientPlayerEntityMixin {
 
     @Shadow protected abstract PlayerListEntry getPlayerListEntry();
     
-    @Inject(method="method_52814()Lnet/minecraft/client/util/SkinTextures", at=@At("RETURN"), cancellable = true)
+    @Inject(method="method_52814()Lnet/minecraft/client/util/SkinTextures;", at=@At("RETURN"), cancellable = true)
     public void getSkinTextures(CallbackInfoReturnable<SkinTextures> cir) {
 
         PlayerListEntry playerEntry = this.getPlayerListEntry();
