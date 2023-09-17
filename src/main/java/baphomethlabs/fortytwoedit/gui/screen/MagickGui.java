@@ -1,6 +1,7 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import java.util.Iterator;
+import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.gui.DrawContext;
@@ -128,7 +129,7 @@ public class MagickGui extends GenericScreen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         context.drawItem(new ItemStack(Items.JIGSAW), x+6, y+6);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.Serializer.fromJson("{\"text\":\"Black Magick by BaphomethLabs\",\"color\":\"#420666\",\"bold\":true}"), this.width / 2, y+11, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, BlackMagick.jsonFromString("{\"text\":\"Black Magick by BaphomethLabs\",\"color\":\"#420666\",\"bold\":true}").text(), this.width / 2, y+11, 0xFFFFFF);
 		context.drawItem(new ItemStack(Items.SPONGE),x+20+2,y+44+1+2);
 		context.drawItem(new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+20+2,y+22*3+1+2);
 		context.drawItem(new ItemStack(Items.DIAMOND_HELMET),x+20+2,y+22*4+1+2);

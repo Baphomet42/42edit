@@ -13,6 +13,7 @@
     "InGameHudMixin",
     "KeyBindingMixin",
     "MinecraftClientMixin",
+    "ScrollableWidgetMixin",
     "SharedConstantsMixin",
     "StructureBlockScreenMixin",
     "TooltipComponentMixin",

@@ -43,6 +43,22 @@ public class BlackMagick {
 
 
 
+    //create new Text from String
+    //value stored in ParsedText so Text is never null
+    public static ParsedText jsonFromString(String inp) {
+        try {
+            Text temp = Text.Serializer.fromJson(inp);
+            if(temp != null)
+                return new ParsedText(true,temp);
+        } catch(Exception ex) {}
+        return new ParsedText(false,Text.Serializer.fromJson("{\"text\":\"Invalid JSON\",\"color\":\"red\"}"));
+    }
+
+
+
+
+
+
     //if inp is valid id, change current item to inp
     public static ItemStack setId(String inp) {
         final MinecraftClient client = MinecraftClient.getInstance();
@@ -1194,6 +1210,18 @@ public class BlackMagick {
             default: return null;
         }
         return item;
+    }
+
+
+
+
+
+
+    //stores a parsed json text
+    //isValid is false if the json cannot be parsed
+    //text is never null, and has a backup message if isValid is false
+    public record ParsedText(boolean isValid, Text text) {
+        
     }
 
 

@@ -293,6 +293,7 @@ public class FortytwoEdit implements ClientModInitializer {
     //registry suggestions
     public static final String[] ATTRIBUTES = getCacheAttributes();
     public static final String[] BLOCKS = getCacheBlocks();
+    public static final String[] BLOCKTAGS = getCacheBlockTags();
     public static final String[] ITEMS = getCacheItems();
     public static final String[] EFFECTS = getCacheEffects();
     public static final String[] ENCHANTS = getCacheEnchants();
@@ -303,7 +304,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final String[] STRUCTURES = getCacheStructures();
 
     //live command suggestions
-    public static void setCommandSuggs(String cmd, TextSuggestor suggs, String[] joinList) {
+    public static void setCommandSuggs(String cmd, TextSuggestor suggs, String[][] joinLists) {
         final MinecraftClient client = MinecraftClient.getInstance();
         CommandDispatcher<CommandSource> commandDispatcher = client.player.networkHandler.getCommandDispatcher();
         ParseResults<CommandSource> cmdSuggsParse = commandDispatcher.parse(cmd, (CommandSource)client.player.networkHandler.getCommandSource());
@@ -314,14 +315,15 @@ public class FortytwoEdit implements ClientModInitializer {
         cmdSuggsPendingSuggestions.thenRun(() -> {
             List<String> list = new ArrayList<>();
 
-            if(joinList != null && joinList.length>0)
-                for(int i=0; i<joinList.length; i++)
-                    list.add(joinList[i]);
+            if(joinLists != null)
+                for(int i=0; i<joinLists.length; i++)
+                    for(int j=0; j<joinLists[i].length; j++)
+                        list.add(joinLists[i][j]);
 
             Suggestions suggestions;
             if (cmdSuggsPendingSuggestions != null && cmdSuggsPendingSuggestions.isDone() && !(suggestions = cmdSuggsPendingSuggestions.join()).isEmpty()) {
                 for (Suggestion suggestion : suggestions.getList())
-                    list.add(suggestion.getText().replace("minecraft:",""));                
+                    list.add(suggestion.getText().replaceFirst("minecraft:",""));                
             }
 
             list = new ArrayList<String>((new HashSet<String>(list)));
@@ -557,6 +559,19 @@ public class FortytwoEdit implements ClientModInitializer {
 
         Registries.BLOCK.forEach(b -> {
             list.add(Registries.BLOCK.getId(b).getPath());
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    private static String[] getCacheBlockTags() {
+        List<String> list = new ArrayList<>();
+
+        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/blocks", map::putIfAbsent);
+        map.keySet().forEach(t -> {
+            list.add(t.getPath().replaceFirst("tags/blocks/","").replaceFirst(".json",""));
         });
 
         Collections.sort(list);
