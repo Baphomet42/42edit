@@ -11,13 +11,15 @@
     "HandledScreenMixin",
     "IconsMixin",
     "InGameHudMixin",
+    "KeyBindingAccessor",
     "KeyBindingMixin",
     "MinecraftClientMixin",
     "ScrollableWidgetMixin",
     "SharedConstantsMixin",
     "StructureBlockScreenMixin",
     "TooltipComponentMixin",
-    "TooltipMixin"
+    "TooltipMixin",
+    "TooltipPositionerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

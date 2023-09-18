@@ -1,9 +1,7 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import org.lwjgl.glfw.GLFW;
-
 import baphomethlabs.fortytwoedit.FortytwoEdit;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -99,7 +97,7 @@ public class AutoClick extends GenericScreen {
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             saveAll();
         }
-        if (keyCode == KeyBindingHelper.getBoundKeyOf(FortytwoEdit.magickGuiKey).getCode() || keyCode == KeyBindingHelper.getBoundKeyOf(client.options.inventoryKey).getCode()) {
+        if (FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
             if(!txtAttackCooldown.isActive()) {
                 saveAll();
                 this.client.setScreen(null);

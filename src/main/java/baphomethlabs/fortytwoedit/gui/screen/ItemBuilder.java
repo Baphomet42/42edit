@@ -13,7 +13,6 @@ import com.google.common.collect.Sets;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -31,6 +30,8 @@ import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.ButtonWidget.PressAction;
+import net.minecraft.client.item.TooltipContext;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.item.Item;
@@ -45,6 +46,7 @@ import net.minecraft.nbt.NbtInt;
 import net.minecraft.nbt.NbtIntArray;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
+import net.minecraft.registry.Registries;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Property;
@@ -3267,7 +3269,7 @@ public class ItemBuilder extends GenericScreen {
                 ButtonWidget w = ButtonWidget.builder(Text.of("Clone"), btn -> {
                     ItemStack temp = BlackMagick.cloneListElement(null,listCurrentPath,listCurrentIndex);
                     if(temp != null && listUnsaved) {
-                        BlackMagick.setNbt(temp,listCurrentPath+"/"+(listCurrentIndex+1)+":",new NbtCompound());//TODO
+                        BlackMagick.setNbt(temp,listCurrentPath+"/"+(listCurrentIndex+1)+":",listCurrent);
                     }
                     this.btnTab(11);
                 }).dimensions(x+120+10,y+5,40,20).build();
@@ -3277,13 +3279,13 @@ public class ItemBuilder extends GenericScreen {
             }
             {
                 ButtonWidget w = ButtonWidget.builder(Text.of("Save"), btn -> {
-                    BlackMagick.setNbt(null,listCurrentPath+"/"+listCurrentIndex+":",new NbtCompound());//TODO
+                    BlackMagick.setNbt(null,listCurrentPath+"/"+listCurrentIndex+":",listCurrent);
                     this.btnTab(11);
                 }).dimensions(x+240-5-40,y+5,40,20).build();
                 if(!client.player.getAbilities().creativeMode)
                     w.active = false;
                 noScrollWidgets.get(tabNum).add(new PosWidget(w,240-5-40,5));
-            }
+            }//TODO disable save/clone if !listCurrentValid
         }
     }
     
@@ -3992,29 +3994,74 @@ public class ItemBuilder extends GenericScreen {
             this.btnX = new int[]{15,15+190,15+190};
             this.btnY = new int[]{0,0,10};
 
-            Text preview = Text.of(nbt.asString());
+            List<Text> preview = new ArrayList<>();
+            preview.add(Text.of(nbt.asString()));
+
             if(path.equals("AttributeModifiers")) {
-                //TODO
+                List<Text> textList = new ArrayList<>();
+                boolean addedPreview = false;
+                if(nbt.contains("AttributeName",NbtElement.STRING_TYPE) && (nbt.contains("Amount",NbtElement.DOUBLE_TYPE) || nbt.contains("Amount",NbtElement.INT_TYPE))) {
+                    NbtList list = new NbtList();
+                    list.add(nbt.copy());
+                    ItemStack item = selItem==null ? new ItemStack(Items.STONE) : new ItemStack(selItem.getItem());
+                    item.setSubNbt(path,list);
+                    if(listEdit[4] != null) {
+                        item.setSubNbt("Enchantments",listEdit[4].copy());
+                        item.setSubNbt("HideFlags",NbtInt.of(1));
+                    }
+                    textList = item.getTooltip(client.player,TooltipContext.Default.ADVANCED.withCreative());
+                    addedPreview = true;
+                    if(textList.size()>6)
+                        preview.add(((MutableText)Text.of("Any Slot: ")).append(textList.get(3)).setStyle(Style.EMPTY));
+                    else if(textList.size()>3)
+                        preview.add(((MutableText)textList.get(2)).append(Text.of(" ")).append(textList.get(3)).setStyle(Style.EMPTY));
+                    else
+                        addedPreview = false;
+
+                    if(nbt.contains("Operation",NbtElement.INT_TYPE) && ( ((NbtInt)nbt.get("Operation")).intValue()<0 || ((NbtInt)nbt.get("Operation")).intValue()>2 ))
+                        addedPreview = false;
+                }
+                if(!addedPreview)
+                    preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid Attribute\",\"color\":\"red\"}").text());
             }
             else if(path.equals("Enchantments")) {
-                if(nbt.contains("id") && nbt.get("id").getType()==NbtElement.STRING_TYPE && nbt.contains("lvl")
-                && ( nbt.get("lvl").getType()==NbtElement.BYTE_TYPE || nbt.get("lvl").getType()==NbtElement.SHORT_TYPE )) {
-                    preview = Text.of(((NbtString)nbt.get("id")).asString().replaceFirst("minecraft:","")+" lvl:"
-                        +(nbt.get("lvl")).asString().replaceFirst("s","").replaceFirst("b",""));
-                }
-                else {
-                    preview = BlackMagick.jsonFromString("{\"text\":\"Invalid Enchantment\",\"color\":\"red\"}").text();//TODO get real display names from tooltips
-                }
+                List<Text> textList = new ArrayList<>();
+                Registries.ENCHANTMENT.getOrEmpty(EnchantmentHelper.getIdFromNbt(nbt)).ifPresent(e -> textList.add(e.getName(EnchantmentHelper.getLevelFromNbt(nbt))));
+                if(textList.size()==0)
+                    preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid Enchantment\",\"color\":\"red\"}").text());
+                else
+                    preview.add(((MutableText)textList.get(0)).setStyle(Style.EMPTY));
             }
-            else if(path.equals("custom_potion_effects") || path.equals("effects")) {
-                //TODO
+            else if(path.equals("custom_potion_effects")) {
+                NbtList list = new NbtList();
+                list.add(nbt.copy());
+                List<Text> textList = new ArrayList<>();
+                ItemStack item = new ItemStack(Items.POTION);
+                item.setSubNbt(path,list);
+                Items.POTION.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+                if(textList.size()==0 || (textList.size()>0 && textList.get(0).getString().equals("No Effects")))
+                    preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid Effect\",\"color\":\"red\"}").text());
+                else
+                    preview.add(((MutableText)textList.get(0)).setStyle(Style.EMPTY));
+            }
+            else if(path.equals("effects")) {
+                NbtList list = new NbtList();
+                list.add(nbt.copy());
+                List<Text> textList = new ArrayList<>();
+                ItemStack item = new ItemStack(Items.SUSPICIOUS_STEW);
+                item.setSubNbt(path,list);
+                Items.SUSPICIOUS_STEW.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+                if(textList.size()>0 && textList.get(0).getString().equals("No Effects"))
+                    preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid Effect\",\"color\":\"red\"}").text());
+                else
+                    preview.add(((MutableText)textList.get(0)).setStyle(Style.EMPTY));
             }
             else if(path.equals("Fireworks/Explosions")) {
-                //TODO
+                //
             }
 
             final NbtCompound copyList = nbt.copy();
-            this.btns[0] = ButtonWidget.builder(preview, btn -> {
+            this.btns[0] = ButtonWidget.builder(preview.get(preview.size()-1), btn -> {
                 ItemBuilder.this.unsel = true;
                 listCurrent = copyList.copy();
                 listCurrentPath = path;
@@ -4427,7 +4474,7 @@ public class ItemBuilder extends GenericScreen {
         if (suggs != null && suggs.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        if (keyCode == KeyBindingHelper.getBoundKeyOf(FortytwoEdit.magickGuiKey).getCode() || keyCode == KeyBindingHelper.getBoundKeyOf(client.options.inventoryKey).getCode()) {
+        if (FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
             if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !unsavedPose && !((tab == 9 || tab == 10) && jsonUnsaved)
             && !(tab == 10 && json2Unsaved) && !(tab == 12 && listUnsaved)) {
                 if(!pauseSaveScroll && tabWidget != null) {

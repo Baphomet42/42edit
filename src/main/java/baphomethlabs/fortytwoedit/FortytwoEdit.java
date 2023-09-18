@@ -27,6 +27,7 @@ import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
+import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.RenderLayer;
@@ -390,10 +391,10 @@ public class FortytwoEdit implements ClientModInitializer {
             if (afkMove.wasPressed()) {
                 autoMove = !autoMove;
                 if (!autoMove)
-                    KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.forwardKey), false);
+                    KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.forwardKey).getBoundKey(), false);
             }
             if (autoMove && client.player != null) {
-                KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.forwardKey), true);
+                KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.forwardKey).getBoundKey(), true);
             }
 
             //afkClick
@@ -401,13 +402,13 @@ public class FortytwoEdit implements ClientModInitializer {
                 autoClicker = !autoClicker;
 
                 if (!autoClicker && autoClick)
-                    KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.useKey), false);
+                    KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey(), false);
                 if (!autoClicker && autoMine)
-                    KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.attackKey), false);
+                    KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey(), false);
             }
             if(autoClicker && client.player != null) {
                 if (autoClick) {
-                    KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.useKey), true);
+                    KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey(), true);
                 }
                 if (autoAttack && System.currentTimeMillis()>=lastAttack + attackWait && client.crosshairTarget instanceof EntityHitResult) {
                     lastAttack = System.currentTimeMillis();
@@ -416,7 +417,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     client.player.swingHand(Hand.MAIN_HAND);
                 }
                 if (autoMine) {
-                    KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.attackKey), true);
+                    KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey(), true);
                 }
             }
 
@@ -440,9 +441,9 @@ public class FortytwoEdit implements ClientModInitializer {
             //spam
             if(spamClick.isPressed() && System.currentTimeMillis()>=lastSpam + 20) {
                 if(modKey.isPressed())
-                    KeyBinding.onKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.attackKey));
+                    KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey());
                 else {
-                    KeyBinding.onKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.useKey));
+                    KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
                     if(randoMode)
                         changeRandoSlot();
                 }
@@ -477,8 +478,8 @@ public class FortytwoEdit implements ClientModInitializer {
             attackWait = 9999;
 
 
-        KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.useKey), false);
-        KeyBinding.setKeyPressed(KeyBindingHelper.getBoundKeyOf(client.options.attackKey), false);
+        KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey(), false);
+        KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey(), false);
     }
 
     private static boolean testRandoSlot() {

@@ -133,7 +133,7 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
     @Inject(method="keyPressed(III)Z", at=@At("HEAD"), cancellable = true)
     private void keyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
 
-        if(FortytwoEdit.spamClick.matchesKey(keyCode, scanCode)) {
+        if(FortytwoEdit.spamClick.matchesKey(keyCode,scanCode)) {
 
             double d = client.mouse.getX() * (double)this.client.getWindow().getScaledWidth() / (double)this.client.getWindow().getWidth();
             double e = client.mouse.getY() * (double)this.client.getWindow().getScaledHeight() / (double)this.client.getWindow().getHeight();

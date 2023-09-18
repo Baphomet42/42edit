@@ -21,6 +21,7 @@ import net.minecraft.client.util.math.Rect2i;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
@@ -218,10 +219,8 @@ public class TextSuggestor {
                 }
                 //context.drawTextWithShadow(TextSuggestor.this.textRenderer, suggestion.getText(), this.area.getX() + 1, this.area.getY() + 2 + 12 * l, l + this.inWindowIndex == this.selection ? -256 : -5592406);
                 Text t = Text.of(suggestion.getText());
-                if(l + this.inWindowIndex == this.selection) {
-                    Text temp = Text.Serializer.fromJson("{\"text\":\"temp\",\"color\":\"yellow\"}");
-                    t = ((MutableText)t).setStyle(temp.getStyle());
-                }
+                if(l + this.inWindowIndex == this.selection)
+                    t = ((MutableText)t).formatted(Formatting.YELLOW);
                 textList.add(t);
                 width = Math.max(width, textRenderer.getWidth(suggestion.getText()));
             }
