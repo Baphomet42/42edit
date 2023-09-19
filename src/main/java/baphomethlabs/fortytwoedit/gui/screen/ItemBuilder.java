@@ -1165,7 +1165,7 @@ public class ItemBuilder extends GenericScreen {
                 listCurrentValid = true;
         }
         else if(listCurrentPath.equals("Fireworks/Explosions")) {
-            //
+            //TODO
             listCurrentValid = true;
         }
 
@@ -4366,7 +4366,7 @@ public class ItemBuilder extends GenericScreen {
                     preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid Effect\",\"color\":\"red\"}").text());
             }
             else if(path.equals("Fireworks/Explosions")) {
-                //
+                //TODO
             }
 
             final NbtCompound copyList = nbt.copy();
