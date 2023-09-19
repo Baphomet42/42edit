@@ -15,35 +15,41 @@ import net.minecraft.text.Text;
 @Mixin(Tooltip.class)
 public abstract class TooltipMixin {
 
-    private static final int maxLines = 22;
-    private static final int large = 420;
+    private static final int lineSwap = 7;
+    private static final int large = 400;
     private static final int medium = 285;
     private static final int small = 170;
+    private static final int safeZone = 18;
 
     @Inject(method="wrapLines(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/text/Text;)Ljava/util/List;", at=@At("RETURN"), cancellable = true)
     private static void modWrapLines(MinecraftClient client, Text text, CallbackInfoReturnable<List<OrderedText>> cir) {
-        if(client.currentScreen != null && client.currentScreen instanceof ItemBuilder && client.textRenderer.wrapLines(text, small).size()>7) {
-            int largeSafe = large;
-            if(client.currentScreen != null)
-                largeSafe = Math.min(largeSafe,client.currentScreen.width-20);
-            if(client.textRenderer.wrapLines(text, largeSafe).size()>maxLines) {
-                List<OrderedText> linesImmutable = client.textRenderer.wrapLines(text, largeSafe);
+        if(client.currentScreen != null && client.currentScreen instanceof ItemBuilder && client.textRenderer.wrapLines(text, small).size()>lineSwap) {
+
+            int largeSafe = Math.min(large,client.currentScreen.width-safeZone);
+            int mediumSafe = Math.min(medium,client.currentScreen.width-safeZone);
+
+            if(client.textRenderer.wrapLines(text, largeSafe).size()>lineSwap) {
+                List<OrderedText> linesImmutable = client.textRenderer.wrapLines(text, client.currentScreen.width-safeZone);
                 List<OrderedText> lines = new ArrayList<>();
+                int maxLines = Math.max(lineSwap,(client.currentScreen.height-safeZone)/10);
                 for(OrderedText t : linesImmutable)
                     lines.add(t);
-                int i = 0;
-                while(lines.size()>maxLines-1) {
-                    lines.remove(lines.size()-1);
-                    i++;
+                if(lines.size()>maxLines) {
+                    int i = 0;
+                    while(lines.size()>maxLines-1) {
+                        lines.remove(lines.size()-1);
+                        i++;
+                    }
+                    List<OrderedText> extra = client.textRenderer.wrapLines(Text.of("..."+i+" more lines..."), client.currentScreen.width-safeZone);
+                    lines.add(extra.get(0));
                 }
-                List<OrderedText> extra = client.textRenderer.wrapLines(Text.of("..."+i+" more lines..."), largeSafe);
-                lines.add(extra.get(0));
                 cir.setReturnValue(lines);
             }
-            else if(client.textRenderer.wrapLines(text, medium).size()>7)
+            else if(client.textRenderer.wrapLines(text, mediumSafe).size()>lineSwap)
                 cir.setReturnValue(client.textRenderer.wrapLines(text, largeSafe));
             else
-                cir.setReturnValue(client.textRenderer.wrapLines(text, medium));
+                cir.setReturnValue(client.textRenderer.wrapLines(text, mediumSafe));
+
         }
     }
     

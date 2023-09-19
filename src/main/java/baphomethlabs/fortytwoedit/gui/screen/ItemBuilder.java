@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import com.google.common.collect.Lists;
@@ -130,9 +131,13 @@ public class ItemBuilder extends GenericScreen {
     private String listItem = "";
     private NbtList[] listEdit = new NbtList[5];//Potions,SusEffects,Fireworks,Attributes,Enchants
     private NbtCompound listCurrent = null;
+    private boolean listCurrentValid = false;
     private String listCurrentPath = "";
     private int listCurrentIndex = -1;
     private boolean listUnsaved = false;
+    private int listSaveBtnI = -1;
+    private int listPotionBtnsI = -1;
+    private static int[] listPotionBtns = new int[3];//showparticles,showicon,ambient
     private static final ItemStack[] listItems = new ItemStack[]{
         ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:potion,Count:1,tag:{CustomPotionColor:10027263}}")),new ItemStack(Items.SUSPICIOUS_STEW),
         new ItemStack(Items.FIREWORK_ROCKET),new ItemStack(Items.NETHER_STAR),new ItemStack(Items.ENCHANTED_BOOK)};
@@ -1110,6 +1115,105 @@ public class ItemBuilder extends GenericScreen {
             btnTab(11);
         }
 
+    }
+
+    private void updateCurrentList() {
+        listCurrentValid = false;
+
+        if(listCurrentPath.equals("AttributeModifiers")) {
+            List<Text> textList = new ArrayList<>();
+            if(listCurrent.contains("AttributeName",NbtElement.STRING_TYPE) && (listCurrent.contains("Amount",NbtElement.DOUBLE_TYPE) || listCurrent.contains("Amount",NbtElement.INT_TYPE))) {
+                NbtList list = new NbtList();
+                list.add(listCurrent.copy());
+                ItemStack item = selItem==null ? new ItemStack(Items.STONE) : new ItemStack(selItem.getItem());
+                item.setSubNbt(listCurrentPath,list);
+                if(listEdit[4] != null) {
+                    item.setSubNbt("Enchantments",listEdit[4].copy());
+                    item.setSubNbt("HideFlags",NbtInt.of(1));
+                }
+                textList = item.getTooltip(client.player,TooltipContext.Default.ADVANCED.withCreative());
+                listCurrentValid = textList.size()>3;
+
+                if(listCurrent.contains("Operation",NbtElement.INT_TYPE) && ( ((NbtInt)listCurrent.get("Operation")).intValue()<0 || ((NbtInt)listCurrent.get("Operation")).intValue()>2 ))
+                    listCurrentValid = false;
+            }
+        }
+        else if(listCurrentPath.equals("custom_potion_effects")) {
+            NbtList list = new NbtList();
+            list.add(listCurrent.copy());
+            List<Text> textList = new ArrayList<>();
+            ItemStack item = new ItemStack(Items.POTION);
+            item.setSubNbt(listCurrentPath,list);
+            Items.POTION.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+            if(textList.size()>0 && !textList.get(0).getString().equals("No Effects"))
+                listCurrentValid = true;
+        }
+        else if(listCurrentPath.equals("effects")) {
+            NbtList list = new NbtList();
+            list.add(listCurrent.copy());
+            List<Text> textList = new ArrayList<>();
+            ItemStack item = new ItemStack(Items.SUSPICIOUS_STEW);
+            item.setSubNbt(listCurrentPath,list);
+            Items.SUSPICIOUS_STEW.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+            if(textList.size()>0 && !textList.get(0).getString().equals("No Effects"))
+                listCurrentValid = true;
+        }
+        else if(listCurrentPath.equals("Enchantments")) {
+            List<Text> textList = new ArrayList<>();
+            Registries.ENCHANTMENT.getOrEmpty(EnchantmentHelper.getIdFromNbt(listCurrent.copy())).ifPresent(e -> textList.add(e.getName(EnchantmentHelper.getLevelFromNbt(listCurrent.copy()))));
+            if(textList.size()>0)
+                listCurrentValid = true;
+        }
+        else if(listCurrentPath.equals("Fireworks/Explosions")) {
+            //
+            listCurrentValid = true;
+        }
+
+        if(listCurrentPath.equals("custom_potion_effects") && widgets.get(12).size()>listPotionBtnsI && listPotionBtnsI>=0) {
+            listCurrent.remove("show_particles");
+            listCurrent.remove("show_icon");
+            listCurrent.remove("ambient");
+            int num = 0;
+            String col = "";
+            if(listPotionBtns[num]==1) {
+                col = "\u00a7a";
+                listCurrent.put("show_particles",NbtByte.of(true));
+            }
+            else if(listPotionBtns[num]==2) {
+                col = "\u00a7c";
+                listCurrent.put("show_particles",NbtByte.of(false));
+            }
+            widgets.get(12).get(listPotionBtnsI).btns[num].setMessage(Text.of(col+"ShowParticles"));
+            num++;
+            col = "";
+            if(listPotionBtns[num]==1) {
+                col = "\u00a7a";
+                listCurrent.put("show_icon",NbtByte.of(true));
+            }
+            else if(listPotionBtns[num]==2) {
+                col = "\u00a7c";
+                listCurrent.put("show_icon",NbtByte.of(false));
+            }
+            widgets.get(12).get(listPotionBtnsI).btns[num].setMessage(Text.of(col+"ShowIcon"));
+            num++;
+            col = "";
+            if(listPotionBtns[num]==1) {
+                col = "\u00a7a";
+                listCurrent.put("ambient",NbtByte.of(true));
+            }
+            else if(listPotionBtns[num]==2) {
+                col = "\u00a7c";
+                listCurrent.put("ambient",NbtByte.of(false));
+            }
+            widgets.get(12).get(listPotionBtnsI).btns[num].setMessage(Text.of(col+"Ambient"));
+        }
+
+        if(noScrollWidgets.get(12).size()>listSaveBtnI && listSaveBtnI>=0) {
+            noScrollWidgets.get(12).get(listSaveBtnI-1).w.active = listCurrentValid || !listUnsaved;
+            noScrollWidgets.get(12).get(listSaveBtnI).w.active = listCurrentValid;
+            noScrollWidgets.get(12).get(listSaveBtnI-1).w.setTooltip(Tooltip.of(Text.of(listCurrent.asString())));
+            noScrollWidgets.get(12).get(listSaveBtnI).w.setTooltip(Tooltip.of(Text.of(listCurrent.asString())));
+        }
     }
 
     private void createWidgets() {
@@ -3108,8 +3212,9 @@ public class ItemBuilder extends GenericScreen {
                 final int i = tabNum; final int j = widgets.get(tabNum).size();
                 jsonEffectBtnsI = j;
                 widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("\u00a7ll"),Text.of("\u00a7oo"),Text.of("\u00a7nn"),Text.of("\u00a7mm"),
-                Text.of("\u00a7kk")},new int[]{20,20,20,20,20},new String[]{"none | true | false","none | true | false","none | true | false","none | true | false",
-                "none | true | false"},null,true,btn -> {
+                Text.of("\u00a7kk")},new int[]{20,20,20,20,20},new String[]{"none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r",
+                "none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r"},
+                null,true,btn -> {
                     unsel = true;
                     jsonEffects[0]++;
                     if(jsonEffects[0]>2)
@@ -3235,7 +3340,7 @@ public class ItemBuilder extends GenericScreen {
                     widgets.get(tabNum).add(new NbtWidget(((NbtCompound)listEdit[num].get(k)).copy(),"AttributeModifiers",index,listEdit[num].size()-1));
                 }
             {
-                widgets.get(tabNum).add(new NbtWidget(listEdit[num],"AttributeModifiers",BlackMagick.elementFromString("{}"),noItem));
+                widgets.get(tabNum).add(new NbtWidget(listEdit[num],"AttributeModifiers",BlackMagick.elementFromString("{UUID:"+FortytwoEdit.randomUUID()+"}"),noItem));
             }
             num++;
             {
@@ -3251,7 +3356,7 @@ public class ItemBuilder extends GenericScreen {
             }
             num++;
         }
-        else if(tabNum == 12) {//TODO attributes/potions/enchs/suseffects/fireworks
+        else if(tabNum == 12) {
             listUnsaved = false;
             {
                 noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Cancel"), btn -> this.btnTab(11)).dimensions(x+5,y+5,40,20).build(),5,5));
@@ -3278,6 +3383,7 @@ public class ItemBuilder extends GenericScreen {
                 noScrollWidgets.get(tabNum).add(new PosWidget(w,120+10,5));
             }
             {
+                listSaveBtnI = noScrollWidgets.get(tabNum).size();
                 ButtonWidget w = ButtonWidget.builder(Text.of("Save"), btn -> {
                     BlackMagick.setNbt(null,listCurrentPath+"/"+listCurrentIndex+":",listCurrent);
                     this.btnTab(11);
@@ -3285,7 +3391,254 @@ public class ItemBuilder extends GenericScreen {
                 if(!client.player.getAbilities().creativeMode)
                     w.active = false;
                 noScrollWidgets.get(tabNum).add(new PosWidget(w,240-5-40,5));
-            }//TODO disable save/clone if !listCurrentValid
+            }
+            if(listCurrentPath.equals("AttributeModifiers")) {
+                {
+                    widgets.get(tabNum).add(new NbtWidget("Edit Attribute"));
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "AttributeName";
+                    widgets.get(tabNum).add(new NbtWidget("Name:", 40, new String[]{"generic.movement_speed","generic.attack_damage","generic.attack_speed",
+                    "generic.attack_knockback","generic.max_health","generic.max_absorption","generic.knockback_resistance","generic.armor","generic.armor_toughness",
+                    "generic.luck"}, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            listCurrent.put(val,NbtString.of(value));
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "Amount";
+                    widgets.get(tabNum).add(new NbtWidget("Amount:", 40, null, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            NbtElement el = BlackMagick.elementFromString(value);
+                            if(el != null && (el.getType() == NbtElement.DOUBLE_TYPE || el.getType() == NbtElement.INT_TYPE)) {
+                                listCurrent.put(val,el);
+                                widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                            }
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "Operation";
+                    widgets.get(tabNum).add(new NbtWidget("Operation:", 60, new String[]{"0","1","2"}, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            NbtElement el = BlackMagick.elementFromString(value);
+                            if(el != null && el.getType() == NbtElement.INT_TYPE && ((NbtInt)el).intValue()>=0 && ((NbtInt)el).intValue()<=2) {
+                                listCurrent.put(val,(NbtInt)el);
+                                widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                            }
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "Slot";
+                    widgets.get(tabNum).add(new NbtWidget("Slot:", 40, new String[]{"mainhand","offhand","head","chest","legs","feet"}, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            listCurrent.put(val,NbtString.of(value));
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+            }
+            else if(listCurrentPath.equals("custom_potion_effects")) {
+                {
+                    widgets.get(tabNum).add(new NbtWidget("Edit Effect"));
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "id";
+                    widgets.get(tabNum).add(new NbtWidget("id:", 40, FortytwoEdit.EFFECTS, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            listCurrent.put(val,NbtString.of(value));
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "duration";
+                    widgets.get(tabNum).add(new NbtWidget("duration:", 60, new String[]{"-1"}, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            NbtElement el = BlackMagick.elementFromString(value);
+                            if(el != null && el.getType() == NbtElement.INT_TYPE) {
+                                listCurrent.put(val,el);
+                                widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                            }
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "amplifier";
+                    widgets.get(tabNum).add(new NbtWidget("amplifier:", 60, null, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            NbtElement el = BlackMagick.elementFromString(value);
+                            if(el != null && (el.getType() == NbtElement.INT_TYPE || el.getType() == NbtElement.BYTE_TYPE)) {
+                                listCurrent.put(val,el);
+                                widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                            }
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+                {
+                    listPotionBtnsI = widgets.get(tabNum).size();
+                    widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("ShowParticles"),Text.of("ShowIcon"),Text.of("Ambient")},new int[]{80,60,60},
+                    new String[]{"none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r",
+                    "none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r"},null,true,btn -> {
+                        unsel = true;
+                        listPotionBtns[0]++;
+                        if(listPotionBtns[0]>2)
+                            listPotionBtns[0]=0;
+                        updateCurrentList();
+                    },btn -> {
+                        unsel = true;
+                        listPotionBtns[1]++;
+                        if(listPotionBtns[1]>2)
+                            listPotionBtns[1]=0;
+                        updateCurrentList();
+                    },btn -> {
+                        unsel = true;
+                        listPotionBtns[2]++;
+                        if(listPotionBtns[2]>2)
+                            listPotionBtns[2]=0;
+                        updateCurrentList();
+                    }));
+                }
+            }
+            else if(listCurrentPath.equals("effects")) {
+                {
+                    widgets.get(tabNum).add(new NbtWidget("Edit Effect"));
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "id";
+                    widgets.get(tabNum).add(new NbtWidget("id:", 40, FortytwoEdit.EFFECTS, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            listCurrent.put(val,NbtString.of(value));
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "duration";
+                    widgets.get(tabNum).add(new NbtWidget("duration:", 60, new String[]{"-1"}, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            NbtElement el = BlackMagick.elementFromString(value);
+                            if(el != null && el.getType() == NbtElement.INT_TYPE) {
+                                listCurrent.put(val,el);
+                                widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                            }
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+            }
+            else if(listCurrentPath.equals("Enchantments")) {
+                {
+                    widgets.get(tabNum).add(new NbtWidget("Edit Enchantment"));
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "id";
+                    widgets.get(tabNum).add(new NbtWidget("Enchant:", 60, FortytwoEdit.ENCHANTS, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            listCurrent.put(val,NbtString.of(value));
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "lvl";
+                    widgets.get(tabNum).add(new NbtWidget("Level:", 40, null, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            NbtElement el = BlackMagick.elementFromString(value);
+                            if(el != null && (el.getType() == NbtElement.SHORT_TYPE || el.getType() == NbtElement.INT_TYPE)) {
+                                listCurrent.put(val,el);
+                                widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                            }
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+            }
+            else if(listCurrentPath.equals("Fireworks/Explosions")) {
+                {
+                    widgets.get(tabNum).add(new NbtWidget("Edit Firework Explosion"));
+                }
+                //TODO
+            }
+            updateCurrentList();
         }
     }
     
@@ -3458,50 +3811,6 @@ public class ItemBuilder extends GenericScreen {
             this.item = item;
             this.itemXoff = itemX;
         }
-
-        //lbl(size) txt
-        // public NbtWidget(String name, int size, String[] suggestions) {
-        //     super();
-        //     this.children = Lists.newArrayList();
-        //     setup();
-
-        //     this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, ItemBuilder.this.x+15+5+size, 5, 240-41-size, 20, Text.of(""))};
-        //     this.txtX = new int[]{15+5+size};
-        //     this.txts[0].setChangedListener(value -> {
-        //         if(value != null && !value.equals("")) {
-        //             this.txts[0].setEditableColor(0xFFFFFF);
-        //             ItemBuilder.this.markUnsaved(this.txts[0]);
-        //         }
-        //         else {
-        //             this.txts[0].setEditableColor(LABEL_COLOR);
-        //             ItemBuilder.this.markSaved(this.txts[0]);
-        //         }
-        //         if(!currentTxt.contains(this.txts[0])) {
-        //             resetSuggs();
-        //             currentTxt.add(this.txts[0]);
-        //             suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-        //             if(suggestions != null && suggestions.length > 0)
-        //                 suggs.setSuggestions(suggestions);
-        //         }
-        //         else{
-        //             if(suggs != null)
-        //                 suggs.refresh();
-        //             else {
-        //                 resetSuggs();
-        //                 suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-        //                 if(suggestions != null && suggestions.length > 0)
-        //                     suggs.setSuggestions(suggestions);
-        //             }
-        //         }
-        //     });
-        //     this.txts[0].setMaxLength(131072);
-        //     for(int i=0; i<txts.length; i++) {
-        //         this.children.add(this.txts[i]);
-        //         ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
-        //     }
-        //     lbl = name;
-        //     lblCentered = false;
-        // }
 
         //lbl(size) txt [custom suggs]
         public NbtWidget(String name, int size, int suggsNum) {
@@ -4051,10 +4360,10 @@ public class ItemBuilder extends GenericScreen {
                 ItemStack item = new ItemStack(Items.SUSPICIOUS_STEW);
                 item.setSubNbt(path,list);
                 Items.SUSPICIOUS_STEW.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
-                if(textList.size()>0 && textList.get(0).getString().equals("No Effects"))
-                    preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid Effect\",\"color\":\"red\"}").text());
-                else
+                if(textList.size()>0 && !textList.get(0).getString().equals("No Effects"))
                     preview.add(((MutableText)textList.get(0)).setStyle(Style.EMPTY));
+                else
+                    preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid Effect\",\"color\":\"red\"}").text());
             }
             else if(path.equals("Fireworks/Explosions")) {
                 //
@@ -4087,6 +4396,45 @@ public class ItemBuilder extends GenericScreen {
 
             for(int i=0; i<btns.length; i++)
                 this.children.add(this.btns[i]);
+        }
+
+        //list lbl(size) txt
+        public NbtWidget(String name, int size, String[] suggestions, Consumer<String> changedListener) {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+
+            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, ItemBuilder.this.x+15+5+size, 5, 240-41-size, 20, Text.of(""))};
+            this.txtX = new int[]{15+5+size};
+            this.txts[0].setChangedListener(value -> {
+                listUnsaved = true;
+                if(!currentTxt.contains(this.txts[0])) {
+                    resetSuggs();
+                    currentTxt.add(this.txts[0]);
+                    suggs = new TextSuggestor(client, this.txts[0], textRenderer);
+                    if(suggestions != null && suggestions.length > 0)
+                        suggs.setSuggestions(suggestions);
+                }
+                else{
+                    if(suggs != null)
+                        suggs.refresh();
+                    else {
+                        resetSuggs();
+                        suggs = new TextSuggestor(client, this.txts[0], textRenderer);
+                        if(suggestions != null && suggestions.length > 0)
+                            suggs.setSuggestions(suggestions);
+                    }
+                }
+                changedListener.accept(value);
+                updateCurrentList();
+            });
+            this.txts[0].setMaxLength(131072);
+            for(int i=0; i<txts.length; i++) {
+                this.children.add(this.txts[i]);
+                ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
+            }
+            lbl = name;
+            lblCentered = false;
         }
 
         //PosWidgets

@@ -23,9 +23,18 @@
     ]
   },
   "mixins": [
-    "ftedit.mixins.json",
-    "freelook.mixins.json",
-    "visiblebarriers.mixins.json"
+    {
+      "config": "ftedit.mixins.json",
+      "environment": "client"
+    },
+    {
+      "config": "freelook.mixins.json",
+      "environment": "client"
+    },
+    {
+      "config": "visiblebarriers.mixins.json",
+      "environment": "client"
+    }
   ],
 
   "depends": {
@@ -33,6 +42,5 @@
     "fabric-api": "*",
     "minecraft": "~1.20",
     "java": ">=17"
-  },
-  "suggests": {}
+  }
 }

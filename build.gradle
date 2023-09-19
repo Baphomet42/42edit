@@ -1,10 +1,14 @@
 plugins {
-	id 'fabric-loom' version '1.2-SNAPSHOT'
+	id 'fabric-loom' version '1.3-SNAPSHOT'
 	id 'maven-publish'
 }
 
 version = project.mod_version
 group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
 
 repositories {
 	// Add repositories to retrieve artifacts from in here.
@@ -14,6 +18,18 @@ repositories {
 	// for more information about repositories.
 }
 
+loom {
+    splitEnvironmentSourceSets()
+
+	mods {
+		"ftedit" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -21,14 +37,16 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	modImplementation include("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
 	
 	//	UPDATE PROTOCOL
 	//	paste gradle.properties Fabric Properties and Dependencies and manually update Mod Properties
 	//	loom version set above (from https://github.com/FabricMC/fabric-example-mod)
 	//	update fabric.mod.json depends minecraft version
+	//	close vscode, end all openjdk tasks, run gradle commands in powershell:
 	//	./gradlew clean			./gradlew --stop
 	//	./gradlew genSources --refresh-dependencies
+	//	.\gradlew vscode
 	//	./gradlew build
 	
 	//	UPDATE LAUNCHER
@@ -50,10 +68,6 @@ dependencies {
 
 }
 
-base {
-	archivesName = project.archives_base_name
-}
-
 processResources {
 	inputs.property "version", project.version
 
@@ -63,7 +77,6 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	// Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
 	it.options.release = 17
 }
 
@@ -79,7 +92,7 @@ java {
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
+		rename { "${it}_${project.base.archivesName.get()}"}
 	}
 }
 

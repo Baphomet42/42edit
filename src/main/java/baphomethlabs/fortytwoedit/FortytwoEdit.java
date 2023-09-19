@@ -111,6 +111,17 @@ public class FortytwoEdit implements ClientModInitializer {
     public static int[] randoSlots;
     public static boolean randoMode = false;
 
+    public static String randomUUID() {
+        String uuid = "[I;";
+        for(int i=0; i<4; i++) {
+            if(i!=0)
+                uuid+=",";
+            uuid += rand.nextInt(Integer.MIN_VALUE,Integer.MAX_VALUE);
+        }
+        uuid+="]";
+        return uuid;
+    }
+
     // opticapes
     private static long lastCapeLoaded = System.currentTimeMillis();
 

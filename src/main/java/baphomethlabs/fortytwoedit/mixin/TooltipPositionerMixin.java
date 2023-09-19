@@ -16,11 +16,11 @@ public abstract class TooltipPositionerMixin {
     @Inject(method="getPosition", at=@At(value = "RETURN"), cancellable = true)
     private void repositionTooltip(int screenWidth, int screenHeight, int x, int y, int width, int height, CallbackInfoReturnable<Vector2ic> cir) {
         Vector2i pos = (Vector2i)cir.getReturnValue();
-        if(pos.x<4 || pos.y<4) {
-            if(pos.x<4)
-                pos.x=4;
-            if(pos.y<4)
-                pos.y=4;
+        if(pos.x<9 || pos.y<9) {
+            if(pos.x<9)
+                pos.x=9;
+            if(pos.y<9)
+                pos.y=9;
             cir.setReturnValue(pos);
         }
     }
