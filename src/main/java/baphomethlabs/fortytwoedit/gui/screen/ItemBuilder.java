@@ -137,7 +137,9 @@ public class ItemBuilder extends GenericScreen {
     private boolean listUnsaved = false;
     private int listSaveBtnI = -1;
     private int listPotionBtnsI = -1;
-    private static int[] listPotionBtns = new int[3];//showparticles,showicon,ambient
+    private int[] listPotionBtns = new int[3];//showparticles,showicon,ambient
+    private int listFireworkBtnsI = -1;
+    private int[] listFireworkBtns = new int[2];//flicker,trail
     private static final ItemStack[] listItems = new ItemStack[]{
         ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:potion,Count:1,tag:{CustomPotionColor:10027263}}")),new ItemStack(Items.SUSPICIOUS_STEW),
         new ItemStack(Items.FIREWORK_ROCKET),new ItemStack(Items.NETHER_STAR),new ItemStack(Items.ENCHANTED_BOOK)};
@@ -996,7 +998,7 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private String appendJsonEffect(String jsonBase, String jsonEffect) {
-        if(jsonBase.length()==0 || jsonBase.equals("[]") || jsonBase.equals("{\"text\":\"\"}"))
+        if(jsonBase.length()==0 || jsonBase.equals("{}") || jsonBase.equals("[]") || jsonBase.equals("[{}]") || jsonBase.equals("{\"text\":\"\"}") || jsonBase.equals("[{\"text\":\"\"}]"))
             return jsonEffect;
         else if(jsonBase.length()>=4 && jsonBase.charAt(0)=='[' && jsonBase.charAt(jsonBase.length()-1)==']'
         && jsonBase.charAt(1)=='{' && jsonBase.charAt(jsonBase.length()-2)=='}')
@@ -1120,6 +1122,71 @@ public class ItemBuilder extends GenericScreen {
     private void updateCurrentList() {
         listCurrentValid = false;
 
+        if(listCurrentPath.equals("custom_potion_effects") && widgets.get(12).size()>listPotionBtnsI && listPotionBtnsI>=0) {
+            listCurrent.remove("show_particles");
+            listCurrent.remove("show_icon");
+            listCurrent.remove("ambient");
+            int num = 0;
+            String col = "";
+            if(listPotionBtns[num]==1) {
+                col = "\u00a7a";
+                listCurrent.put("show_particles",NbtByte.of(true));
+            }
+            else if(listPotionBtns[num]==2) {
+                col = "\u00a7c";
+                listCurrent.put("show_particles",NbtByte.of(false));
+            }
+            widgets.get(12).get(listPotionBtnsI).btns[num].setMessage(Text.of(col+"ShowParticles"));
+            num++;
+            col = "";
+            if(listPotionBtns[num]==1) {
+                col = "\u00a7a";
+                listCurrent.put("show_icon",NbtByte.of(true));
+            }
+            else if(listPotionBtns[num]==2) {
+                col = "\u00a7c";
+                listCurrent.put("show_icon",NbtByte.of(false));
+            }
+            widgets.get(12).get(listPotionBtnsI).btns[num].setMessage(Text.of(col+"ShowIcon"));
+            num++;
+            col = "";
+            if(listPotionBtns[num]==1) {
+                col = "\u00a7a";
+                listCurrent.put("ambient",NbtByte.of(true));
+            }
+            else if(listPotionBtns[num]==2) {
+                col = "\u00a7c";
+                listCurrent.put("ambient",NbtByte.of(false));
+            }
+            widgets.get(12).get(listPotionBtnsI).btns[num].setMessage(Text.of(col+"Ambient"));
+        }
+        else if(listCurrentPath.equals("Fireworks/Explosions") && widgets.get(12).size()>listFireworkBtnsI && listFireworkBtnsI>=0) {
+            listCurrent.remove("Flicker");
+            listCurrent.remove("Trail");
+            int num = 0;
+            String col = "";
+            if(listFireworkBtns[num]==1) {
+                col = "\u00a7a";
+                listCurrent.put("Flicker",NbtByte.of(true));
+            }
+            else if(listFireworkBtns[num]==2) {
+                col = "\u00a7c";
+                listCurrent.put("Flicker",NbtByte.of(false));
+            }
+            widgets.get(12).get(listFireworkBtnsI).btns[num].setMessage(Text.of(col+"Twinkle"));
+            num++;
+            col = "";
+            if(listFireworkBtns[num]==1) {
+                col = "\u00a7a";
+                listCurrent.put("Trail",NbtByte.of(true));
+            }
+            else if(listFireworkBtns[num]==2) {
+                col = "\u00a7c";
+                listCurrent.put("Trail",NbtByte.of(false));
+            }
+            widgets.get(12).get(listFireworkBtnsI).btns[num].setMessage(Text.of(col+"Trail"));
+        }
+
         if(listCurrentPath.equals("AttributeModifiers")) {
             List<Text> textList = new ArrayList<>();
             if(listCurrent.contains("AttributeName",NbtElement.STRING_TYPE) && (listCurrent.contains("Amount",NbtElement.DOUBLE_TYPE) || listCurrent.contains("Amount",NbtElement.INT_TYPE))) {
@@ -1165,47 +1232,12 @@ public class ItemBuilder extends GenericScreen {
                 listCurrentValid = true;
         }
         else if(listCurrentPath.equals("Fireworks/Explosions")) {
-            //TODO
-            listCurrentValid = true;
-        }
-
-        if(listCurrentPath.equals("custom_potion_effects") && widgets.get(12).size()>listPotionBtnsI && listPotionBtnsI>=0) {
-            listCurrent.remove("show_particles");
-            listCurrent.remove("show_icon");
-            listCurrent.remove("ambient");
-            int num = 0;
-            String col = "";
-            if(listPotionBtns[num]==1) {
-                col = "\u00a7a";
-                listCurrent.put("show_particles",NbtByte.of(true));
-            }
-            else if(listPotionBtns[num]==2) {
-                col = "\u00a7c";
-                listCurrent.put("show_particles",NbtByte.of(false));
-            }
-            widgets.get(12).get(listPotionBtnsI).btns[num].setMessage(Text.of(col+"ShowParticles"));
-            num++;
-            col = "";
-            if(listPotionBtns[num]==1) {
-                col = "\u00a7a";
-                listCurrent.put("show_icon",NbtByte.of(true));
-            }
-            else if(listPotionBtns[num]==2) {
-                col = "\u00a7c";
-                listCurrent.put("show_icon",NbtByte.of(false));
-            }
-            widgets.get(12).get(listPotionBtnsI).btns[num].setMessage(Text.of(col+"ShowIcon"));
-            num++;
-            col = "";
-            if(listPotionBtns[num]==1) {
-                col = "\u00a7a";
-                listCurrent.put("ambient",NbtByte.of(true));
-            }
-            else if(listPotionBtns[num]==2) {
-                col = "\u00a7c";
-                listCurrent.put("ambient",NbtByte.of(false));
-            }
-            widgets.get(12).get(listPotionBtnsI).btns[num].setMessage(Text.of(col+"Ambient"));
+            List<Text> textList = new ArrayList<>();
+            ItemStack item = new ItemStack(Items.FIREWORK_STAR);
+            item.setSubNbt("Explosion",listCurrent.copy());
+            Items.FIREWORK_STAR.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+            if(textList.size()>0)
+                listCurrentValid = true;
         }
 
         if(noScrollWidgets.get(12).size()>listSaveBtnI && listSaveBtnI>=0) {
@@ -3551,6 +3583,36 @@ public class ItemBuilder extends GenericScreen {
                         updateCurrentList();
                     }));
                 }
+                String el = "show_particles";
+                int num = 0;
+                if((listCurrent.contains(el,NbtElement.BYTE_TYPE) || listCurrent.contains(el,NbtElement.INT_TYPE))
+                        && (listCurrent.get(el).asString().equals("0") || listCurrent.get(el).asString().equals("0b")))
+                    listPotionBtns[num] = 2;
+                else if((listCurrent.contains(el,NbtElement.BYTE_TYPE) || listCurrent.contains(el,NbtElement.INT_TYPE))
+                        && (listCurrent.get(el).asString().equals("1") || listCurrent.get(el).asString().equals("1b")))
+                    listPotionBtns[num] = 1;
+                else
+                    listPotionBtns[num] = 0;
+                num++;
+                el = "show_icon";
+                if((listCurrent.contains(el,NbtElement.BYTE_TYPE) || listCurrent.contains(el,NbtElement.INT_TYPE))
+                        && (listCurrent.get(el).asString().equals("0") || listCurrent.get(el).asString().equals("0b")))
+                    listPotionBtns[num] = 2;
+                else if((listCurrent.contains(el,NbtElement.BYTE_TYPE) || listCurrent.contains(el,NbtElement.INT_TYPE))
+                        && (listCurrent.get(el).asString().equals("1") || listCurrent.get(el).asString().equals("1b")))
+                    listPotionBtns[num] = 1;
+                else
+                    listPotionBtns[num] = 0;
+                num++;
+                el = "ambient";
+                if((listCurrent.contains(el,NbtElement.BYTE_TYPE) || listCurrent.contains(el,NbtElement.INT_TYPE))
+                        && (listCurrent.get(el).asString().equals("0") || listCurrent.get(el).asString().equals("0b")))
+                    listPotionBtns[num] = 2;
+                else if((listCurrent.contains(el,NbtElement.BYTE_TYPE) || listCurrent.contains(el,NbtElement.INT_TYPE))
+                        && (listCurrent.get(el).asString().equals("1") || listCurrent.get(el).asString().equals("1b")))
+                    listPotionBtns[num] = 1;
+                else
+                    listPotionBtns[num] = 0;
             }
             else if(listCurrentPath.equals("effects")) {
                 {
@@ -3636,7 +3698,101 @@ public class ItemBuilder extends GenericScreen {
                 {
                     widgets.get(tabNum).add(new NbtWidget("Edit Firework Explosion"));
                 }
-                //TODO
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "Colors";
+                    widgets.get(tabNum).add(new NbtWidget("Colors:", 40, new String[]{"[I;0]"}, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            NbtElement el = BlackMagick.elementFromString(value);
+                            if(el != null && el.getType() == NbtElement.INT_ARRAY_TYPE) {
+                                listCurrent.put(val,el);
+                                widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                            }
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "FadeColors";
+                    widgets.get(tabNum).add(new NbtWidget("Fade:", 40, new String[]{"[I;0]"}, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            NbtElement el = BlackMagick.elementFromString(value);
+                            if(el != null && el.getType() == NbtElement.INT_ARRAY_TYPE) {
+                                listCurrent.put(val,el);
+                                widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                            }
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+                {
+                    final int i = tabNum; final int j = widgets.get(tabNum).size();
+                    String val = "Type";
+                    widgets.get(tabNum).add(new NbtWidget("Type:", 40, new String[]{"0 - Small Ball","1 - Large Ball","2 - Star-shaped",
+                    "3 - Creeper-shaped","4 - Burst"}, value -> {
+                        if(listCurrent.contains(val)) {
+                            listCurrent.remove(val);
+                            widgets.get(i).get(j).txts[0].setEditableColor(0xFF5555);
+                        }
+                        if(value != null && value.length()>0) {
+                            NbtElement el = BlackMagick.elementFromString(""+value.charAt(0));
+                            if(el != null && (el.getType() == NbtElement.INT_TYPE || el.getType() == NbtElement.BYTE_TYPE)) {
+                                listCurrent.put(val,el);
+                                widgets.get(i).get(j).txts[0].setEditableColor(0xFFFFFF);
+                            }
+                        }
+                    }));
+                    if(listCurrent.contains(val))
+                        widgets.get(i).get(j).txts[0].setText(listCurrent.get(val).asString());
+                }
+                {
+                    listFireworkBtnsI = widgets.get(tabNum).size();
+                    widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Twinkle"),Text.of("Trail")},new int[]{60,40},
+                    new String[]{"none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r"},null,true,btn -> {
+                        unsel = true;
+                        listFireworkBtns[0]++;
+                        if(listFireworkBtns[0]>2)
+                            listFireworkBtns[0]=0;
+                        updateCurrentList();
+                    },btn -> {
+                        unsel = true;
+                        listFireworkBtns[1]++;
+                        if(listFireworkBtns[1]>2)
+                            listFireworkBtns[1]=0;
+                        updateCurrentList();
+                    }));
+                }
+                String el = "Flicker";
+                int num = 0;
+                if((listCurrent.contains(el,NbtElement.BYTE_TYPE) || listCurrent.contains(el,NbtElement.INT_TYPE))
+                        && (listCurrent.get(el).asString().equals("0") || listCurrent.get(el).asString().equals("0b")))
+                    listFireworkBtns[num] = 2;
+                else if((listCurrent.contains(el,NbtElement.BYTE_TYPE) || listCurrent.contains(el,NbtElement.INT_TYPE))
+                        && (listCurrent.get(el).asString().equals("1") || listCurrent.get(el).asString().equals("1b")))
+                    listFireworkBtns[num] = 1;
+                else
+                    listFireworkBtns[num] = 0;
+                num++;
+                el = "Trail";
+                if((listCurrent.contains(el,NbtElement.BYTE_TYPE) || listCurrent.contains(el,NbtElement.INT_TYPE))
+                        && (listCurrent.get(el).asString().equals("0") || listCurrent.get(el).asString().equals("0b")))
+                    listFireworkBtns[num] = 2;
+                else if((listCurrent.contains(el,NbtElement.BYTE_TYPE) || listCurrent.contains(el,NbtElement.INT_TYPE))
+                        && (listCurrent.get(el).asString().equals("1") || listCurrent.get(el).asString().equals("1b")))
+                    listFireworkBtns[num] = 1;
+                else
+                    listFireworkBtns[num] = 0;
             }
             updateCurrentList();
         }
@@ -4366,7 +4522,36 @@ public class ItemBuilder extends GenericScreen {
                     preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid Effect\",\"color\":\"red\"}").text());
             }
             else if(path.equals("Fireworks/Explosions")) {
-                //TODO
+                List<Text> textList = new ArrayList<>();
+                ItemStack item = new ItemStack(Items.FIREWORK_STAR);
+                NbtCompound el = nbt.copy();
+                if(!(el.contains("Colors",NbtElement.INT_ARRAY_TYPE) && ((NbtIntArray)el.get("Colors")).size()>0))
+                    el.put("Colors",BlackMagick.elementFromString("[I;0]"));
+                if(el.contains("FadeColors"))
+                    el.remove("FadeColors");
+                item.setSubNbt("Explosion",el);
+                Items.FIREWORK_STAR.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+                if(textList.size()==0)
+                    preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid Explosion\",\"color\":\"red\"}").text());
+                else {
+                    MutableText btnLbl = (MutableText)textList.get(0);
+                    if(textList.size()==3) {
+                        btnLbl.append(Text.of(" ("));
+                        btnLbl.append(textList.get(2));
+                        btnLbl.append(Text.of(")"));
+                    }
+                    else if(textList.size()==4) {
+                        btnLbl.append(Text.of(" ("));
+                        btnLbl.append(textList.get(2));
+                        btnLbl.append(Text.of("/"));
+                        btnLbl.append(textList.get(3));
+                        btnLbl.append(Text.of(")"));
+                    }
+                    btnLbl.append(Text.of(" ["));
+                    btnLbl.append(textList.get(1));
+                    btnLbl.append(Text.of("]"));
+                    preview.add(btnLbl.setStyle(Style.EMPTY));
+                }
             }
 
             final NbtCompound copyList = nbt.copy();
