@@ -105,6 +105,11 @@ public class FortytwoEdit implements ClientModInitializer {
     public static KeyBinding modKey;
     public static KeyBinding spamClick;
     public static boolean xrayEntity = false;
+    public static boolean autoFish = false;
+    public static boolean autoFishClick = false;
+    private static long lastFish = 0;
+    private static boolean didFish = false;
+    private static final int fishWait = 1000;
 
     // randomizer mode
     private static SecureRandom rand = new SecureRandom();
@@ -430,6 +435,27 @@ public class FortytwoEdit implements ClientModInitializer {
                 if (autoMine) {
                     KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey(), true);
                 }
+            }
+
+            //autoFish
+            if(autoFishClick && System.currentTimeMillis()>=lastFish + fishWait) {
+                if(autoFish && !autoClicker && client.currentScreen == null && ((!client.player.getMainHandStack().isEmpty()
+                        && client.player.getMainHandStack().getItem().toString().equals("fishing_rod")) || (client.player.getMainHandStack().isEmpty()
+                        && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().getItem().toString().equals("fishing_rod"))) ) {
+                    KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
+                    didFish = true;
+                }
+                autoFishClick = false;
+                lastFish = System.currentTimeMillis();
+            }
+            if(didFish && System.currentTimeMillis()>=lastFish + fishWait) {
+                if(autoFish && !autoClicker && client.currentScreen == null && ((!client.player.getMainHandStack().isEmpty()
+                        && client.player.getMainHandStack().getItem().toString().equals("fishing_rod")) || (client.player.getMainHandStack().isEmpty()
+                        && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().getItem().toString().equals("fishing_rod"))) ) {
+                    KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
+                }
+                didFish = false;
+                lastFish = System.currentTimeMillis();
             }
 
             //freelook

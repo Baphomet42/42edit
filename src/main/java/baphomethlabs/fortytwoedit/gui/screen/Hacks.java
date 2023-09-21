@@ -8,6 +8,7 @@ import org.lwjgl.glfw.GLFW;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -27,6 +28,7 @@ import net.minecraft.util.math.GlobalPos;
 public class Hacks extends GenericScreen {
 
     protected ButtonWidget btnWgtFindInvis;
+    protected CyclingButtonWidget<Boolean> btnWgtAutoFish;
     protected TextFieldWidget txtRando;
     protected boolean unsaved = false;
     
@@ -67,6 +69,11 @@ public class Hacks extends GenericScreen {
         if(!client.player.getAbilities().creativeMode)
             btnWgtFindInvis.active = false;
         this.addDrawableChild(ButtonWidget.builder(Text.of("Death Pos"), button -> this.btnDeathPos()).dimensions(x+20,y+22*5+1,100,20).build());
+        btnWgtAutoFish = this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("   Auto Fish [On]"), Text.literal("   Auto Fish [Off]")).initially(FortytwoEdit.autoFish).omitKeyText().build(x+20+100+5,y+22*5+1,100,20, Text.of(""), (button, trackOutput) -> {
+            FortytwoEdit.autoFish = !FortytwoEdit.autoFish;
+            this.resize(this.client,this.width,this.height);
+        }));
+        btnWgtAutoFish.setTooltip(Tooltip.of(Text.of("Requires subtitles to be on")));
         this.addDrawableChild(ButtonWidget.builder(Text.of("Look N"), button -> this.btnLookN()).dimensions(x+20,y+22*7+1,40,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Rotate"), button -> this.btnLookR()).dimensions(x+20+40+5,y+22*7+1,40,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Pano"), button -> this.btnPano()).dimensions(x+20+40+5+40+5,y+22*7+1,40,20).build());
@@ -338,6 +345,7 @@ public class Hacks extends GenericScreen {
 		context.drawItem(new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),x+20+2,y+22*3+1+2);
 		context.drawItem(new ItemStack(Items.BARRIER),x+20+2,y+22*4+1+2);
 		context.drawItem(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+22*5+1+2);
+		context.drawItem(new ItemStack(Items.FISHING_ROD),x+20+2+100+5,y+22*5+1+2);
     }
 
     @Override

@@ -16,6 +16,7 @@
     "ScrollableWidgetMixin",
     "SharedConstantsMixin",
     "StructureBlockScreenMixin",
+    "SubtitlesHudMixin",
     "TooltipComponentMixin",
     "TooltipMixin",
     "TooltipPositionerMixin"
