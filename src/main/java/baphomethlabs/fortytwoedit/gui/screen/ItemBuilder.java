@@ -25,7 +25,6 @@ import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.EditBoxWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
@@ -92,6 +91,15 @@ public class ItemBuilder extends GenericScreen {
     public static boolean savedModeSet = false;
     private NbtList savedItems = null;
     private boolean savedError = false;
+    private static boolean viewBlackMarket = false;
+    private static NbtList webItems = null;
+    private static final ItemStack[] savedModeItems = new ItemStack[]{ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString(
+        "{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;1468515997,1957250988,-1516230854,741262166],Properties:{textures:[{Value:\"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybC"
+        +"I6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmQ5ZjE4YzlkODVmOTJmNzJmODY0ZDY3YzEzNjdlOWE0NWRjMTBmMzcxNTQ5YzQ2YTRkNGRkOWU0ZjEzZmY0In19fQ==\"}]}}}}")),
+        ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;-938498587,1827358226,-1634388686,963179323],"
+        +"Properties:{textures:[{Value:\"eyJ0aW1lc3RhbXAiOjE0MTU4OTE5NjY1OTMsInByb2ZpbGVJZCI6ImM4MGZhNWU1NmNlYjQ2MTI5ZTk1MzUzMjM5NjhmMzNiIiwicHJvZmlsZU5hbWUiOiJUaGVNZX"
+        +"RhbEdvYXQxNyIsImlzUHVibGljIjp0cnVlLCJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTI2NDg2ZjQyNDg5Y2VmMDJjOWU5OGRkOGJ"
+        +"lNWEzZjM4ZTg3OTE0NzU0MzI2ZTc3YzgzN2MxYjJiY2JhNjUifX19\"}]}}}}"))};
     private ArmorStandEntity renderArmorStand;
     private ArmorStandEntity renderArmorPose;
     protected final int playerX = x + 240+10;
@@ -595,7 +603,7 @@ public class ItemBuilder extends GenericScreen {
         else return Tooltip.of(Text.of("Failed to read item"));
     }
 
-    private void updateSaved() {
+    private void refreshSaved() {
         savedItems = FortytwoEdit.getSavedItems();
         if(savedItems == null) {
             savedError = true;
@@ -608,16 +616,46 @@ public class ItemBuilder extends GenericScreen {
             }
             savedItems = nbt;
         }
+        updateSavedTab();
+    }
+    private void getWebItems() {
+        webItems = new NbtList();
+        for(String cat: FortytwoEdit.webItemCats) {
+            NbtList list = (NbtList)FortytwoEdit.webItems.get(cat);
+            for(int i=0; i<list.size(); i++)
+                webItems.add(list.get(i));
+        }
+        while(webItems.size()<9*FortytwoEdit.SAVED_ROWS) {
+            NbtCompound air = new NbtCompound();
+            air.putString("id","air");
+            air.putInt("Count",0);
+            webItems.add(air);
+        }
+        updateSavedTab();
+    }
+    private void updateSavedTab() {
         if(widgets.get(4).size() == FortytwoEdit.SAVED_ROWS)
             for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
                 widgets.get(4).get(i).updateSavedDisplay();
     }
 
     private void setSavedModeTooltip() {
-        if(savedModeSet)
-            noScrollWidgets.get(4).get(0).w.setTooltip(Tooltip.of(Text.of("C - Save to slot")));
-        else
-            noScrollWidgets.get(4).get(0).w.setTooltip(Tooltip.of(Text.of("V - Get item")));
+        if(viewBlackMarket) {
+            noScrollWidgets.get(4).get(0).w.setTooltip(Tooltip.of(Text.of("Black Market Items")));
+            noScrollWidgets.get(4).get(1).w.setTooltip(Tooltip.of(Text.of("Refresh from Web")));
+            noScrollWidgets.get(4).get(1).w.setMessage(Text.of("\u27F3"));
+        }
+        else {
+            noScrollWidgets.get(4).get(0).w.setTooltip(Tooltip.of(Text.of("Local Items")));
+            if(savedModeSet) {
+                noScrollWidgets.get(4).get(1).w.setTooltip(Tooltip.of(Text.of("C - Save to slot")));
+                noScrollWidgets.get(4).get(1).w.setMessage(Text.of("C"));
+            }
+            else {
+                noScrollWidgets.get(4).get(1).w.setTooltip(Tooltip.of(Text.of("V - Get item")));
+                noScrollWidgets.get(4).get(1).w.setMessage(Text.of("V"));
+            }
+        }
     }
 
     private void resetSuggs() {
@@ -2118,18 +2156,34 @@ public class ItemBuilder extends GenericScreen {
         tabNum++;
         //createBlock saved items
         {
-            noScrollWidgets.get(tabNum).add(new PosWidget(CyclingButtonWidget.onOffBuilder(Text.literal("C"),
-                    Text.literal("V")).initially(savedModeSet).omitKeyText().build(x+15-3, y+35+1,20,20, Text.of(""), (button, trackOutput) -> {
-                savedModeSet = (boolean)trackOutput;
+            noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of(""), btn -> {
+                viewBlackMarket = !viewBlackMarket;
                 setSavedModeTooltip();
-                updateSaved();
+                updateSavedTab();
                 ItemBuilder.this.unsel = true;
-            }),15-3,35+1));
+            }).dimensions(x+15-3, y+35+1,20,20).build(),15-3,35+1));
+        }
+        {
+            noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of(""), btn -> {
+                if(viewBlackMarket) {
+                    FortytwoEdit.refreshWebItems(true);
+                    getWebItems();
+                    refreshSaved();
+                }
+                else {
+                    savedModeSet = !savedModeSet;
+                    setSavedModeTooltip();
+                    updateSavedTab();
+                }
+                ItemBuilder.this.unsel = true;
+            }).dimensions(x+15-3, y+35+1+22,20,20).build(),15-3,35+1+22));
         }
         for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
             widgets.get(tabNum).add(new NbtWidget(i));
+        refreshSaved();
+        if(webItems == null)
+            getWebItems();
         setSavedModeTooltip();
-        updateSaved();
 
         tabNum++;
         //createBlock entity data
@@ -4182,23 +4236,34 @@ public class ItemBuilder extends GenericScreen {
                 final int index = row*9+i;
                 this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
                     ItemBuilder.this.unsel = true;
-                    if(savedModeSet) {
-                        ItemBuilder.this.savedError = false;
-                        NbtCompound nbt = new NbtCompound();
-                        if(client.player.getMainHandStack().isEmpty()) {
-                            nbt.putString("id","air");
-                            nbt.putInt("Count",0);
+                    if(!viewBlackMarket) {
+                        if(savedModeSet) {
+                            ItemBuilder.this.savedError = false;
+                            NbtCompound nbt = new NbtCompound();
+                            if(client.player.getMainHandStack().isEmpty()) {
+                                nbt.putString("id","air");
+                                nbt.putInt("Count",0);
+                            }
+                            else {
+                                nbt = (NbtCompound)BlackMagick.getNbtFromPath(null,"0:");
+                            }
+                            savedItems.set(index,nbt);
+                            FortytwoEdit.setSavedItems(savedItems);
+                            refreshSaved();
                         }
                         else {
-                            nbt = (NbtCompound)BlackMagick.getNbtFromPath(null,"0:");
+                            if(client.player.getAbilities().creativeMode) {
+                                ItemStack item = ItemStack.fromNbt((NbtCompound)(savedItems.get(index)));
+                                if(item!=null && !item.isEmpty()) {
+                                    client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
+                                    client.player.playerScreenHandler.sendContentUpdates();
+                                }
+                            }
                         }
-                        savedItems.set(index,nbt);
-                        FortytwoEdit.setSavedItems(savedItems);
-                        updateSaved();
                     }
                     else {
                         if(client.player.getAbilities().creativeMode) {
-                            ItemStack item = ItemStack.fromNbt((NbtCompound)(savedItems.get(index)));
+                            ItemStack item = ItemStack.fromNbt((NbtCompound)(webItems.get(index)));
                             if(item!=null && !item.isEmpty()) {
                                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                                 client.player.playerScreenHandler.sendContentUpdates();
@@ -4656,21 +4721,22 @@ public class ItemBuilder extends GenericScreen {
 
         public void updateSavedDisplay() {
             for(int i=0; i<9; i++) {
-                this.btns[i].active = savedModeSet;
-                if(!ItemStack.fromNbt((NbtCompound)(savedItems.get(savedRow*9+i))).isEmpty()) {
-                    this.btns[i].setTooltip(makeItemTooltip(ItemStack.fromNbt((NbtCompound)(savedItems.get(savedRow*9+i)))));
-                    savedStacks[i] = ItemStack.fromNbt((NbtCompound)(savedItems.get(savedRow*9+i)));
+                NbtCompound current = viewBlackMarket ? (NbtCompound)webItems.get(savedRow*9+i) : (NbtCompound)savedItems.get(savedRow*9+i);
+                this.btns[i].active = savedModeSet && !viewBlackMarket;
+                if(!ItemStack.fromNbt(current).isEmpty()) {
+                    this.btns[i].setTooltip(makeItemTooltip(ItemStack.fromNbt(current)));
+                    savedStacks[i] = ItemStack.fromNbt(current);
                     if(client.player.getAbilities().creativeMode)
                         this.btns[i].active = true;
                 }
                 else {
-                    if(((NbtCompound)(savedItems.get(savedRow*9+i))).contains("id",NbtElement.STRING_TYPE) && 
-                            ((NbtCompound)(savedItems.get(savedRow*9+i))).get("id").asString().equals("air")) {
+                    if((current).contains("id",NbtElement.STRING_TYPE) && 
+                            (current).get("id").asString().equals("air")) {
                         this.btns[i].setTooltip(null);
                         savedStacks[i] = new ItemStack(Items.AIR);
                     }
                     else {
-                        this.btns[i].setTooltip(makeItemTooltip((NbtCompound)(savedItems.get(savedRow*9+i))));
+                        this.btns[i].setTooltip(makeItemTooltip(current));
                         savedStacks[i] = FortytwoEdit.UNKNOWN_ITEM;
                         if(client.player.getAbilities().creativeMode)
                             this.btns[i].active = true;
@@ -4947,6 +5013,11 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
 
+            if(tab == 4 && viewBlackMarket)
+                context.drawItem(savedModeItems[1], x+14, y+38);
+            else if(tab == 4)
+                context.drawItem(savedModeItems[0], x+14, y+38);
+            
             if(tab == 5 && editArmorStand)
                 InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)renderArmorStand);
             else if(tab == 6) {

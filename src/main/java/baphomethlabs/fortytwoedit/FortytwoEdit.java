@@ -154,6 +154,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 con.setConnectTimeout(2000);
                 if(con.getResponseCode() == HttpURLConnection.HTTP_OK)
                     connect = true;
+                con.disconnect();
             } catch(IOException e) {}
             if(!connect) {
                 opticapes = false;
@@ -195,6 +196,7 @@ public class FortytwoEdit implements ClientModInitializer {
         try {
             URL link = new URL("http://s.optifine.net/capes/" + name + ".png");
             HttpURLConnection con = (HttpURLConnection)link.openConnection();
+            con.setUseCaches(false);
             con.setConnectTimeout(500);
             con.setReadTimeout(500);
             NativeImage capeInp = NativeImage.read(con.getInputStream());
@@ -350,9 +352,16 @@ public class FortytwoEdit implements ClientModInitializer {
         });
     }
 
+    //web items
+    public static boolean webItemsAuto = true;
+    public static NbtCompound webItems = null;
+    public static final String[] webItemCats = new String[]{"misc","potions","eggs"};
+
 
     @Override
     public void onInitializeClient() {
+
+        LOGGER.info("Loading 42edit client");
 
         final MinecraftClient gameClient = MinecraftClient.getInstance();
 
@@ -384,8 +393,8 @@ public class FortytwoEdit implements ClientModInitializer {
         //options
         readOptions();
 
-        //saved items
         getSavedItems();
+        refreshWebItems(false);
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
 
@@ -499,6 +508,8 @@ public class FortytwoEdit implements ClientModInitializer {
             }
 
         });
+
+        LOGGER.info("Client initialized");
     }
 
     public static void updateAutoClick(boolean click, boolean mine, boolean attack, int wait) {
@@ -736,10 +747,13 @@ public class FortytwoEdit implements ClientModInitializer {
                 clientCape = 0;
             if(json.contains("OptiCapeToggle",NbtElement.BYTE_TYPE))
                 opticapesOn = ((NbtByte)json.get("OptiCapeToggle")).byteValue() == 1;
+            if(json.contains("WebItems",NbtElement.BYTE_TYPE))
+                webItemsAuto = ((NbtByte)json.get("WebItems")).byteValue() == 1;
 
             json.remove("CustomCapeToggle");
             json.remove("CustomCape");
             json.remove("OptiCapeToggle");
+            json.remove("WebItems");
 
             if(json.asString().length()>2) {
                 LOGGER.warn("Config file contains unknown keys: "+json.asString());
@@ -763,7 +777,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
             String options = "{CustomCapeToggle:"+ (showClientCape ? "1b" : "0b")
                 +",CustomCape:"+ clientCape
-                +",OptiCapeToggle:"+ (opticapesOn ? "1b" : "0b");
+                +",OptiCapeToggle:"+ (opticapesOn ? "1b" : "0b")
+                +",WebItems:"+ (webItemsAuto ? "1b" : "0b");
             
             if(optionsExtra != null && optionsExtra.asString().length()>2)
                 options += "," + optionsExtra.asString().substring(1,optionsExtra.asString().length()-1);
@@ -843,6 +858,130 @@ public class FortytwoEdit implements ClientModInitializer {
 
         LOGGER.warn("Failed to edit saved items file");
         return null;
+    }
+
+    public static void refreshWebItems(boolean overwriteCache) {
+        webItems = null;
+        final MinecraftClient client = MinecraftClient.getInstance();
+        String cacheString = "";
+        try {
+            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
+            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt")).exists()) {
+                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt")).createNewFile();
+                FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt", StandardCharsets.UTF_8, false);
+                writer.write("{}");
+                writer.close();
+            }
+                
+            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt"), StandardCharsets.UTF_8);
+            if(scan.hasNextLine())
+                cacheString = scan.nextLine();
+            scan.close();
+        } catch (Exception e) {}
+
+        int cacheVer = -1;
+        NbtCompound newItems = null;
+
+        if(!overwriteCache) {
+            if(BlackMagick.elementFromString(cacheString) != null && BlackMagick.elementFromString(cacheString).getType()==NbtElement.COMPOUND_TYPE) {
+                NbtCompound cache = (NbtCompound)BlackMagick.elementFromString(cacheString);
+                if(cache.contains("version",NbtElement.INT_TYPE))
+                    cacheVer = ((NbtInt)cache.get("version")).intValue();
+                if(cacheVer > -1 && cache.contains("items",NbtElement.LIST_TYPE) && ((NbtList)cache.get("items")).size()>0
+                        && ((NbtList)cache.get("items")).get(0).getType()==NbtElement.COMPOUND_TYPE)
+                    newItems = cache.copy();
+            }
+            else
+                LOGGER.warn("Failed to read web cache");
+        }
+
+        if(webItemsAuto || overwriteCache) {
+            String webJson = "";
+            try {
+                HttpURLConnection con = (HttpURLConnection)(new URL("https://baphomet42.github.io/blackmarket/items.json")).openConnection();
+                con.setConnectTimeout(2000);
+                con.setReadTimeout(500);
+                con.setUseCaches(false);
+                if(con.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                    Scanner scan = new Scanner(con.getInputStream());
+                    while(scan.hasNextLine())
+                        webJson += scan.nextLine();
+                    scan.close();
+                }
+                con.disconnect();
+            } catch(IOException e) {}
+
+            if(BlackMagick.elementFromString(webJson) != null && BlackMagick.elementFromString(webJson).getType()==NbtElement.COMPOUND_TYPE) {
+                NbtCompound cache = (NbtCompound)BlackMagick.elementFromString(webJson);
+                int webVer = -1;
+                if(cache.contains("version",NbtElement.INT_TYPE))
+                    webVer = ((NbtInt)cache.get("version")).intValue();
+                if(webVer > -1 && cache.contains("items",NbtElement.LIST_TYPE) && ((NbtList)cache.get("items")).size()>0
+                        && ((NbtList)cache.get("items")).get(0).getType()==NbtElement.COMPOUND_TYPE && webVer > cacheVer) {
+
+                    LOGGER.info("Updating Black Market items [Version "+webVer+"]");
+                    newItems = cache.copy();
+                    String items = newItems.asString();
+
+                    try {
+                        FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt", StandardCharsets.UTF_8, false);
+                        writer.write(items);
+                        writer.close();
+                    } catch(IOException e) {
+                        LOGGER.warn("Failed to save web cache");
+                    }
+
+                }
+            }
+            else
+                LOGGER.warn("Failed connection to BaphomethLabs");
+        }
+
+        String key = "items";   // replace items with items_snapshot when needed
+        if(newItems != null && newItems.contains(key,NbtElement.LIST_TYPE) && ((NbtList)newItems.get(key)).size()>0
+        && ((NbtList)newItems.get(key)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
+            NbtList items = (NbtList)newItems.get(key);
+
+            NbtList misc = new NbtList();
+            NbtList potions = new NbtList();
+            NbtList eggs = new NbtList();
+
+            for(int i=0; i<items.size(); i++) {
+                if(((NbtCompound)items.get(i)).contains("id",NbtElement.STRING_TYPE)) {
+                    NbtCompound jsonItem = (NbtCompound)items.get(i);
+                    NbtCompound nbt = new NbtCompound();
+                    nbt.put("id",jsonItem.get("id"));
+                    if(jsonItem.contains("count",NbtElement.INT_TYPE))
+                        nbt.put("Count",jsonItem.get("count"));
+                    if(jsonItem.contains("tag",NbtElement.STRING_TYPE)) {
+                        NbtElement el = BlackMagick.elementFromString(((NbtString)jsonItem.get("tag")).asString());
+                        if(el != null && el.getType()==NbtElement.COMPOUND_TYPE)
+                            nbt.put("tag",el);
+                    }
+
+                    if(jsonItem.contains("category",NbtElement.STRING_TYPE)) {
+                        String cat = ((NbtString)jsonItem.get("category")).asString();
+                        switch(cat) {
+                            case "potions": potions.add(nbt); break;
+                            case "eggs": eggs.add(nbt); break;
+                            default: misc.add(nbt); break;
+                        }
+                    }
+                    else
+                        misc.add(nbt);
+
+                }
+            }
+
+            NbtCompound nbt = new NbtCompound();
+            nbt.put("misc",misc);
+            nbt.put("potions",potions);
+            nbt.put("eggs",eggs);
+            webItems = nbt;
+        }
+        else if(webItemsAuto || overwriteCache)
+            LOGGER.warn("No source of web items available");
     }
 
 }
