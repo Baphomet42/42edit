@@ -8,6 +8,7 @@
     "CreativeInventoryScreenMixin",
     "GameRendererMixin",
     "HandledScreenMixin",
+    "HotbarStorageAccessor",
     "IconsMixin",
     "InGameHudMixin",
     "KeyBindingAccessor",

@@ -14,6 +14,7 @@ import com.google.common.collect.Sets;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
+import baphomethlabs.fortytwoedit.mixin.HotbarStorageAccessor;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -94,12 +95,13 @@ public class ItemBuilder extends GenericScreen {
     private static boolean viewBlackMarket = false;
     private static NbtList webItems = null;
     private static final ItemStack[] savedModeItems = new ItemStack[]{ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString(
-        "{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;1468515997,1957250988,-1516230854,741262166],Properties:{textures:[{Value:\"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybC"
-        +"I6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmQ5ZjE4YzlkODVmOTJmNzJmODY0ZDY3YzEzNjdlOWE0NWRjMTBmMzcxNTQ5YzQ2YTRkNGRkOWU0ZjEzZmY0In19fQ==\"}]}}}}")),
-        ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;-938498587,1827358226,-1634388686,963179323],"
-        +"Properties:{textures:[{Value:\"eyJ0aW1lc3RhbXAiOjE0MTU4OTE5NjY1OTMsInByb2ZpbGVJZCI6ImM4MGZhNWU1NmNlYjQ2MTI5ZTk1MzUzMjM5NjhmMzNiIiwicHJvZmlsZU5hbWUiOiJUaGVNZX"
-        +"RhbEdvYXQxNyIsImlzUHVibGljIjp0cnVlLCJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTI2NDg2ZjQyNDg5Y2VmMDJjOWU5OGRkOGJ"
-        +"lNWEzZjM4ZTg3OTE0NzU0MzI2ZTc3YzgzN2MxYjJiY2JhNjUifX19\"}]}}}}"))};
+        "{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;1997664788,2121809964,-2050088034,-1558826484],Properties:{textures:[{Value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQ"
+        +"iIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iZDlmMThjOWQ4NWY5MmY3"
+        +"MmY4NjRkNjdjMTM2N2U5YTQ1ZGMxMGYzNzE1NDljNDZhNGQ0ZGQ5ZTRmMTNmZjQiDQogICAgfQ0KICB9DQp9\"}]}}}}")),
+        ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;-1528398943,522535610,-1505917405,2012489093],"
+        +"Properties:{textures:[{Value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3"
+        +"RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MjY0ODZmNDI0ODljZWYwMmM5ZTk4ZGQ4YmU1YTNmMzhlODc5MTQ3NTQzMjZlNzdjODM3YzFiMmJjYmE2NSINCiAgICB9DQogIH0NCn0=\"}]}}}}")),
+        new ItemStack(Items.BARRIER)};
     private ArmorStandEntity renderArmorStand;
     private ArmorStandEntity renderArmorPose;
     protected final int playerX = x + 240+10;
@@ -620,11 +622,10 @@ public class ItemBuilder extends GenericScreen {
     }
     private void getWebItems() {
         webItems = new NbtList();
-        for(String cat: FortytwoEdit.webItemCats) {
-            NbtList list = (NbtList)FortytwoEdit.webItems.get(cat);
-            for(int i=0; i<list.size(); i++)
-                webItems.add(list.get(i));
-        }
+
+        if(FortytwoEdit.webItems != null)
+            webItems = FortytwoEdit.webItems.copy();
+
         while(webItems.size()<9*FortytwoEdit.SAVED_ROWS) {
             NbtCompound air = new NbtCompound();
             air.putString("id","air");
@@ -1862,9 +1863,10 @@ public class ItemBuilder extends GenericScreen {
                         tag.put("BlockEntityTag",BET);
                         NbtCompound SkullOwner = new NbtCompound();
                         SkullOwner.putString("Name","\u00a77[\u00a7f"+sound+"\u00a77]\u00a7r");
-                        SkullOwner.put("Id",BlackMagick.elementFromString("[I;-78097021,-2092610827,-2037916490,-261835205]"));
-                        SkullOwner.put("Properties",BlackMagick.elementFromString("{textures:[{Value:\"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dX"+
-                            "Jlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGNlZWI3N2Q0ZDI1NzI0YTljYWYyYzdjZGYyZDg4Mzk5YjE0MTdjNmI5ZmY1MjEzNjU5YjY1M2JlNDM3NmUzIn19fQ==\"}]}"));
+                        SkullOwner.put("Id",BlackMagick.elementFromString("[I;905869354,-357217255,-1221221082,-631504474]"));
+                        SkullOwner.put("Properties",BlackMagick.elementFromString("{textures:[{Value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dX"
+                        +"JlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80Y2VlYjc3ZDRkMjU3MjRhOWNhZjJjN2NkZ"
+                        +"jJkODgzOTliMTQxN2M2YjlmZjUyMTM2NTliNjUzYmU0Mzc2ZTMiDQogICAgfQ0KICB9DQp9\"}]}"));
                         tag.put("SkullOwner",SkullOwner);
                         nbt.put("tag",tag);
                         ItemStack item = ItemStack.fromNbt(nbt);
@@ -2168,7 +2170,11 @@ public class ItemBuilder extends GenericScreen {
                 if(viewBlackMarket) {
                     FortytwoEdit.refreshWebItems(true);
                     getWebItems();
+
                     refreshSaved();
+
+                    ((HotbarStorageAccessor)client.getCreativeHotbarStorage()).setLoaded(false);
+                    client.getCreativeHotbarStorage().getSavedHotbar(0);
                 }
                 else {
                     savedModeSet = !savedModeSet;
@@ -3375,7 +3381,7 @@ public class ItemBuilder extends GenericScreen {
         else if(tabNum == 11) {
             boolean noItem = client.player.getMainHandStack().isEmpty();
             int num = 0;
-            if(listItem.startsWith("potion") || listItem.startsWith("splash_potion") || listItem.startsWith("lingering_potion")) {
+            if(listItem.startsWith("potion") || listItem.startsWith("splash_potion") || listItem.startsWith("lingering_potion") || listItem.startsWith("tipped_arrow")) {
                 {
                     widgets.get(tabNum).add(new NbtWidget("Potion Effects",listItems[num],50));
                 }
@@ -4805,8 +4811,11 @@ public class ItemBuilder extends GenericScreen {
                 this.rgbSlider.setY(y);
             }
             if(this.savedStacks != null && this.savedStacks.length == 9)
-                for(int i=0; i<9; i++)
+                for(int i=0; i<9; i++) {
                     context.drawItem(this.savedStacks[i],x+this.btnX[i]+2,y+2);
+                    if(savedModeSet && !viewBlackMarket && !this.savedStacks[i].getItem().toString().equals("air"))
+                        context.drawItem(savedModeItems[2],x+this.btnX[i]+2,y+2);
+                }
             if(rgbNum == 1) {
                 if(rgbChanged[0]) {
                     this.txts[0].setText(""+getRgbDec());

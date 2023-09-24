@@ -291,20 +291,17 @@ public class FortytwoEdit implements ClientModInitializer {
     
     //items
     public static final ItemStack HEAD42 =
-        ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;456917768,-717075144,-1332545803,-1234799884],"+
-        "Name:\"42Richtofen42\",Properties:{textures:[{Value:\"ewogICJ0aW1lc3RhbXAiIDogMTY3MzkxMzQ0ODkzNCwKICAicHJvZmlsZUlkIiA6ICIxYjNjMDMwOGQ1NDI0ZDM4YjA5MmY2"+
-        "ZjViNjY2NzJmNCIsCiAgInByb2ZpbGVOYW1lIiA6ICI0MlJpY2h0b2ZlbjQyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogIC"+
-        "AgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2U0OWI2OWI1ZTczNWViNTIyYjI0YzY5NzM1NDlkZGE4MzNiMTVkOTFiODc0MzU2NGNmYjE3ZDBmOTYxYzBm"+
-        "NTQiCiAgICB9LAogICAgIkNBUEUiIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzIzNDBjMGUwM2RkMjRhMTFiMTVhOGIzM2MyYTdlOWUzMm"+
-        "FiYjIwNTFiMjQ4MWQwYmE3ZGVmZDYzNWNhN2E5MzMiCiAgICB9CiAgfQp9\"}]}}}}"));
+        ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;-880354087,1818313375,-2008037379,-1315376055],"
+        +"Name:\"42Richtofen42\",Properties:{textures:[{Value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAg"
+        +"InVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lNDliNjliNWU3MzVlYjUyMmIyNGM2OTczNTQ5ZGRhODMzYjE1ZDkxYjg3NDM1NjRjZmIxN2QwZjk2MWMwZjU0Ig0KI"
+        +"CAgIH0NCiAgfQ0KfQ==\"}]}}}}"));
     public static final ItemStack BANNER42 =
         ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:red_banner,Count:1,tag:{BlockEntityTag:{Patterns:[{Color:15,Pattern:\"cbo\"},"+
         "{Color:15,Pattern:\"bri\"},{Color:14,Pattern:\"bt\"},{Color:15,Pattern:\"bt\"},{Color:10,Pattern:\"flo\"},{Color:15,Pattern:\"gra\"}],id:\"minecraft:banner\"}}}"));
     public static final ItemStack UNKNOWN_ITEM =
-        ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;456917768,-717075144,-1332545803,-1234799884],"+
-        "Properties:{textures:[{Value:\"ewogICJ0aW1lc3RhbXAiIDogMTY3OTM4NTI5MzU1NywKICAicHJvZmlsZUlkIiA6ICIxYjNjMDMwOGQ1NDI0ZDM4YjA5MmY2ZjViNjY2NzJmNCIsCiAgInB"+
-        "yb2ZpbGVOYW1lIiA6ICI0MlJpY2h0b2ZlbjQyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwO"+
-        "i8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2FlMTgyMzY3MTE5NjMxMzE3NjkyMzQzNzg4Y2Q1Yzg1NGMxM2I0NDlkMzZlNjIyYjg1NTRhNTYzOGVkMzg1OTMiCiAgICB9CiAgfQp9\"}]}}}}"));
+        ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;2132284947,1840398976,-1134576747,-1149047905],"
+        +"Properties:{textures:[{Value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3R"
+        +"leHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hZTE4MjM2NzExOTYzMTMxNzY5MjM0Mzc4OGNkNWM4NTRjMTNiNDQ5ZDM2ZTYyMmI4NTU0YTU2MzhlZDM4NTkzIg0KICAgIH0NCiAgfQ0KfQ==\"}]}}}}"));
 
     //saved items
     public static final int SAVED_ROWS = 9;
@@ -354,8 +351,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     //web items
     public static boolean webItemsAuto = true;
-    public static NbtCompound webItems = null;
-    public static final String[] webItemCats = new String[]{"misc","potions","eggs"};
+    public static NbtList webItems = null;
 
 
     @Override
@@ -904,7 +900,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 con.setReadTimeout(500);
                 con.setUseCaches(false);
                 if(con.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                    Scanner scan = new Scanner(con.getInputStream());
+                    Scanner scan = new Scanner(con.getInputStream(), StandardCharsets.UTF_8);
                     while(scan.hasNextLine())
                         webJson += scan.nextLine();
                     scan.close();
@@ -943,15 +939,14 @@ public class FortytwoEdit implements ClientModInitializer {
         && ((NbtList)newItems.get(key)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
             NbtList items = (NbtList)newItems.get(key);
 
-            NbtList misc = new NbtList();
-            NbtList potions = new NbtList();
-            NbtList eggs = new NbtList();
+            NbtList itemList = new NbtList();
 
             for(int i=0; i<items.size(); i++) {
                 if(((NbtCompound)items.get(i)).contains("id",NbtElement.STRING_TYPE)) {
                     NbtCompound jsonItem = (NbtCompound)items.get(i);
                     NbtCompound nbt = new NbtCompound();
                     nbt.put("id",jsonItem.get("id"));
+                    nbt.put("Count",NbtInt.of(1));
                     if(jsonItem.contains("count",NbtElement.INT_TYPE))
                         nbt.put("Count",jsonItem.get("count"));
                     if(jsonItem.contains("tag",NbtElement.STRING_TYPE)) {
@@ -959,29 +954,16 @@ public class FortytwoEdit implements ClientModInitializer {
                         if(el != null && el.getType()==NbtElement.COMPOUND_TYPE)
                             nbt.put("tag",el);
                     }
-
-                    if(jsonItem.contains("category",NbtElement.STRING_TYPE)) {
-                        String cat = ((NbtString)jsonItem.get("category")).asString();
-                        switch(cat) {
-                            case "potions": potions.add(nbt); break;
-                            case "eggs": eggs.add(nbt); break;
-                            default: misc.add(nbt); break;
-                        }
-                    }
-                    else
-                        misc.add(nbt);
-
+                    itemList.add(nbt);
                 }
             }
 
-            NbtCompound nbt = new NbtCompound();
-            nbt.put("misc",misc);
-            nbt.put("potions",potions);
-            nbt.put("eggs",eggs);
-            webItems = nbt;
+            webItems = itemList;
         }
-        else if(webItemsAuto || overwriteCache)
+        else if(webItemsAuto && !overwriteCache)
             LOGGER.warn("No source of web items available");
+        else if(overwriteCache)
+            refreshWebItems(false);
     }
 
 }

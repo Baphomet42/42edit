@@ -31,7 +31,7 @@ public abstract class TooltipMixin {
             if(client.textRenderer.wrapLines(text, largeSafe).size()>lineSwap) {
                 List<OrderedText> linesImmutable = client.textRenderer.wrapLines(text, client.currentScreen.width-safeZone);
                 List<OrderedText> lines = new ArrayList<>();
-                int maxLines = Math.max(lineSwap,(client.currentScreen.height-safeZone)/10);
+                int maxLines = Math.max(lineSwap,((client.currentScreen.height-safeZone)/10)-1);//10 pixels per line, -1 line gives space to see hotbar
                 for(OrderedText t : linesImmutable)
                     lines.add(t);
                 if(lines.size()>maxLines) {
