@@ -28,9 +28,11 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
 import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
+import baphomethlabs.fortytwoedit.mixin.TranslationStorageAccessor;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.resource.language.TranslationStorage;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
@@ -314,10 +316,12 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final String[] EFFECTS = getCacheEffects();
     public static final String[] ENCHANTS = getCacheEnchants();
     public static final String[] ENTITIES = getCacheEntities();
+    private static String[] KEYBINDS = null;
     public static final String[] LOOT = getCacheLootTables();
     public static final String[] PARTICLES = getCacheParticles();
     public static final String[] SOUNDS = getCacheSounds();
     public static final String[] STRUCTURES = getCacheStructures();
+    private static String[] TRANSLATIONS = null;
 
     //live command suggestions
     public static void setCommandSuggs(String cmd, TextSuggestor suggs, String[][] joinLists) {
@@ -667,6 +671,30 @@ public class FortytwoEdit implements ClientModInitializer {
         return list.toArray(new String[0]);
     }
 
+    public static String[] getCacheKeybinds() {
+        if(KEYBINDS == null) {
+            List<String> list = new ArrayList<>();
+            List<String> list2 = new ArrayList<>();
+
+            for(String k: KeyBindingAccessor.getKeysList().keySet()) {
+                if(k.contains("ftedit.")) {
+                    list2.add(k);
+                }
+                else
+                    list.add(k);
+            }
+
+            Collections.sort(list);
+            Collections.sort(list2);
+
+            for(String k: list2)
+                list.add(k);
+
+            KEYBINDS = list.toArray(new String[0]);
+        }
+        return KEYBINDS;
+    }
+
     private static String[] getCacheLootTables() {
         List<String> list = new ArrayList<>();
 
@@ -713,6 +741,26 @@ public class FortytwoEdit implements ClientModInitializer {
 
         Collections.sort(list);
         return list.toArray(new String[0]);
+    }
+
+    public static String[] getCacheTranslations() {
+        if(TRANSLATIONS == null) {
+            List<String> list = new ArrayList<>();
+
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.getResourceManager() != null) {
+                List<String> l = new ArrayList<>();
+                l.add("en_us");
+                TranslationStorage s = TranslationStorage.load(client.getResourceManager(),l,false);
+                for(String t: ((TranslationStorageAccessor)s).getTranslations().keySet()) {
+                    list.add(t);
+                }
+            }
+
+            Collections.sort(list);
+            TRANSLATIONS = list.toArray(new String[0]);
+        }
+        return TRANSLATIONS;
     }
 
     private static void readOptions() {

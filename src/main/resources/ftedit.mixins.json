@@ -20,7 +20,8 @@
     "SubtitlesHudMixin",
     "TooltipComponentMixin",
     "TooltipMixin",
-    "TooltipPositionerMixin"
+    "TooltipPositionerMixin",
+    "TranslationStorageAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

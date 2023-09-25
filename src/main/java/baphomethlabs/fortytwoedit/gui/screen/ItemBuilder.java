@@ -132,9 +132,12 @@ public class ItemBuilder extends GenericScreen {
     private int jsonBoxI = -1;
     private Text jsonPreview = Text.of("");
     private Text jsonPreview2 = Text.of("");
+    private int jsonEffectMode = -1;
+    private static String jsonLastColor = "reset";
     private boolean jsonEffectValid = false;
     private String jsonEffectFull = "";
-    private static int[] jsonEffects = new int[6];//bold,italic,underlined,strikethrough,obfuscated,radgrad
+    private static int[] jsonEffects = new int[8];//bold,italic,underlined,strikethrough,obfuscated,radgrad,colmode,elmode
+    private int jsonEffectTxtI = -1;
     private int jsonEffectBtnsI = -1;
     private static double[] tabScroll = new double[tabs.length];
     private boolean pauseSaveScroll = false;
@@ -936,7 +939,7 @@ public class ItemBuilder extends GenericScreen {
         for(int i=0; i<rgbChanged.length; i++)
             rgbChanged[i] = true;
 
-        if(jsonEffectBtnsI>=0 && widgets.get(10).size()>jsonEffectBtnsI+2+3) {
+        if(jsonEffectMode == 0 && jsonEffectBtnsI>=0 && widgets.get(10).size()>jsonEffectBtnsI+2+3) {
             for(int rgbNum=0; rgbNum<2; rgbNum++) {
                 for(int i=0; i<3; i++)
                     ((RgbSlider)widgets.get(10).get(jsonEffectBtnsI+2+i).wids[rgbNum].w).setVal(rgb[i+3*rgbNum]);
@@ -945,6 +948,16 @@ public class ItemBuilder extends GenericScreen {
                 ((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI+2+3).wids[rgbNum].w).setEditableColor(getRgbDec(rgbNum));
             }
             ((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI-1).wids[0].w).setText(((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI-1).wids[0].w).getText());
+        }
+        else if(jsonEffectMode == 1 && jsonEffectBtnsI>=0 && widgets.get(10).size()>jsonEffectBtnsI+2+2) {
+            for(int i=0; i<3; i++)
+                ((RgbSlider)widgets.get(10).get(jsonEffectBtnsI+2+i).wids[0].w).setVal(rgb[i]);
+
+            if(jsonEffects[6]==0) {
+                ((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI+1).wids[1].w).setText(""+getRgbHex(0));
+                ((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI+1).wids[1].w).setEditableColor(getRgbDec(0));
+                updateJsonEffect();
+            }
         }
         
     }
@@ -1032,8 +1045,11 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
         }
-        if(noScrollWidgets.size() > 10 && noScrollWidgets.get(10).size() > 1)
+        if(tab == 10 && noScrollWidgets.size() > 10 && noScrollWidgets.get(10).size() > 1) {
             ((ButtonWidget)noScrollWidgets.get(10).get(1).w).active = (jsonEffectValid && client.player.getAbilities().creativeMode);
+            if(jsonEffect != null && jsonEffect.length()>0)
+                ((ButtonWidget)noScrollWidgets.get(10).get(1).w).setTooltip(Tooltip.of(Text.of(jsonEffect)));
+        }
     }
 
     private String appendJsonEffect(String jsonBase, String jsonEffect) {
@@ -1048,7 +1064,7 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private void updateJsonEffectBtns() {
-        if(jsonEffectBtnsI>=0) {
+        if(jsonEffectBtnsI>=0 && (jsonEffectMode == 0 || jsonEffectMode == 1)) {
             int num = 0;
             String col = "";
             if(jsonEffects[num]==1)
@@ -1084,10 +1100,213 @@ public class ItemBuilder extends GenericScreen {
             else if(jsonEffects[num]==2)
                 col = "\u00a7c";
             widgets.get(10).get(jsonEffectBtnsI).btns[num].setMessage(Text.of(col+"\u00a7kk"));
-            widgets.get(10).get(jsonEffectBtnsI+1).btns[0].setMessage(Text.of("Radial"));
-            if(jsonEffects[5]==1)
-                widgets.get(10).get(jsonEffectBtnsI+1).btns[0].setMessage(Text.of("Linear"));
+            if(jsonEffectMode == 0) {
+                widgets.get(10).get(jsonEffectBtnsI+1).btns[0].setMessage(Text.of("[Radial]"));
+                if(jsonEffects[5]==1)
+                    widgets.get(10).get(jsonEffectBtnsI+1).btns[0].setMessage(Text.of("[Linear]"));
+            }
+            else if(jsonEffectMode == 1) {
+                ((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI+1).wids[1].w).setEditableColor(0xFFFFFF);
+                ((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI+1).wids[1].w).setEditable(true);
+
+                if(jsonEffects[6]==0) {
+                    widgets.get(10).get(jsonEffectBtnsI+1).wids[0].w.setMessage(Text.of("Color [RGB]"));
+                    ((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI+1).wids[1].w).setText(getRgbHex());
+                    ((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI+1).wids[1].w).setEditableColor(getRgbDec());
+                }
+                else if(jsonEffects[6]==1) {
+                    widgets.get(10).get(jsonEffectBtnsI+1).wids[0].w.setMessage(Text.of("Color [Vanilla]"));
+                    ((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI+1).wids[1].w).setText(jsonLastColor);
+                }
+                else if(jsonEffects[6]==2) {
+                    widgets.get(10).get(jsonEffectBtnsI+1).wids[0].w.setMessage(Text.of("Color [None]"));
+                    ((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI+1).wids[1].w).setText("<None>");
+                    ((TextFieldWidget)widgets.get(10).get(jsonEffectBtnsI+1).wids[1].w).setEditable(false);
+                }
+
+                widgets.get(10).get(jsonEffectBtnsI+5).btns[0].setMessage(Text.of("[Text]"));
+                if(jsonEffects[7]==1)
+                    widgets.get(10).get(jsonEffectBtnsI+5).btns[0].setMessage(Text.of("[Keybind]"));
+                else if(jsonEffects[7]==2)
+                    widgets.get(10).get(jsonEffectBtnsI+5).btns[0].setMessage(Text.of("[Translate]"));
+            }
         }
+    }
+
+    private void updateJsonEffect() {
+        json2Unsaved = true;
+
+        if(jsonEffectMode == 0) {
+            String value = ((TextFieldWidget)widgets.get(10).get(jsonEffectTxtI).wids[0].w).getText();
+            String val = "";
+            if(value.length()==1 || (rgb[0]==rgb[3] && rgb[1]==rgb[4] && rgb[2]==rgb[5])) {
+                val+="{\"text\":\"";
+                for(int i=0; i<value.length(); i++) {
+                    String thisChar = ""+value.charAt(i);
+                    if(thisChar.equals("\\") || thisChar.equals("\""))
+                        thisChar = "\\"+thisChar;
+                    val+=thisChar;
+                }
+                val+="\",\"color\":\""+getRgbHex()+"\"";
+                if(jsonEffects[0]==1)
+                    val+=",\"bold\":true";
+                else if(jsonEffects[0]==2)
+                    val+=",\"bold\":false";
+                if(jsonEffects[1]==1)
+                    val+=",\"italic\":true";
+                else if(jsonEffects[1]==2)
+                    val+=",\"italic\":false";
+                if(jsonEffects[2]==1)
+                    val+=",\"underlined\":true";
+                else if(jsonEffects[2]==2)
+                    val+=",\"underlined\":false";
+                if(jsonEffects[3]==1)
+                    val+=",\"strikethrough\":true";
+                else if(jsonEffects[3]==2)
+                    val+=",\"strikethrough\":false";
+                if(jsonEffects[4]==1)
+                    val+=",\"obfuscated\":true";
+                else if(jsonEffects[4]==2)
+                    val+=",\"obfuscated\":false";
+                val+="}";
+            }
+            else if(value.length() > 1) {
+                val+="{\"text\":\"";
+                for(int i=0; i<1; i++) {
+                    String thisChar = ""+value.charAt(i);
+                    if(thisChar.equals("\\") || thisChar.equals("\""))
+                        thisChar = "\\"+thisChar;
+                    val+=thisChar;
+                }
+                val+="\",\"color\":\"#";
+                for(int c=0; c<3; c++) {
+                    int col = 0;
+                    if(jsonEffects[5]==1)
+                        col = rgb[c];
+                    else {
+                        col = rgb[c+3];
+                    }
+                    String current = Integer.toHexString(col).toUpperCase();
+                    if(current.length()==1)
+                        current = "0" + current;
+                    val += current;
+                }
+                val+="\"";
+                if(jsonEffects[0]==1)
+                    val+=",\"bold\":true";
+                else if(jsonEffects[0]==2)
+                    val+=",\"bold\":false";
+                if(jsonEffects[1]==1)
+                    val+=",\"italic\":true";
+                else if(jsonEffects[1]==2)
+                    val+=",\"italic\":false";
+                if(jsonEffects[2]==1)
+                    val+=",\"underlined\":true";
+                else if(jsonEffects[2]==2)
+                    val+=",\"underlined\":false";
+                if(jsonEffects[3]==1)
+                    val+=",\"strikethrough\":true";
+                else if(jsonEffects[3]==2)
+                    val+=",\"strikethrough\":false";
+                if(jsonEffects[4]==1)
+                    val+=",\"obfuscated\":true";
+                else if(jsonEffects[4]==2)
+                    val+=",\"obfuscated\":false";
+                val+=",\"extra\":[";
+                boolean firstPart = true;
+                for(int i=1; i<value.length(); i++) {
+                    if(!firstPart)
+                        val+=",";
+                    String thisChar = ""+value.charAt(i);
+                    if(thisChar.equals("\\") || thisChar.equals("\""))
+                        thisChar = "\\"+thisChar;
+                    val+="{\"text\":\""+thisChar+"\",\"color\":\"#";
+                    for(int c=0; c<3; c++) {
+                        int col = 0;
+                        if(jsonEffects[5]==1)
+                            col = rgb[c] + (int)((rgb[c+3]-rgb[c])*i/((double)(value.length()-1)));
+                        else {
+                            if(value.length()%2==0) {
+                                if(i<value.length()/2)
+                                    col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*i/((double)(value.length()/2-1)));
+                                else
+                                    col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*(value.length()-i-1)/((double)(value.length()/2-1)));
+                            }
+                            else {
+                                if(i<=value.length()/2)
+                                    col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*i/((double)(value.length()/2)));
+                                else
+                                    col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*(value.length()-i-1)/((double)(value.length()/2)));
+                            }
+                        }
+                        
+                        String current = Integer.toHexString(col).toUpperCase();
+                        if(current.length()==1)
+                            current = "0" + current;
+                        val += current;
+                    }
+                    val+="\"}";
+                    firstPart = false;
+                }
+                val+="]}";
+            }
+            if(value == null || value.equals(""))
+                val = "{\"text\":\"\"}";
+            updateJsonPreview(val);
+        }
+        else if(jsonEffectMode == 1) {
+            String value = ((TextFieldWidget)widgets.get(10).get(jsonEffectTxtI).wids[0].w).getText();
+            String val = "{";
+            if(jsonEffects[7] == 0) {
+                val+="\"text\":\"";
+                for(int i=0; i<value.length(); i++) {
+                    String thisChar = ""+value.charAt(i);
+                    if(thisChar.equals("\\") || thisChar.equals("\""))
+                        thisChar = "\\"+thisChar;
+                    val+=thisChar;
+                }
+                val+="\"";
+            }
+            else if(jsonEffects[7] == 1) {
+                val+="\"keybind\":\""+value+"\"";
+            }
+            else if(jsonEffects[7] == 2) {
+                val+="\"translate\":\""+value+"\"";
+                if(widgets.get(10).get(jsonEffectBtnsI+7).txts[0].getText() != null && widgets.get(10).get(jsonEffectBtnsI+7).txts[0].getText().length()>0)
+                    val+=",\"with\":"+widgets.get(10).get(jsonEffectBtnsI+7).txts[0].getText();
+                if(widgets.get(10).get(jsonEffectBtnsI+8).txts[0].getText() != null && widgets.get(10).get(jsonEffectBtnsI+8).txts[0].getText().length()>0)
+                    val+=",\"fallback\":\""+widgets.get(10).get(jsonEffectBtnsI+8).txts[0].getText()+"\"";
+            }
+            if(jsonEffects[6]==0)
+                val+=",\"color\":\""+getRgbHex()+"\"";
+            else if(jsonEffects[6]==1)
+                val+=",\"color\":\""+jsonLastColor+"\"";
+            if(jsonEffects[0]==1)
+                val+=",\"bold\":true";
+            else if(jsonEffects[0]==2)
+                val+=",\"bold\":false";
+            if(jsonEffects[1]==1)
+                val+=",\"italic\":true";
+            else if(jsonEffects[1]==2)
+                val+=",\"italic\":false";
+            if(jsonEffects[2]==1)
+                val+=",\"underlined\":true";
+            else if(jsonEffects[2]==2)
+                val+=",\"underlined\":false";
+            if(jsonEffects[3]==1)
+                val+=",\"strikethrough\":true";
+            else if(jsonEffects[3]==2)
+                val+=",\"strikethrough\":false";
+            if(jsonEffects[4]==1)
+                val+=",\"obfuscated\":true";
+            else if(jsonEffects[4]==2)
+                val+=",\"obfuscated\":false";
+            val+="}";
+            if(value == null || value.equals(""))
+                val = "{\"text\":\"\"}";
+            updateJsonPreview(val);
+        }
+
     }
     
     private Style getBookTextStyleAt(List<OrderedText> page, int bookRenderX, int bookRenderY, double x, double y) {
@@ -3011,23 +3230,18 @@ public class ItemBuilder extends GenericScreen {
         }
 
         tabNum++;
-        //createBlock json
         //see createWidgets(8)
 
         tabNum++;
-        //createBlock jsonEdit
         //see createWidgets(9)
 
         tabNum++;
-        //createBlock jsonEffects
         //see createWidgets(10)
 
         tabNum++;
-        //createBlock attributes/enchants
         //see createWidgets(11)
 
         tabNum++;
-        //createBlock listEdit
         //see createWidgets(12)
 
     }
@@ -3039,7 +3253,7 @@ public class ItemBuilder extends GenericScreen {
         }
         widgets.get(tabNum).clear();
         noScrollWidgets.get(tabNum).clear();
-        if(tabNum == 8) {
+        if(tabNum == 8) {   //createBlock json
             boolean noItem = client.player.getMainHandStack().isEmpty();
             {
                 widgets.get(tabNum).add(new NbtWidget("Name",new ItemStack(Items.NAME_TAG),50));
@@ -3075,7 +3289,7 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
         }
-        else if(tabNum == 9) {
+        else if(tabNum == 9) {  //createBlock jsonEdit
             jsonUnsaved = false;
             {
                 noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Cancel"), btn -> this.btnTab(8)).dimensions(x+5,y+5,40,20).build(),5,5));
@@ -3136,14 +3350,31 @@ public class ItemBuilder extends GenericScreen {
                 updateJsonPreview();
             }
             {
-                noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Effect"), button -> {
+                noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Text"), button -> {
+                    jsonEffectMode = 1;
                     createWidgets(10);
                     this.btnTab(10);
                     ItemBuilder.this.unsel = true;
                 }).dimensions(x+15-3,y+35+22*6+1,60,20).build(),15-3,35+22*6+1));
             }
+            {
+                noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Effect"), button -> {
+                    jsonEffectMode = 0;
+                    createWidgets(10);
+                    this.btnTab(10);
+                    ItemBuilder.this.unsel = true;
+                }).dimensions(x+15-3+60+5,y+35+22*6+1,60,20).build(),15-3+60+5,35+22*6+1));
+            }
+            {
+                noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Set Event"), button -> {
+                    jsonEffectMode = 2;
+                    createWidgets(10);
+                    this.btnTab(10);
+                    ItemBuilder.this.unsel = true;
+                }).dimensions(x+15-3+60+5+60+5,y+35+22*6+1,60,20).build(),15-3+60+5+60+5,35+22*6+1));
+            }
         }
-        else if(tabNum == 10) {
+        else if(tabNum == 10) { //createBlock jsonEffects
             json2Unsaved = false;
             updateJsonPreview();
             {
@@ -3173,136 +3404,53 @@ public class ItemBuilder extends GenericScreen {
                 w.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
                 noScrollWidgets.get(tabNum).add(new PosWidget(w,-15,5+1));
             }
-            {
+            if(jsonEffectMode == 0) {
                 widgets.get(tabNum).add(new NbtWidget("Gradient"));
             }
-            {
+            else if(jsonEffectMode == 1) {
+                widgets.get(tabNum).add(new NbtWidget("Text Element"));
+            }
+            else if(jsonEffectMode == 2) {
+                widgets.get(tabNum).add(new NbtWidget("Mouse Event"));
+            }
+            if(jsonEffectMode == 0 || jsonEffectMode == 1) {
+                jsonEffectTxtI = widgets.get(tabNum).size();
                 TextFieldWidget w = new TextFieldWidget(this.textRenderer,x+15-3,y+35,240-36,20,Text.of(""));
                 w.setMaxLength(131072);
                 w.setChangedListener(value -> {
-                    json2Unsaved = true;
-                    String val = "";
-                    if(value.length()==1 || (rgb[0]==rgb[3] && rgb[1]==rgb[4] && rgb[2]==rgb[5])) {
-                        val+="{\"text\":\"";
-                        for(int i=0; i<value.length(); i++) {
-                            String thisChar = ""+value.charAt(i);
-                            if(thisChar.equals("\\") || thisChar.equals("\""))
-                                thisChar = "\\"+thisChar;
-                            val+=thisChar;
-                        }
-                        val+="\",\"color\":\""+getRgbHex()+"\"";
-                        if(jsonEffects[0]==1)
-                            val+=",\"bold\":true";
-                        else if(jsonEffects[0]==2)
-                            val+=",\"bold\":false";
-                        if(jsonEffects[1]==1)
-                            val+=",\"italic\":true";
-                        else if(jsonEffects[1]==2)
-                            val+=",\"italic\":false";
-                        if(jsonEffects[2]==1)
-                            val+=",\"underlined\":true";
-                        else if(jsonEffects[2]==2)
-                            val+=",\"underlined\":false";
-                        if(jsonEffects[3]==1)
-                            val+=",\"strikethrough\":true";
-                        else if(jsonEffects[3]==2)
-                            val+=",\"strikethrough\":false";
-                        if(jsonEffects[4]==1)
-                            val+=",\"obfuscated\":true";
-                        else if(jsonEffects[4]==2)
-                            val+=",\"obfuscated\":false";
-                        val+="}";
-                    }
-                    else if(value.length() > 1) {
-                        val+="{\"text\":\"";
-                        for(int i=0; i<1; i++) {
-                            String thisChar = ""+value.charAt(i);
-                            if(thisChar.equals("\\") || thisChar.equals("\""))
-                                thisChar = "\\"+thisChar;
-                            val+=thisChar;
-                        }
-                        val+="\",\"color\":\"#";
-                        for(int c=0; c<3; c++) {
-                            int col = 0;
-                            if(jsonEffects[5]==1)
-                                col = rgb[c];
-                            else {
-                                col = rgb[c+3];
+                    updateJsonEffect();
+                    if(jsonEffectMode == 1) {
+                        if(jsonEffects[7]==1 || jsonEffects[7]==2) {
+
+                            String[] suggestions = jsonEffects[7]==1 ? FortytwoEdit.getCacheKeybinds() : FortytwoEdit.getCacheTranslations();
+
+                            if(!currentTxt.contains(w)) {
+                                resetSuggs();
+                                currentTxt.add(w);
+                                suggs = new TextSuggestor(client, w, textRenderer);
+                                if(suggestions != null && suggestions.length > 0)
+                                    suggs.setSuggestions(suggestions);
                             }
-                            String current = Integer.toHexString(col).toUpperCase();
-                            if(current.length()==1)
-                                current = "0" + current;
-                            val += current;
-                        }
-                        val+="\"";
-                        if(jsonEffects[0]==1)
-                            val+=",\"bold\":true";
-                        else if(jsonEffects[0]==2)
-                            val+=",\"bold\":false";
-                        if(jsonEffects[1]==1)
-                            val+=",\"italic\":true";
-                        else if(jsonEffects[1]==2)
-                            val+=",\"italic\":false";
-                        if(jsonEffects[2]==1)
-                            val+=",\"underlined\":true";
-                        else if(jsonEffects[2]==2)
-                            val+=",\"underlined\":false";
-                        if(jsonEffects[3]==1)
-                            val+=",\"strikethrough\":true";
-                        else if(jsonEffects[3]==2)
-                            val+=",\"strikethrough\":false";
-                        if(jsonEffects[4]==1)
-                            val+=",\"obfuscated\":true";
-                        else if(jsonEffects[4]==2)
-                            val+=",\"obfuscated\":false";
-                        val+=",\"extra\":[";
-                        boolean firstPart = true;
-                        for(int i=1; i<value.length(); i++) {
-                            if(!firstPart)
-                                val+=",";
-                            String thisChar = ""+value.charAt(i);
-                            if(thisChar.equals("\\") || thisChar.equals("\""))
-                                thisChar = "\\"+thisChar;
-                            val+="{\"text\":\""+thisChar+"\",\"color\":\"#";
-                            for(int c=0; c<3; c++) {
-                                int col = 0;
-                                if(jsonEffects[5]==1)
-                                    col = rgb[c] + (int)((rgb[c+3]-rgb[c])*i/((double)(value.length()-1)));
+                            else{
+                                if(suggs != null)
+                                    suggs.refresh();
                                 else {
-                                    if(value.length()%2==0) {
-                                        if(i<value.length()/2)
-                                            col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*i/((double)(value.length()/2-1)));
-                                        else
-                                            col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*(value.length()-i-1)/((double)(value.length()/2-1)));
-                                    }
-                                    else {
-                                        if(i<=value.length()/2)
-                                            col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*i/((double)(value.length()/2)));
-                                        else
-                                            col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*(value.length()-i-1)/((double)(value.length()/2)));
-                                    }
+                                    resetSuggs();
+                                    suggs = new TextSuggestor(client, w, textRenderer);
+                                    if(suggestions != null && suggestions.length > 0)
+                                        suggs.setSuggestions(suggestions);
                                 }
-                                
-                                String current = Integer.toHexString(col).toUpperCase();
-                                if(current.length()==1)
-                                    current = "0" + current;
-                                val += current;
                             }
-                            val+="\"}";
-                            firstPart = false;
                         }
-                        val+="]}";
+                        else
+                            resetSuggs();
                     }
-                    if(value == null || value.equals(""))
-                        val = "{\"text\":\"\"}";
-                    updateJsonPreview(val);
                 });
                 widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0)}));
                 this.allTxtWidgets.add(w);
             }
-            {
-                final int i = tabNum; final int j = widgets.get(tabNum).size();
-                jsonEffectBtnsI = j;
+            if(jsonEffectMode == 0 || jsonEffectMode == 1) {
+                jsonEffectBtnsI = widgets.get(tabNum).size();
                 widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("\u00a7ll"),Text.of("\u00a7oo"),Text.of("\u00a7nn"),Text.of("\u00a7mm"),
                 Text.of("\u00a7kk")},new int[]{20,20,20,20,20},new String[]{"none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r",
                 "none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r"},
@@ -3311,74 +3459,153 @@ public class ItemBuilder extends GenericScreen {
                     jsonEffects[0]++;
                     if(jsonEffects[0]>2)
                         jsonEffects[0]=0;
-                    ((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).setText(((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).getText());
+                    updateJsonEffect();
                     updateJsonEffectBtns();
                 },btn -> {
                     unsel = true;
                     jsonEffects[1]++;
                     if(jsonEffects[1]>2)
                         jsonEffects[1]=0;
-                    ((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).setText(((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).getText());
+                    updateJsonEffect();
                     updateJsonEffectBtns();
                 },btn -> {
                     unsel = true;
                     jsonEffects[2]++;
                     if(jsonEffects[2]>2)
                         jsonEffects[2]=0;
-                    ((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).setText(((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).getText());
+                    updateJsonEffect();
                     updateJsonEffectBtns();
                 },btn -> {
                     unsel = true;
                     jsonEffects[3]++;
                     if(jsonEffects[3]>2)
                         jsonEffects[3]=0;
-                    ((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).setText(((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).getText());
+                    updateJsonEffect();
                     updateJsonEffectBtns();
                 },btn -> {
                     unsel = true;
                     jsonEffects[4]++;
                     if(jsonEffects[4]>2)
                         jsonEffects[4]=0;
-                    ((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).setText(((TextFieldWidget)widgets.get(i).get(j-1).wids[0].w).getText());
+                    updateJsonEffect();
                     updateJsonEffectBtns();
                 }));
             }
-            {
-                final int i = tabNum; final int j = widgets.get(tabNum).size();
-                widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Radial")},
-                new int[]{40},new String[]{"Radial | Linear"},null,true,btn -> {
+            if(jsonEffectMode == 0) {
+                widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("[Radial]")},
+                new int[]{60},new String[]{"Radial | Linear"},null,true,btn -> {
                     unsel = true;
                     jsonEffects[5]++;
                     if(jsonEffects[5]>1)
                         jsonEffects[5]=0;
-                    ((TextFieldWidget)widgets.get(i).get(j-2).wids[0].w).setText(((TextFieldWidget)widgets.get(i).get(j-2).wids[0].w).getText());
+                    updateJsonEffect();
                     updateJsonEffectBtns();
                 }));
             }
-            {
-                RgbSlider w = new RgbSlider(3);
-                RgbSlider w2 = new RgbSlider(6);
-                widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+            else if(jsonEffectMode == 1) {
+                ButtonWidget w = ButtonWidget.builder(Text.of("Color [RGB]"), btn -> {
+                    unsel = true;
+                    jsonEffects[6]++;
+                    if(jsonEffects[6]>2)
+                        jsonEffects[6]=0;
+                    updateJsonEffect();
+                    updateJsonEffectBtns();
+                }).dimensions(0,0,80,20).build();
+                w.setTooltip(Tooltip.of(Text.of("RGB | Vanilla | None")));
+                TextFieldWidget w2 = new TextFieldWidget(this.textRenderer,0,0,240-36-80-5,20,Text.of(""));
+                w2.setMaxLength(131072);
+                w2.setChangedListener(value -> {
+                    if(jsonEffects[6]==1) {
+                        jsonLastColor = value;
+
+                        String[] suggestions = new String[]{"reset","aqua","black","blue","dark_aqua","dark_blue","dark_gray","dark_green","dark_purple","dark_red",
+                            "gold","gray","green","light_purple","red","white","yellow"};
+
+                        if(!currentTxt.contains(w2)) {
+                            resetSuggs();
+                            currentTxt.add(w2);
+                            suggs = new TextSuggestor(client, w2, textRenderer);
+                            if(suggestions != null && suggestions.length > 0)
+                                suggs.setSuggestions(suggestions);
+                        }
+                        else{
+                            if(suggs != null)
+                                suggs.refresh();
+                            else {
+                                resetSuggs();
+                                suggs = new TextSuggestor(client, w2, textRenderer);
+                                if(suggestions != null && suggestions.length > 0)
+                                    suggs.setSuggestions(suggestions);
+                            }
+                        }
+
+                        updateJsonEffect();
+                    }
+                    else
+                        resetSuggs();
+                });
+                widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0), new PosWidget(w2,15+80+5,0)}));
             }
-            {
-                RgbSlider w = new RgbSlider(4);
-                RgbSlider w2 = new RgbSlider(7);
-                widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+            if(jsonEffectMode == 0) {
+                {
+                    RgbSlider w = new RgbSlider(3);
+                    RgbSlider w2 = new RgbSlider(6);
+                    widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+                }
+                {
+                    RgbSlider w = new RgbSlider(4);
+                    RgbSlider w2 = new RgbSlider(7);
+                    widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+                }
+                {
+                    RgbSlider w = new RgbSlider(5);
+                    RgbSlider w2 = new RgbSlider(8);
+                    widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+                }
+                {
+                    TextFieldWidget w = new TextFieldWidget(textRenderer, x+15, 0, 60, 20, Text.of(""));
+                    TextFieldWidget w2 = new TextFieldWidget(textRenderer, x+15+100+5, 0, 60, 20, Text.of(""));
+                    widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+                }
             }
-            {
-                RgbSlider w = new RgbSlider(5);
-                RgbSlider w2 = new RgbSlider(8);
-                widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
-            }
-            {
-                TextFieldWidget w = new TextFieldWidget(textRenderer, x+15, 0, 60, 20, Text.of(""));
-                TextFieldWidget w2 = new TextFieldWidget(textRenderer, x+15+100+5, 0, 60, 20, Text.of(""));
-                widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+            else if(jsonEffectMode == 1) {
+                {
+                    RgbSlider w = new RgbSlider(0);
+                    widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0)}));
+                }
+                {
+                    RgbSlider w = new RgbSlider(1);
+                    widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0)}));
+                }
+                {
+                    RgbSlider w = new RgbSlider(2);
+                    widgets.get(tabNum).add(new NbtWidget(new PosWidget[]{new PosWidget(w,15,0)}));
+                }
+                {
+                    widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("[Text]")},
+                    new int[]{80},new String[]{"Text | Keybind | Translate"},null,true,btn -> {
+                        unsel = true;
+                        jsonEffects[7]++;
+                        if(jsonEffects[7]>2)
+                            jsonEffects[7]=0;
+                        updateJsonEffect();
+                        updateJsonEffectBtns();
+                    }));
+                }
+                {
+                    widgets.get(tabNum).add(new NbtWidget("Translations Only"));
+                }
+                {
+                    widgets.get(tabNum).add(new NbtWidget("Params:",60,3));
+                }
+                {
+                    widgets.get(tabNum).add(new NbtWidget("Fallback:",60,4));
+                }
             }
             updateJsonEffectBtns();
             updateRgbSliders();
         }
-        else if(tabNum == 11) {
+        else if(tabNum == 11) { //createBlock attributes/enchants
             boolean noItem = client.player.getMainHandStack().isEmpty();
             int num = 0;
             if(listItem.startsWith("potion") || listItem.startsWith("splash_potion") || listItem.startsWith("lingering_potion") || listItem.startsWith("tipped_arrow")) {
@@ -3448,7 +3675,7 @@ public class ItemBuilder extends GenericScreen {
             }
             num++;
         }
-        else if(tabNum == 12) {
+        else if(tabNum == 12) { //createBlock listEdit
             listUnsaved = false;
             {
                 noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Cancel"), btn -> this.btnTab(11)).dimensions(x+5,y+5,40,20).build(),5,5));
@@ -4053,6 +4280,10 @@ public class ItemBuilder extends GenericScreen {
                         FortytwoEdit.setCommandSuggs("loot spawn ~ ~ ~ loot ", suggs, new String[][]{FortytwoEdit.LOOT});
                     else if(suggsNum == 2)
                         FortytwoEdit.setCommandSuggs("execute if block ~ ~ ~ ", suggs, new String[][]{FortytwoEdit.BLOCKS,FortytwoEdit.BLOCKTAGS});
+                    else if(suggsNum == 3)
+                        suggs.setSuggestions(new String[]{"[\"\"]","[{\"text\":\"\"}]"});
+                    else if(suggsNum == 4)
+                        resetSuggs();
                     else
                         resetSuggs();
                 }
@@ -4066,10 +4297,16 @@ public class ItemBuilder extends GenericScreen {
                             FortytwoEdit.setCommandSuggs("loot spawn ~ ~ ~ loot ", suggs, new String[][]{FortytwoEdit.LOOT});
                         else if(suggsNum == 2)
                             FortytwoEdit.setCommandSuggs("execute if block ~ ~ ~ ", suggs, new String[][]{FortytwoEdit.BLOCKS,FortytwoEdit.BLOCKTAGS});
+                        else if(suggsNum == 3)
+                            suggs.setSuggestions(new String[]{"[\"\"]","[{\"text\":\"\"}]"});
+                        else if(suggsNum == 4)
+                            resetSuggs();
                         else
                             resetSuggs();
                     }
                 }
+                if(suggsNum == 3 || suggsNum == 4)
+                    updateJsonEffect();
             });
             this.txts[0].setMaxLength(131072);
             for(int i=0; i<txts.length; i++) {
