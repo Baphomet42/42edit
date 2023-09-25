@@ -3365,7 +3365,7 @@ public class ItemBuilder extends GenericScreen {
                     ItemBuilder.this.unsel = true;
                 }).dimensions(x+15-3+60+5,y+35+22*6+1,60,20).build(),15-3+60+5,35+22*6+1));
             }
-            {
+            if(listCurrentPath.equals("pages")) {
                 noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Set Event"), button -> {
                     jsonEffectMode = 2;
                     createWidgets(10);
@@ -3411,7 +3411,7 @@ public class ItemBuilder extends GenericScreen {
                 widgets.get(tabNum).add(new NbtWidget("Text Element"));
             }
             else if(jsonEffectMode == 2) {
-                widgets.get(tabNum).add(new NbtWidget("Mouse Event"));
+                widgets.get(tabNum).add(new NbtWidget("Text Event"));
             }
             if(jsonEffectMode == 0 || jsonEffectMode == 1) {
                 jsonEffectTxtI = widgets.get(tabNum).size();
