@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.lwjgl.glfw.GLFW;
+import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -269,13 +270,12 @@ public class Hacks extends GenericScreen {
                     NbtCompound nbt = new NbtCompound();
                     if((new EntityDataObject(current)).getNbt()!=null)
                         nbt = (new EntityDataObject(current)).getNbt();
-                    if(nbt.contains("Invisible") && nbt.get("Invisible").getType()==NbtElement.BYTE_TYPE
-                    && nbt.get("Invisible").asString().equals("1b")) {
+                    if(nbt.contains("Invisible",NbtElement.BYTE_TYPE) && nbt.get("Invisible").asString().equals("1b") 
+                    && !(nbt.contains("CustomNameVisible",NbtElement.BYTE_TYPE) && nbt.get("CustomNameVisible").asString().equals("1b"))) {
                         if(((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(0))).isEmpty() && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(1))).isEmpty()
                         && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(2))).isEmpty() && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(3))).isEmpty()
                         && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(0))).isEmpty() && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(1))).isEmpty())
-                            client.player.sendMessage(Text.of("Invisible armor stand ["+
-                                current.getBlockX()+","+current.getBlockY()+","+current.getBlockZ()+"]"),false);
+                            reportInvis(current);
                     }
                 }
                 else if(current.getType() == EntityType.ITEM_FRAME || current.getType() == EntityType.GLOW_ITEM_FRAME) {
@@ -285,14 +285,24 @@ public class Hacks extends GenericScreen {
                     if(nbt.contains("Invisible") && nbt.get("Invisible").getType()==NbtElement.BYTE_TYPE
                     && nbt.get("Invisible").asString().equals("1b")) {
                         if(!nbt.contains("Item")) {
-                            client.player.sendMessage(Text.of("Invisible item frame ["+
-                            current.getBlockX()+","+current.getBlockY()+","+current.getBlockZ()+"]"),false);
+                            reportInvis(current);
                         }
                     }
                 }
             }
         }
         this.resize(this.client,this.width,this.height);
+    }
+
+    private void reportInvis(Entity entity) {
+        String json = "[{\"text\":\""+entity.getName().getString()+"\",\"hoverEvent\":{\"action\":\"show_entity\",\"contents\":"
+            +"{\"type\":\""+entity.getType().toString().replaceFirst("entity.","").replaceFirst("minecraft.","")+"\",\"id\":\""+entity.getUuidAsString()+"\"}},\"clickEvent\":"
+            +"{\"action\":\"suggest_command\",\"value\":\"/tp "+entity.getBlockX()+" "+entity.getBlockY()+" "+entity.getBlockZ()+"\"}},{\"text\":\" \"},"
+            +"{\"text\":\"["+entity.getBlockX()+", "+entity.getBlockY()+", "+entity.getBlockZ()+"]\"}]";
+        if(BlackMagick.jsonFromString(json).isValid())
+            client.player.sendMessage(BlackMagick.jsonFromString(json).text(),false);
+        else
+            client.player.sendMessage(Text.of(entity.getName().getString()+" ["+entity.getBlockX()+", "+entity.getBlockY()+", "+entity.getBlockZ()+"]"),false);
     }
 
     protected void btnDeathPos() {
