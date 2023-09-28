@@ -300,6 +300,9 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final ItemStack BANNER42 =
         ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:red_banner,Count:1,tag:{BlockEntityTag:{Patterns:[{Color:15,Pattern:\"cbo\"},"+
         "{Color:15,Pattern:\"bri\"},{Color:14,Pattern:\"bt\"},{Color:15,Pattern:\"bt\"},{Color:10,Pattern:\"flo\"},{Color:15,Pattern:\"gra\"}],id:\"minecraft:banner\"}}}"));
+    public static final ItemStack BANNERBRICK =
+        ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:orange_banner,Count:1,tag:{BlockEntityTag:{Patterns:[{Color:15,Pattern:\"gra\"},"+
+        "{Color:15,Pattern:\"gra\"},{Color:15,Pattern:\"gra\"},{Color:1,Pattern:\"bts\"},{Color:14,Pattern:\"bri\"},{Color:13,Pattern:\"cre\"}],id:\"minecraft:banner\"}}}"));
     public static final ItemStack UNKNOWN_ITEM =
         ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:player_head,Count:1,tag:{SkullOwner:{Id:[I;2132284947,1840398976,-1134576747,-1149047905],"
         +"Properties:{textures:[{Value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3R"

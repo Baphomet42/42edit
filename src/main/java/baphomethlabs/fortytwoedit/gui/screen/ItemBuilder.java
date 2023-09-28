@@ -72,7 +72,7 @@ public class ItemBuilder extends GenericScreen {
     protected static final Tab[] tabs = new Tab[]{new Tab(0,"General",new ItemStack(Items.GOLDEN_SWORD)), new Tab(1,"Blocks",new ItemStack(Items.PURPLE_SHULKER_BOX)),
         new Tab(2,"Misc",FortytwoEdit.HEAD42), new Tab(8,"Custom NBT",new ItemStack(Items.COMMAND_BLOCK)),
         new Tab(9,"Saved Items",new ItemStack(Items.JIGSAW)), new Tab(3,"Entity Data",new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG)),
-        new Tab(5,"Armor Pose",new ItemStack(Items.ARMOR_STAND)), new Tab(4,"Banner Maker",FortytwoEdit.BANNER42),
+        new Tab(5,"Armor Pose",new ItemStack(Items.ARMOR_STAND)), new Tab(4,"Presets",FortytwoEdit.BANNER42),
         new Tab(7,"Text",new ItemStack(Items.NAME_TAG)), new Tab("TextEdit",true), new Tab("TextEffect",true),
         new Tab(6,"Attributes",new ItemStack(Items.ENCHANTED_BOOK)), new Tab("ListEdit",true)};
     private static final int LEFT_TABS = 5;
@@ -105,8 +105,8 @@ public class ItemBuilder extends GenericScreen {
         new ItemStack(Items.BARRIER)};
     private ArmorStandEntity renderArmorStand;
     private ArmorStandEntity renderArmorPose;
-    protected final int playerX = x + 240+10;
-    protected final int playerY = y - 10;
+    protected final int playerX = 240+10;
+    protected final int playerY = -10;
     private static final int RENDER_SIZE = 35;
     private ArrayList<NbtWidget> sliders = new ArrayList<>();
     private ArrayList<NbtWidget> sliderBtns = new ArrayList<>();
@@ -141,7 +141,7 @@ public class ItemBuilder extends GenericScreen {
     private static double[] tabScroll = new double[tabs.length];
     private boolean pauseSaveScroll = false;
     private String listItem = "";
-    private NbtList[] listEdit = new NbtList[5];//Potions,SusEffects,Fireworks,Attributes,Enchants
+    private NbtList[] listEdit = new NbtList[6];//Potions,SusEffects,Fireworks,Banners,Attributes,Enchants
     private NbtCompound listCurrent = null;
     private boolean listCurrentValid = false;
     private String listCurrentPath = "";
@@ -149,9 +149,13 @@ public class ItemBuilder extends GenericScreen {
     private boolean listUnsaved = false;
     private int[] listPotionBtns = new int[3];//showparticles,showicon,ambient
     private int[] listFireworkBtns = new int[2];//flicker,trail
+    private String listBannerPat = null;
+    private String listBannerCol = null;
+    private boolean bannerShield = false;
+    private static ArmorStandEntity bannerChangePreview = null;
     private static final ItemStack[] listItems = new ItemStack[]{
         ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:potion,Count:1,tag:{CustomPotionColor:10027263}}")),new ItemStack(Items.SUSPICIOUS_STEW),
-        new ItemStack(Items.FIREWORK_ROCKET),new ItemStack(Items.NETHER_STAR),new ItemStack(Items.ENCHANTED_BOOK)};
+        new ItemStack(Items.FIREWORK_ROCKET),FortytwoEdit.BANNERBRICK,new ItemStack(Items.NETHER_STAR),new ItemStack(Items.ENCHANTED_BOOK)};
     
     public ItemBuilder() {}
 
@@ -238,6 +242,15 @@ public class ItemBuilder extends GenericScreen {
         renderArmorPose.setPitch(25.0f);
         renderArmorPose.headYaw = renderArmorPose.getYaw();
         renderArmorPose.prevHeadYaw = renderArmorPose.getYaw();
+        //banner prev
+        if(bannerChangePreview == null) {
+            bannerChangePreview = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
+            bannerChangePreview.bodyYaw = 210.0f;
+            bannerChangePreview.setPitch(25.0f);
+            bannerChangePreview.headYaw = bannerChangePreview.getYaw();
+            bannerChangePreview.prevHeadYaw = bannerChangePreview.getYaw();
+            bannerChangePreview.readNbt((NbtCompound)BlackMagick.elementFromString("{Invisible:1b,Pose:{RightArm:[-90f,-90f,0f]}}"));
+        }
 
         //banner
         int i=0;
@@ -1408,6 +1421,13 @@ public class ItemBuilder extends GenericScreen {
 
             num++;
             listEdit[num] = null;
+            cacheI.put("listEditBanner",new int[]{num,num});
+            el = BlackMagick.getNbtFromPath(null, "0:/tag/BlockEntityTag/Patterns");
+            if(el != null && el.getType() == NbtElement.LIST_TYPE && ((NbtList)el).size()>0 && ((NbtList)el).get(0).getType()==NbtElement.COMPOUND_TYPE)
+                listEdit[num] = (NbtList)el;
+
+            num++;
+            listEdit[num] = null;
             el = BlackMagick.getNbtFromPath(null, "0:/tag/AttributeModifiers");
             if(el != null && el.getType() == NbtElement.LIST_TYPE && ((NbtList)el).size()>0 && ((NbtList)el).get(0).getType()==NbtElement.COMPOUND_TYPE)
                 listEdit[num] = (NbtList)el;
@@ -1427,6 +1447,7 @@ public class ItemBuilder extends GenericScreen {
     private void updateCurrentList() {
         listCurrentValid = false;
 
+        //update btns
         if(listCurrentPath.equals("custom_potion_effects") && cacheI.containsKey("listPotionBtns") && widgets.get(cacheI.get("listPotionBtns")[0])
         .size()>cacheI.get("listPotionBtns")[1]) {
             int[] listPotionBtnsI = cacheI.get("listPotionBtns");
@@ -1495,7 +1516,30 @@ public class ItemBuilder extends GenericScreen {
             }
             widgets.get(listFireworkBtnsI[0]).get(listFireworkBtnsI[1]).btns[num].setMessage(Text.of(col+"Trail"));
         }
+        else if(listCurrentPath.equals("BlockEntityTag/Patterns") && cacheI.containsKey("listBannerLbl") && widgets.get(cacheI.get("listBannerLbl")[0])
+        .size()>cacheI.get("listBannerLbl")[1]+2+4) {
 
+            listCurrent.remove("Color");
+            if(listBannerCol != null && dyeStringToInt(listBannerCol)!=-1)
+                listCurrent.putInt("Color",dyeStringToInt(listBannerCol));
+
+            int[] listBannerLblI = cacheI.get("listBannerLbl");
+            listCurrent.remove("Pattern");
+            if(listBannerPat != null)
+                listCurrent.putString("Pattern",listBannerPat);
+
+            for(int row=0; row<2; row++)
+                for(int col=0; col<8; col++)
+                    widgets.get(listBannerLblI[0]).get(listBannerLblI[1]+row).btns[col].active =
+                        !widgets.get(listBannerLblI[0]).get(listBannerLblI[1]+row).patterns[col].equals(listBannerCol);
+
+            for(int row=0; row<5; row++)
+                for(int col=0; col<8; col++)
+                    widgets.get(listBannerLblI[0]).get(listBannerLblI[1]+2+row).btns[col].active =
+                        !widgets.get(listBannerLblI[0]).get(listBannerLblI[1]+2+row).patterns[col].equals(listBannerPat);
+        }
+
+        //verify list element
         if(listCurrentPath.equals("AttributeModifiers")) {
             List<Text> textList = new ArrayList<>();
             if(listCurrent.contains("AttributeName",NbtElement.STRING_TYPE) && (listCurrent.contains("Amount",NbtElement.DOUBLE_TYPE) || listCurrent.contains("Amount",NbtElement.INT_TYPE))) {
@@ -1503,10 +1547,6 @@ public class ItemBuilder extends GenericScreen {
                 list.add(listCurrent.copy());
                 ItemStack item = selItem==null ? new ItemStack(Items.STONE) : new ItemStack(selItem.getItem());
                 item.setSubNbt(listCurrentPath,list);
-                if(listEdit[4] != null) {
-                    item.setSubNbt("Enchantments",listEdit[4].copy());
-                    item.setSubNbt("HideFlags",NbtInt.of(1));
-                }
                 textList = item.getTooltip(client.player,TooltipContext.Default.ADVANCED.withCreative());
                 listCurrentValid = textList.size()>3;
 
@@ -1548,6 +1588,36 @@ public class ItemBuilder extends GenericScreen {
             if(textList.size()>0)
                 listCurrentValid = true;
         }
+        else if(listCurrentPath.equals("BlockEntityTag/Patterns")) {
+            NbtList list = new NbtList();
+            list.add(listCurrent.copy());
+            List<Text> textList = new ArrayList<>();
+            ItemStack item = new ItemStack(Items.BLACK_BANNER);
+            NbtCompound bet = new NbtCompound();
+            bet.put("Patterns",list);
+            item.setSubNbt("BlockEntityTag",bet);
+            Items.BLACK_BANNER.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+            if(textList.size()>0 && listBannerCol != null && listBannerPat != null)
+                listCurrentValid = true;
+
+            bannerChangePreview.readNbt((NbtCompound)BlackMagick.elementFromString("{HandItems:[{},{}],ArmorItems:[{},{},{},{}],Invisible:1b,Pose:{RightArm:[-90f,-90f,0f]}}"));
+            if(cacheI.containsKey("listEditBanner")) {
+                NbtList prevList = listEdit[cacheI.get("listEditBanner")[0]].copy();
+                prevList.set(listCurrentIndex,listCurrent);
+                NbtCompound prevBet = new NbtCompound();
+                if(selItem.hasNbt() && selItem.getNbt().contains("BlockEntityTag",NbtElement.COMPOUND_TYPE))
+                    prevBet = (NbtCompound)selItem.getNbt().get("BlockEntityTag").copy();
+                prevBet.put("Patterns",prevList);
+                ItemStack prevItem = selItem.copy();
+                prevItem.setSubNbt("BlockEntityTag",prevBet);
+                if(!bannerShield)
+                    bannerChangePreview.readNbt((NbtCompound)BlackMagick.elementFromString("{ArmorItems:[{},{},{},{id:"+prevItem.getItem().toString()+
+                        ",Count:1,tag:"+prevItem.getNbt().asString()+"}],Invisible:1b,Pose:{RightArm:[-90f,-90f,0f]}}"));
+                else
+                    bannerChangePreview.readNbt((NbtCompound)BlackMagick.elementFromString("{HandItems:[{id:shield,Count:1,tag:"+prevItem.getNbt().asString()
+                        +"},{}],Invisible:1b,Pose:{RightArm:[-90f,-90f,0f]}}"));
+            }
+        }
 
         if(cacheI.containsKey("listSaveBtn") && noScrollWidgets.get(cacheI.get("listSaveBtn")[0]).size()>cacheI.get("listSaveBtn")[1]) {
             int[] listSaveBtnI = cacheI.get("listSaveBtn");
@@ -1555,6 +1625,49 @@ public class ItemBuilder extends GenericScreen {
             noScrollWidgets.get(listSaveBtnI[0]).get(listSaveBtnI[1]).w.active = listCurrentValid;
             noScrollWidgets.get(listSaveBtnI[0]).get(listSaveBtnI[1]-1).w.setTooltip(Tooltip.of(Text.of(listCurrent.asString())));
             noScrollWidgets.get(listSaveBtnI[0]).get(listSaveBtnI[1]).w.setTooltip(Tooltip.of(Text.of(listCurrent.asString())));
+        }
+    }
+
+    public int dyeStringToInt(String inp) {
+        switch(inp.toLowerCase()) {
+            case "white": return 0;
+            case "orange": return 1;
+            case "magenta": return 2;
+            case "light_blue": return 3;
+            case "yellow": return 4;
+            case "lime": return 5;
+            case "pink": return 6;
+            case "gray": return 7;
+            case "light_gray": return 8;
+            case "cyan": return 9;
+            case "purple": return 10;
+            case "blue": return 11;
+            case "brown": return 12;
+            case "green": return 13;
+            case "red": return 14;
+            case "black": return 15;
+            default: return -1;
+        }
+    }
+    public String dyeIntStringToString(String inp) {
+        switch(inp) {
+            case "0": return "white";
+            case "1": return "orange";
+            case "2": return "magenta";
+            case "3": return "light_blue";
+            case "4": return "yellow";
+            case "5": return "lime";
+            case "6": return "pink";
+            case "7": return "gray";
+            case "8": return "light_gray";
+            case "9": return "cyan";
+            case "10": return "purple";
+            case "11": return "blue";
+            case "12": return "brown";
+            case "13": return "green";
+            case "14": return "red";
+            case "15": return "black";
+            default: return null;
         }
     }
 
@@ -3203,53 +3316,17 @@ public class ItemBuilder extends GenericScreen {
         btnResetPose();
 
         tabNum++;
-        //createBlock banner maker
+        //createBlock presets
         {
             final int i = tabNum; final int j = widgets.get(tabNum).size();
-            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Preset")},new int[]{40,55,49,55},
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Banner")},new int[]{40,55,49,55},
                     new String[]{"Char Color | Chars | Base Color"+"\n\n"+BANNER_PRESET_CHARS},new String[][] {DYES,BANNER_CHAR_LIST,DYES},false,btn -> {
                 String[] inps = widgets.get(i).get(j).btn();
                 CLICK:{
-                    int baseColor = 0;
-                    int charColor = 0;
-                    switch(inps[2].toLowerCase()) {
-                        case "white": baseColor=0; break;
-                        case "orange": baseColor=1; break;
-                        case "magenta": baseColor=2; break;
-                        case "light_blue": baseColor=3; break;
-                        case "yellow": baseColor=4; break;
-                        case "lime": baseColor=5; break;
-                        case "pink": baseColor=6; break;
-                        case "gray": baseColor=7; break;
-                        case "light_gray": baseColor=8; break;
-                        case "cyan": baseColor=9; break;
-                        case "purple": baseColor=10; break;
-                        case "blue": baseColor=11; break;
-                        case "brown": baseColor=12; break;
-                        case "green": baseColor=13; break;
-                        case "red": baseColor=14; break;
-                        case "black": baseColor=15; break;
-                        default: break CLICK;
-                    }
-                    switch(inps[0].toLowerCase()) {
-                        case "white": charColor=0; break;
-                        case "orange": charColor=1; break;
-                        case "magenta": charColor=2; break;
-                        case "light_blue": charColor=3; break;
-                        case "yellow": charColor=4; break;
-                        case "lime": charColor=5; break;
-                        case "pink": charColor=6; break;
-                        case "gray": charColor=7; break;
-                        case "light_gray": charColor=8; break;
-                        case "cyan": charColor=9; break;
-                        case "purple": charColor=10; break;
-                        case "blue": charColor=11; break;
-                        case "brown": charColor=12; break;
-                        case "green": charColor=13; break;
-                        case "red": charColor=14; break;
-                        case "black": charColor=15; break;
-                        default: break CLICK;
-                    }
+                    int baseColor = dyeStringToInt(inps[2]);
+                    int charColor = dyeStringToInt(inps[0]);
+                    if(charColor == -1 || baseColor == -1)
+                        break CLICK;
                     String chars = inps[1];
                     if(chars.equals("*"))
                         chars = BANNER_PRESET_CHARS;
@@ -3722,6 +3799,22 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
             num++;
+            if((listItem.contains("{") && listItem.substring(0,listItem.indexOf("{")).contains("banner")) || (!listItem.contains("{") && listItem.contains("banner"))
+            || listItem.startsWith("shield")) {
+                bannerShield = listItem.startsWith("shield");
+                {
+                    widgets.get(tabNum).add(new NbtWidget("Banner Patterns",listItems[num],50));
+                }
+                if(listEdit[num] != null)
+                    for(int k=0; k<listEdit[num].size(); k++) {
+                        final int index = k;
+                        widgets.get(tabNum).add(new NbtWidget(((NbtCompound)listEdit[num].get(k)).copy(),"BlockEntityTag/Patterns",index,listEdit[num].size()-1));
+                    }
+                {
+                    widgets.get(tabNum).add(new NbtWidget(listEdit[num],"BlockEntityTag/Patterns",BlackMagick.elementFromString("{}"),noItem));
+                }
+            }
+            num++;
             {
                 widgets.get(tabNum).add(new NbtWidget("Attributes",listItems[num],50));
             }
@@ -4153,6 +4246,40 @@ public class ItemBuilder extends GenericScreen {
                 else
                     listFireworkBtns[num] = 0;
             }
+            else if(listCurrentPath.equals("BlockEntityTag/Patterns")) {
+                {
+                    cacheI.put("listBannerLbl",new int[]{tabNum,widgets.get(tabNum).size()});
+                    int row = 0;
+                    widgets.get(tabNum).add(new NbtWidget(row,new String[]{"white","light_gray","gray","black","brown","red","orange","yellow"}));
+                    row++;
+                    widgets.get(tabNum).add(new NbtWidget(row,new String[]{"lime","green","cyan","light_blue","blue","purple","magenta","pink"}));
+                    row++;
+                    widgets.get(tabNum).add(new NbtWidget(row,new String[]{"bl","br","tl","tr","bs","ts","ls","rs"}));
+                    row++;
+                    widgets.get(tabNum).add(new NbtWidget(row,new String[]{"cs","ms","drs","dls","ss","cr","sc","bt"}));
+                    row++;
+                    widgets.get(tabNum).add(new NbtWidget(row,new String[]{"tt","bts","tts","ld","rd","lud","rud","mc"}));
+                    row++;
+                    widgets.get(tabNum).add(new NbtWidget(row,new String[]{"mr","vh","hh","vhr","hhb","bo","cbo","gra"}));
+                    row++;
+                    widgets.get(tabNum).add(new NbtWidget(row,new String[]{"gru","bri","cre","sku","flo","moj","glb","pig"}));
+                }
+                listBannerCol = "white";
+                if(listCurrent.contains("Color",NbtElement.INT_TYPE))
+                    listBannerCol = dyeIntStringToString(""+((NbtInt)listCurrent.get("Color")).intValue());
+                listBannerPat = null;
+                if(listCurrent.contains("Pattern",NbtElement.STRING_TYPE))
+                    listBannerPat = ((NbtString)listCurrent.get("Pattern")).asString();
+                int[] listBannerLblI = cacheI.get("listBannerLbl");
+                for(int row=0; row<2; row++)
+                    for(int col=0; col<8; col++)
+                        widgets.get(listBannerLblI[0]).get(listBannerLblI[1]+row).btns[col].active =
+                            !widgets.get(listBannerLblI[0]).get(listBannerLblI[1]+row).patterns[col].equals(listBannerCol);
+                for(int row=0; row<5; row++)
+                    for(int col=0; col<8; col++)
+                        widgets.get(listBannerLblI[0]).get(listBannerLblI[1]+2+row).btns[col].active =
+                            !widgets.get(listBannerLblI[0]).get(listBannerLblI[1]+2+row).patterns[col].equals(listBannerPat);
+            }
             updateCurrentList();
         }
     }
@@ -4195,6 +4322,7 @@ public class ItemBuilder extends GenericScreen {
         private int rgbNum;
         private ItemStack item = null;
         private int itemXoff = 0;
+        public String[] patterns;
         private PosWidget[] wids;
 
         //btn(size) txt
@@ -4598,6 +4726,59 @@ public class ItemBuilder extends GenericScreen {
             }
         }
 
+        //banner row (8 btns), row 0/1 for dye, else for pattern
+        public NbtWidget(int row, String[] patterns) {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+
+            this.patterns = patterns;
+            this.savedStacks = new ItemStack[patterns.length];
+            if(row>=2) {
+                if(!bannerShield)
+                    for(int i=0; i<patterns.length; i++)
+                        this.savedStacks[i] = ItemStack.fromNbt((NbtCompound)BlackMagick
+                            .elementFromString("{id:white_banner,Count:1,tag:{BlockEntityTag:{Patterns:[{Color:14,Pattern:"+patterns[i]+"}]}}}"));
+                else
+                    for(int i=0; i<patterns.length; i++)
+                        this.savedStacks[i] = ItemStack.fromNbt((NbtCompound)BlackMagick
+                            .elementFromString("{id:shield,Count:1,tag:{BlockEntityTag:{Base:0,Patterns:[{Color:14,Pattern:"+patterns[i]+"}]}}}"));
+            }
+            else {
+                for(int i=0; i<patterns.length; i++)
+                    this.savedStacks[i] = ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:"+patterns[i]+"_dye,Count:1}"));
+            }
+            this.btns = new ButtonWidget[patterns.length];
+            this.btnX = new int[patterns.length];
+            int currentX = 10+30;
+            for(int i=0; i<btns.length; i++) {
+                this.btnX[i] = currentX;
+                final int col = i;
+                this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
+                    ItemBuilder.this.unsel = true;
+                    if(row>=2)
+                        ItemBuilder.this.listBannerPat = patterns[col];
+                    else
+                        ItemBuilder.this.listBannerCol = patterns[col];
+                    updateCurrentList();
+                }).dimensions(currentX,5,20,20).build();
+                currentX += 20;
+
+                if(row>=2) {
+                    List<Text> textList = new ArrayList<>();
+                    Items.WHITE_BANNER.appendTooltip(ItemStack.fromNbt((NbtCompound)BlackMagick
+                        .elementFromString("{id:white_banner,Count:1,tag:{BlockEntityTag:{Patterns:[{Color:14,Pattern:"+patterns[i]+"}]}}}")),
+                        null,textList,TooltipContext.Default.ADVANCED.withCreative());
+                    if(textList.size()>0)
+                        this.btns[i].setTooltip(Tooltip.of(Text.of(textList.get(0).getString().replaceAll("Red ",""))));
+                }
+                else
+                    this.btns[i].setTooltip(Tooltip.of(savedStacks[i].getName()));
+
+                this.children.add(this.btns[i]);
+            }
+        }
+
         //pose slider
         public NbtWidget(int part, int num) {
             super();
@@ -4855,10 +5036,6 @@ public class ItemBuilder extends GenericScreen {
                     list.add(nbt.copy());
                     ItemStack item = selItem==null ? new ItemStack(Items.STONE) : new ItemStack(selItem.getItem());
                     item.setSubNbt(path,list);
-                    if(listEdit[4] != null) {
-                        item.setSubNbt("Enchantments",listEdit[4].copy());
-                        item.setSubNbt("HideFlags",NbtInt.of(1));
-                    }
                     textList = item.getTooltip(client.player,TooltipContext.Default.ADVANCED.withCreative());
                     addedPreview = true;
                     if(textList.size()>6)
@@ -4937,6 +5114,20 @@ public class ItemBuilder extends GenericScreen {
                     btnLbl.append(Text.of("]"));
                     preview.add(btnLbl.setStyle(Style.EMPTY));
                 }
+            }
+            else if(path.equals("BlockEntityTag/Patterns")) {
+                NbtList list = new NbtList();
+                list.add(nbt.copy());
+                List<Text> textList = new ArrayList<>();
+                ItemStack item = new ItemStack(Items.BLACK_BANNER);
+                NbtCompound bet = new NbtCompound();
+                bet.put("Patterns",list);
+                item.setSubNbt("BlockEntityTag",bet);
+                Items.BLACK_BANNER.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+                if(textList.size()>0)
+                    preview.add(((MutableText)textList.get(0)).setStyle(Style.EMPTY));
+                else
+                    preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid Pattern\",\"color\":\"red\"}").text());
             }
 
             final NbtCompound copyList = nbt.copy();
@@ -5130,6 +5321,9 @@ public class ItemBuilder extends GenericScreen {
                     if(savedModeSet && !viewBlackMarket && !this.savedStacks[i].getItem().toString().equals("air"))
                         context.drawItem(savedModeItems[2],x+this.btnX[i]+2,y+2);
                 }
+            else if(this.savedStacks != null && this.savedStacks.length == 8)
+                for(int i=0; i<8; i++)
+                    context.drawItem(this.savedStacks[i],x+this.btnX[i]+2,y+2);
             if(rgbNum == 1) {
                 if(rgbChanged[0]) {
                     this.txts[0].setText(""+getRgbDec());
@@ -5375,6 +5569,13 @@ public class ItemBuilder extends GenericScreen {
             else
                 context.drawCenteredTextWithShadow(this.textRenderer, tab==9 ? jsonPreview : jsonPreview2, this.width / 2, y-14, 0xFFFFFF);
         }
+        if(tab == 12 && listCurrentPath.equals("BlockEntityTag/Patterns") && bannerChangePreview != null) {
+            if(!bannerShield)
+                InventoryScreen.drawEntity(context,x+240,y,x+240+100,y+400,2*RENDER_SIZE,0f,x+240+50,y+200,(LivingEntity)bannerChangePreview);
+            else
+                InventoryScreen.drawEntity(context,x+240,y,x+240+100,y+200,2*RENDER_SIZE,0f,x+240+50,y+100,(LivingEntity)bannerChangePreview);
+        }
+
 
         if(suggs != null)
             suggs.render(context, mouseX, mouseY);
