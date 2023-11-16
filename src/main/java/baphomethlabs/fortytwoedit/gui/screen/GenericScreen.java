@@ -1,5 +1,6 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
+import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.NarratorManager;
@@ -24,6 +25,7 @@ public abstract class GenericScreen extends Screen {
         super.init();
         x = (this.width - this.backgroundWidth) / 2;
         y = (this.height - this.backgroundHeight) / 2;
+        FortytwoEdit.quickScreen = 0;
     }
     
     protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY, int gui) {

@@ -26,7 +26,9 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
+import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
 import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
+import baphomethlabs.fortytwoedit.gui.screen.SummonScreen;
 import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
 import baphomethlabs.fortytwoedit.mixin.TranslationStorageAccessor;
 import net.minecraft.client.option.KeyBinding;
@@ -84,6 +86,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     //gui
     public static KeyBinding magickGuiKey;
+    public static int quickScreen = 0;
 
     //options
     private static NbtCompound optionsExtra;
@@ -402,8 +405,14 @@ public class FortytwoEdit implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
 
             // magickgui
-            if (magickGuiKey.wasPressed())
-                client.setScreen(new MagickGui());
+            if (magickGuiKey.wasPressed()) {
+                if(quickScreen == 1)
+                    client.setScreen(new ItemBuilder());
+                else if(quickScreen == 2)
+                    client.setScreen(new SummonScreen());
+                else
+                    client.setScreen(new MagickGui());
+            }
 
             // zoom
             if (zoom.isPressed() && !zoomed) {

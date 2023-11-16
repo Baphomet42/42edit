@@ -162,6 +162,7 @@ public class ItemBuilder extends GenericScreen {
     @Override
     protected void init() {
         super.init();
+        FortytwoEdit.quickScreen = 1;
 
         if(firstInit) {
             if(tab == 9 || tab == 10)
