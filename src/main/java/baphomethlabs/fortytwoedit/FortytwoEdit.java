@@ -28,7 +28,6 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
 import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
-import baphomethlabs.fortytwoedit.gui.screen.SummonScreen;
 import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
 import baphomethlabs.fortytwoedit.mixin.TranslationStorageAccessor;
 import net.minecraft.client.option.KeyBinding;
@@ -225,7 +224,7 @@ public class FortytwoEdit implements ClientModInitializer {
     // custom capes
     public static boolean showClientCape = false;
     public static int clientCape = 0;
-    public static String[] clientCapeList = {"minecon2011","minecon2013","minecon2016","mojang-old","mojang","spartan","christmas"};
+    public static String[] clientCapeList = {"none","migrator","vanilla","cherry","minecon2011","minecon2012","minecon2013","minecon2015","minecon2016","minecon2019","mojang-classic","mojang","mojang-studios","spartan","christmas"};
     public static String clientUsername = "";
 
     //skin testing
@@ -408,8 +407,6 @@ public class FortytwoEdit implements ClientModInitializer {
             if (magickGuiKey.wasPressed()) {
                 if(quickScreen == 1)
                     client.setScreen(new ItemBuilder());
-                else if(quickScreen == 2)
-                    client.setScreen(new SummonScreen());
                 else
                     client.setScreen(new MagickGui());
             }
@@ -795,12 +792,13 @@ public class FortytwoEdit implements ClientModInitializer {
 
             if(json.contains("CustomCapeToggle",NbtElement.BYTE_TYPE))
                 showClientCape = ((NbtByte)json.get("CustomCapeToggle")).byteValue() == 1;
-            if(json.contains("CustomCape",NbtElement.INT_TYPE))
-                clientCape = ((NbtInt)json.get("CustomCape")).intValue();
-            if(clientCape<0)
+            if(json.contains("CustomCape",NbtElement.STRING_TYPE)) {
                 clientCape = 0;
-            else if(clientCape>=clientCapeList.length)
-                clientCape = 0;
+                String capeName = ((NbtString)json.get("CustomCape")).asString();
+                for(int i=0; i<clientCapeList.length; i++)
+                    if(capeName.equals(clientCapeList[i]))
+                        clientCape = i;
+            }
             if(json.contains("OptiCapeToggle",NbtElement.BYTE_TYPE))
                 opticapesOn = ((NbtByte)json.get("OptiCapeToggle")).byteValue() == 1;
             if(json.contains("WebItems",NbtElement.BYTE_TYPE))
@@ -832,7 +830,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).createNewFile();
 
             String options = "{CustomCapeToggle:"+ (showClientCape ? "1b" : "0b")
-                +",CustomCape:"+ clientCape
+                +",CustomCape:\""+ clientCapeList[clientCape]+"\""
                 +",OptiCapeToggle:"+ (opticapesOn ? "1b" : "0b")
                 +",WebItems:"+ (webItemsAuto ? "1b" : "0b");
             

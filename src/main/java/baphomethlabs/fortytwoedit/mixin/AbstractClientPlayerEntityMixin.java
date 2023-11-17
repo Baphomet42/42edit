@@ -42,6 +42,8 @@ public abstract class AbstractClientPlayerEntityMixin {
             }
             if(FortytwoEdit.showClientCape && name.equals(FortytwoEdit.clientUsername)) {
                 cape = new Identifier("42edit:textures/capes/"+FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]+".png");
+                if(FortytwoEdit.clientCapeList[FortytwoEdit.clientCape].equals("none"))
+                    cape = null;
                 changed = true;
             }
 
