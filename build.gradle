@@ -29,10 +29,10 @@ dependencies {
 	
 	//	UPDATE PROTOCOL
 	//	paste gradle.properties Fabric Properties and Dependencies and manually update Mod Properties
-	//	update fabric.mod.json depends minecraft version
+	//	update fabric.mod.json depends minecraft version (for new full mc versions)
 	//	close vscode, end all openjdk tasks, run gradle commands in powershell:
-	//	./gradlew genSources --refresh-dependencies
-	//	.\gradlew vscode
+	//		./gradlew genSources --refresh-dependencies
+	//		.\gradlew vscode
 	//	.vscode/launch.json "args": "--quickPlaySingleplayer \"Continue Testing\""
 	//	./gradlew build
 	//	java project clean workspace

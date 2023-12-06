@@ -261,10 +261,10 @@ public class FortytwoEdit implements ClientModInitializer {
     private static Perspective lastPerspective;
 
     //see feature items
-    public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE);
+    public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE,FeatureFlags.UPDATE_1_21);
 
     //format codes
-    public static final Text formatTooltip = Text.Serializer.fromJson("[{\"text\":\"Formatting\n"+
+    public static final Text formatTooltip = Text.Serialization.fromJson("[{\"text\":\"Formatting\n"+
         "0-black§r 1-§1dark_blue§r 2-§2dark_green§r 3-§3dark_aqua§r 4-§4dark_red§r 5-§5dark_purple§r "+
         "6-§6gold§r 7-§7gray§r 8-§8dark_gray§r 9-§9blue§r a-§agreen§r b-§baqua§r "+
         "c-§cred§r d-§dlight_purple§r e-§eyellow§r f-§fwhite§r #420666-\"},{\"text\":\"0xRRGGBB\",\"color\":\"#420666\"},"+

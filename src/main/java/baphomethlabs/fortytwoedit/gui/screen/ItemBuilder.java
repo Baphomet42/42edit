@@ -4287,17 +4287,16 @@ public class ItemBuilder extends GenericScreen {
     
     ///////////////////////////////////////////////////////////////////////////////////////////////
     private class TabWidget
-    extends ElementListWidget<AbstractWidget> {
+    extends ElementListWidget<AbstractWidget> { //modified from net.minecraft.client.gui.screen.world.EditGameRulesScreen$RuleListWidget
         public TabWidget(final int tab) {
-            super(ItemBuilder.this.client, ItemBuilder.this.width-30, ItemBuilder.this.height, ItemBuilder.this.y+32, ItemBuilder.this.y + ItemBuilder.this.backgroundHeight - 5, tab == 4 ? 20 : 22);
+            super(ItemBuilder.this.client, ItemBuilder.this.width-30, ItemBuilder.this.backgroundHeight-32-5, ItemBuilder.this.y+32, tab == 4 ? 20 : 22);
             
             for(int i=0; i<widgets.get(tab).size(); i++)
                 this.addEntry((AbstractWidget)ItemBuilder.this.widgets.get(tab).get(i));
         }
 
-        @Override
-        public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-            super.render(context, mouseX, mouseY, delta);
+        public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+            super.renderWidget(context, mouseX, mouseY, delta);
             AbstractWidget abstractRuleWidget = (AbstractWidget)this.getHoveredEntry();
             if (abstractRuleWidget != null && abstractRuleWidget.description != null) {
                 ItemBuilder.this.setTooltip(abstractRuleWidget.description);

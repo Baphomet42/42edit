@@ -47,11 +47,11 @@ public class BlackMagick {
     //value stored in ParsedText so Text is never null
     public static ParsedText jsonFromString(String inp) {
         try {
-            Text temp = Text.Serializer.fromJson(inp);
+            Text temp = Text.Serialization.fromJson(inp);
             if(temp != null)
-                return new ParsedText(true,temp);
+                return new ParsedText(true,temp.copy());
         } catch(Exception ex) {}
-        return new ParsedText(false,Text.Serializer.fromJson("{\"text\":\"Invalid JSON\",\"color\":\"red\"}"));
+        return new ParsedText(false,Text.Serialization.fromJson("{\"text\":\"Invalid JSON\",\"color\":\"red\"}").copy());
     }
 
 
