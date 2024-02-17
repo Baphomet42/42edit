@@ -148,6 +148,31 @@ public class BlackMagick {
 
 
 
+    //return string representation of an ItemStack as it would be used in /give
+    //count will appear at the end only if it is above 1 and hideCount is false
+    public static String formatItem(ItemStack item, boolean hideNbt, boolean hideCount) {
+        if(item != null && !item.isEmpty()) {
+            String itemData = item.getItem().toString();
+            if(item.hasNbt() && !hideNbt) {
+                itemData += item.getNbt().asString();
+            }
+            if(item.getCount()>1 && !hideCount)
+                itemData += " " + item.getCount();
+            return itemData;
+        }
+        else
+            return "air";
+    }
+
+    public static String formatItem(ItemStack item) {
+        return formatItem(item, false, false);
+    }
+
+
+
+
+
+
     //returns NbtElement from path or null if it DNE
     public static NbtElement getNbtFromPath(ItemStack overrideItem, String getKey) {
         MinecraftClient client = MinecraftClient.getInstance();

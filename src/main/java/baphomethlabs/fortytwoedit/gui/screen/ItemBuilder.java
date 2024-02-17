@@ -70,13 +70,14 @@ public class ItemBuilder extends GenericScreen {
     protected static final int TAB_SIZE = 24;
     protected static final int TAB_SPACING = 2;
     protected static final Tab[] tabs = new Tab[]{new Tab(0,"General",new ItemStack(Items.GOLDEN_SWORD)), new Tab(1,"Blocks",new ItemStack(Items.PURPLE_SHULKER_BOX)),
-        new Tab(2,"Misc",FortytwoEdit.HEAD42), new Tab(8,"Custom NBT",new ItemStack(Items.COMMAND_BLOCK)),
+        new Tab(2,"Misc",FortytwoEdit.HEAD42), new Tab(4,"Custom NBT",new ItemStack(Items.COMMAND_BLOCK)),
         new Tab(9,"Saved Items",new ItemStack(Items.JIGSAW)), new Tab(3,"Entity Data",new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG)),
-        new Tab(5,"Armor Pose",new ItemStack(Items.ARMOR_STAND)), new Tab(4,"Presets",FortytwoEdit.BANNER42),
+        new Tab(5,"Armor Pose",new ItemStack(Items.ARMOR_STAND)), new Tab(8,"Inventory",new ItemStack(Items.ENDER_CHEST)),
         new Tab(7,"Text",new ItemStack(Items.NAME_TAG)), new Tab("TextEdit",true), new Tab("TextEffect",true),
         new Tab(6,"Attributes",new ItemStack(Items.ENCHANTED_BOOK)), new Tab("ListEdit",true)};
     private static final int LEFT_TABS = 5;
     protected ItemStack selItem = null;
+    protected String cacheItemFull = "";
     protected String cacheBlock = "";
     protected ArrayList<ArrayList<String>> cacheStates = new ArrayList<>();
     protected ButtonWidget itemBtn;
@@ -156,6 +157,7 @@ public class ItemBuilder extends GenericScreen {
     private static final ItemStack[] listItems = new ItemStack[]{
         ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:potion,Count:1,tag:{CustomPotionColor:10027263}}")),new ItemStack(Items.SUSPICIOUS_STEW),
         new ItemStack(Items.FIREWORK_ROCKET),FortytwoEdit.BANNERBRICK,new ItemStack(Items.NETHER_STAR),new ItemStack(Items.ENCHANTED_BOOK)};
+    private ItemStack[] cacheInv = new ItemStack[41];
     
     public ItemBuilder() {}
 
@@ -355,11 +357,7 @@ public class ItemBuilder extends GenericScreen {
 
     protected void btnCopyNbt() {
         if(client.player.getMainHandStack() != null && !client.player.getMainHandStack().isEmpty()) {
-            String itemData = client.player.getMainHandStack().getItem().toString();
-            if(client.player.getMainHandStack().hasNbt())
-                itemData += client.player.getMainHandStack().getNbt().asString();
-            if(client.player.getMainHandStack().getCount()>1)
-                itemData += " " + client.player.getMainHandStack().getCount();
+            String itemData = BlackMagick.formatItem(client.player.getMainHandStack());
             client.player.sendMessage(Text.of(itemData),false);
             client.keyboard.setClipboard(itemData);
         }
@@ -376,10 +374,15 @@ public class ItemBuilder extends GenericScreen {
                 cacheBlock = "";
                 cacheStates = new ArrayList<>();
             }
+            cacheItemFull = "air";
         }
         else {
-            itemBtn.active = true;            
-            itemBtn.setTooltip(makeItemTooltip(selItem));
+            itemBtn.active = true;
+            String newCacheItem = BlackMagick.formatItem(selItem);
+            if(!cacheItemFull.equals(newCacheItem)) {
+                cacheItemFull = newCacheItem;
+                itemBtn.setTooltip(makeItemTooltip(selItem));
+            }
             if(!selItem.getItem().toString().equals(cacheBlock))
                 getBlockStates(selItem.getItem());
         }
@@ -388,16 +391,8 @@ public class ItemBuilder extends GenericScreen {
     private void compareItems() {
         
         if(!client.player.getMainHandStack().isEmpty() && !client.player.getOffHandStack().isEmpty()) {
-
-            String itemData = client.player.getMainHandStack().getItem().toString();
-            if(client.player.getMainHandStack().hasNbt())
-                itemData += client.player.getMainHandStack().getNbt().asString();
-
-            String itemData2 = client.player.getOffHandStack().getItem().toString();
-            if(client.player.getOffHandStack().hasNbt())
-                itemData2 += client.player.getOffHandStack().getNbt().asString();
-
-            if(itemData.equals(itemData2)) {
+            if(BlackMagick.formatItem(client.player.getMainHandStack(),false,true)
+            .equals(BlackMagick.formatItem(client.player.getOffHandStack(),false,true))) {
                 if(itemsEqual != 1) {
                     itemsEqual = 1;
                     updateCompareItems();
@@ -453,78 +448,7 @@ public class ItemBuilder extends GenericScreen {
         if(stack.hasNbt()) {
             itemData += stack.getNbt().asString();
         }
-        //remove SkullOwner Properties
-        while(itemData.contains("Properties:{textures:")) {
-            int propertiesIndex = itemData.indexOf("Properties:{textures:");
-            String firstHalf = itemData.substring(0,propertiesIndex)+"Properties:{...}";
-            String secondHalf = itemData.substring(propertiesIndex+21);
-            int bracketCount = 1;
-            int nextOpenBracket;
-            int nextCloseBracket;
-            while(bracketCount!=0 && secondHalf.length()>0) {
-                nextOpenBracket = secondHalf.indexOf('{');
-                nextCloseBracket = secondHalf.indexOf('}');
-                if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
-                    bracketCount++;
-                    secondHalf = secondHalf.substring(nextOpenBracket+1);
-                }
-                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
-                    bracketCount--;
-                    secondHalf = secondHalf.substring(nextCloseBracket+1);
-                }
-                else
-                    secondHalf = "";
-            }
-            itemData = firstHalf + secondHalf;
-        }
-        //remove SkullOwner UUID
-        while(itemData.contains("Id:[I;")) {
-            int idIndex = itemData.indexOf("Id:[I;");
-            String firstHalf = itemData.substring(0,idIndex)+"Id:[...]";
-            String secondHalf = itemData.substring(idIndex+6);
-            int bracketCount = 1;
-            int nextOpenBracket;
-            int nextCloseBracket;
-            while(bracketCount!=0 && secondHalf.length()>0) {
-                nextOpenBracket = secondHalf.indexOf('[');
-                nextCloseBracket = secondHalf.indexOf(']');
-                if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
-                    bracketCount++;
-                    secondHalf = secondHalf.substring(nextOpenBracket+1);
-                }
-                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
-                    bracketCount--;
-                    secondHalf = secondHalf.substring(nextCloseBracket+1);
-                }
-                else
-                    secondHalf = "";
-            }
-            itemData = firstHalf + secondHalf;
-        }
-        //remove SkullOwnerOrig
-        while(itemData.contains("SkullOwnerOrig:[I;")) {
-            int origIndex = itemData.indexOf("SkullOwnerOrig:[I;");
-            String firstHalf = itemData.substring(0,origIndex)+"\u00a74\u26a0\u00a7rSkullOwnerOrig:[...]";
-            String secondHalf = itemData.substring(origIndex+18);
-            int bracketCount = 1;
-            int nextOpenBracket;
-            int nextCloseBracket;
-            while(bracketCount!=0 && secondHalf.length()>0) {
-                nextOpenBracket = secondHalf.indexOf('[');
-                nextCloseBracket = secondHalf.indexOf(']');
-                if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
-                    bracketCount++;
-                    secondHalf = secondHalf.substring(nextOpenBracket+1);
-                }
-                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
-                    bracketCount--;
-                    secondHalf = secondHalf.substring(nextCloseBracket+1);
-                }
-                else
-                    secondHalf = "";
-            }
-            itemData = firstHalf + secondHalf;
-        }
+        itemData = makeItemTooltipShorten(itemData);
         if(stack.getCount()>1)
             itemData += " " + stack.getCount();
         
@@ -539,6 +463,15 @@ public class ItemBuilder extends GenericScreen {
         if(nbt.contains("tag",NbtElement.COMPOUND_TYPE)) {
             itemData += nbt.get("tag").asString();
         }
+        itemData = makeItemTooltipShorten(itemData);
+        if(nbt.contains("Count",NbtElement.INT_TYPE) && ((NbtInt)nbt.get("Count")).intValue() >1)
+            itemData += " " + nbt.get("Count").asString();
+        if(nbt.contains("id",NbtElement.STRING_TYPE))
+            return Tooltip.of(Text.empty().append("Unknown Item").append(Text.of("\n"+nbt.get("id").asString()+itemData)));
+        else return Tooltip.of(Text.of("Failed to read item"));
+    }
+
+    private String makeItemTooltipShorten(String itemData) {
         //remove SkullOwner Properties
         while(itemData.contains("Properties:{textures:")) {
             int propertiesIndex = itemData.indexOf("Properties:{textures:");
@@ -611,11 +544,7 @@ public class ItemBuilder extends GenericScreen {
             }
             itemData = firstHalf + secondHalf;
         }
-        if(nbt.contains("Count",NbtElement.INT_TYPE) && ((NbtInt)nbt.get("Count")).intValue() >1)
-            itemData += " " + nbt.get("Count").asString();
-        if(nbt.contains("id",NbtElement.STRING_TYPE))
-            return Tooltip.of(Text.empty().append("Unknown Item").append(Text.of("\n"+nbt.get("id").asString()+itemData)));
-        else return Tooltip.of(Text.of("Failed to read item"));
+        return itemData;
     }
 
     private void refreshSaved() {
@@ -1004,14 +933,8 @@ public class ItemBuilder extends GenericScreen {
 
     private void updateJsonTab() {
 
-        String itemData = "air";
-        if(!client.player.getMainHandStack().isEmpty()) {
-            itemData = client.player.getMainHandStack().getItem().toString();
-            if(client.player.getMainHandStack().hasNbt())
-                itemData += client.player.getMainHandStack().getNbt().asString();
-        }
-        if(!jsonItem.equals(itemData)) {
-            jsonItem = itemData;
+        if(!jsonItem.equals(cacheItemFull)) {
+            jsonItem = ""+cacheItemFull;
 
             jsonName = null;
             NbtElement el = BlackMagick.getNbtFromPath(null, "0:/tag/display/Name");
@@ -1393,14 +1316,8 @@ public class ItemBuilder extends GenericScreen {
 
     private void updateListTab() {
 
-        String itemData = "air";
-        if(!client.player.getMainHandStack().isEmpty()) {
-            itemData = client.player.getMainHandStack().getItem().toString();
-            if(client.player.getMainHandStack().hasNbt())
-                itemData += client.player.getMainHandStack().getNbt().asString();
-        }
-        if(!listItem.equals(itemData)) {
-            listItem = itemData;
+        if(!listItem.equals(cacheItemFull)) {
+            listItem = ""+cacheItemFull;
 
             int num = 0;
             listEdit[num] = null;
@@ -1626,6 +1543,25 @@ public class ItemBuilder extends GenericScreen {
             noScrollWidgets.get(listSaveBtnI[0]).get(listSaveBtnI[1]).w.active = listCurrentValid;
             noScrollWidgets.get(listSaveBtnI[0]).get(listSaveBtnI[1]-1).w.setTooltip(Tooltip.of(Text.of(listCurrent.asString())));
             noScrollWidgets.get(listSaveBtnI[0]).get(listSaveBtnI[1]).w.setTooltip(Tooltip.of(Text.of(listCurrent.asString())));
+        }
+    }
+
+    private void updateInvTab() {//TODO
+        boolean changed = false;
+        for(int i=0; i<cacheInv.length; i++) {
+            ItemStack current = null;
+            if(i<27)
+                current = client.player.getInventory().main.get(i+9).copy();
+            else if(i<36)
+                current = client.player.getInventory().main.get(i-27).copy();
+            else if(i<40)
+                current = client.player.getInventory().armor.get(i-36).copy();
+            else if(i<41)
+                current = client.player.getInventory().offHand.get(i-40).copy();
+            if(!BlackMagick.formatItem(cacheInv[i]).equals(BlackMagick.formatItem(current))) {
+                changed = true;
+                cacheInv[i] = current;
+            }
         }
     }
 
@@ -1992,6 +1928,49 @@ public class ItemBuilder extends GenericScreen {
                 else
                     BlackMagick.removeNbt(null,"BlockEntityTag/LootTable");
             },1,false));
+        }
+        {
+            widgets.get(tabNum).add(new NbtWidget("Banners"));
+        }
+        {
+            final int i = tabNum; final int j = widgets.get(tabNum).size();
+            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Symbol")},new int[]{40,55,49,55},
+                    new String[]{"Char Color | Chars | Base Color"+"\n\n"+BANNER_PRESET_CHARS},new String[][] {DYES,BANNER_CHAR_LIST,DYES},false,btn -> {
+                String[] inps = widgets.get(i).get(j).btn();
+                CLICK:{
+                    int baseColor = dyeStringToInt(inps[2]);
+                    int charColor = dyeStringToInt(inps[0]);
+                    if(charColor == -1 || baseColor == -1)
+                        break CLICK;
+                    String chars = inps[1];
+                    if(chars.equals("*"))
+                        chars = BANNER_PRESET_CHARS;
+                    else {
+                        String newchars = "";
+                        for(int ii=0; ii<chars.length(); ii++)
+                            if(BANNER_PRESET_CHARS.contains(""+chars.charAt(ii)))
+                                newchars += chars.charAt(ii);
+                        chars = newchars;
+                    }
+                    if(chars.length()==1)
+                        BlackMagick.createBanner(baseColor,charColor,chars,inps[2].toLowerCase(),inps[0].toLowerCase());
+                    else if(chars.length()>1) {
+                        NbtList Items = new NbtList();
+                        while(chars.length()>0) {
+                            ItemStack bannerItem = BlackMagick.createBanner(baseColor,charColor,chars.substring(0,1),inps[2].toLowerCase(),inps[0].toLowerCase());
+                            if(bannerItem!=null)
+                                Items.add((NbtCompound)BlackMagick.getNbtFromPath(bannerItem,"0:"));
+                            if(chars.length()==1)
+                                chars = "";
+                            else
+                                chars = chars.substring(1);
+                        }
+                        ItemStack override = BlackMagick.setId("bundle");
+                        override = BlackMagick.removeNbt(override,"");
+                        BlackMagick.setNbt(override,"Items",Items);
+                    }
+                }
+            }));
         }
         {
             widgets.get(tabNum).add(new NbtWidget("Utilities"));
@@ -2449,11 +2428,7 @@ public class ItemBuilder extends GenericScreen {
             final int i = tabNum; final int j = noScrollWidgets.get(tabNum).size();
             noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Get"), button -> {
                 if(!client.player.getMainHandStack().isEmpty()) {
-                    String itemData = client.player.getMainHandStack().getItem().toString();
-                    if(client.player.getMainHandStack().hasNbt())
-                        itemData += client.player.getMainHandStack().getNbt().asString();
-                    if(client.player.getMainHandStack().getCount()>1)
-                        itemData += " " + client.player.getMainHandStack().getCount();
+                    String itemData = BlackMagick.formatItem(client.player.getMainHandStack());
                     ((EditBoxWidget)noScrollWidgets.get(i).get(j-1).w).setText(itemData);
                     ItemBuilder.this.markUnsaved((EditBoxWidget)noScrollWidgets.get(i).get(j-1).w);
                 }
@@ -3317,47 +3292,9 @@ public class ItemBuilder extends GenericScreen {
         btnResetPose();
 
         tabNum++;
-        //createBlock presets
-        {
-            final int i = tabNum; final int j = widgets.get(tabNum).size();
-            widgets.get(tabNum).add(new NbtWidget(new Text[]{Text.of("Banner")},new int[]{40,55,49,55},
-                    new String[]{"Char Color | Chars | Base Color"+"\n\n"+BANNER_PRESET_CHARS},new String[][] {DYES,BANNER_CHAR_LIST,DYES},false,btn -> {
-                String[] inps = widgets.get(i).get(j).btn();
-                CLICK:{
-                    int baseColor = dyeStringToInt(inps[2]);
-                    int charColor = dyeStringToInt(inps[0]);
-                    if(charColor == -1 || baseColor == -1)
-                        break CLICK;
-                    String chars = inps[1];
-                    if(chars.equals("*"))
-                        chars = BANNER_PRESET_CHARS;
-                    else {
-                        String newchars = "";
-                        for(int ii=0; ii<chars.length(); ii++)
-                            if(BANNER_PRESET_CHARS.contains(""+chars.charAt(ii)))
-                                newchars += chars.charAt(ii);
-                        chars = newchars;
-                    }
-                    if(chars.length()==1)
-                        BlackMagick.createBanner(baseColor,charColor,chars,inps[2].toLowerCase(),inps[0].toLowerCase());
-                    else if(chars.length()>1) {
-                        NbtList Items = new NbtList();
-                        while(chars.length()>0) {
-                            ItemStack bannerItem = BlackMagick.createBanner(baseColor,charColor,chars.substring(0,1),inps[2].toLowerCase(),inps[0].toLowerCase());
-                            if(bannerItem!=null)
-                                Items.add((NbtCompound)BlackMagick.getNbtFromPath(bannerItem,"0:"));
-                            if(chars.length()==1)
-                                chars = "";
-                            else
-                                chars = chars.substring(1);
-                        }
-                        ItemStack override = BlackMagick.setId("bundle");
-                        override = BlackMagick.removeNbt(override,"");
-                        BlackMagick.setNbt(override,"Items",Items);
-                    }
-                }
-            }));
-        }
+        //createBlock inventory
+        //TODO
+        //see createWidgets(7)
 
         tabNum++;
         //see createWidgets(8)
@@ -3383,7 +3320,10 @@ public class ItemBuilder extends GenericScreen {
         }
         widgets.get(tabNum).clear();
         noScrollWidgets.get(tabNum).clear();
-        if(tabNum == 8) {   //createBlock json
+        if(tabNum == 7) {   //createBlock inventory
+            //TODO
+        }
+        else if(tabNum == 8) {   //createBlock json
             boolean noItem = client.player.getMainHandStack().isEmpty();
             {
                 widgets.get(tabNum).add(new NbtWidget("Name",new ItemStack(Items.NAME_TAG),50));
@@ -5550,6 +5490,11 @@ public class ItemBuilder extends GenericScreen {
             if(savedError)
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
         }
+        if(tab == 7) {//TODO
+            for(int i=0; i<cacheInv.length; i++)
+                if(cacheInv[i] != null && !cacheInv[i].isEmpty())
+                    context.drawItem(cacheInv[i],x+20+(i%9)*20,y+30+(i/9)*20);
+        }
         if((tab == 9 && jsonPreview != null) || (tab == 10 && jsonPreview2 != null)) {
             if(listCurrentPath.equals("pages")) {
                 int i = x - 150 - 1;
@@ -5595,6 +5540,7 @@ public class ItemBuilder extends GenericScreen {
         }
         suggs = null;
         super.resize(client, width, height);
+        cacheItemFull = "";
     }
 
     @Override
@@ -5654,6 +5600,8 @@ public class ItemBuilder extends GenericScreen {
                 updatePose();
             }
         }
+        else if(tab == 7)
+            updateInvTab();
         else if(tab == 8)
             updateJsonTab();
         else if(tab == 11)
