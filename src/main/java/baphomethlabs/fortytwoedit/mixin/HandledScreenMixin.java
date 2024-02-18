@@ -9,6 +9,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.ContainerTooltipData;
 import net.minecraft.client.gui.DrawContext;
@@ -66,32 +68,11 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                     boolean empty = true;
                     int rows = 3;
                     int columns = 9;
-                    String itemName = stack.getItem().toString();
-                    if(itemName.contains("chest") || itemName.contains("shulker") || itemName.contains("barrel")) {
-                    }
-                    else if(itemName.contains("dispenser") || itemName.contains("dropper")) {
-                        columns = 3;
-                    }
-                    else if(itemName.contains("hopper")) {
-                        rows = 1;
-                        columns = 5;
-                    }
-                    else if(itemName.contains("furnace") || itemName.contains("smoker")) {
-                        rows = 3;
-                        columns = 1;
-                    }
-                    else if(itemName.contains("brewing_stand")) {
-                        rows = 1;
-                        columns = 5;
-                    }
-                    else if(itemName.contains("chiseled_bookshelf")) {
-                        rows = 2;
-                        columns = 3;
-                    }
-                    else if(itemName.contains("campfire")) {
-                        rows = 1;
-                        columns = 4;
-                    }
+                    int[] size = BlackMagick.containerSize(stack.getItem().toString());
+                    if(size[0]>0)
+                        rows = size[0];
+                    if(size[1]>0)
+                        columns = size[1];
                     ItemStack[] itemsArray = new ItemStack[rows*columns];
 
                     for(NbtElement el : itemsCompound) {

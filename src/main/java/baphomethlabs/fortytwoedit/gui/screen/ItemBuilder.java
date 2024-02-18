@@ -158,6 +158,7 @@ public class ItemBuilder extends GenericScreen {
         ItemStack.fromNbt((NbtCompound)BlackMagick.elementFromString("{id:potion,Count:1,tag:{CustomPotionColor:10027263}}")),new ItemStack(Items.SUSPICIOUS_STEW),
         new ItemStack(Items.FIREWORK_ROCKET),FortytwoEdit.BANNERBRICK,new ItemStack(Items.NETHER_STAR),new ItemStack(Items.ENCHANTED_BOOK)};
     private ItemStack[] cacheInv = new ItemStack[41];
+    private int cacheInvSlot = -1;
     
     public ItemBuilder() {}
 
@@ -1546,7 +1547,7 @@ public class ItemBuilder extends GenericScreen {
         }
     }
 
-    private void updateInvTab() {//TODO
+    private void updateInvTab() {
         boolean changed = false;
         for(int i=0; i<cacheInv.length; i++) {
             ItemStack current = null;
@@ -1562,6 +1563,15 @@ public class ItemBuilder extends GenericScreen {
                 changed = true;
                 cacheInv[i] = current;
             }
+        }
+        if(cacheInvSlot != client.player.getInventory().selectedSlot) {
+            changed = true;
+            cacheInvSlot = client.player.getInventory().selectedSlot;
+        }
+
+        if(changed) {
+            createWidgets(7);
+            btnTab(7);
         }
     }
 
@@ -3292,8 +3302,6 @@ public class ItemBuilder extends GenericScreen {
         btnResetPose();
 
         tabNum++;
-        //createBlock inventory
-        //TODO
         //see createWidgets(7)
 
         tabNum++;
@@ -3321,7 +3329,46 @@ public class ItemBuilder extends GenericScreen {
         widgets.get(tabNum).clear();
         noScrollWidgets.get(tabNum).clear();
         if(tabNum == 7) {   //createBlock inventory
-            //TODO
+            {
+                widgets.get(tabNum).add(new NbtWidget("Inventory"));
+            }
+            {
+                for(int i=0; i<5; i++)
+                widgets.get(tabNum).add(new NbtWidgetInvRow(i));    //TODO highlight hotbar slot, armor symbols
+            }
+            for(int i=0; i<2; i++) {
+                ItemStack current = i==0 ? client.player.getMainHandStack() : client.player.getOffHandStack();
+                if(current != null && !current.isEmpty()) {
+                    String id = current.getItem().toString();
+                    int[] size = BlackMagick.containerSize(id);
+                    
+                    NbtList itemsList = null;
+                    if(current.hasNbt() && current.getNbt().contains("BlockEntityTag",NbtElement.COMPOUND_TYPE)) {
+                        NbtCompound bet = (NbtCompound)(current.getNbt().get("BlockEntityTag").copy());
+                        if(bet.contains("Items",NbtElement.LIST_TYPE) && ((NbtList)bet.get("Items")).size()>0
+                        && ((NbtList)bet.get("Items")).get(0).getType()==NbtElement.COMPOUND_TYPE) {
+                            itemsList = ((NbtList)bet.get("Items"));
+                        }
+                    }
+
+                    if(id.contains("armor_stand")) {
+                        {
+                            widgets.get(tabNum).add(new NbtWidget(i==0 ? "Selected Armor Stand" : "Offhand Armor Stand"));
+                        }
+                        //TODO
+                    }
+
+                    if((size[0]>0 && size[1]>0) || itemsList != null) {
+                        {
+                            widgets.get(tabNum).add(new NbtWidget(i==0 ? "Selected Container" : "Offhand Container"));
+                        }
+                        //TODO
+                    }
+                }
+            }
+            //TODO ender chest with timestamp, clear after joining world (or save cached by worldname/ip/etc)
+            //TODO saved hotbars (read or readwrite?)
+            //TODO enable buttons (only creative?), swap mode or copy mode
         }
         else if(tabNum == 8) {   //createBlock json
             boolean noItem = client.player.getMainHandStack().isEmpty();
@@ -4244,26 +4291,34 @@ public class ItemBuilder extends GenericScreen {
         }
     }
 
-    private class NbtWidget
+    protected class NbtWidget
     extends AbstractWidget {
 
         protected final List<ClickableWidget> children;
-        private ButtonWidget[] btns;
-        private int[] btnX;
-        private int[] btnY = null;
-        private TextFieldWidget[] txts;
-        private int[] txtX;
-        private String lbl;
-        private boolean lblCentered;
-        private ItemStack[] savedStacks;
-        private int savedRow = -1;
-        private PoseSlider poseSlider;
-        private RgbSlider rgbSlider;
-        private int rgbNum;
-        private ItemStack item = null;
-        private int itemXoff = 0;
+        protected ButtonWidget[] btns;
+        protected int[] btnX;
+        protected int[] btnY = null;
+        protected TextFieldWidget[] txts;
+        protected int[] txtX;
+        protected String lbl;
+        protected boolean lblCentered;
+        protected ItemStack[] savedStacks;
+        protected int savedStacksMode = -1;
+        protected int savedRow = -1;
+        protected PoseSlider poseSlider;
+        protected RgbSlider rgbSlider;
+        protected int rgbNum;
+        protected ItemStack item = null;
+        protected int itemXoff = 0;
         public String[] patterns;
-        private PosWidget[] wids;
+        protected PosWidget[] wids;
+
+        //default
+        public NbtWidget() {
+            super();
+            this.children = Lists.newArrayList();
+            setup();
+        }
 
         //btn(size) txt
         public NbtWidget(String name, int size, String tooltip, PressAction onPress, String[] suggestions, boolean survival) {
@@ -4616,6 +4671,7 @@ public class ItemBuilder extends GenericScreen {
 
             this.savedRow = row;
             this.savedStacks = new ItemStack[9];
+            this.savedStacksMode = 1;
             this.btns = new ButtonWidget[9];
             this.btnX = new int[9];
             int currentX = 10+30;
@@ -4674,6 +4730,7 @@ public class ItemBuilder extends GenericScreen {
 
             this.patterns = patterns;
             this.savedStacks = new ItemStack[patterns.length];
+            this.savedStacksMode = 0;
             if(row>=2) {
                 if(!bannerShield)
                     for(int i=0; i<patterns.length; i++)
@@ -5171,29 +5228,30 @@ public class ItemBuilder extends GenericScreen {
         }
 
         public void updateSavedDisplay() {
-            for(int i=0; i<9; i++) {
-                NbtCompound current = viewBlackMarket ? (NbtCompound)webItems.get(savedRow*9+i) : (NbtCompound)savedItems.get(savedRow*9+i);
-                this.btns[i].active = savedModeSet && !viewBlackMarket;
-                if(!ItemStack.fromNbt(current).isEmpty()) {
-                    this.btns[i].setTooltip(makeItemTooltip(ItemStack.fromNbt(current)));
-                    savedStacks[i] = ItemStack.fromNbt(current);
-                    if(client.player.getAbilities().creativeMode)
-                        this.btns[i].active = true;
-                }
-                else {
-                    if((current).contains("id",NbtElement.STRING_TYPE) && 
-                            (current).get("id").asString().equals("air")) {
-                        this.btns[i].setTooltip(null);
-                        savedStacks[i] = new ItemStack(Items.AIR);
-                    }
-                    else {
-                        this.btns[i].setTooltip(makeItemTooltip(current));
-                        savedStacks[i] = FortytwoEdit.UNKNOWN_ITEM;
+            if(savedStacksMode == 1)
+                for(int i=0; i<9; i++) {
+                    NbtCompound current = viewBlackMarket ? (NbtCompound)webItems.get(savedRow*9+i) : (NbtCompound)savedItems.get(savedRow*9+i);
+                    this.btns[i].active = savedModeSet && !viewBlackMarket;
+                    if(!ItemStack.fromNbt(current).isEmpty()) {
+                        this.btns[i].setTooltip(makeItemTooltip(ItemStack.fromNbt(current)));
+                        savedStacks[i] = ItemStack.fromNbt(current);
                         if(client.player.getAbilities().creativeMode)
                             this.btns[i].active = true;
                     }
+                    else {
+                        if((current).contains("id",NbtElement.STRING_TYPE) && 
+                                (current).get("id").asString().equals("air")) {
+                            this.btns[i].setTooltip(null);
+                            savedStacks[i] = new ItemStack(Items.AIR);
+                        }
+                        else {
+                            this.btns[i].setTooltip(makeItemTooltip(current));
+                            savedStacks[i] = FortytwoEdit.UNKNOWN_ITEM;
+                            if(client.player.getAbilities().creativeMode)
+                                this.btns[i].active = true;
+                        }
+                    }
                 }
-            }
         }
 
         public void setSlider(float val) {
@@ -5255,15 +5313,16 @@ public class ItemBuilder extends GenericScreen {
                 this.rgbSlider.setX(ItemBuilder.this.x+2+10+20+5+40);
                 this.rgbSlider.setY(y);
             }
-            if(this.savedStacks != null && this.savedStacks.length == 9)
+            if(savedStacksMode == 1 && this.savedStacks != null && this.savedStacks.length == 9)
                 for(int i=0; i<9; i++) {
                     context.drawItem(this.savedStacks[i],x+this.btnX[i]+2,y+2);
                     if(savedModeSet && !viewBlackMarket && !this.savedStacks[i].getItem().toString().equals("air"))
                         context.drawItem(savedModeItems[2],x+this.btnX[i]+2,y+2);
                 }
-            else if(this.savedStacks != null && this.savedStacks.length == 8)
-                for(int i=0; i<8; i++)
-                    context.drawItem(this.savedStacks[i],x+this.btnX[i]+2,y+2);
+            else if(savedStacksMode == 0 && this.savedStacks != null && this.savedStacks.length == this.btnX.length)
+                for(int i=0; i<this.savedStacks.length; i++)
+                    if(this.savedStacks[i] != null && !this.savedStacks[i].isEmpty())
+                        context.drawItem(this.savedStacks[i],x+this.btnX[i]+2,y+2);
             if(rgbNum == 1) {
                 if(rgbChanged[0]) {
                     this.txts[0].setText(""+getRgbDec());
@@ -5283,6 +5342,44 @@ public class ItemBuilder extends GenericScreen {
                     context.drawItem(rgbItems[i], x+15+2+i*25, y+2+22);
             }
 
+        }
+    }
+
+    class NbtWidgetInvRow extends NbtWidget {
+        public NbtWidgetInvRow(int row) {
+            super();
+    
+            this.savedStacksMode = 0;
+            if(row >= 0 && row < 4) {
+                this.savedStacks = new ItemStack[9];
+                this.btns = new ButtonWidget[9];
+                this.btnX = new int[9];
+            }
+            else if(row == 4) {
+                this.savedStacks = new ItemStack[5];
+                this.btns = new ButtonWidget[5];
+                this.btnX = new int[5];
+            }
+
+            int currentX = 10+30;
+            if(row==4)
+                currentX += 20;
+            for(int i=0; i<this.savedStacks.length; i++) {
+                this.btnX[i] = currentX;
+                final int index = row*9+i;
+                this.savedStacks[i] = cacheInv[index];
+                this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
+                    ItemBuilder.this.unsel = true;
+                }).dimensions(currentX,5,20,20).build();
+                if(cacheInv[index] != null && !cacheInv[index].isEmpty())
+                    this.btns[i].setTooltip(makeItemTooltip(cacheInv[index]));
+                currentX += 20;
+                if(row==4 && i==3)
+                    currentX += 40;
+                this.btns[i].active = false;
+
+                this.children.add(this.btns[i]);
+            }
         }
     }
 
@@ -5489,11 +5586,6 @@ public class ItemBuilder extends GenericScreen {
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
             if(savedError)
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
-        }
-        if(tab == 7) {//TODO
-            for(int i=0; i<cacheInv.length; i++)
-                if(cacheInv[i] != null && !cacheInv[i].isEmpty())
-                    context.drawItem(cacheInv[i],x+20+(i%9)*20,y+30+(i/9)*20);
         }
         if((tab == 9 && jsonPreview != null) || (tab == 10 && jsonPreview2 != null)) {
             if(listCurrentPath.equals("pages")) {

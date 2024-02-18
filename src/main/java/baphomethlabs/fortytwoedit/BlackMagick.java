@@ -1250,4 +1250,47 @@ public class BlackMagick {
     }
 
 
+
+
+
+
+    //returns int array with [rows,columns] or [-1,-1] depending on storage size of blockentity for item
+    //get id from ItemStack.getItem().toString()
+    public static int[] containerSize(String id) {
+        int rows = -1;
+        int cols = -1;
+        
+        if(id.contains("chest") || id.contains("shulker") || id.contains("barrel")) {
+            rows = 3;
+            cols = 9;
+        }
+        else if(id.contains("dispenser") || id.contains("dropper")) {
+            rows = 3;
+            cols = 3;
+        }
+        else if(id.contains("hopper")) {
+            rows = 1;
+            cols = 5;
+        }
+        else if(id.contains("furnace") || id.contains("smoker")) {
+            rows = 1;
+            cols = 3;
+        }
+        else if(id.contains("brewing_stand")) {
+            rows = 1;
+            cols = 5;
+        }
+        else if(id.contains("chiseled_bookshelf")) {
+            rows = 2;
+            cols = 3;
+        }
+        else if(id.contains("campfire")) {
+            rows = 1;
+            cols = 4;
+        }
+
+        return new int[]{rows,cols};
+    }
+
+
 }
