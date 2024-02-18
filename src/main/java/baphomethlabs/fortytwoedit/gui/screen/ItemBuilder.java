@@ -33,6 +33,7 @@ import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.ButtonWidget.PressAction;
 import net.minecraft.client.item.TooltipContext;
+import net.minecraft.client.option.HotbarStorage;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
@@ -3334,41 +3335,103 @@ public class ItemBuilder extends GenericScreen {
             }
             {
                 for(int i=0; i<5; i++)
-                widgets.get(tabNum).add(new NbtWidgetInvRow(i));    //TODO highlight hotbar slot, armor symbols
+                    widgets.get(tabNum).add(new NbtWidgetInvRow(i));
             }
             for(int i=0; i<2; i++) {
                 ItemStack current = i==0 ? client.player.getMainHandStack() : client.player.getOffHandStack();
                 if(current != null && !current.isEmpty()) {
                     String id = current.getItem().toString();
                     int[] size = BlackMagick.containerSize(id);
-                    
-                    NbtList itemsList = null;
-                    if(current.hasNbt() && current.getNbt().contains("BlockEntityTag",NbtElement.COMPOUND_TYPE)) {
-                        NbtCompound bet = (NbtCompound)(current.getNbt().get("BlockEntityTag").copy());
-                        if(bet.contains("Items",NbtElement.LIST_TYPE) && ((NbtList)bet.get("Items")).size()>0
-                        && ((NbtList)bet.get("Items")).get(0).getType()==NbtElement.COMPOUND_TYPE) {
-                            itemsList = ((NbtList)bet.get("Items"));
+
+                    if(id.contains("bundle")) {
+                        {
+                            widgets.get(tabNum).add(new NbtWidget(i==0 ? "Selected Bundle" : "Offhand Bundle"));
+                        }
+                        NbtList itemsList = new NbtList();
+                        if(current.hasNbt() && current.getNbt().contains("Items",NbtElement.LIST_TYPE)
+                        && ((NbtList)current.getNbt().get("Items")).size()>0
+                        && ((NbtList)current.getNbt().get("Items")).get(0).getType()==NbtElement.COMPOUND_TYPE) {
+                            itemsList = ((NbtList)current.getNbt().get("Items"));
+                        }
+
+                        ItemStack[] stacks = new ItemStack[itemsList.size()+1];
+                        for(int index=0; index<itemsList.size(); index++) {
+                            stacks[index+1] = ItemStack.fromNbt((NbtCompound)itemsList.get(index));
+                        }
+
+                        int index = 0;
+                        for(int r=0; r<=(stacks.length-1)/9; r++) {
+                            ItemStack[] stackRow = new ItemStack[stacks.length-index > 9 ? 9 : stacks.length-index];
+                            for(int c=0; c<stackRow.length; c++)
+                                stackRow[c] = stacks[index+c];
+                            index+=9;
+                            widgets.get(tabNum).add(new NbtWidgetInvRow(stackRow));
                         }
                     }
-
-                    if(id.contains("armor_stand")) {
+                    else if(id.contains("armor_stand")) {
                         {
                             widgets.get(tabNum).add(new NbtWidget(i==0 ? "Selected Armor Stand" : "Offhand Armor Stand"));
                         }
-                        //TODO
+                        ItemStack[] stacks = new ItemStack[6];
+                        if(current.hasNbt() && current.getNbt().contains("EntityTag",NbtElement.COMPOUND_TYPE)) {
+                            NbtCompound et = (NbtCompound)(current.getNbt().get("EntityTag").copy());
+                            if(et.contains("ArmorItems",NbtElement.LIST_TYPE) && ((NbtList)et.get("ArmorItems")).size()==4
+                            && ((NbtList)et.get("ArmorItems")).get(0).getType()==NbtElement.COMPOUND_TYPE) {
+                                NbtList itemsList = ((NbtList)et.get("ArmorItems"));
+                                for(int a=0; a<4; a++) {
+                                    stacks[a] = ItemStack.fromNbt((NbtCompound)itemsList.get(a));
+                                }
+                            }
+                        }
+                        if(current.hasNbt() && current.getNbt().contains("EntityTag",NbtElement.COMPOUND_TYPE)) {
+                            NbtCompound et = (NbtCompound)(current.getNbt().get("EntityTag").copy());
+                            if(et.contains("HandItems",NbtElement.LIST_TYPE) && ((NbtList)et.get("HandItems")).size()==2
+                            && ((NbtList)et.get("HandItems")).get(0).getType()==NbtElement.COMPOUND_TYPE) {
+                                NbtList itemsList = ((NbtList)et.get("HandItems"));
+                                for(int h=0; h<2; h++) {
+                                    stacks[4+h] = ItemStack.fromNbt((NbtCompound)itemsList.get(h));
+                                }
+                            }
+                        }
+                        widgets.get(tabNum).add(new NbtWidgetInvRow(stacks));
                     }
-
-                    if((size[0]>0 && size[1]>0) || itemsList != null) {
+                    else if(size[0]>0 && size[1]>0) {
                         {
                             widgets.get(tabNum).add(new NbtWidget(i==0 ? "Selected Container" : "Offhand Container"));
                         }
-                        //TODO
+                        NbtList itemsList = null;
+                        if(current.hasNbt() && current.getNbt().contains("BlockEntityTag",NbtElement.COMPOUND_TYPE)) {
+                            NbtCompound bet = (NbtCompound)(current.getNbt().get("BlockEntityTag").copy());
+                            if(bet.contains("Items",NbtElement.LIST_TYPE) && ((NbtList)bet.get("Items")).size()>0
+                            && ((NbtList)bet.get("Items")).get(0).getType()==NbtElement.COMPOUND_TYPE) {
+                                itemsList = ((NbtList)bet.get("Items"));
+                            }
+                        }
+                        for(int r=0; r<size[0]; r++) {
+                            ItemStack[] stacks = new ItemStack[size[1]];
+                            if(itemsList != null)
+                                for(int c=0; c<size[1]; c++) {
+                                    for(int index=0; index<itemsList.size(); index++) {
+                                        if(((NbtCompound)itemsList.get(index)).contains("Slot",NbtElement.BYTE_TYPE)
+                                        && ((NbtCompound)itemsList.get(index)).getByte("Slot")==(r*size[1]+c))
+                                            stacks[c] = ItemStack.fromNbt((NbtCompound)itemsList.get(index));
+                                    }
+                                }
+                            widgets.get(tabNum).add(new NbtWidgetInvRow(stacks));
+                        }
                     }
                 }
             }
-            //TODO ender chest with timestamp, clear after joining world (or save cached by worldname/ip/etc)
-            //TODO saved hotbars (read or readwrite?)
-            //TODO enable buttons (only creative?), swap mode or copy mode
+            {
+                widgets.get(tabNum).add(new NbtWidget("Saved Hotbars"));
+            }
+            for(int h=0; h<HotbarStorage.STORAGE_ENTRY_COUNT; h++) {
+                NbtList row = client.getCreativeHotbarStorage().getSavedHotbar(h).toNbtList();
+                ItemStack[] stacks = new ItemStack[9];
+                for(int c=0; c<stacks.length; c++)
+                    stacks[c] = ItemStack.fromNbt((NbtCompound)row.get(c));
+                widgets.get(tabNum).add(new NbtWidgetInvRow(stacks));
+            }
         }
         else if(tabNum == 8) {   //createBlock json
             boolean noItem = client.player.getMainHandStack().isEmpty();
@@ -5346,6 +5409,8 @@ public class ItemBuilder extends GenericScreen {
     }
 
     class NbtWidgetInvRow extends NbtWidget {
+
+        //player inventory row (3 rows inv, 1 row hotbar, 5 slots armor/offhand)
         public NbtWidgetInvRow(int row) {
             super();
     
@@ -5376,6 +5441,29 @@ public class ItemBuilder extends GenericScreen {
                 currentX += 20;
                 if(row==4 && i==3)
                     currentX += 40;
+                this.btns[i].active = false;
+
+                this.children.add(this.btns[i]);
+            }
+        }
+        
+        public NbtWidgetInvRow(ItemStack[] stacks) {
+            super();
+    
+            this.savedStacksMode = 0;
+            this.savedStacks = stacks;
+            this.btns = new ButtonWidget[stacks.length];
+            this.btnX = new int[stacks.length];
+
+            int currentX = 10+30;
+            for(int i=0; i<this.savedStacks.length; i++) {
+                this.btnX[i] = currentX;
+                this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
+                    ItemBuilder.this.unsel = true;
+                }).dimensions(currentX,5,20,20).build();
+                if(this.savedStacks[i] != null && !this.savedStacks[i].isEmpty())
+                    this.btns[i].setTooltip(makeItemTooltip(this.savedStacks[i]));
+                currentX += 20;
                 this.btns[i].active = false;
 
                 this.children.add(this.btns[i]);
