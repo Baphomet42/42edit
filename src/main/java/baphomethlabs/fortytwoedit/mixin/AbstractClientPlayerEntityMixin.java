@@ -31,7 +31,7 @@ public abstract class AbstractClientPlayerEntityMixin {
             boolean changed = false;
 
             //cape
-            if(FortytwoEdit.opticapes) {
+            if(FortytwoEdit.opticapesWorking && FortytwoEdit.opticapesOn) {
                 if(FortytwoEdit.capeCached(name)) {
                     cape = new Identifier("42edit:cache/capes/"+name.toLowerCase());
                     changed = true;

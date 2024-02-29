@@ -47,6 +47,7 @@ dependencies {
 	//	delete .gradle .cache from User
 	//	update example mod files
 	//	update FortytwoEdit.FEATURES
+	//	verify ordinals (ScrollableWidgetMixin/SharedConstantsMixin)
 
 	//	TOOLS
 	//	Ctrl-P search MC classes starting with #

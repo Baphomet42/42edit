@@ -143,15 +143,13 @@ public class FortytwoEdit implements ClientModInitializer {
             return false;
     }
 
-    public static boolean opticapes = true;
-    public static boolean opticapesOn = true;
+    public static boolean opticapesWorking = true; //if optifine connection is working
+    public static boolean opticapesOn = true; //optifine cape setting
 
     private static void checkCapesEnabled() {
-        opticapes = false;
-        if(opticapesOn)
-            opticapes = true;
+        opticapesWorking = true;
 
-        if(opticapes) {
+        if(opticapesOn) {
             boolean connect = false;
             try {
                 HttpURLConnection con = (HttpURLConnection)(new URL("http://s.optifine.net/capes/42Richtofen42.png")).openConnection();
@@ -161,7 +159,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 con.disconnect();
             } catch(IOException e) {}
             if(!connect) {
-                opticapes = false;
+                opticapesWorking = false;
                 LOGGER.warn("Failed connection to OptiFine capes");
             }
         }
@@ -391,12 +389,12 @@ public class FortytwoEdit implements ClientModInitializer {
         BlockRenderLayerMap.INSTANCE.putBlock(Blocks.STRUCTURE_VOID, RenderLayer.getTranslucent());
         BlockRenderLayerMap.INSTANCE.putBlock(Blocks.LIGHT, RenderLayer.getTranslucent());
 
+        //options
+        readOptions();
+
         // custom capes
         clientUsername = gameClient.getSession().getUsername();
         clearCapes();
-
-        //options
-        readOptions();
 
         getSavedItems();
         refreshWebItems(false);
@@ -505,7 +503,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 lastSpam = System.currentTimeMillis();
             }
 
-            //capes
+            //clear cached optifine capes when leaving world/server
             if (capeNames.size() > 0 && MinecraftClient.getInstance().player == null) {
                 clearCapes();
             }

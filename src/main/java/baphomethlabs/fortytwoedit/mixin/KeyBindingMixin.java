@@ -32,8 +32,7 @@ public abstract class KeyBindingMixin {
                 if(item != null && client.player.getAbilities().creativeMode) {
                     client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                     client.player.playerScreenHandler.sendContentUpdates();
-                    int i=0;
-                    while(client.options.pickItemKey.wasPressed() && i<20) { i++; }
+                    while(client.options.pickItemKey.wasPressed()) {}
                 }
             }
 
