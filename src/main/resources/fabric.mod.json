@@ -2,7 +2,6 @@
   "schemaVersion": 1,
   "id": "ftedit",
   "version": "${version}",
-
   "name": "42edit",
   "description": "Blackest Magick in Practice",
   "authors": [
@@ -12,10 +11,8 @@
     "homepage": "https://baphomet42.github.io/",
     "sources":  "https://github.com/Baphomet42/42edit"
   },
-
   "license": "MIT",
   "icon": "assets/42edit/icon.png",
-
   "environment": "client",
   "entrypoints": {
     "client": [
@@ -38,9 +35,9 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.14.22",
-    "fabric-api": "*",
+    "fabricloader": ">=0.15.0",
     "minecraft": "~1.20",
-    "java": ">=17"
+    "java": ">=17",
+    "fabric-api": "*"
   }
 }

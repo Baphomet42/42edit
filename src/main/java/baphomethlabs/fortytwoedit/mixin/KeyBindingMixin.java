@@ -29,7 +29,7 @@ public abstract class KeyBindingMixin {
             }
             else if(key.equals(((KeyBindingAccessor)client.options.pickItemKey).getBoundKey())) {
                 ItemStack item = FortytwoEdit.copyLookAt();
-                if(item != null && client.player.getAbilities().creativeMode) {
+                if(item != null && !item.isEmpty() && client.player.getAbilities().creativeMode) {
                     client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                     client.player.playerScreenHandler.sendContentUpdates();
                     while(client.options.pickItemKey.wasPressed()) {}

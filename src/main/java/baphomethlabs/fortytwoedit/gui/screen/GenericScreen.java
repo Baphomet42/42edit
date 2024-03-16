@@ -27,6 +27,11 @@ public abstract class GenericScreen extends Screen {
         y = (this.height - this.backgroundHeight) / 2;
         FortytwoEdit.quickScreen = 0;
     }
+
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        this.renderInGameBackground(context);
+    }
     
     protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY, int gui) {
         int i = this.x;

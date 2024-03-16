@@ -7,10 +7,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
 import net.minecraft.state.property.IntProperty;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -32,8 +30,8 @@ public class LightBlockMixin {
     }
 
     @Inject(method = "onUse", at = @At("HEAD"), cancellable = true)
-    public void onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit, CallbackInfoReturnable<ActionResult> cir) {
-        if (!world.isClient && player.getStackInHand(hand).getItem() == Items.LIGHT) {
+    public void onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit, CallbackInfoReturnable<ActionResult> cir) {
+        if (!world.isClient) {
             world.setBlockState(pos, state.cycle(LEVEL_15), Block.NOTIFY_LISTENERS);
             cir.setReturnValue(ActionResult.SUCCESS);
         } else {

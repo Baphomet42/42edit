@@ -58,8 +58,8 @@ public class Hacks extends GenericScreen {
         }
         this.txtRando.setChangedListener(this::editTxtRando);
         this.addDrawableChild(this.txtRando);
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Get Entity"), button -> this.btnGetEntity()).dimensions(x+20,y+22*3+1,80,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Full Data"), button -> this.btnGetEntityFull()).dimensions(x+20+80+5,y+22*3+1,60,20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Get Entity"), button -> this.btnGetEntity(1)).dimensions(x+20,y+22*3+1,80,20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Full Data"), button -> this.btnGetEntity(0)).dimensions(x+20+80+5,y+22*3+1,60,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Xray [On]"), Text.literal("Xray [Off]")).initially(FortytwoEdit.seeInvis).omitKeyText().build(x+20,y+22*4+1,100,20, Text.of(""), (button, trackOutput) -> {
             client.worldRenderer.reload();
             FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
@@ -113,7 +113,7 @@ public class Hacks extends GenericScreen {
         }
     }
 
-    protected void btnGetEntity() {
+    protected void btnGetEntity(int mode) {
         Iterator<Entity> entities = client.world.getEntities().iterator();
         List<NbtCompound> items = new ArrayList<>();
         double x = client.player.getX();
@@ -127,108 +127,44 @@ public class Hacks extends GenericScreen {
             && current.getY()>y-range && current.getY()<y+range
             && current.getZ()>z-range && current.getZ()<z+range) {
                 NbtCompound nbt = new NbtCompound();
-                nbt.putInt("Count",1);
-                NbtCompound nbtTag = new NbtCompound();
-                nbt.put("tag",nbtTag);
-                NbtCompound nbtEntityTag = new NbtCompound();
+                NbtCompound components = new NbtCompound();
+                nbt.put("components",components);
+                NbtCompound entityData = new NbtCompound();
                 if((new EntityDataObject(current)).getNbt()!=null)
-                    nbtEntityTag = (new EntityDataObject(current)).getNbt();
-                nbtTag.put("EntityTag",nbtEntityTag);
+                    entityData = (new EntityDataObject(current)).getNbt();
+                components.put("entity_data",entityData);
                 if(current.getType() == EntityType.ARMOR_STAND) {
                     nbt.putString("id","armor_stand");
-                    nbtEntityTag.remove("Attributes");
-                    nbtEntityTag.remove("Brain");
-                    nbtEntityTag.remove("FallFlying");
-                    nbtEntityTag.remove("Health");
+                    entityData.putString("id","armor_stand");
+                    if(mode == 1) {
+                        entityData.remove("Brain");
+                        entityData.remove("FallFlying");
+                        entityData.remove("Health");
+                    }
                 }
                 else {
                     nbt.putString("id","ender_dragon_spawn_egg");
-                    nbtEntityTag.putString("id",current.getType().toString().replace("entity.minecraft.",""));
-                    NbtCompound nbtDisplay = new NbtCompound();
-                    nbtTag.put("display",nbtDisplay);
+                    entityData.putString("id",current.getType().toString().replace("entity.minecraft.",""));
                     NbtList nbtLore = new NbtList();
-                    nbtDisplay.put("Lore",nbtLore);
+                    components.put("custom_name",nbtLore);
                     nbtLore.add(NbtString.of("{\"text\":\""+
-                        current.getType().toString().replace("entity.minecraft.","")+"\",\"color\":\"gray\",\"italic\":false}"));
+                        current.getType().toString().replace("entity.minecraft.","")+" Spawn Egg\",\"italic\":false}"));
                 }
-                nbtEntityTag.remove("Air");
-                nbtEntityTag.remove("FallDistance");
-                nbtEntityTag.remove("Fire");
-                nbtEntityTag.remove("Motion");
-                nbtEntityTag.remove("OnGround");
-                nbtEntityTag.remove("PortalCooldown");
-                nbtEntityTag.remove("Pos");
-                nbtEntityTag.remove("Rotation");
-                nbtEntityTag.remove("TicksFrozen");
-                nbtEntityTag.remove("UUID");
-                nbtEntityTag.remove("AbsorptionAmount");
-                nbtEntityTag.remove("DeathTime");
-                nbtEntityTag.remove("HurtByTimestamp");
-                nbtEntityTag.remove("HurtTime");
-                items.add(nbt);
-            }
-        }
-        if(items.size()>0) {
-            NbtCompound nbt = new NbtCompound();
-            nbt.putString("id","bundle");
-            nbt.putInt("Count",1);
-            NbtCompound nbtTag = new NbtCompound();
-            nbt.put("tag",nbtTag);
-            NbtList nbtItems = new NbtList();
-            nbtTag.put("Items",nbtItems);
-            for(int i=0; i<items.size(); i++) {
-                nbtItems.add(items.get(i));
-            }
-            ItemStack item = ItemStack.fromNbt(nbt);
-            if(items.size()==1)
-                item = ItemStack.fromNbt((NbtCompound)nbtItems.get(0));
-
-            String itemData = item.getItem().toString();
-            if(item.hasNbt())
-                itemData += item.getNbt().asString();
-            client.keyboard.setClipboard(itemData);
-
-            if (client.player.getAbilities().creativeMode) {
-                client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-                client.player.playerScreenHandler.sendContentUpdates();
-            }
-        }
-        this.resize(this.client,this.width,this.height);
-    }
-
-    protected void btnGetEntityFull() {
-        Iterator<Entity> entities = client.world.getEntities().iterator();
-        List<NbtCompound> items = new ArrayList<>();
-        double x = client.player.getX();
-        double y = client.player.getY();
-        double z = client.player.getZ();
-        double range = 2.5;
-        while (entities.hasNext()) {
-            Entity current = entities.next();
-            if(current.getType() != EntityType.PLAYER
-            && current.getX()>x-range && current.getX()<x+range
-            && current.getY()>y-range && current.getY()<y+range
-            && current.getZ()>z-range && current.getZ()<z+range) {
-                NbtCompound nbt = new NbtCompound();
-                nbt.putInt("Count",1);
-                NbtCompound nbtTag = new NbtCompound();
-                nbt.put("tag",nbtTag);
-                NbtCompound nbtEntityTag = new NbtCompound();
-                if((new EntityDataObject(current)).getNbt()!=null)
-                    nbtEntityTag = (new EntityDataObject(current)).getNbt();
-                nbtTag.put("EntityTag",nbtEntityTag);
-                if(current.getType() == EntityType.ARMOR_STAND) {
-                    nbt.putString("id","armor_stand");
-                }
-                else {
-                    nbt.putString("id","ender_dragon_spawn_egg");
-                    nbtEntityTag.putString("id",current.getType().toString().replace("entity.minecraft.",""));
-                    NbtCompound nbtDisplay = new NbtCompound();
-                    nbtTag.put("display",nbtDisplay);
-                    NbtList nbtLore = new NbtList();
-                    nbtDisplay.put("Lore",nbtLore);
-                    nbtLore.add(NbtString.of("{\"text\":\""+
-                        current.getType().toString().replace("entity.minecraft.","")+"\",\"color\":\"gray\",\"italic\":false}"));
+                if(mode == 1) {
+                    entityData.remove("Air");
+                    entityData.remove("FallDistance");
+                    entityData.remove("Fire");
+                    entityData.remove("Motion");
+                    entityData.remove("OnGround");
+                    entityData.remove("PortalCooldown");
+                    entityData.remove("Pos");
+                    entityData.remove("Rotation");
+                    entityData.remove("TicksFrozen");
+                    entityData.remove("UUID");
+                    entityData.remove("AbsorptionAmount");
+                    entityData.remove("DeathTime");
+                    entityData.remove("HurtByTimestamp");
+                    entityData.remove("HurtTime");
                 }
                 items.add(nbt);
             }
@@ -236,24 +172,20 @@ public class Hacks extends GenericScreen {
         if(items.size()>0) {
             NbtCompound nbt = new NbtCompound();
             nbt.putString("id","bundle");
-            nbt.putInt("Count",1);
-            NbtCompound nbtTag = new NbtCompound();
-            nbt.put("tag",nbtTag);
-            NbtList nbtItems = new NbtList();
-            nbtTag.put("Items",nbtItems);
+            NbtCompound components = new NbtCompound();
+            nbt.put("components",components);
+            NbtList bundle = new NbtList();
+            components.put("bundle_contents",bundle);
             for(int i=0; i<items.size(); i++) {
-                nbtItems.add(items.get(i));
+                bundle.add(items.get(i));
             }
-            ItemStack item = ItemStack.fromNbt(nbt);
+            ItemStack item = BlackMagick.itemFromNbt(nbt);
             if(items.size()==1)
-                item = ItemStack.fromNbt((NbtCompound)nbtItems.get(0));
+                item = BlackMagick.itemFromNbt((NbtCompound)bundle.get(0));
 
-            String itemData = item.getItem().toString();
-            if(item.hasNbt())
-                itemData += item.getNbt().asString();
-            client.keyboard.setClipboard(itemData);
+            client.keyboard.setClipboard(BlackMagick.itemToGive(item));
 
-            if (client.player.getAbilities().creativeMode) {
+            if (client.player.getAbilities().creativeMode && !item.isEmpty()) {
                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
                 client.player.playerScreenHandler.sendContentUpdates();
             }
@@ -308,7 +240,7 @@ public class Hacks extends GenericScreen {
     protected void btnDeathPos() {
         if(client.player.getLastDeathPos().isPresent()) {
             GlobalPos pos = client.player.getLastDeathPos().get();
-            String coords = "Last death [X: "+pos.getPos().getX()+", Y: "+pos.getPos().getY()+", Z: "+pos.getPos().getZ()+"] in "+pos.getDimension().getValue().toString();
+            String coords = "Last death [X: "+pos.pos().getX()+", Y: "+pos.pos().getY()+", Z: "+pos.pos().getZ()+"] in "+pos.dimension().getValue().toString();
             client.player.sendMessage(Text.of(coords),false);
         }
         else {

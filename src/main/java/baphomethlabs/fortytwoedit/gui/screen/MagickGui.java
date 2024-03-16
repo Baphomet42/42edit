@@ -1,13 +1,11 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
-import java.util.Iterator;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 
 public class MagickGui extends GenericScreen {
@@ -42,45 +40,16 @@ public class MagickGui extends GenericScreen {
 
     protected void btnHat() {
         if(client.player.getAbilities().creativeMode) {
-            ItemStack hand = null;
-            ItemStack head = null;
-            Iterator<ItemStack> armor = null;
-            if(!client.player.getMainHandStack().isEmpty())
-                hand=client.player.getMainHandStack().copy();
-            if(client.player.getArmorItems()!=null)
-                armor=client.player.getArmorItems().iterator();
-            for(int i=0;i<4;i++) {
-                if(armor!=null && armor.hasNext())
-                    head=armor.next().copy();
-                else
-                    head=null;
-            }
-            if(hand!=null && head!=null) {
-                client.interactionManager.clickCreativeStack(hand, 5);
-                client.interactionManager.clickCreativeStack(head, 36 + client.player.getInventory().selectedSlot);
-                client.player.playerScreenHandler.sendContentUpdates();
-            }
-            else if(hand!=null && head==null) {
-                NbtCompound nbt = new NbtCompound();
-                nbt.putString("id","air");
-                client.interactionManager.clickCreativeStack(hand, 5);
-                client.interactionManager.clickCreativeStack(ItemStack.fromNbt(nbt), 36 + client.player.getInventory().selectedSlot);
-                client.player.playerScreenHandler.sendContentUpdates();
-            }
-            else if(hand==null && head!=null) {
-                NbtCompound nbt = new NbtCompound();
-                nbt.putString("id","air");
-                client.interactionManager.clickCreativeStack(ItemStack.fromNbt(nbt), 5);
-                client.interactionManager.clickCreativeStack(head, 36 + client.player.getInventory().selectedSlot);
-                client.player.playerScreenHandler.sendContentUpdates();
-            }
+            ItemStack hand = client.player.getMainHandStack().copy();
+            ItemStack head = client.player.getInventory().getArmorStack(3).copy();
+            BlackMagick.setItem(hand,5);
+            BlackMagick.setItemMain(head);
         }
         this.resize(this.client,this.width,this.height);
     }
 
     protected void btnSuperSecretSettings() {
-        client.gameRenderer.cycleSuperSecretSetting();
-        FortytwoEdit.secretSound();
+        FortytwoEdit.cycleSuperSecretSetting();
         this.resize(this.client,this.width,this.height);
     }
 
