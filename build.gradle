@@ -33,7 +33,7 @@ dependencies {
 	//	close vscode, end all openjdk tasks, run gradle commands in powershell:
 	//		./gradlew genSources --refresh-dependencies
 	//		.\gradlew vscode
-	//	.vscode/launch.json "args": "--quickPlaySingleplayer \"Continue Testing\""
+	//	.vscode/launch.json "args": "--quickPlaySingleplayer \"Continue Testing\"",
 	//	./gradlew build
 	//	java project clean workspace
 	

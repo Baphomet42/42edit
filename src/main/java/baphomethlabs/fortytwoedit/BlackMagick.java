@@ -1,29 +1,27 @@
 package baphomethlabs.fortytwoedit;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.item.Item;
+import net.minecraft.command.argument.NbtPathArgumentType.NbtPath;
+import net.minecraft.component.ComponentMap;
+import net.minecraft.component.DataComponentType;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtByte;
-import net.minecraft.nbt.NbtByteArray;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtDouble;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtFloat;
-import net.minecraft.nbt.NbtInt;
-import net.minecraft.nbt.NbtIntArray;
 import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtLong;
-import net.minecraft.nbt.NbtLongArray;
-import net.minecraft.nbt.NbtShort;
-import net.minecraft.nbt.NbtString;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 public class BlackMagick {
 
@@ -125,6 +123,7 @@ public class BlackMagick {
      * The minecraft namespace is removed from id and components.
      * Count is removed if only 1.
      * 
+     * @param item
      * @return compound with id/count/components (or empty compound)
      */
     public static NbtCompound itemToNbt(ItemStack item) {
@@ -153,14 +152,77 @@ public class BlackMagick {
     }
 
     /**
+     * Get compound representation of an item, or an empty compound if invalid.
+     * The minecraft namespace is removed from id and components.
+     * All components are kept, even if they are the default values.
+     * 
+     * @param item
+     * @return compound with id/count/components (or empty compound)
+     */
+    public static NbtCompound itemToNbtAll(ItemStack item) {
+        NbtCompound nbt = new NbtCompound();
+        if(item != null && !item.isEmpty()) {
+            NbtElement comps = new NbtCompound();
+            String compsString = componentsAsString(item.getComponents());
+            if(compsString != null && compsString.length()>0)
+                comps = BlackMagick.nbtFromString("{"+compsString+"}",NbtElement.COMPOUND_TYPE);
+            if(comps != null && !((NbtCompound)comps).isEmpty())
+                nbt.put("components",comps);
+            nbt.putInt("count",item.getCount());
+            nbt.putString("id",item.getItem().toString());
+        }
+        if(nbt.contains("id",NbtElement.STRING_TYPE) && nbt.getString("id").startsWith("minecraft:") && nbt.getString("id").length()>10)
+            nbt.putString("id",nbt.getString("id").substring(10));
+        if(nbt.contains("components",NbtElement.COMPOUND_TYPE)) {
+            NbtCompound comps = nbt.getCompound("components");
+            NbtCompound newComps = new NbtCompound();
+            for(String k : comps.getKeys()) {
+                if(k.startsWith("minecraft:") && k.length()>10) {
+                    newComps.put(k.substring(10),comps.get(k));
+                }
+                else
+                    newComps.put(k,comps.get(k));
+            }
+            nbt.put("components",newComps);
+        }
+        return nbt;
+    }
+
+    // modified from net.minecraft.command.argument.ItemStackArgument
+    // change = to : in return line and surround identifier in quotes
+    private static String componentsAsString(ComponentMap comps) {
+        final MinecraftClient client = MinecraftClient.getInstance();
+        if(client.world != null && comps != null) {
+            RegistryWrapper.WrapperLookup registries = client.world.getRegistryManager();
+            RegistryOps<NbtElement> dynamicOps = registries.getOps(NbtOps.INSTANCE);
+            return comps.stream().flatMap(component -> {
+                DataComponentType<?> dataComponentType = component.type();
+                Identifier identifier = Registries.DATA_COMPONENT_TYPE.getId(dataComponentType);
+                Optional<NbtElement> optional = component.encode(dynamicOps).result();
+                if (identifier == null || optional.isEmpty()) {
+                    return Stream.empty();
+                }
+                return Stream.of("\""+identifier.toString() + "\":" + optional.get());
+            }).collect(Collectors.joining(String.valueOf(',')));
+        }
+        return "";
+    }
+
+    /**
      * Returns the item argument that can be used in the give command to get the item.
      * Count will appear at the end if it's higher than 1.
      * The minecraft namespace is removed from id and components.
      * 
+     * @param item
+     * @param keepAll whether or not default components should be listed (and count if 1)
      * @return item argument in form: stone[custom_data={foo:bar}] 4
      */
-    public static String itemToGive(ItemStack item) {
-        NbtCompound nbt = itemToNbt(item);
+    public static String itemToGive(ItemStack item, boolean keepAll) {
+        NbtCompound nbt;
+        if(!keepAll)
+            nbt = itemToNbt(item);
+        else
+            nbt = itemToNbtAll(item);
         if(nbt == null || !nbt.contains("id",NbtElement.STRING_TYPE) || nbt.getString("id").equals(""))
             return "";
         String cmd = nbt.getString("id");
@@ -185,709 +247,138 @@ public class BlackMagick {
             cmd += "]";
         }
 
-        if(nbt.contains("count",NbtElement.INT_TYPE) && nbt.getInt("count") > 1)
+        if(nbt.contains("count",NbtElement.INT_TYPE) && (nbt.getInt("count") > 1 || keepAll))
             cmd += " " + nbt.getInt("count");
         return cmd;
     }
 
     /**
-     * Returns components with minecraft namespace removed
+     * Returns copy of element at path or null if not found
      * 
-     * @return copy of components compound (or empty compound)
+     * @param inp compound to search from
+     * @param path path like "foo" "foo.bar" or "foo.bar[1]"
+     * @return
      */
-    public static NbtCompound getComps(ItemStack inp) {
-        NbtCompound nbt = itemToNbt(inp);
-        return(nbt.getCompound("components").copy());
+    public static NbtElement getNbtPath(NbtCompound inp, String path) {
+        if(inp == null || inp.getType() != NbtElement.COMPOUND_TYPE)
+            return null;
+
+        try {
+            NbtPath p = NbtPath.method_58472(path);
+            List<NbtElement> list = p.get(inp);
+            if(list.size() == 1) {
+                NbtElement el = list.get(0);
+                if(el == null)
+                    return null;
+                else
+                    return el.copy();
+            }
+        } catch(Exception ex) {}
+        
+        return null;
     }
 
+    /**
+     * Returns element at path with matching type, or null if not found
+     * 
+     * @param inp compound to search from
+     * @param path path like "foo" "foo.bar" or "foo.bar[1]"
+     * @param type NbtElement type
+     * @return
+     */
+    public static NbtElement getNbtPath(NbtCompound inp, String path, byte type) {
+        NbtElement el = getNbtPath(inp, path);
+        if(el != null && el.getType() == type)
+            return el;
+        return null;
+    }
 
+    /**
+     * Returns a copy of a compound after the path is set to a copy of el (or removed if el == null).
+     * This cannot set to an index of a list that does not yet exist, unless the path ends like foo.bar.list[]
+     * 
+     * @param base compound to edit
+     * @param path path like "foo" "foo.bar" or "foo.bar[1]"
+     * @param el element to be set (or null to remove)
+     * @return copy with changes made
+     */
+    public static NbtCompound setNbtPath(NbtCompound base, String path, NbtElement el) {
+        NbtCompound nbt = new NbtCompound();
+        if(base != null)
+            nbt = base.copy();
 
-
-
-
-    //returns NbtElement from path or null if not found
-    // public static NbtElement getNbtPath(NbtElement inp, String path) {
-    //     //parse path into list of keys
-    //     //key examples: foo "foo" foo[0]
-    //     List<String> keys = new ArrayList<>();
+        try {
+            NbtPath p = NbtPath.method_58472(path);
+            if(el == null)
+                p.remove(nbt);
+            else
+                p.put(nbt,el.copy());
+        } catch(Exception ex) {
+            return base.copy();
+        }
         
+        return nbt;
+    }
 
-    //     return getNbtPath(inp,keys);
-    // }
+    /**
+     * Returns a copy of a compound in which a list element at the path is swapped up or down (if possible)
+     * 
+     * @param base compound to edit
+     * @param path path like "foo" "foo.bar" or "foo.bar[1]" ending in an NbtList
+     * @param index index in list
+     * @param up whether to move the element up or down
+     * @return copy with changes made
+     */
+    public static NbtCompound moveListElement(NbtCompound base, String path, int index, boolean up) {
+        if(base == null)
+            return null;
+        if(path == null || path.length() == 0 || index<0)
+            return base.copy();
 
-    //returns NbtElement from path or null if not found
-    // public static NbtElement getNbtPath(NbtElement inp, List<String> keys) { //TODO getNbt
-    //     if(inp == null)
-    //         return null;
-    //     if(keys == null || keys.size() == 0)
-    //         return inp;
+        NbtCompound nbt = base.copy();
 
-    //     String nextPath;
-    //     if(path.contains(".")) {
-    //         if(path.length() > path.indexOf(".") + 1)
-    //             nextPath = path.substring(path.indexOf(".")+1);
-    //         else
-    //             return null;
-    //         path = path.substring(0,path.indexOf("."));
-    //     }
-    // }
+        if(getNbtPath(nbt,path,NbtElement.LIST_TYPE) != null) {
+            NbtList list = (NbtList)getNbtPath(nbt,path);
+            if(list.size()>index && !((index==0 && up) || (index==list.size()-1 && !up))) {
+                NbtElement el = list.remove(index);
+                if(up)
+                    list.add(index-1,el);
+                else
+                    list.add(index+1,el);
+                nbt = setNbtPath(nbt, path, list);
+            }
+        }
 
-        
+        return nbt;
+    }
 
+    /**
+     * Returns a copy of a compound in which a list element at the path is cloned
+     * 
+     * @param base compound to edit
+     * @param path path like "foo" "foo.bar" or "foo.bar[1]" ending in an NbtList
+     * @param index index in list
+     * @return copy with changes made
+     */
+    public static NbtCompound cloneListElement(NbtCompound base, String path, int index) {
+        if(base == null)
+            return null;
+        if(path == null || path.length() == 0 || index<0)
+            return base.copy();
 
+        NbtCompound nbt = base.copy();
 
+        if(getNbtPath(nbt,path,NbtElement.LIST_TYPE) != null) {
+            NbtList list = (NbtList)getNbtPath(nbt,path);
+            if(list.size()>index) {
+                NbtElement el = list.get(index).copy();
+                list.add(index,el);
+                nbt = setNbtPath(nbt, path, list);
+            }
+        }
 
-
-        // if(path.contains("/") || path.contains(":")) {
-        //     List<String> keyList = new ArrayList<>();
-        //     if(!path.contains("/") && ( path.equals("0:") || path.equals("1:") ))
-        //         keyList.add(path);
-        //     while(path.contains("/")) {
-        //         String thisString = path.substring(0,path.indexOf("/"));
-        //         if(!thisString.equals(""))
-        //             keyList.add(thisString);
-        //         if(path.length()>path.indexOf("/")+1) {
-        //             path = path.substring(path.indexOf("/")+1);
-        //             if(!path.contains("/") && !path.equals(""))
-        //                 keyList.add(path);
-        //         }
-        //         else
-        //             path = "";
-        //     }
-        //     if(keyList.size()==0)
-        //         return null;
-        //     NbtCompound nbtBase = new NbtCompound();
-        //     if(keyList.get(0).equals("0:")) {
-        //         ItemStack item;
-        //         if(overrideItem!=null)
-        //             item = overrideItem.copy();
-        //         else if(!client.player.getMainHandStack().isEmpty())
-        //             item = client.player.getMainHandStack().copy();
-        //         else
-        //             return null;
-        //         NbtCompound nbtTag = new NbtCompound();
-        //         if(item.hasNbt()) {
-        //             nbtTag= item.getNbt().copy();
-        //             nbtBase.put("tag",nbtTag);
-        //         }
-        //         nbtBase.putInt("Count",item.getCount());
-        //         nbtBase.putString("id",item.getItem().toString());
-        //         ItemStack newItem = ItemStack.fromNbt(nbtBase);
-        //         if(newItem.isEmpty()) {
-        //             client.player.sendMessage(Text.of("Item id error (id not equal to Item.toString() "+
-        //             item.getItem().toString()+")"),false);
-        //             return null;
-        //         }
-        //     }
-        //     else if(keyList.get(0).equals("1:")) {
-        //         NbtCompound nbtTag = new NbtCompound();
-        //         if(client.player.getOffHandStack().isEmpty())
-        //             return null;
-        //         ItemStack offItem = client.player.getOffHandStack().copy();
-        //         if(offItem.hasNbt()) {
-        //             nbtTag=offItem.getNbt().copy();
-        //             nbtBase.put("tag",nbtTag);
-        //         }
-        //         nbtBase.putInt("Count",offItem.getCount());
-        //         nbtBase.putString("id",offItem.getItem().toString());
-        //         ItemStack newItem = ItemStack.fromNbt(nbtBase);
-        //         if(newItem.isEmpty()) {
-        //             client.player.sendMessage(Text.of("Item id error (id not equal to Item.toString() "+
-        //             offItem.getItem().toString()+")"),false);
-        //             return null;
-        //         }
-        //     }
-        //     else
-        //         return null;
-        //     if(keyList.size()==1)
-        //         return nbtBase.copy();
-        //     if(keyList.size()==2) {
-        //         path = keyList.get(keyList.size()-1);
-        //         if(nbtBase.contains(path)) {
-        //             return nbtBase.get(path);
-        //         }
-        //         else
-        //             return null;
-        //     }
-        //     if(!keyList.get(1).equals("tag"))
-        //         return null;
-        //     NbtCompound nbt = nbtBase.getCompound("tag");
-        //     keyList.remove(0);
-        //     keyList.remove(0);
-        //     if(keyList.size()==1) {
-        //         path = keyList.get(keyList.size()-1);
-        //         if(nbt.contains(path)) {
-        //             return nbt.get(path);
-        //         }
-        //         else
-        //             return null;
-        //     }
-        //     int[] type = new int[keyList.size()];
-        //     for(int i=0; i<keyList.size(); i++) {
-        //         if(keyList.get(i).contains(":")) {
-        //             if(keyList.get(i).length()<2 || i==0)
-        //                 return null;
-        //             try {
-        //                 type[i-1] = Integer.parseInt(keyList.get(i).substring(0,keyList.get(i).length()-1));
-        //             } catch(NumberFormatException e) {
-        //                 return null;
-        //             }
-        //         }
-        //         type[i]=-1;
-        //     }
-        //     List<NbtElement> nbtList = new ArrayList<NbtElement>();
-        //     nbtList.add(nbt);
-        //     for(int i=0; i<keyList.size(); i++) {
-        //         if(nbtList.get(i).getType()==NbtElement.COMPOUND_TYPE && ((NbtCompound)nbtList.get(i)).contains(keyList.get(i))) {
-        //                 nbtList.add(((NbtCompound)nbtList.get(i)).get(keyList.get(i)));
-        //         }
-        //         else if(nbtList.get(i).getType()==NbtElement.LIST_TYPE && ((NbtList)nbtList.get(i)).size()>(type[i-1])) {
-        //             nbtList.add(((NbtList)nbtList.get(i)).get(type[i-1]));
-        //         }
-        //         else
-        //             return null;
-        //     }
-        //     if(type[type.length-2]==-1) {
-        //         path = keyList.get(keyList.size()-1);
-        //         if(((NbtCompound)nbtList.get(nbtList.size()-2)).contains(path)) {
-        //             return ((NbtCompound)nbtList.get(nbtList.size()-2)).get(path);
-        //         }
-        //         else
-        //             return null;
-        //     }
-        //     else {
-        //         int inpIndex = type[type.length-2];
-        //         if(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex)
-        //             return null;
-        //         return ((NbtList)nbtList.get(nbtList.size()-2)).get(inpIndex);
-        //     }
-        // }
-        // else
-        //     return null;
-
-
-
-
-
-
-    //set nbt at specified path to compound/list/array given
-    //adds new Compounds and Lists along the way, if none exist
-    //overwrites existing keys if they have the same name
-    //if itemstack input is null, gets item from user mainhand
-    //public static ItemStack setNbt(ItemStack overrideItem, String inpKey, NbtElement inp) { //TODO setNbt and removeNbt
-        // MinecraftClient client = MinecraftClient.getInstance();
-        // if (client.player.getAbilities().creativeMode) {
-        //     ItemStack item;
-        //     if(overrideItem!=null)
-        //         item = overrideItem.copy();
-        //     else if(!client.player.getMainHandStack().isEmpty())
-        //         item = client.player.getMainHandStack().copy();
-        //     else
-        //         return null;
-        //     if(inp !=null && inpKey.equals("")) {
-        //         if(inp.getType()==NbtElement.COMPOUND_TYPE) {
-        //             item.setNbt((NbtCompound)inp);
-        //             client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-        //             client.player.playerScreenHandler.sendContentUpdates();
-        //             return item;
-        //         }
-        //     }
-        //     if(inp == null)
-        //         return item;
-        //     else if(inp.getType()==NbtElement.COMPOUND_TYPE || inp.getType()==NbtElement.LIST_TYPE || inp.getType()==NbtElement.BYTE_ARRAY_TYPE
-        //     || inp.getType()==NbtElement.INT_ARRAY_TYPE || inp.getType()==NbtElement.LONG_ARRAY_TYPE || inp.getType()==NbtElement.STRING_TYPE
-        //     || inp.getType()==NbtElement.BYTE_TYPE || inp.getType()==NbtElement.SHORT_TYPE || inp.getType()==NbtElement.INT_TYPE
-        //     || inp.getType()==NbtElement.LONG_TYPE || inp.getType()==NbtElement.FLOAT_TYPE || inp.getType()==NbtElement.DOUBLE_TYPE ) {
-        //         if(inpKey.contains("/") || inpKey.contains(":")) {
-        //             NbtCompound nbt = new NbtCompound();
-        //             if(item.hasNbt())
-        //                 nbt = item.getNbt().copy();
-        //             List<String> keyList = new ArrayList<>();
-        //             if(!inpKey.contains("/"))
-        //                 return item;
-        //             while(inpKey.contains("/")) {
-        //                 String thisString = inpKey.substring(0,inpKey.indexOf("/"));
-        //                 if(!thisString.equals(""))
-        //                     keyList.add(thisString);
-        //                 if(inpKey.length()>inpKey.indexOf("/")+1) {
-        //                     inpKey = inpKey.substring(inpKey.indexOf("/")+1);
-        //                     if(!inpKey.contains("/") && !inpKey.equals(""))
-        //                         keyList.add(inpKey);
-        //                 }
-        //                 else
-        //                     inpKey = "";
-        //             }
-        //             if(keyList.size()==0)
-        //                 return item;
-        //             else if(keyList.size()==1) {
-        //                 inpKey = keyList.get(keyList.size()-1);
-        //                 nbt.put(inpKey,inp);
-        //                 item.setNbt(nbt);
-        //                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-        //                 client.player.playerScreenHandler.sendContentUpdates();
-        //                 return item;
-        //             }
-        //             int[] type = new int[keyList.size()];
-        //             for(int i=0; i<keyList.size(); i++) {
-        //                 if(keyList.get(i).contains(":")) {
-        //                     if(keyList.get(i).length()<2 || i==0)
-        //                         return item;
-        //                     try {
-        //                         type[i-1] = Integer.parseInt(keyList.get(i).substring(0,keyList.get(i).length()-1));
-        //                     } catch(NumberFormatException e) {
-        //                         return item;
-        //                     }
-        //                 }
-        //                 type[i]=-1;
-        //             }
-        //             List<NbtElement> nbtList = new ArrayList<NbtElement>();
-        //             nbtList.add(nbt);
-        //             for(int i=0; i<keyList.size(); i++) {
-        //                 if(nbtList.get(i).getType()==NbtElement.COMPOUND_TYPE) {
-        //                     if(((NbtCompound)nbtList.get(i)).get(keyList.get(i))!=null
-        //                     && ((((NbtCompound)nbtList.get(i)).get(keyList.get(i)).getType()==NbtElement.COMPOUND_TYPE
-        //                     && type[i]==-1))) {
-        //                         nbtList.add(((NbtCompound)nbtList.get(i)).get(keyList.get(i)));
-        //                     }
-        //                     else if(((NbtCompound)nbtList.get(i)).get(keyList.get(i))!=null
-        //                     && ((((NbtCompound)nbtList.get(i)).get(keyList.get(i)).getType()==NbtElement.LIST_TYPE
-        //                     && type[i]!=-1))) {
-        //                         nbtList.add(((NbtCompound)nbtList.get(i)).get(keyList.get(i)));
-        //                     }
-        //                     else if(type[i]==-1) {
-        //                         ((NbtCompound)nbtList.get(i)).put(keyList.get(i),new NbtCompound());
-        //                         nbtList.add(((NbtCompound)nbtList.get(i)).get(keyList.get(i)));
-        //                     }
-        //                     else {
-        //                         ((NbtCompound)nbtList.get(i)).put(keyList.get(i),new NbtList());
-        //                         nbtList.add(((NbtCompound)nbtList.get(i)).get(keyList.get(i)));
-        //                     }
-        //                 }
-        //                 else if(nbtList.get(i).getType()==NbtElement.LIST_TYPE) {
-        //                     if(type[i]==-1 && i<keyList.size()-1 && ((NbtList)nbtList.get(i)).size()>type[i-1]
-        //                     && ((NbtList)nbtList.get(i)).get(type[i-1])!=null
-        //                     && ((NbtList)nbtList.get(i)).get(type[i-1]).getType()==NbtElement.COMPOUND_TYPE) {
-        //                         nbtList.add(((NbtList)nbtList.get(i)).get(type[i-1]));
-        //                     }
-        //                     else if(type[i]==-1 && i<keyList.size()-1 && ((NbtList)nbtList.get(i)).size()>0
-        //                     && ((NbtList)nbtList.get(i)).get(0)!=null
-        //                     && ((NbtList)nbtList.get(i)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
-        //                         while(((NbtList)nbtList.get(i)).size()<=type[i-1]) {
-        //                            ((NbtList)nbtList.get(i)).add(new NbtCompound());
-        //                         }
-        //                         nbtList.add(((NbtList)nbtList.get(i)).get(type[i-1]));
-        //                     }
-        //                     else if(type[i]==-1 && i<keyList.size()-1) {
-        //                         ((NbtList)nbtList.get(i)).clear();
-        //                         while(((NbtList)nbtList.get(i)).size()<=type[i-1]) {
-        //                            ((NbtList)nbtList.get(i)).add(new NbtCompound());
-        //                         }
-        //                         nbtList.add(((NbtList)nbtList.get(i)).get(type[i-1]));
-        //                     }
-        //                     else if(i==keyList.size()-1) {
-        //                         nbtList.add(new NbtCompound());
-        //                     }
-        //                     else
-        //                         return item;
-        //                 }
-        //                 else
-        //                     return item;
-        //             }
-        //             if(type[type.length-2]==-1) {
-        //                 inpKey = keyList.get(keyList.size()-1);
-        //                 ((NbtCompound)nbtList.get(nbtList.size()-2)).put(inpKey,inp);
-        //                 item.setNbt(nbt);
-        //                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-        //                 client.player.playerScreenHandler.sendContentUpdates();
-        //                 return item;
-        //             }
-        //             else {
-        //                 int inpIndex = type[type.length-2];
-        //                 if(inp.getType()==NbtElement.LIST_TYPE)
-        //                     return item;
-        //                 if(inp.getType()==NbtElement.COMPOUND_TYPE) {
-        //                     if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-        //                     && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtCompound());
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                     else {
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).clear();
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtCompound());
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                 }
-        //                 else if(inp.getType()==NbtElement.BYTE_ARRAY_TYPE) {
-        //                     if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-        //                     && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.BYTE_ARRAY_TYPE) {
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtByteArray(new byte[0]));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                     else {
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).clear();
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtByteArray(new byte[0]));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                 }
-        //                 else if(inp.getType()==NbtElement.INT_ARRAY_TYPE) {
-        //                     if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-        //                     && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.INT_ARRAY_TYPE) {
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtIntArray(new int[0]));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                     else {
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).clear();
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtIntArray(new int[0]));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                 }
-        //                 else if(inp.getType()==NbtElement.LONG_ARRAY_TYPE) {
-        //                     if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-        //                     && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.LONG_ARRAY_TYPE) {
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtLongArray(new long[0]));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                     else {
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).clear();
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(new NbtLongArray(new long[0]));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                 }
-        //                 else if(inp.getType()==NbtElement.STRING_TYPE) {
-        //                     if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-        //                     && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.STRING_TYPE) {
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtString.of(""));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                     else {
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).clear();
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtString.of(""));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                 }
-        //                 else if(inp.getType()==NbtElement.DOUBLE_TYPE) {
-        //                     if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-        //                     && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.DOUBLE_TYPE) {
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtDouble.of(0.0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                     else {
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).clear();
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtDouble.of(0.0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                 }
-        //                 else if(inp.getType()==NbtElement.FLOAT_TYPE) {
-        //                     if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-        //                     && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.FLOAT_TYPE) {
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtFloat.of((float)0.0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                     else {
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).clear();
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtFloat.of((float)0.0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                 }
-        //                 else if(inp.getType()==NbtElement.BYTE_TYPE) {
-        //                     if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-        //                     && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.BYTE_TYPE) {
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtByte.of((byte)0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                     else {
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).clear();
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtByte.of((byte)0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                 }
-        //                 else if(inp.getType()==NbtElement.SHORT_TYPE) {
-        //                     if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-        //                     && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.SHORT_TYPE) {
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtShort.of((short)0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                     else {
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).clear();
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtShort.of((short)0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                 }
-        //                 else if(inp.getType()==NbtElement.INT_TYPE) {
-        //                     if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-        //                     && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.INT_TYPE) {
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtInt.of(0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                     else {
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).clear();
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtInt.of(0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                 }
-        //                 else if(inp.getType()==NbtElement.LONG_TYPE) {
-        //                     if(((NbtList)nbtList.get(nbtList.size()-2)).size()>0
-        //                     && ((NbtList)nbtList.get(nbtList.size()-2)).get(0).getType()==NbtElement.LONG_TYPE) {
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtLong.of((long)0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                     else {
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).clear();
-        //                         while(((NbtList)nbtList.get(nbtList.size()-2)).size()<=inpIndex) {
-        //                             ((NbtList)nbtList.get(nbtList.size()-2)).add(NbtLong.of((long)0));
-        //                         }
-        //                         ((NbtList)nbtList.get(nbtList.size()-2)).set(inpIndex,inp);
-        //                     }
-        //                 }
-        //                 else
-        //                     return item;
-        //                 item.setNbt(nbt);
-        //                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-        //                 client.player.playerScreenHandler.sendContentUpdates();
-        //                 return item;
-        //             }
-        //         }
-        //         NbtCompound nbt = new NbtCompound();
-        //         if(item.hasNbt())
-        //             nbt = item.getNbt().copy();
-        //         nbt.put(inpKey,inp);
-        //         item.setNbt(nbt);
-        //         client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-        //         client.player.playerScreenHandler.sendContentUpdates();
-        //         return item;
-        //     }
-        //     else
-        //         return item;
-        // }
-        // else
-        //     return null;
-    //    return null;
-    //}
-
-
-
-    
-
-
-    //deletes nbt at specified path and returns updated item
-    //if no path given, deletes all nbt
-    //if path not found, nothing changes
-    //if itemstack input is null, gets item from user mainhand
-    //public static ItemStack removeNbt(ItemStack overrideItem, String inpKey) {
-        // final MinecraftClient client = MinecraftClient.getInstance();
-        // if (client.player.getAbilities().creativeMode) {
-        //     ItemStack item;
-        //     if(overrideItem!=null)
-        //         item = overrideItem.copy();
-        //     else if(!client.player.getMainHandStack().isEmpty())
-        //         item = client.player.getMainHandStack().copy();
-        //     else
-        //         return null;
-        //     boolean noInpKey = inpKey.equals("");
-        //     if(noInpKey && item.hasNbt()) {
-        //         item.setNbt(new NbtCompound());
-        //         client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-        //         client.player.playerScreenHandler.sendContentUpdates();
-        //         return item;
-        //     }
-        //     else if(!noInpKey && item.hasNbt()) {
-        //         if(inpKey.contains("/") || inpKey.contains(":")) {
-        //             NbtCompound nbt = item.getNbt().copy();
-        //             List<String> keyList = new ArrayList<>();
-        //             if(!inpKey.contains("/"))
-        //                 return item;
-        //             while(inpKey.contains("/")) {
-        //                 String thisString = inpKey.substring(0,inpKey.indexOf("/"));
-        //                 if(!thisString.equals(""))
-        //                     keyList.add(thisString);
-        //                 if(inpKey.length()>inpKey.indexOf("/")+1) {
-        //                     inpKey = inpKey.substring(inpKey.indexOf("/")+1);
-        //                     if(!inpKey.contains("/") && !inpKey.equals(""))
-        //                         keyList.add(inpKey);
-        //                 }
-        //                 else
-        //                     inpKey = "";
-        //             }
-        //             if(keyList.size()==0)
-        //                 return item;
-        //             else if(keyList.size()==1) {
-        //                 item.removeSubNbt(keyList.get(keyList.size()-1));
-        //                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-        //                 client.player.playerScreenHandler.sendContentUpdates();
-        //                 return item;
-        //             }
-        //             int[] type = new int[keyList.size()];
-        //             for(int i=0; i<keyList.size(); i++) {
-        //                 if(keyList.get(i).contains(":")) {
-        //                     if(keyList.get(i).length()<2 || i==0)
-        //                         return item;
-        //                     try {
-        //                         type[i-1] = Integer.parseInt(keyList.get(i).substring(0,keyList.get(i).length()-1));
-        //                     } catch(NumberFormatException e) {
-        //                         return item;
-        //                     }
-        //                 }
-        //                 type[i]=-1;
-        //             }
-        //             List<NbtElement> nbtList = new ArrayList<NbtElement>();
-        //             nbtList.add(nbt);
-        //             for(int i=0; i<keyList.size(); i++) {
-        //                 if(nbtList.get(i).getType()==NbtElement.COMPOUND_TYPE
-        //                 && ((NbtCompound)nbtList.get(i)).get(keyList.get(i))!=null) {
-        //                     nbtList.add(((NbtCompound)nbtList.get(i)).get(keyList.get(i)));
-        //                 }
-        //                 else if(nbtList.get(i).getType()==NbtElement.LIST_TYPE
-        //                 && ((NbtList)nbtList.get(i)).size()>type[i-1]
-        //                 && ((NbtList)nbtList.get(i)).get(type[i-1])!=null) {
-        //                     nbtList.add(((NbtList)nbtList.get(i)).get(type[i-1]));
-        //                 }
-        //                 else
-        //                     return item;
-        //             }
-        //             if(type[type.length-2]==-1)
-        //                 ((NbtCompound)nbtList.get(nbtList.size()-2)).remove(keyList.get(keyList.size()-1));
-        //             else
-        //                 ((NbtList)nbtList.get(nbtList.size()-2)).remove(type[type.length-2]);
-        //             CLEAN: {
-        //                 for(int i=2;i<type.length;i++) {
-        //                     if(type[type.length-i]==-1 && ((NbtCompound)nbtList.get(nbtList.size()-i)).isEmpty()
-        //                     && type[type.length-i-1]==-1) {
-        //                         ((NbtCompound)nbtList.get(nbtList.size()-i-1)).remove(keyList.get(keyList.size()-i));
-        //                     }
-        //                     else if(type[type.length-i]!=-1 && ((NbtList)nbtList.get(nbtList.size()-i)).isEmpty()
-        //                     && type[type.length-i-1]==-1) {
-        //                         ((NbtCompound)nbtList.get(nbtList.size()-i-1)).remove(keyList.get(keyList.size()-i));
-        //                     }
-        //                     else
-        //                         break CLEAN;
-        //                 }
-        //                 if(nbtList.get(1).getType()==NbtElement.COMPOUND_TYPE && ((NbtCompound)nbtList.get(1)).isEmpty()) {
-        //                     ((NbtCompound)nbtList.get(0)).remove(keyList.get(0));
-        //                 }
-        //                 else if(nbtList.get(1).getType()==NbtElement.LIST_TYPE && ((NbtList)nbtList.get(1)).isEmpty()) {
-        //                     ((NbtCompound)nbtList.get(0)).remove(keyList.get(0));
-        //                 }
-        //             }
-        //             item.setNbt(nbt);
-        //             client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-        //             client.player.playerScreenHandler.sendContentUpdates();
-        //             return item;
-        //         }
-        //         item.removeSubNbt(inpKey);
-        //         client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-        //         client.player.playerScreenHandler.sendContentUpdates();
-        //         return item;
-        //     }
-        //     else
-        //         return item;
-        // }
-        // else
-        //     return null;
-    //    return null;
-    //}
-
-
-
-
-
-
-    //move an element in a list up or down
-    // public static ItemStack moveListElement(ItemStack overrideItem, String inpKey, int index, boolean up) { TODO moveListEl
-    //     MinecraftClient client = MinecraftClient.getInstance();
-    //     if (client.player.getAbilities().creativeMode) {
-    //         ItemStack item;
-    //         if(overrideItem!=null)
-    //             item = overrideItem.copy();
-    //         else if(!client.player.getMainHandStack().isEmpty())
-    //             item = client.player.getMainHandStack().copy();
-    //         else
-    //             return null;
-    //         if(getNbtFromPath(item, "0:/tag/"+inpKey) != null && getNbtFromPath(item, "0:/tag/"+inpKey).getType()==NbtElement.LIST_TYPE) {
-    //             NbtList list = ((NbtList)getNbtFromPath(item, "0:/tag/"+inpKey)).copy();
-    //             if(list.size()>index && index>=0 && !((index==0 && up) || (index==list.size()-1 && !up))) {
-    //                 NbtElement el = list.remove(index);
-    //                 if(up)
-    //                     list.add(index-1,el);
-    //                 else
-    //                     list.add(index+1,el);
-    //                 return setNbt(item, inpKey, list.copy());
-    //             }
-    //         }
-    //         return item;
-    //     }
-    //     return null;
-    // }
-
-
-
-
-
-
-    //clone an element of a list to the adjacent index
-    // public static ItemStack cloneListElement(ItemStack overrideItem, String inpKey, int index) {
-    //     MinecraftClient client = MinecraftClient.getInstance();
-    //     if (client.player.getAbilities().creativeMode) {
-    //         ItemStack item;
-    //         if(overrideItem!=null)
-    //             item = overrideItem.copy();
-    //         else if(!client.player.getMainHandStack().isEmpty())
-    //             item = client.player.getMainHandStack().copy();
-    //         else
-    //             return null;
-    //         if(getNbtFromPath(item, "0:/tag/"+inpKey) != null && getNbtFromPath(item, "0:/tag/"+inpKey).getType()==NbtElement.LIST_TYPE) {
-    //             NbtList list = ((NbtList)getNbtFromPath(item, "0:/tag/"+inpKey)).copy();
-    //             if(list.size()>index && index>=0) {
-    //                 NbtElement el = list.get(index).copy();
-    //                 list.add(index,el);
-    //                 return setNbt(item, inpKey, list.copy());
-    //             }
-    //         }
-    //         return item;
-    //     }
-    //     return null;
-    // }
+        return nbt;
+    }
 
     /**
      * Get the Nbt representation of an item for pre-made banner designs for various characters
@@ -897,376 +388,50 @@ public class BlackMagick {
      * @param charColor the color of the character
      * @return compound representation of an itemstack, or null
      */
-    public static NbtCompound createBanner(char character, String baseColor, String charColor) {//TODO banners
+    public static NbtCompound createBanner(char character, String baseColor, String charColor) {
+        NbtElement el = null;
+        switch(character) {
+            case 'A': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'B': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+baseColor+",pattern:\"minecraft:circle\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'C': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'D': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:half_vertical\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'E': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'F': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'G': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:half_vertical\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'H': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'I': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_center\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'J': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'K': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'L': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:half_vertical\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'M': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:triangle_top\"},{color:"+baseColor+",pattern:\"minecraft:triangles_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'N': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'O': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'P': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'Q': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:square_bottom_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'R': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'S': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'T': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_center\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'U': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'V': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:diagonal_up_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'W': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:triangle_bottom\"},{color:"+baseColor+",pattern:\"minecraft:triangles_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'X': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'Y': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'Z': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case '0': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case '1': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:square_top_left\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:stripe_center\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case '2': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case '3': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case '4': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case '5': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case '6': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case '7': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case '8': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case '9': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            default: return null;
+        }
+        if(el != null)
+            return (NbtCompound)el;
         return null;
-    //     ItemStack item = BlackMagick.setId(baseColorString+"_banner");
-    //     item = BlackMagick.removeNbt(item,"");
-    //     switch(text.substring(0,1)) {
-    //         case "A": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("mr"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("ms"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
-    //         case "B": item = BlackMagick.setId(charColorString+"_banner");
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("cbo"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("mc"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ms"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "C": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("mr"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "D": item = BlackMagick.setId(charColorString+"_banner");
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("mr"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("cbo"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("vh"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "E": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ms"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
-    //         case "F": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ms"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "G": item = BlackMagick.setId(charColorString+"_banner");
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("vh"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hh"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
-    //         case "H": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ms"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
-    //         case "I": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("cs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
-    //         case "J": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hh"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "K": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("drs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hh"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("dls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "L": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("vh"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bo"));break;
-    //         case "M": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("tt"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("tts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "N": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("drs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
-    //         case "O": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "P": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hhb"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ms"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
-    //         case "Q": item = BlackMagick.setId(charColorString+"_banner");
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("mr"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("br"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
-    //         case "R": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hhb"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("drs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
-    //         case "S": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("mr"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("drs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("cbo"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
-    //         case "T": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("cs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bo"));break;
-    //         case "U": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
-    //         case "V": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("rd"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("dls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
-    //         case "W": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("bt"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "X": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("drs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("dls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bo"));break;
-    //         case "Y": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("drs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hhb"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("dls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
-    //         case "Z": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("dls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bo"));break;
-    //         case "0": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("mr"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
-    //         case "1": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("tl"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("cbo"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("cs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "2": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("dls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("cbo"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "3": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ms"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("cbo"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/6:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/6:/Pattern",NbtString.of("bo"));break;
-    //         case "4": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hhb"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ms"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "5": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("mr"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("drs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("bo"));break;
-    //         case "6": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hh"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("ms"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/6:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/6:/Pattern",NbtString.of("bo"));break;
-    //         case "7": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("dls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("bo"));break;
-    //         case "8": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("bs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("mr"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("drs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("dls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
-    //         case "9": item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/0:/Pattern",NbtString.of("ls"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/1:/Pattern",NbtString.of("hhb"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/2:/Pattern",NbtString.of("ts"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/3:/Pattern",NbtString.of("rs"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Color",NbtInt.of(charColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/4:/Pattern",NbtString.of("ms"));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Color",NbtInt.of(baseColor));
-    //             item = BlackMagick.setNbt(item,"BlockEntityTag/Patterns/5:/Pattern",NbtString.of("bo"));break;
-    //         default: return null;
-    //     }
-    //     return item;
     }
 
 
