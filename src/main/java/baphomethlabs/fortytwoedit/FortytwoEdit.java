@@ -38,6 +38,7 @@ import net.minecraft.client.resource.language.TranslationStorage;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -47,12 +48,16 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtInt;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registries;
 import net.minecraft.resource.InputSupplier;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.resource.VanillaDataPackProvider;
 import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.resource.featuretoggle.FeatureSet;
+import net.minecraft.server.command.CommandManager;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.command.CommandManager.RegistrationEnvironment;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Property;
@@ -262,6 +267,11 @@ public class FortytwoEdit implements ClientModInitializer {
 
     //see feature items
     public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE,FeatureFlags.UPDATE_1_21);
+
+    //commands TODO command manger/dispatcher needed?
+    // public static final CommandRegistryAccess COMMAND_REGISTRY_ACCESS = CommandRegistryAccess.of(DynamicRegistryManager.EMPTY, FEATURES);
+    // public static final CommandManager COMMAND_MANAGER = new CommandManager(RegistrationEnvironment.ALL,COMMAND_REGISTRY_ACCESS);
+    // public static final CommandDispatcher<ServerCommandSource> COMMAND_DISPATCHER = COMMAND_MANAGER.getDispatcher();
 
     //format codes
     public static final Text formatTooltip = BlackMagick.jsonFromString("[{\"text\":\"Formatting\n"+

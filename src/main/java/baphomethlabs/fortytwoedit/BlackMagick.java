@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.NbtPathArgumentType.NbtPath;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.component.DataComponentType;
@@ -513,6 +514,13 @@ public class BlackMagick {
             if(query.equals(s))
                 return true;
         return false;
+    }
+
+    public static CommandRegistryAccess getCommandRegistries() {//TODO get from world, javadoc
+        final MinecraftClient client = MinecraftClient.getInstance();
+        if(client.world != null)
+            return CommandRegistryAccess.of(client.world.getRegistryManager(), FortytwoEdit.FEATURES);
+        return CommandRegistryAccess.of(DynamicRegistryManager.EMPTY, FortytwoEdit.FEATURES);
     }
 
 
