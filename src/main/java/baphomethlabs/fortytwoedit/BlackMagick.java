@@ -87,6 +87,18 @@ public class BlackMagick {
     }
 
     /**
+     * Validates element to be a non-null compound, otherwise returns default compound
+     * 
+     * @param el any element or null
+     * @return non-null compound
+     */
+    public static NbtCompound validCompound(NbtElement el) {
+        if(el == null || el.getType() != NbtElement.COMPOUND_TYPE)
+            return new NbtCompound();
+        return (NbtCompound)el;
+    }
+
+    /**
      * @param inp raw json
      * @return parsed Text or error message
      */
@@ -516,7 +528,11 @@ public class BlackMagick {
         return false;
     }
 
-    public static CommandRegistryAccess getCommandRegistries() {//TODO get from world, javadoc
+    /**
+     * 
+     * @return vanilla command registries with all features enabled
+     */
+    public static CommandRegistryAccess getCommandRegistries() {
         final MinecraftClient client = MinecraftClient.getInstance();
         if(client.world != null)
             return CommandRegistryAccess.of(client.world.getRegistryManager(), FortytwoEdit.FEATURES);
