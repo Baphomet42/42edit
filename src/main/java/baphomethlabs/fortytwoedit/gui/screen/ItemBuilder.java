@@ -146,6 +146,7 @@ public class ItemBuilder extends GenericScreen {
     private static int[] jsonEffects = new int[8];//bold,italic,underlined,strikethrough,obfuscated,radgrad,colmode,elmode
     private static double[] tabScroll = new double[tabs.length];
     private boolean pauseSaveScroll = false;
+    protected NbtElement tempEl = null;
 
     protected String editPath = ""; // path to component
     protected String editPath2 = ""; // apend to editPath to get path to list
@@ -451,7 +452,8 @@ public class ItemBuilder extends GenericScreen {
         String itemData = "";
         itemData += nbt.asString();
         itemData = makeItemTooltipShorten(itemData);
-        return Tooltip.of(Text.empty().append(stack == null ? Text.of("Unknown Item") : stack.getName()).append(Text.of("\n"+itemData)));
+        return Tooltip.of(Text.empty().append(stack == null ? BlackMagick.jsonFromString("{\"text\":\"Failed to read item\",\"color\":\"red\"}").text() :
+            stack.getName()).append(Text.of("\n"+itemData)));
     }
 
     private String makeItemTooltipShorten(String itemData) {
@@ -662,7 +664,9 @@ public class ItemBuilder extends GenericScreen {
         nbt.put("Pose",pose.copy());
         renderArmorPose.readNbt(nbt.copy());
 
-        setPoseButton.setTooltip(Tooltip.of(Text.of("Set Pose\n\nPose:"+pose.asString())));
+        if(setPoseButton != null)
+            setPoseButton.setTooltip(Tooltip.of(Text.of("Set Pose\n\nPose:"+pose.asString())));
+
         return pose.copy();
     }
 
@@ -1633,7 +1637,6 @@ public class ItemBuilder extends GenericScreen {
         String name = path;
         switch(name) {
             case "components.enchantment_glint_override" : name="glint override"; break;
-            case "components.hide_additional_tooltip" : name="hide extra flags"; break;
             case "components.suspicious_stew_effects" : name="stew effects"; break;
             case "components.writable_book_content" : name="book text"; break;
             case "components.written_book_content" : name="book content"; break;
@@ -1715,6 +1718,30 @@ public class ItemBuilder extends GenericScreen {
         }
     }
 
+    public boolean setEditingElement(String path, NbtElement newEl, ButtonWidget saveBtn) {
+        tempEl = newEl;
+        saveBtn.setTooltip(Tooltip.of(Text.of("Invalid component:\n" + (tempEl==null ? "null" : tempEl.asString()))));
+        saveBtn.active = false;
+        if(tempEl != null && saveBtn != null) {
+            ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,tempEl));
+            if(ItemStack.areEqual(selItem,newItem)) {
+                saveBtn.setTooltip(Tooltip.of(Text.of("Item Unchanged")));
+            }
+            else if(newItem != null) {
+                if(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(newItem),path) != null) {
+                    saveBtn.setTooltip(Tooltip.of(Text.of("Set component to:\n"+tempEl.asString())));
+                    saveBtn.active = true;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Resets all tabs. Only use on first init when widgets.size()==0.
+     * Creates widgets for static pages.
+     */
     private void createWidgets() {
         widgets.clear();
         noScrollWidgets.clear();
@@ -2907,6 +2934,13 @@ public class ItemBuilder extends GenericScreen {
 
     }
 
+    /**
+     * Clears tabNum tab then recreates its widgets.
+     * If tabNum is current tab, reloads the window.
+     * Use for tabs that change depending on cached variables.
+     * 
+     * @param tabNum
+     */
     public void createWidgets(int tabNum) {
         if(!pauseSaveScroll && tabWidget != null) {
             tabScroll[tab] = tabWidget.getScrollAmount();
@@ -2924,6 +2958,7 @@ public class ItemBuilder extends GenericScreen {
         }
         widgets.get(tabNum).clear();
         noScrollWidgets.get(tabNum).clear();
+
         if(tabNum == CACHE_TAB_MAIN) {   //createBlock components
             {
                 buildComponentWidget(widgets.get(tabNum), "id");
@@ -2938,7 +2973,7 @@ public class ItemBuilder extends GenericScreen {
                 List<String> unused = new ArrayList<String>();
                 for(String c : FortytwoEdit.COMPONENTS)
                 {
-                    if(hasComponent(selItem.getComponents(),c) || componentRead(selItem.getItem(),c))
+                    if(hasComponent(selItem.getComponents(),c))// || componentRead(selItem.getItem(),c))
                         buildComponentWidget(widgets.get(tabNum), "components."+c);
                     else
                         unused.add(c);
@@ -3209,7 +3244,7 @@ public class ItemBuilder extends GenericScreen {
                         widgets.get(tabNum).add(new RowWidget(editPath.replaceAll("components.","")));
                     }
                     {
-                        widgets.get(tabNum).add(new RowWidgetComponent(editPath));
+                        //widgets.get(tabNum).add(new RowWidgetComponent(editPath));
                     }
                 }
             }
@@ -4383,7 +4418,124 @@ public class ItemBuilder extends GenericScreen {
         //     }
         //     updateCurrentList();
         // }
-        btnTab(tab);
+        if(tab == tabNum)
+            btnTab(tab);
+    }
+
+    /**
+     * Clears blank tab then recreates its widgets.
+     * Sets the current page to this tab.
+     * Use for hidden tabs.
+     * 
+     * @param mode type of blank page to make
+     * @param args args depending on mode (sometimes can be null)
+     */
+    public void createWidgets(int mode, NbtCompound args) {
+        int tabNum = CACHE_TAB_BLANK;
+        if(!pauseSaveScroll && tabWidget != null) {
+            tabScroll[tab] = tabWidget.getScrollAmount();
+            pauseSaveScroll = true;
+        }
+        for(RowWidget r : widgets.get(tabNum)) {
+            for(TextFieldWidget t : r.txts) {
+                this.unsavedTxtWidgets.remove(t);
+                this.allTxtWidgets.remove(t);
+            }
+        }
+        for(PosWidget r : noScrollWidgets.get(tabNum)) {
+            this.unsavedTxtWidgets.remove(r.w);
+            this.allTxtWidgets.remove(r.w);
+        }
+        widgets.get(tabNum).clear();
+        noScrollWidgets.get(tabNum).clear();
+
+        boolean valid = false;
+
+        if(mode==0) { // display current component
+            if(args.contains("path",NbtElement.STRING_TYPE)); {
+                String path = args.get("path").asString();
+                NbtElement el = BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path);
+                valid = true;
+                {
+                    ButtonWidget w = ButtonWidget.builder(Text.of("Cancel"),btn -> this.btnTab(CACHE_TAB_MAIN)).dimensions(x+5,y+5,40,20).build();
+                    if(el == null)
+                        w.setTooltip(Tooltip.of(Text.of("Keep component empty")));
+                    else
+                        w.setTooltip(Tooltip.of(Text.of("Keep component as:\n"+el.asString())));
+                    noScrollWidgets.get(tabNum).add(new PosWidget(w,5,5));
+                }
+                // {
+                //     ButtonWidget w = ButtonWidget.builder(Text.of("Delete"), btn -> {
+                //         BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,null)));
+                //         this.btnTab(CACHE_TAB_MAIN);
+                //     }).dimensions(x+120-40-10,y+5,40,20).build();
+                //     if(!client.player.getAbilities().creativeMode || el==null)
+                //         w.active = false;
+                //     noScrollWidgets.get(tabNum).add(new PosWidget(w,120-40-10,5));
+                // }
+                final ButtonWidget saveBtn;
+                saveBtn = ButtonWidget.builder(Text.of("Save"), btn -> {
+                    if(tempEl != null) {
+                        ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,tempEl));
+                        if(newItem != null) {
+                            if(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(newItem),path) != null) {
+                                BlackMagick.setItemMain(newItem);
+                                this.btnTab(CACHE_TAB_MAIN);
+                            }
+                        }
+                    }
+                    unsel = true;
+                }).dimensions(x+240-5-40,y+5,40,20).build();
+                {
+                    noScrollWidgets.get(tabNum).add(new PosWidget(saveBtn,240-5-40,5));
+                }
+                setEditingElement(path,null,saveBtn);
+                if(el != null)
+                    setEditingElement(path,el.copy(),saveBtn);
+
+                if(el != null) {
+                    if(el.getType() == NbtElement.COMPOUND_TYPE) {
+                        //TODO compound logic
+                        {
+                            widgets.get(tabNum).add(new RowWidget(path.replace("components.","")));
+                        }
+                        for(String k : BlackMagick.sortSet(((NbtCompound)el).getKeys())) {
+                            widgets.get(tabNum).add(new RowWidgetElement(path,saveBtn,(NbtCompound)el,k));
+                        }
+                    }
+                    else if(el.getType() == NbtElement.LIST_TYPE) {
+                        //TODO list logic
+                        {
+                            widgets.get(tabNum).add(new RowWidget(path.replace("components.","")));
+                        }
+                        {
+                            widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
+                        }
+                    }
+                    else { //TODO fallback
+                        {
+                            widgets.get(tabNum).add(new RowWidget(path.replace("components.","")));
+                        }
+                        {
+                            widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
+                        }
+                    }
+                }
+                else { //TODO fallback
+                    {
+                        widgets.get(tabNum).add(new RowWidget(path.replace("components.","")));
+                    }
+                    {
+                        widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
+                    }
+                }
+            }
+        }
+
+        if(!valid)
+            btnTab(CACHE_TAB_MAIN);
+        else
+            btnTab(tabNum);
     }
     
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -5368,12 +5520,14 @@ public class ItemBuilder extends GenericScreen {
                     if(savedStacksWarn != null && savedStacksWarn.length == 9)
                         savedStacksWarn[i] = false;
                     if(!parsedStack.isEmpty()) {
-                        this.btns[i].setTooltip(makeItemTooltip(current,parsedStack));
                         savedStacks[i] = parsedStack;
                         if(!BlackMagick.itemToNbt(parsedStack).asString().equals(current.asString())) {
+                            this.btns[i].setTooltip(makeItemTooltip(current,null));
                             if(savedStacksWarn != null && savedStacksWarn.length == 9)
                                 savedStacksWarn[i] = true;
                         }
+                        else
+                            this.btns[i].setTooltip(makeItemTooltip(current,parsedStack));
                         if(client.player.getAbilities().creativeMode)
                             this.btns[i].active = true;
                     }
@@ -5487,7 +5641,9 @@ public class ItemBuilder extends GenericScreen {
     class RowWidgetComponent extends RowWidget {
 
         /**
-         * Row to edit component nbt (or id/count)
+         * Row to edit component nbt (or id/count).
+         * Contains button to set and txt to input.
+         * Component is removed on set when txt is empty.
          * 
          * @param path nbt path in format: components.foo.bar.list[0]
          */
@@ -5501,12 +5657,7 @@ public class ItemBuilder extends GenericScreen {
 
             int size = sizeFromName(name);
 
-            final String startVal;
-            if(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path) != null) {
-                startVal = BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path).asString();
-            }
-            else
-                startVal = "";
+            final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path));
 
             final String[] suggestions;
             if(baseSuggestions == null)
@@ -5654,19 +5805,15 @@ public class ItemBuilder extends GenericScreen {
         }
 
         /**
-         * Used for editPath fallback (only one textfieldwidget)
+         * Used for editPath fallback (only one textfieldwidget).
+         * Set or delete using component page buttons.
          * 
          * @param path nbt path in format: components.foo.bar.list[0]
          */
-        public RowWidgetComponent(String path) {
+        public RowWidgetComponent(String path, ButtonWidget saveBtn) {
             super();
 
-            final String startVal;
-            if(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path) != null) {
-                startVal = BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path).asString();
-            }
-            else
-                startVal = "";
+            final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path));
 
             final String[] suggestions = new String[]{startVal};
 
@@ -5677,62 +5824,48 @@ public class ItemBuilder extends GenericScreen {
 
             this.txts[0].setChangedListener(value -> {
                 inpError = null;
-                editElement[1] = null;
-                if(cacheI.containsKey("editSave")) {
-                    int[] saveBtn = cacheI.get("editSave");
-                    ((ButtonWidget)ItemBuilder.this.noScrollWidgets.get(saveBtn[0]).get(saveBtn[1]).w).setTooltip(null);
 
-                    if((value != null && !value.equals(startVal))) {
-                        this.txts[0].setEditableColor(0xFFFFFF);
+                if((value != null && !value.equals(startVal))) {
+                    this.txts[0].setEditableColor(0xFFFFFF);
 
-                        if(client.player.getAbilities().creativeMode)
-                            ((ButtonWidget)ItemBuilder.this.noScrollWidgets.get(saveBtn[0]).get(saveBtn[1]).w).active = true;
-
-                        if(path.startsWith("components.")) {
-                            try {
-                                ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader("stone["+path.replaceAll("components.","")+"="+value+"]"));
-                                editElement[1] = BlackMagick.nbtFromString(value);
-                            } catch(Exception ex) {
-                                if(ex instanceof CommandSyntaxException) {
-                                    inpError = ((CommandSyntaxException)ex).getMessage();
-                                }
+                    if(path.startsWith("components.")) {
+                        try {
+                            ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader("stone["+path.replaceAll("components.","")+"="+value+"]"));
+                        } catch(Exception ex) {
+                            if(ex instanceof CommandSyntaxException) {
+                                inpError = ((CommandSyntaxException)ex).getMessage();
                             }
-                        }
-
-                        if(inpError != null) {
-                            ((ButtonWidget)ItemBuilder.this.noScrollWidgets.get(saveBtn[0]).get(saveBtn[1]).w).active = false;
-                            this.txts[0].setEditableColor(0xFF5555);
-                            if(inpError.contains(" at position ")) {
-                                inpError = inpError.substring(0,inpError.indexOf(" at position "));
-                            }
-                        }
-                        else {
-                            if(value.length()>0)
-                                ((ButtonWidget)ItemBuilder.this.noScrollWidgets.get(saveBtn[0]).get(saveBtn[1]).w)
-                                    .setTooltip(Tooltip.of(Text.of("Set "+path.replaceAll("components.",""))));  
                         }
                     }
+
+                    if(inpError != null) {
+                        this.txts[0].setEditableColor(0xFF5555);
+                        if(inpError.contains(" at position ")) {
+                            inpError = inpError.substring(0,inpError.indexOf(" at position "));
+                        }
+                    }
+                }
+                else {
+                    this.txts[0].setEditableColor(LABEL_COLOR);
+                }
+            
+                setEditingElement(path,BlackMagick.nbtFromString(value),saveBtn);
+
+                if(!currentTxt.contains(this.txts[0])) {
+                    resetSuggs();
+                    currentTxt.add(this.txts[0]);
+                    suggs = new TextSuggestor(client, this.txts[0], textRenderer);
+                    if(suggestions != null && suggestions.length > 0)
+                        suggs.setSuggestions(suggestions);
+                }
+                else{
+                    if(suggs != null)
+                        suggs.refresh();
                     else {
-                        this.txts[0].setEditableColor(LABEL_COLOR);
-                        ((ButtonWidget)ItemBuilder.this.noScrollWidgets.get(saveBtn[0]).get(saveBtn[1]).w).active = false;
-                    }
-
-                    if(!currentTxt.contains(this.txts[0])) {
                         resetSuggs();
-                        currentTxt.add(this.txts[0]);
                         suggs = new TextSuggestor(client, this.txts[0], textRenderer);
                         if(suggestions != null && suggestions.length > 0)
                             suggs.setSuggestions(suggestions);
-                    }
-                    else{
-                        if(suggs != null)
-                            suggs.refresh();
-                        else {
-                            resetSuggs();
-                            suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                            if(suggestions != null && suggestions.length > 0)
-                                suggs.setSuggestions(suggestions);
-                        }
                     }
                 }
             });
@@ -5752,8 +5885,9 @@ public class ItemBuilder extends GenericScreen {
     class RowWidgetCompound extends RowWidget {
 
         /**
-         * Used for compound, list, or Text types.
+         * Used on components page to represent a compound, list, or Text.
          * Any other type will default back to compound.
+         * Contains button to view and button to delete. (or button to add if null)
          * 
          * @param path nbt path in format: components.foo.bar.list[0]
          * @param name
@@ -5771,12 +5905,7 @@ public class ItemBuilder extends GenericScreen {
 
             int size = sizeFromName(name);
 
-            final String startVal;
-            if(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path) != null) {
-                startVal = BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path).asString();
-            }
-            else
-                startVal = "";
+            final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path));
 
             Text btnTxt = Text.of(startVal);
             if(BlackMagick.jsonFromString(startVal).isValid())
@@ -5784,32 +5913,34 @@ public class ItemBuilder extends GenericScreen {
 
             this.btns = new ButtonWidget[]{
             ButtonWidget.builder(btnTxt, btn -> {//TODO rowwidget
-                editPath = path;
-                editPath2 = "";
-                editPath2Index = -1;
-                editPathMode = 0;
-                editElement[0] = BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path);
-                editElement[1] = null;
-                editElement2[0] = null;
-                editElement2[1] = null;
-                createWidgets(CACHE_TAB_BLANK);
-                btnTab(CACHE_TAB_BLANK);
+                // editPath = path;
+                // editPath2 = "";
+                // editPath2Index = -1;
+                // editPathMode = 0;
+                // editElement[0] = BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path);
+                // editElement[1] = null;
+                // editElement2[0] = null;
+                // editElement2[1] = null;
+                //createWidgets(CACHE_TAB_BLANK);
+                createWidgets(0,BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}")));
+                //btnTab(CACHE_TAB_BLANK);
                 unsel = true;
             }).dimensions(ItemBuilder.this.x+ROW_LEFT+size,5,ROW_RIGHT-ROW_LEFT-20-size-5,20).build(),
             ButtonWidget.builder(Text.of(startVal.equals("") ? "+" : "X"), btn -> {
                 if(startVal.equals("")) {
-                    editPath = path;
-                    editPath2 = "";
-                    editPath2Index = -1;
-                    editPathMode = 0;
-                    editElement[0] = null;
-                    editElement[1] = null;
-                    editElement2[0] = null;
-                    editElement2[1] = null;
-                    if(path.equals("components.custom_name"))
-                        editPathArg = "{\"text\":\"\"}";
-                    createWidgets(CACHE_TAB_BLANK);
-                    btnTab(CACHE_TAB_BLANK);
+                    // editPath = path;
+                    // editPath2 = "";
+                    // editPath2Index = -1;
+                    // editPathMode = 0;
+                    // editElement[0] = null;
+                    // editElement[1] = null;
+                    // editElement2[0] = null;
+                    // editElement2[1] = null;
+                    // if(path.equals("components.custom_name"))
+                    //     editPathArg = "{\"text\":\"\"}";
+                    //createWidgets(CACHE_TAB_BLANK);
+                    createWidgets(0,BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}")));
+                    //btnTab(CACHE_TAB_BLANK);
                 }
                 else {
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,null)));
@@ -5821,7 +5952,7 @@ public class ItemBuilder extends GenericScreen {
                 this.btns[0].setTooltip(Tooltip.of(Text.of("Edit component")));
             else
                 this.btns[0].active = false;
-            this.btns[1].setTooltip(Tooltip.of(Text.of(startVal.equals("") ? "Create component" : "Remove")));
+            this.btns[1].setTooltip(Tooltip.of(Text.of(startVal.equals("") ? "Create component" : "Delete component")));
 
             for(int i=0; i<btns.length; i++)
                 this.children.add(this.btns[i]);          
@@ -5829,11 +5960,98 @@ public class ItemBuilder extends GenericScreen {
 
     }
 
+    class RowWidgetElement extends RowWidget {
+
+        /**
+         * Row to edit any element in base compound.
+         * Contains button to set and txt to input.
+         * Element is removed on set when txt is empty.
+         * 
+         * @param key element key within compound
+         */
+        public RowWidgetElement(String path, ButtonWidget saveBtn, NbtCompound base, String key) {
+            super();
+
+            this.lbl = key;
+            int size = sizeFromName(key);
+
+            final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(base,key));
+
+            final String[] suggestions;
+            if(startVal.length()>0)
+                suggestions = new String[]{startVal};
+            else
+                suggestions = null;
+
+            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
+                ItemBuilder.this.x+ROW_LEFT+5+size, 5, ROW_RIGHT-ROW_LEFT-size-5, 20, Text.of(""))};
+            this.txtX = new int[]{ROW_LEFT+5+size};
+            this.txts[0].setMaxLength(131072);
+
+            this.txts[0].setChangedListener(value -> {
+                inpError = null;
+
+                NbtElement el = BlackMagick.nbtFromString(value);
+                if(value.equals(""))
+                    el = null;
+
+                if((value != null && !value.equals(startVal))) {
+                    this.txts[0].setEditableColor(0xFFFFFF);
+                    
+                    if(value.length()>0 && el==null) {
+                        inpError = "Invalid element";
+                    }
+
+                    if(inpError != null) {
+                        this.txts[0].setEditableColor(0xFF5555);
+                    }
+                }
+                else {
+                    this.txts[0].setEditableColor(LABEL_COLOR);
+                }
+                
+                if(tempEl != null && tempEl.getType()==NbtElement.COMPOUND_TYPE) {
+                    setEditingElement(path,BlackMagick.setNbtPath((NbtCompound)tempEl,key,el),saveBtn);
+                }
+
+                if(!currentTxt.contains(this.txts[0])) {
+                    resetSuggs();
+                    currentTxt.add(this.txts[0]);
+                    suggs = new TextSuggestor(client, this.txts[0], textRenderer);
+                    if(suggestions != null && suggestions.length > 0)
+                        suggs.setSuggestions(suggestions);
+                }
+                else{
+                    if(suggs != null)
+                        suggs.refresh();
+                    else {
+                        resetSuggs();
+                        suggs = new TextSuggestor(client, this.txts[0], textRenderer);
+                        if(suggestions != null && suggestions.length > 0)
+                            suggs.setSuggestions(suggestions);
+                    }
+                }
+
+            });
+
+            this.txts[0].setText(startVal);
+
+            for(int i=0; i<txts.length; i++) {
+                this.children.add(this.txts[i]);
+                ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
+            }            
+        }
+
+    }
+
     class RowWidgetTrinary extends RowWidget {
 
         /**
+         * Used for bool type components.
+         * Contains [ Unset | False | True ] buttons.
          * 
          * @param path nbt path in format: components.foo.bar.list[0]
+         * @param name override lbl name
          */
         public RowWidgetTrinary(String path, String name) {
             super();
@@ -5876,7 +6094,8 @@ public class ItemBuilder extends GenericScreen {
         }
 
         /**
-         * Trinary for None | {show_in_tooltip:0b} | {}
+         * Used for Unit type with show_in_tooltip option.
+         * Contains [ False | Hide | Show ] buttons.
          * 
          * @param path nbt path in format: components.foo.bar.list[0]
          */
@@ -5899,16 +6118,16 @@ public class ItemBuilder extends GenericScreen {
             final int btnSize = 35;
             final int btnSpacing = 2;
             this.btns = new ButtonWidget[]{
-            ButtonWidget.builder(Text.of("Unset"), btn -> {
+            ButtonWidget.builder(Text.of("False"), btn -> {
                 BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null)));
                 unsel = true;
             }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(3*btnSize+2*btnSpacing),5,btnSize,20).build(),
-            ButtonWidget.builder(Text.of("False"), btn -> {
+            ButtonWidget.builder(Text.of("Hide"), btn -> {
                 BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,
                     BlackMagick.validCompound(BlackMagick.nbtFromString("{show_in_tooltip:0b}")))));
                 unsel = true;
             }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(2*btnSize+btnSpacing),5,btnSize,20).build(),
-            ButtonWidget.builder(Text.of("True"), btn -> {
+            ButtonWidget.builder(Text.of("Show"), btn -> {
                 BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,new NbtCompound())));
                 unsel = true;
             }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
@@ -5925,8 +6144,11 @@ public class ItemBuilder extends GenericScreen {
     class RowWidgetBinary extends RowWidget {
 
         /**
+         * Used for Unit type components.
+         * Contains buttons [ False | True ]
          * 
          * @param path nbt path in format: components.foo.bar.list[0]
+         * @param name override display name
          */
         public RowWidgetBinary(String path, String name) {
             super();

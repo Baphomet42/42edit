@@ -1,10 +1,12 @@
 package baphomethlabs.fortytwoedit;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandRegistryAccess;
@@ -60,6 +62,9 @@ public class BlackMagick {
     }
 
     /**
+     * Get nbt from stringified nbt.
+     * Invalid types may be parsed as a string.
+     * 
      * @param inp stringified nbt element
      * @return parsed element or null if invalid
      */
@@ -75,6 +80,8 @@ public class BlackMagick {
     }
 
     /**
+     * Get nbt from stringified nbt of a certain type.
+     * 
      * @param inp stringified nbt element
      * @param type if parsed element not type, returns null
      * @return parsed element or null if invalid
@@ -84,6 +91,36 @@ public class BlackMagick {
         if(el != null && el.getType() != type)
             return null;
         return el;
+    }
+
+    /**
+     * Get stringified nbt where NbtStrings are quoted if necessary.
+     * Quotes may be double or single, and are not included if they aren't needed.
+     * A null element will return an empty string.
+     * 
+     * @param inp
+     * @return
+     */
+    public static String nbtToString(NbtElement inp) {
+        if(inp == null)
+            return "";
+        else if(inp.getType()==NbtElement.STRING_TYPE) {
+            NbtElement el = nbtFromString(inp.asString());
+            if(el != null && el.getType()==NbtElement.STRING_TYPE && el.asString().equals(inp.asString()))
+                return inp.asString();
+
+            NbtCompound temp = new NbtCompound();
+            temp.put("temp",inp);
+            String parsed = temp.asString();
+            if(parsed.startsWith("{temp:") && parsed.endsWith("}"))
+                return parsed.substring(6,parsed.length()-1);
+            else {
+                FortytwoEdit.LOGGER.warn("Failed to stringify NbtString: "+inp.asString());
+                return inp.asString();
+            }
+        }
+        else
+            return inp.asString();
     }
 
     /**
@@ -526,6 +563,23 @@ public class BlackMagick {
             if(query.equals(s))
                 return true;
         return false;
+    }
+
+    /**
+     * Returns a list of strings sorted alphabetically.
+     * Treats uppercase and lowercase the same.
+     * 
+     * @param set
+     * @return
+     */
+    public static List<String> sortSet(Set<String> set) {
+        List<String> list = new ArrayList<>();
+
+        for(String s : set)
+            list.add(s);
+
+        Collections.sort(list, String.CASE_INSENSITIVE_ORDER);
+        return list;
     }
 
     /**
