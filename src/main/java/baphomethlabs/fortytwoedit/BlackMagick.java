@@ -7,12 +7,19 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.spongepowered.asm.mixin.injection.struct.InjectorGroupInfo.Map;
+
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.NbtPathArgumentType.NbtPath;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.component.DataComponentType;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -23,9 +30,14 @@ import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.state.property.Property;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 
+/**
+ * Class containing static methods used for working with NBT, JSON Text, and more
+ */
 public class BlackMagick {
 
     /**
@@ -112,12 +124,15 @@ public class BlackMagick {
             NbtCompound temp = new NbtCompound();
             temp.put("temp",inp);
             String parsed = temp.asString();
-            if(parsed.startsWith("{temp:") && parsed.endsWith("}"))
-                return parsed.substring(6,parsed.length()-1);
-            else {
-                FortytwoEdit.LOGGER.warn("Failed to stringify NbtString: "+inp.asString());
-                return inp.asString();
+            if(parsed.startsWith("{temp:") && parsed.endsWith("}")) {
+                parsed = parsed.substring(6,parsed.length()-1);
+                if(BlackMagick.nbtFromString(parsed)!=null && BlackMagick.nbtFromString(parsed).getType()==NbtElement.STRING_TYPE
+                && (BlackMagick.nbtFromString(parsed)).asString().equals(inp.asString())) {
+                    return parsed;
+                }
             }
+            FortytwoEdit.LOGGER.warn("Failed to stringify NbtString: "+inp.asString());
+            return inp.asString();
         }
         else
             return inp.asString();
@@ -136,12 +151,19 @@ public class BlackMagick {
     }
 
     /**
+     * Converts json to Text object. Valid forms include: {"text":""}, [{"text":""}], and quoted versions of those.
+     * Passing a string literal must be in two sets of quotes like: "\"Minecraft\"", "'Minecraft'", etc.
+     * 
      * @param inp raw json
      * @return parsed Text or error message
      */
     public static ParsedText jsonFromString(String inp) {
         RegistryWrapper.WrapperLookup reg = DynamicRegistryManager.EMPTY;
         try {
+            if(inp.startsWith("\"") && inp.endsWith("\""))
+                inp = inp.substring(1,inp.length()-1);
+            else if(inp.startsWith("'") && inp.endsWith("'"))
+                inp = inp.substring(1,inp.length()-1);
             Text temp = Text.Serialization.fromJson(inp,reg);
             if(temp != null)
                 return new ParsedText(true,temp.copy());
@@ -431,6 +453,26 @@ public class BlackMagick {
     }
 
     /**
+     * Get list of all possible block states that can be applied to the item
+     * 
+     * @param item the ItemStack.getItem()
+     * @return list of lists where the first string in each list is the key and the rest are the value options (may be empty but never null)
+     */
+    public static List<List<String>> getBlockStates(Item item) {
+        List<List<String>> states = new ArrayList<>();
+        BlockState blockState = Block.getBlockFromItem(item).getDefaultState();
+        for (Map.Entry<Property<?>, Comparable<?>> entry : blockState.getEntries().entrySet()) {
+            ArrayList<String> list = new ArrayList<>();
+            list.add(entry.getKey().getName());
+            for(Comparable<?> val : entry.getKey().getValues()) {
+                list.add((String)Util.getValueAsString(entry.getKey(), val));
+            }
+            states.add(list);
+        }
+        return states;
+    }
+
+    /**
      * Get the Nbt representation of an item for pre-made banner designs for various characters
      * 
      * @param character 
@@ -580,6 +622,27 @@ public class BlackMagick {
 
         Collections.sort(list, String.CASE_INSENSITIVE_ORDER);
         return list;
+    }
+
+    /**
+     * Converts decimal color like 4327014 to hex color like #420666.
+     * Returns null if input is not a valid decimal color.
+     * 
+     * @param dec like 4327014
+     * @return hex String like #420666 or null
+     */
+    public static String colorHexFromDec(String dec) {
+        try {
+            int col = Integer.parseInt(dec);
+            if(col>=0 && col <=16777215) {
+                String hex = Integer.toHexString(col);
+                while(hex.length()<6)
+                    hex = "0"+hex;
+                if(hex.length()==6)
+                    return "#"+hex;
+            }
+        } catch(NumberFormatException ex) {}
+        return null;
     }
 
     /**

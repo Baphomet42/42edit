@@ -47,6 +47,7 @@ dependencies {
 	//	delete .gradle .cache from User
 	//	update example mod files
 	//	update FortytwoEdit.FEATURES
+	//	update ComponentHelper (search HARDCODED)
 	//	verify ordinals (ScrollableWidgetMixin/StringHelperMixin)
 
 	//	TOOLS
