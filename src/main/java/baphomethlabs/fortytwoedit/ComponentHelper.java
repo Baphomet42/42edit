@@ -80,6 +80,7 @@ public class ComponentHelper {
             case "map_decorations":
             case "map_id":
             case "max_damage":
+            case "ominous_bottle_amplifier":
             case "pot_decorations":
             case "potion_contents":
             case "recipes":
@@ -121,6 +122,7 @@ public class ComponentHelper {
     public static String getCompNickname(String path) {
         switch(path) {
             case "components.enchantment_glint_override" : return "glint override";
+            case "components.ominous_bottle_amplifier" : return "ominous lvl";
             case "components.suspicious_stew_effects" : return "stew effects";
             case "components.writable_book_content" : return "book text";
             case "components.written_book_content" : return "book content";
@@ -135,6 +137,9 @@ public class ComponentHelper {
      * @return enum CompType
      */
     public static CompType getCompType(String path) {
+        if(isText(path) || isDecimalColor(path))
+            return CompType.COMPLEX;
+
         switch(path) {
             case "components.enchantment_glint_override" :
                 return CompType.TRINARY;
@@ -162,7 +167,6 @@ public class ComponentHelper {
             case "components.container_loot" :
             case "components.custom_data" :
             case "components.custom_model_data" :
-            case "components.custom_name" :
             case "components.debug_stick_state" :
             case "components.dyed_color" :
             case "components.enchantments" :
@@ -183,7 +187,6 @@ public class ComponentHelper {
             case "components.trim" :
             case "components.writable_book_content" :
             case "components.written_book_content" :
-            case "components.map_color" :
                 return CompType.COMPLEX;
 
             default : return CompType.VALUE;
@@ -198,33 +201,42 @@ public class ComponentHelper {
      * @return suggestions or null
      */
     public static String[] getPathSuggs(String path, @Nullable ItemStack stack) {
-        switch(path) {
-            case "id" : return FortytwoEdit.ITEMS ;
-            case "count" :
-                if(stack != null) {
-                    if(stack.getMaxCount()==1)
-                        return new String[]{"1"};
-                    else
-                        return new String[]{"1",""+stack.getMaxCount()};
-                }
+        if(path.endsWith("id"))
+            return FortytwoEdit.ITEMS;
+        else if(path.endsWith("count")) {
+            if(stack != null && path.equals("count")) {
+                if(stack.getMaxCount()==1)
+                    return new String[]{"1"};
                 else
-                    return new String[]{"1","16","64"};
-
-            case "components.base_color" : return DYES;
-            case "components.damage" :
-                if(stack != null)
-                    return new String[]{"0",""+stack.getMaxDamage()};
-                else
-                    return new String[]{"0"};
-            case "components.instrument" : return new String[]{"ponder_goat_horn","sing_goat_horn","seek_goat_horn",
-                "feel_goat_horn","admire_goat_horn","call_goat_horn","yearn_goat_horn","dream_goat_horn"};
-            case "components.max_damage" : return new String[]{""};
-            case "components.max_stack_size" : return new String[]{"1","16","64","99"};
-            case "components.note_block_sound" : return FortytwoEdit.SOUNDS;
-            case "components.rarity" : return new String[]{"common","uncommon","rare","epic"};
-            case "components.repair_cost" : return new String[]{"0",""+Integer.MAX_VALUE};
-            default : return null;//TODO get more from subcomponents, entity_data, block_data, etc (test contains entity_tag, block_tag, etc)
+                    return new String[]{"1",""+stack.getMaxCount()};
+            }
+            else
+                return new String[]{"1","16","64","99"};
         }
+        else if(path.endsWith("components.base_color"))
+            return DYES;
+        else if(path.endsWith("components.damage")) {
+            if(stack != null && path.equals("components.damage"))
+                return new String[]{"0",""+stack.getMaxDamage()};
+            else
+                return new String[]{"0"};
+        }
+        else if(path.endsWith("components.instrument"))
+            return new String[]{"ponder_goat_horn","sing_goat_horn","seek_goat_horn",
+            "feel_goat_horn","admire_goat_horn","call_goat_horn","yearn_goat_horn","dream_goat_horn"};
+        else if(path.endsWith("components.max_damage"))
+            return new String[]{""};
+        else if(path.endsWith("components.max_stack_size"))
+            return new String[]{"1","16","64","99"};
+        else if(path.endsWith("components.note_block_sound"))
+            return FortytwoEdit.SOUNDS;
+        else if(path.endsWith("components.ominous_bottle_amplifier"))
+            return new String[]{"0","1","2","3","4"};
+        else if(path.endsWith("components.rarity"))
+            return new String[]{"common","uncommon","rare","epic"};
+        else if(path.endsWith("components.repair_cost"))
+            return new String[]{"0",""+Integer.MAX_VALUE};
+        return null;//TODO get more from subcomponents, entity_data, block_data, etc (test contains entity_tag, block_tag, etc)
     }
 
     /**
@@ -251,7 +263,7 @@ public class ComponentHelper {
      * @return true if NBT at path should be JSON Text
      */
     public static boolean isText(String path) {
-        if(path.endsWith("custom_name") || path.endsWith("CustomName") || path.contains("lore[")
+        if(path.endsWith("custom_name") || path.endsWith("item_name") || path.endsWith("CustomName") || path.contains("lore[")
         || (path.contains("pages[") && path.contains("written_book_content")))
             return true;
 
@@ -265,7 +277,7 @@ public class ComponentHelper {
      * @return true if NBT at path should be a decimal color
      */
     public static boolean isDecimalColor(String path) {
-        if(path.endsWith("rgb") || path.endsWith("map_color") || path.contains("custom_color"))
+        if(path.endsWith("rgb") || path.endsWith("map_color") || path.endsWith("custom_color"))
             return true;
 
         return false;

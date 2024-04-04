@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -33,12 +34,12 @@ import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
 import baphomethlabs.fortytwoedit.mixin.TranslationStorageAccessor;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.resource.language.TranslationStorage;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.command.CommandSource;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtByte;
@@ -65,23 +66,11 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 
 public class FortytwoEdit implements ClientModInitializer {
-
-    /*------------------------------------------
-     *  Incorporated works
-     *  
-     *  Example Mod from https://github.com/FabricMC/fabric-example-mod Creative Commons Zero v1.0 Universal
-     *  Freelook from https://github.com/Celibistrial/freelook (celibistrial.freelook) GNU Affero General Public License v3.0
-     *  Visible Barriers from https://github.com/AmyMialeeMods/visible-barriers (xyz.amymialee.visiblebarriers) Copyright (c) 2022 AmyMialee All rights reserved.
-     *  Brewing Guide from https://www.curseforge.com/minecraft/texture-packs/in-game-brewing-guide
-     *------------------------------------------
-     */
 
 	public static final Logger LOGGER = LoggerFactory.getLogger("42edit");
 
@@ -95,9 +84,6 @@ public class FortytwoEdit implements ClientModInitializer {
     // zoom
     public static boolean zoomed = false;
     private static boolean smooth = false;
-
-    // visiblebarriers
-    public static boolean seeInvis = false;
 
     // hacks
     public static boolean autoMove = false;
@@ -116,6 +102,9 @@ public class FortytwoEdit implements ClientModInitializer {
     private static long lastFish = 0;
     private static boolean didFish = false;
     private static final int fishWait = 1000;
+
+    // xray mode
+    public static boolean seeInvis = false;
 
     // randomizer mode
     private static SecureRandom rand = new SecureRandom();
@@ -154,12 +143,12 @@ public class FortytwoEdit implements ClientModInitializer {
         if(opticapesOn) {
             boolean connect = false;
             try {
-                HttpURLConnection con = (HttpURLConnection)(new URL("http://s.optifine.net/capes/42Richtofen42.png")).openConnection();
+                HttpURLConnection con = (HttpURLConnection)(new URI("http://s.optifine.net/capes/42Richtofen42.png")).toURL().openConnection();
                 con.setConnectTimeout(2000);
                 if(con.getResponseCode() == HttpURLConnection.HTTP_OK)
                     connect = true;
                 con.disconnect();
-            } catch(IOException e) {}
+            } catch(Exception e) {}
             if(!connect) {
                 opticapesWorking = false;
                 LOGGER.warn("Failed connection to OptiFine capes");
@@ -198,7 +187,7 @@ public class FortytwoEdit implements ClientModInitializer {
             tryLoadCape(client.getSession().getUsername());
         capeNames.add(name);
         try {
-            URL link = new URL("http://s.optifine.net/capes/" + name + ".png");
+            URL link = new URI("http://s.optifine.net/capes/" + name + ".png").toURL();
             HttpURLConnection con = (HttpURLConnection)link.openConnection();
             con.setUseCaches(false);
             con.setConnectTimeout(500);
@@ -259,6 +248,7 @@ public class FortytwoEdit implements ClientModInitializer {
     //freelook
     public static boolean isFreeLooking = false;
     private static Perspective lastPerspective;
+    public static float[] cameraRotation = {0f,0f};
 
     //see feature items
     public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE,FeatureFlags.UPDATE_1_21);
@@ -402,11 +392,6 @@ public class FortytwoEdit implements ClientModInitializer {
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_EQUAL, "ftedit.key.categories.ftedit"));
         KeyBinding afkClick = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.afkClick",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_MINUS, "ftedit.key.categories.ftedit"));
-                
-        // visiblebarriers
-        BlockRenderLayerMap.INSTANCE.putBlock(Blocks.BARRIER, RenderLayer.getTranslucent());
-        BlockRenderLayerMap.INSTANCE.putBlock(Blocks.STRUCTURE_VOID, RenderLayer.getTranslucent());
-        BlockRenderLayerMap.INSTANCE.putBlock(Blocks.LIGHT, RenderLayer.getTranslucent());
 
         //options
         readOptions();
@@ -494,18 +479,20 @@ public class FortytwoEdit implements ClientModInitializer {
             }
 
             //freelook
-            if (freeLook.isPressed()) {
-                if (!isFreeLooking) { // Only execute when enabling FreeLook.
+            if(freeLook.isPressed()) {
+                if (!isFreeLooking) {
                     lastPerspective = client.options.getPerspective();
+                    Entity view = client.getCameraEntity() == null ? client.player : client.getCameraEntity();
+                    cameraRotation[0] = view.getYaw();
+                    cameraRotation[1] = view.getPitch();
 
-                    // Switch from first to third person.
-                    if (lastPerspective == Perspective.FIRST_PERSON) {
+                    if (lastPerspective == Perspective.FIRST_PERSON)
                         client.options.setPerspective(Perspective.THIRD_PERSON_BACK);
-                    }
 
                     isFreeLooking = true;
                 }
-            } else if (isFreeLooking) { // Only execute when disabling FreeLook.
+            }
+            else if(isFreeLooking) {
                 isFreeLooking = false;
                 client.options.setPerspective(lastPerspective);
             }
@@ -982,7 +969,7 @@ public class FortytwoEdit implements ClientModInitializer {
         if(webItemsAuto || overwriteCache) {
             String webJson = "";
             try {
-                HttpURLConnection con = (HttpURLConnection)(new URL("https://baphomet42.github.io/blackmarket/items.json")).openConnection();
+                HttpURLConnection con = (HttpURLConnection)(new URI("https://baphomet42.github.io/blackmarket/items.json")).toURL().openConnection();
                 con.setConnectTimeout(2000);
                 con.setReadTimeout(500);
                 con.setUseCaches(false);
@@ -993,7 +980,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     scan.close();
                 }
                 con.disconnect();
-            } catch(IOException e) {}
+            } catch(Exception e) {}
 
             if(BlackMagick.nbtFromString(webJson) != null && BlackMagick.nbtFromString(webJson).getType()==NbtElement.COMPOUND_TYPE) {
                 NbtCompound cache = (NbtCompound)BlackMagick.nbtFromString(webJson);

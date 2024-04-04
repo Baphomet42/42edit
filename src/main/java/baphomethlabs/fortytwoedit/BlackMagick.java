@@ -7,11 +7,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.spongepowered.asm.mixin.injection.struct.InjectorGroupInfo.Map;
-
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -68,6 +65,17 @@ public class BlackMagick {
     public static void setItem(ItemStack item, int slot) {
         final MinecraftClient client = MinecraftClient.getInstance();
         if(client.player.getAbilities().creativeMode) {
+
+            // If item is not enabled, sets the slot to a bundle containing the item.
+            // Removing the bundle item in an inventory may result in a ghost item.
+            // Emptying the bundle with the use key ingame will spawn the item, and it will not be a ghost.
+            if (!item.isEmpty() && !client.player.networkHandler.hasFeature(item.getItem().getRequiredFeatures())) {
+                ItemStack newStack = BlackMagick.itemFromString("{id:bundle,components:{bundle_contents:["+BlackMagick.itemToNbt(item).asString()+"]}}");
+                if(!newStack.isEmpty()) {
+                    item = newStack;
+                }
+            }
+
             client.interactionManager.clickCreativeStack(item.copy(), slot);
             client.player.playerScreenHandler.sendContentUpdates();
         }
@@ -187,6 +195,17 @@ public class BlackMagick {
         final MinecraftClient client = MinecraftClient.getInstance();
         if(client.world != null && inp != null)
             return ItemStack.fromNbtOrEmpty(client.world.getRegistryManager(),inp);
+        return ItemStack.EMPTY;
+    }
+
+    /**
+     * @param inp stringified item compound with id/count/components
+     * @return stack from nbt (or empty stack if invalid)
+     */
+    public static ItemStack itemFromString(String inp) {
+        final MinecraftClient client = MinecraftClient.getInstance();
+        if(client.world != null && inp != null)
+            return ItemStack.fromNbtOrEmpty(client.world.getRegistryManager(),BlackMagick.validCompound(BlackMagick.nbtFromString(inp,NbtElement.COMPOUND_TYPE)));
         return ItemStack.EMPTY;
     }
 
@@ -336,7 +355,7 @@ public class BlackMagick {
             return null;
 
         try {
-            NbtPath p = NbtPath.method_58472(path);
+            NbtPath p = NbtPath.parse(path);
             List<NbtElement> list = p.get(inp);
             if(list.size() == 1) {
                 NbtElement el = list.get(0);
@@ -380,7 +399,7 @@ public class BlackMagick {
             nbt = base.copy();
 
         try {
-            NbtPath p = NbtPath.method_58472(path);
+            NbtPath p = NbtPath.parse(path);
             if(el == null)
                 p.remove(nbt);
             else

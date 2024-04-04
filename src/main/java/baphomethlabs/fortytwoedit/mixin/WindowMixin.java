@@ -9,7 +9,7 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.Window;
 
 @Mixin(Window.class)
-public abstract class IconsMixin {
+public abstract class WindowMixin {
 
     @Redirect(method="setIcon", at=@At(value="INVOKE", target="Lnet/minecraft/client/texture/NativeImage;read(Ljava/io/InputStream;)Lnet/minecraft/client/texture/NativeImage;"))
     private NativeImage returnIcon(InputStream stream) {

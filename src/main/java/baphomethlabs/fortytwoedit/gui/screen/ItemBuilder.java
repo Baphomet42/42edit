@@ -33,11 +33,12 @@ import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.ButtonWidget.PressAction;
-import net.minecraft.client.item.TooltipContext;
+import net.minecraft.client.item.TooltipType;
 import net.minecraft.client.option.HotbarStorage;
 import net.minecraft.command.argument.ItemStackArgumentType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
+import net.minecraft.item.Item.TooltipContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtByte;
@@ -1444,7 +1445,7 @@ public class ItemBuilder extends GenericScreen {
                 list.add(listCurrent.copy());
                 ItemStack item = selItem==null ? new ItemStack(Items.STONE) : new ItemStack(selItem.getItem());
                 //item.setSubNbt(listCurrentPath,list);
-                textList = item.getTooltip(client.player,TooltipContext.Default.ADVANCED.withCreative());
+                textList = item.getTooltip(TooltipContext.DEFAULT,client.player,TooltipType.ADVANCED.withCreative());
                 listCurrentValid = textList.size()>3;
 
                 if(listCurrent.contains("Operation",NbtElement.INT_TYPE) && ( ((NbtInt)listCurrent.get("Operation")).intValue()<0 || ((NbtInt)listCurrent.get("Operation")).intValue()>2 ))
@@ -1457,7 +1458,7 @@ public class ItemBuilder extends GenericScreen {
             List<Text> textList = new ArrayList<>();
             ItemStack item = new ItemStack(Items.POTION);
             //item.setSubNbt(listCurrentPath,list);
-            Items.POTION.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+            Items.POTION.appendTooltip(item,TooltipContext.DEFAULT,textList,TooltipType.ADVANCED.withCreative());
             if(textList.size()>0 && !textList.get(0).getString().equals("No Effects"))
                 listCurrentValid = true;
         }
@@ -1467,7 +1468,7 @@ public class ItemBuilder extends GenericScreen {
             List<Text> textList = new ArrayList<>();
             ItemStack item = new ItemStack(Items.SUSPICIOUS_STEW);
             //item.setSubNbt(listCurrentPath,list);
-            Items.SUSPICIOUS_STEW.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+            Items.SUSPICIOUS_STEW.appendTooltip(item,TooltipContext.DEFAULT,textList,TooltipType.ADVANCED.withCreative());
             if(textList.size()>0 && !textList.get(0).getString().equals("No Effects"))
                 listCurrentValid = true;
         }
@@ -1481,7 +1482,7 @@ public class ItemBuilder extends GenericScreen {
             List<Text> textList = new ArrayList<>();
             ItemStack item = new ItemStack(Items.FIREWORK_STAR);
             //item.setSubNbt("Explosion",listCurrent.copy());
-            Items.FIREWORK_STAR.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+            Items.FIREWORK_STAR.appendTooltip(item,TooltipContext.DEFAULT,textList,TooltipType.ADVANCED.withCreative());
             if(textList.size()>0)
                 listCurrentValid = true;
         }
@@ -1493,7 +1494,7 @@ public class ItemBuilder extends GenericScreen {
             NbtCompound bet = new NbtCompound();
             bet.put("Patterns",list);
             //item.setSubNbt("BlockEntityTag",bet);
-            Items.BLACK_BANNER.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+            Items.BLACK_BANNER.appendTooltip(item,TooltipContext.DEFAULT,textList,TooltipType.ADVANCED.withCreative());
             if(textList.size()>0 && listBannerCol != null && listBannerPat != null)
                 listCurrentValid = true;
 
@@ -1733,11 +1734,11 @@ public class ItemBuilder extends GenericScreen {
                     String sound = inp.trim();
                     sound = sound.replaceAll("[^a-zA-Z0-9_.:]","");
                     if(!sound.equals("")) {
-                        ItemStack item = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.nbtFromString(
+                        ItemStack item = BlackMagick.itemFromString(
                             "{id:player_head,components:{profile:{properties:[{name:\"textures\",value:"+
                             "\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDov"+
                             "L3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80Y2VlYjc3ZDRkMjU3MjRhOWNhZjJjN2NkZjJkODgzOTliMTQxN2M2YjlmZjUyMTM2NTliNjUzYmU0Mz"+
-                            "c2ZTMiDQogICAgfQ0KICB9DQp9\"}]},note_block_sound:\""+sound+"\",custom_name:'[{\"text\":\""+sound+"\",\"color\":\"yellow\",\"italic\":false}]'}}")));
+                            "c2ZTMiDQogICAgfQ0KICB9DQp9\"}]},note_block_sound:\""+sound+"\",custom_name:'[{\"text\":\""+sound+"\",\"color\":\"yellow\",\"italic\":false}]'}}");
                         if(!item.isEmpty())
                             BlackMagick.setItemMain(item);
                     }
@@ -4949,7 +4950,7 @@ public class ItemBuilder extends GenericScreen {
                     List<Text> textList = new ArrayList<>();
                     Items.WHITE_BANNER.appendTooltip(BlackMagick.itemFromNbt((NbtCompound)BlackMagick
                         .nbtFromString("{id:white_banner,Count:1,tag:{BlockEntityTag:{Patterns:[{Color:14,Pattern:"+patterns[i]+"}]}}}")),
-                        null,textList,TooltipContext.Default.ADVANCED.withCreative());
+                        TooltipContext.DEFAULT,textList,TooltipType.ADVANCED.withCreative());
                     if(textList.size()>0)
                         this.btns[i].setTooltip(Tooltip.of(Text.of(textList.get(0).getString().replaceAll("Red ",""))));
                 }
@@ -5217,7 +5218,7 @@ public class ItemBuilder extends GenericScreen {
                     list.add(nbt.copy());
                     ItemStack item = selItem==null ? new ItemStack(Items.STONE) : new ItemStack(selItem.getItem());
                     //item.setSubNbt(path,list);
-                    textList = item.getTooltip(client.player,TooltipContext.Default.ADVANCED.withCreative());
+                    textList = item.getTooltip(TooltipContext.DEFAULT,client.player,TooltipType.ADVANCED.withCreative());
                     addedPreview = true;
                     if(textList.size()>6)
                         preview.add(((MutableText)Text.of("Any Slot: ")).append(textList.get(3)).setStyle(Style.EMPTY));
@@ -5246,7 +5247,7 @@ public class ItemBuilder extends GenericScreen {
                 List<Text> textList = new ArrayList<>();
                 ItemStack item = new ItemStack(Items.POTION);
                 //item.setSubNbt(path,list);
-                Items.POTION.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+                Items.POTION.appendTooltip(item,TooltipContext.DEFAULT,textList,TooltipType.ADVANCED.withCreative());
                 if(textList.size()==0 || (textList.size()>0 && textList.get(0).getString().equals("No Effects")))
                     preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid effect\",\"color\":\"red\"}").text());
                 else
@@ -5258,7 +5259,7 @@ public class ItemBuilder extends GenericScreen {
                 List<Text> textList = new ArrayList<>();
                 ItemStack item = new ItemStack(Items.SUSPICIOUS_STEW);
                 //item.setSubNbt(path,list);
-                Items.SUSPICIOUS_STEW.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+                Items.SUSPICIOUS_STEW.appendTooltip(item,TooltipContext.DEFAULT,textList,TooltipType.ADVANCED.withCreative());
                 if(textList.size()>0 && !textList.get(0).getString().equals("No Effects"))
                     preview.add(((MutableText)textList.get(0)).setStyle(Style.EMPTY));
                 else
@@ -5273,7 +5274,7 @@ public class ItemBuilder extends GenericScreen {
                 if(el.contains("FadeColors"))
                     el.remove("FadeColors");
                 //item.setSubNbt("Explosion",el);
-                Items.FIREWORK_STAR.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+                Items.FIREWORK_STAR.appendTooltip(item,TooltipContext.DEFAULT,textList,TooltipType.ADVANCED.withCreative());
                 if(textList.size()==0)
                     preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid explosion\",\"color\":\"red\"}").text());
                 else {
@@ -5304,7 +5305,7 @@ public class ItemBuilder extends GenericScreen {
                 NbtCompound bet = new NbtCompound();
                 bet.put("Patterns",list);
                 //item.setSubNbt("BlockEntityTag",bet);
-                Items.BLACK_BANNER.appendTooltip(item,null,textList,TooltipContext.Default.ADVANCED.withCreative());
+                Items.BLACK_BANNER.appendTooltip(item,TooltipContext.DEFAULT,textList,TooltipType.ADVANCED.withCreative());
                 if(textList.size()>0)
                     preview.add(((MutableText)textList.get(0)).setStyle(Style.EMPTY));
                 else
@@ -5800,7 +5801,6 @@ public class ItemBuilder extends GenericScreen {
          * 
          * @param path nbt path in format: components.foo.bar.list[0]
          * @param name
-         * @param isText true if the element type is Text
          */
         public RowWidgetCompound(String path, String name) {
             super();
