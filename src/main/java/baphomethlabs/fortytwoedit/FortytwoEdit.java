@@ -648,6 +648,17 @@ public class FortytwoEdit implements ClientModInitializer {
 
         list.remove("creative_slot_lock");
         list.remove("map_post_processing");
+
+        Set<String> superKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(ComponentHelper.SUPER_ITEM,"components",NbtElement.COMPOUND_TYPE)).getKeys();
+        for(String k : superKeys) {
+            if(!list.contains(k))
+                LOGGER.warn("Unknown component in ComponentHelper: "+k);
+        }
+        for(String k : list) {
+            if(!superKeys.contains(k))
+                LOGGER.warn("ComponentHelper does not contain component: "+k);
+        }
+
         Collections.sort(list);
         return list.toArray(new String[0]);
     }
@@ -1023,7 +1034,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     nbt.put("Count",NbtInt.of(1));
                     if(jsonItem.contains("count",NbtElement.INT_TYPE))
                         nbt.put("Count",jsonItem.get("count"));
-                    if(jsonItem.contains("tag",NbtElement.STRING_TYPE)) {
+                    if(jsonItem.contains("tag",NbtElement.STRING_TYPE)) {//TODO update web items validation system
                         NbtElement el = BlackMagick.nbtFromString(((NbtString)jsonItem.get("tag")).asString());
                         if(el != null && el.getType()==NbtElement.COMPOUND_TYPE)
                             nbt.put("tag",el);

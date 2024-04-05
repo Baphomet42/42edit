@@ -16,6 +16,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.ComponentHelper;
+import baphomethlabs.fortytwoedit.ComponentHelper.PathType;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.mixin.HotbarStorageAccessor;
@@ -127,12 +128,12 @@ public class ItemBuilder extends GenericScreen {
     private static final ItemStack[] rgbItems = new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
     private Map<String,int[]> cacheI = Maps.newHashMap();
     private Text jsonPreview = Text.of("");
-    private Text jsonPreview2 = Text.of("");
     private int jsonEffectMode = -1;
     private static int[] jsonEffects = new int[8];//bold,italic,underlined,strikethrough,obfuscated,radgrad,colmode,elmode
     private static double[] tabScroll = new double[tabs.length];
     private boolean pauseSaveScroll = false;
-    protected NbtElement tempEl = null;
+    protected NbtElement blankTabEl = null;
+    protected String blankTabLbl = null;
 
     // protected String editPath = ""; // path to component
     // protected String editPath2 = ""; // apend to editPath to get path to list
@@ -142,7 +143,7 @@ public class ItemBuilder extends GenericScreen {
     // protected int editPathMode = 0; // 0 for component, 1 for compound in list, 2+ for other
     // protected String editPathArg = null; // use when switching between tabs and always set to null after use
 
-    private boolean jsonUnsaved[] = new boolean[2];
+    private boolean jsonBaseValid = false;
     private boolean jsonEffectValid = false;
     private String jsonEffectFull = "";
     private static String jsonLastColor = "reset";
@@ -848,7 +849,7 @@ public class ItemBuilder extends GenericScreen {
         rgbItems[2] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:filled_map,components:{map_color:"+getRgbDec()+"}}"));
     }
 
-    private int getRgbDec() {//TODO move color calculations to blackmagick
+    private int getRgbDec() {
         return getRgbDec(0);
     }
     private int getRgbDec(int rgbNum) {
@@ -899,10 +900,10 @@ public class ItemBuilder extends GenericScreen {
 
     // }
 
-    private void updateJsonPreview() {
-        updateJsonPreview(null);
+    private void updateJsonPreview(String path, String jsonBase) {
+        updateJsonPreview(path,jsonBase,null);
     }
-    private void updateJsonPreview(String jsonEffect) {
+    private void updateJsonPreview(String path, String jsonBase, String jsonEffect) {
         // int[] editSave = null;
         // if(editPathMode == 0) {
         //     editElement[1] = null;
@@ -915,51 +916,32 @@ public class ItemBuilder extends GenericScreen {
         //     ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]).w).active = false;
         //     ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]-1).w).active = false;
         // }
+        jsonBaseValid = false;
         jsonEffectValid = false;
-        String json1inp = null;
-        if(cacheI.containsKey("jsonBox")) {
-            int[] jsonBoxI = cacheI.get("jsonBox");
-            if(noScrollWidgets.size()>jsonBoxI[0] && noScrollWidgets.get(jsonBoxI[0]).size()>jsonBoxI[1]) {
-                json1inp = ((EditBoxWidget)noScrollWidgets.get(jsonBoxI[0]).get(jsonBoxI[1]).w).getText();
-            }
-            // else if(editPathMode==2 && editElement[1] != null) {
-            //     json1inp = editElement[1].asString();
+        jsonPreview = BlackMagick.jsonFromString(jsonBase).text();
+        if(BlackMagick.jsonFromString(jsonBase).isValid()) {
+            jsonBaseValid = true;
+            // if(editPathMode == 0) {
+            //     editElement[1] = NbtString.of(jsonBase);
+            //     ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]).w).active = true;
             // }
-            // else if(editPathMode==3 && editElement2[1] != null) {
-            //     json1inp = editElement2[1].asString();
+            // else if(editPathMode == 1) {
+            //     editElement2[1] = NbtString.of(jsonBase);
+            //     ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]).w).active = true;
+            //     if(editElement[1] != null && editElement2[0] != null)
+            //         ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]-1).w).active = true;
             // }
-        }
 
-        if(json1inp != null) {
-            jsonPreview = BlackMagick.jsonFromString(json1inp).text();
-            jsonPreview2 = BlackMagick.jsonFromString(json1inp).text();
-            if(BlackMagick.jsonFromString(json1inp).isValid()) {
-                // if(editPathMode == 0) {
-                //     editElement[1] = NbtString.of(json1inp);
-                //     ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]).w).active = true;
-                // }
-                // else if(editPathMode == 1) {
-                //     editElement2[1] = NbtString.of(json1inp);
-                //     ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]).w).active = true;
-                //     if(editElement[1] != null && editElement2[0] != null)
-                //         ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]-1).w).active = true;
-                // }
-
-                if(jsonEffect != null && BlackMagick.jsonFromString(appendJsonEffect(json1inp,jsonEffect)).isValid()) {
-                    jsonPreview2 = BlackMagick.jsonFromString(appendJsonEffect(json1inp,jsonEffect)).text();
-                    if(jsonEffect.length()>0 && !jsonEffect.equals("{\"text\":\"\"}"))
-                        jsonEffectValid = true;
-                    jsonEffectFull = appendJsonEffect(json1inp,jsonEffect);
-                }
-                if(listCurrentPath.equals("display/Name")) {
-                    jsonPreview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text()).append(jsonPreview.copy());
-                    jsonPreview2 = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text()).append(jsonPreview2.copy());
-                }
-                else if(listCurrentPath.equals("display/Lore")) {
-                    jsonPreview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text()).append(jsonPreview.copy());
-                    jsonPreview2 = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text()).append(jsonPreview2.copy());
-                }
+            if(jsonEffect != null && BlackMagick.jsonFromString(appendJsonEffect(jsonBase,jsonEffect)).isValid()) {
+                jsonPreview = BlackMagick.jsonFromString(appendJsonEffect(jsonBase,jsonEffect)).text();
+                if(jsonEffect.length()>0 && !jsonEffect.equals("{\"text\":\"\"}"))
+                    jsonEffectValid = true;
+                jsonEffectFull = appendJsonEffect(jsonBase,jsonEffect);
             }
+            if(path.endsWith("components.custom_name"))
+                jsonPreview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text()).append(jsonPreview.copy());
+            else if(path.contains("components.lore["))
+                jsonPreview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text()).append(jsonPreview.copy());
         }
         if(cacheI.containsKey("jsonAdd") && cacheI.get("jsonAdd")[0] == tab && noScrollWidgets.size() > cacheI.get("jsonAdd")[0]
         && noScrollWidgets.get(cacheI.get("jsonAdd")[0]).size() > cacheI.get("jsonAdd")[1]) {
@@ -1067,8 +1049,6 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private void updateJsonEffect() {
-        jsonUnsaved[1] = true;
-
         if(jsonEffectMode == 0) {
             if(!cacheI.containsKey("jsonEffectTxt") || tab != cacheI.get("jsonEffectTxt")[0])
                 return;
@@ -1187,7 +1167,7 @@ public class ItemBuilder extends GenericScreen {
             }
             if(value == null || value.equals(""))
                 val = "{\"text\":\"\"}";
-            updateJsonPreview(val);
+            //updateJsonPreview(val);
         }
         else if(jsonEffectMode == 1) {
             if(!cacheI.containsKey("jsonEffectTxt") || tab != cacheI.get("jsonEffectTxt")[0])
@@ -1244,7 +1224,7 @@ public class ItemBuilder extends GenericScreen {
             val+="}";
             if(value == null || value.equals(""))
                 val = "{\"text\":\"\"}";
-            updateJsonPreview(val);
+            //updateJsonPreview(val);
         }
         else if(jsonEffectMode == 2) {
             if(!cacheI.containsKey("clickEventLbl") || tab != cacheI.get("clickEventLbl")[0])
@@ -1268,7 +1248,7 @@ public class ItemBuilder extends GenericScreen {
             if(hover != null && hover.length()>0 && contents != null && contents.length()>0) {
                 val += ",\"hoverEvent\":{\"action\":\""+hover+"\",\"contents\":"+contents+"}";
             }
-            updateJsonPreview(val);
+            //updateJsonPreview(val);
         }
 
     }
@@ -1556,35 +1536,55 @@ public class ItemBuilder extends GenericScreen {
 
     protected void buildComponentWidget(List<RowWidget> list, String path) {
         String name = ComponentHelper.getCompNickname(path);
-        String[] suggs = ComponentHelper.getPathSuggs(path, selItem);
 
-        switch(ComponentHelper.getCompType(path)) {
+        switch(ComponentHelper.getPathInfo(path).type()) {
 
             case UNIT : list.add(new RowWidgetBinary(path,name)); break;
             case TOOLTIP_UNIT : list.add(new RowWidgetTrinary(path)); break;
             case TRINARY : list.add(new RowWidgetTrinary(path,name)); break;
-            case COMPLEX : list.add(new RowWidgetCompound(path,name)); break;
-            default : list.add(new RowWidgetComponent(path,name,suggs)); break;
+            case COMPOUND :
+            case LIST :
+            case TEXT :
+            case DECIMAL_COLOR :
+                list.add(new RowWidgetCompound(path,name));
+                break;
+            default : list.add(new RowWidgetComponent(path,name,ComponentHelper.getPathInfo(path).suggs())); break;
         }
     }
 
     public boolean setEditingElement(String path, NbtElement newEl, ButtonWidget saveBtn) {
-        tempEl = newEl;
-        saveBtn.setTooltip(Tooltip.of(Text.of("Invalid component:\n" + (tempEl==null ? "null" : tempEl.asString()))));
+        blankTabEl = newEl;
+        saveBtn.setTooltip(Tooltip.of(Text.of("Invalid component:\n" + (blankTabEl==null ? "null" : blankTabEl.asString()))));
         saveBtn.active = false;
-        if(tempEl != null && saveBtn != null) {
-            ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,tempEl));
+        if(blankTabEl != null && saveBtn != null) {
+            ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,blankTabEl));
             if(ItemStack.areEqual(selItem,newItem)) {
                 saveBtn.setTooltip(Tooltip.of(Text.of("Item unchanged")));
             }
             else if(newItem != null) {
                 if(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(newItem),path) != null) {
-                    saveBtn.setTooltip(Tooltip.of(Text.of("Set component to:\n"+tempEl.asString())));
+                    saveBtn.setTooltip(Tooltip.of(Text.of("Set component to:\n"+BlackMagick.nbtToString(blankTabEl))));
                     saveBtn.active = true;
                     return true;
                 }
             }
         }
+
+        if(inpError == null && path.startsWith("components.") && blankTabEl != null && !path.replaceAll("components.","").contains(".")
+        && !path.replaceAll("components.","").contains("[")) {
+            try {
+                ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(
+                    new StringReader("stone["+path.replaceAll("components.","")+"="+BlackMagick.nbtToString(blankTabEl)+"]"));
+            } catch(Exception ex) {
+                if(ex instanceof CommandSyntaxException) {
+                    inpError = ((CommandSyntaxException)ex).getMessage();
+                    if(inpError.contains(" at position ")) {
+                        inpError = inpError.substring(0,inpError.indexOf(" at position "));
+                    }
+                }
+            }
+        }
+
         return false;
     }
 
@@ -4347,6 +4347,7 @@ public class ItemBuilder extends GenericScreen {
      */
     public void createWidgets(int mode, NbtCompound args) {
         int tabNum = CACHE_TAB_BLANK;
+        blankTabLbl = null;
         if(!pauseSaveScroll && tabWidget != null) {
             tabScroll[tab] = tabWidget.getScrollAmount();
             pauseSaveScroll = true;
@@ -4390,8 +4391,8 @@ public class ItemBuilder extends GenericScreen {
                 // }
                 final ButtonWidget saveBtn;
                 saveBtn = ButtonWidget.builder(Text.of("Save"), btn -> {
-                    if(tempEl != null) {
-                        ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,tempEl));
+                    if(blankTabEl != null) {
+                        ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,blankTabEl));
                         if(newItem != null) {
                             if(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(newItem),path) != null) {
                                 BlackMagick.setItemMain(newItem);
@@ -4408,40 +4409,103 @@ public class ItemBuilder extends GenericScreen {
                 if(el != null)
                     setEditingElement(path,el.copy(),saveBtn);
 
+                PathType elType = ComponentHelper.getPathInfo(path).type();
                 if(el != null) {
-                    if(el.getType() == NbtElement.COMPOUND_TYPE) {
-                        {
-                            widgets.get(tabNum).add(new RowWidget(path.replace("components.","")));
-                        }
-                        for(String k : BlackMagick.sortSet(((NbtCompound)el).getKeys())) {
-                            widgets.get(tabNum).add(new RowWidgetElement(path,saveBtn,(NbtCompound)el,k));
-                        }
-                    }
-                    else if(el.getType() == NbtElement.LIST_TYPE) {
-                        //TODO list logic
-                        {
-                            widgets.get(tabNum).add(new RowWidget(path.replace("components.","")));
-                        }
-                        {
-                            widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
-                        }
-                    }
-                    else { //TODO test for Text, Color, otherwise go to fallback
-                        {
-                            widgets.get(tabNum).add(new RowWidget(path.replace("components.","")));
-                        }
-                        {
-                            widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
-                        }
+                    switch(el.getType()) {
+                        case NbtElement.COMPOUND_TYPE : elType = PathType.COMPOUND; break;
+                        case NbtElement.LIST_TYPE : elType = PathType.LIST; break;
+                        default : break;
                     }
                 }
-                else { //TODO get screen based on what nbt should be
-                    {
-                        widgets.get(tabNum).add(new RowWidget(path.replace("components.","")));
+
+                blankTabLbl = path.replace("components.","");
+
+                if(elType == PathType.COMPOUND) {
+                    if(el==null || el.getType()!=NbtElement.COMPOUND_TYPE) {
+                        el = new NbtCompound();
+                        setEditingElement(path,el.copy(),saveBtn);
+                    }
+
+                    Set<String> keys = Sets.newHashSet();
+                    for(String k : BlackMagick.validCompound(BlackMagick.getNbtPath(ComponentHelper.SUPER_ITEM,path)).getKeys()) {
+                        keys.add(k);
+                    }
+                    for(String k : ((NbtCompound)el).getKeys()) {
+                        keys.add(k);
+                    }
+                    for(String k : BlackMagick.sortSet(keys)) {
+                        widgets.get(tabNum).add(new RowWidgetElement(path,saveBtn,(NbtCompound)el,k));
+                    }
+                }
+                else if(elType == PathType.LIST) {
+                    //TODO list logic
+                    widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
+                }
+                else if(elType == PathType.TEXT) {//TODO text logic
+                    jsonEffectMode=-1;
+                    String startVal = "";
+                    if(el != null && el.getType()==NbtElement.STRING_TYPE)
+                        startVal = ((NbtString)el).asString();
+                    else {
+                        startVal = "{\"text\":\"\"}";
+                        el = NbtString.of(startVal);
+                        setEditingElement(path,el,saveBtn);
+                    }
+
+                    {  
+                        TextFieldWidget w = new TextFieldWidget(this.textRenderer,x-15,y+5+1,15,18,Text.of(""));
+                        w.setEditable(false);
+                        w.setText("\u00a7");
+                        w.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
+                        noScrollWidgets.get(tabNum).add(new PosWidget(w,-15,5+1));
                     }
                     {
-                        widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
+                        cacheI.put("jsonBox",new int[]{tabNum,noScrollWidgets.get(tabNum).size()});
+                        EditBoxWidget w = new EditBoxWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, x+15-3, y+35, 240-36, 22*6, Text.of(""), Text.of(""));
+                        w.setChangeListener(value -> {
+                            inpError = null;
+                            updateJsonPreview(path,value);
+                            if(jsonBaseValid) {
+                                setEditingElement(path,BlackMagick.nbtFromString("'"+value+"'",NbtElement.STRING_TYPE),saveBtn);
+                            }
+                            else {
+                                setEditingElement(path,null,saveBtn);
+                            }
+                        });
+                        noScrollWidgets.get(tabNum).add(new PosWidget(w,15-3,35));
+                        this.allTxtWidgets.add(w);
+                        w.setText(startVal);
                     }
+                    {
+                        noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Text"), button -> {
+                            jsonEffectMode = 1;
+                            // createWidgets(tab);
+                            // this.btnTab(tab);
+                            ItemBuilder.this.unsel = true;
+                        }).dimensions(x+15-3,y+35+22*6+1,60,20).build(),15-3,35+22*6+1));
+                    }
+                    {
+                        noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Effect"), button -> {
+                            jsonEffectMode = 0;
+                            // createWidgets(tab);
+                            // this.btnTab(tab);
+                            ItemBuilder.this.unsel = true;
+                        }).dimensions(x+15-3+60+5,y+35+22*6+1,60,20).build(),15-3+60+5,35+22*6+1));
+                    }
+                    if(path.contains("written_book_content")) {
+                        noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Set Event"), button -> {
+                            jsonEffectMode = 2;
+                            // createWidgets(tab);
+                            // this.btnTab(tab);
+                            ItemBuilder.this.unsel = true;
+                        }).dimensions(x+15-3+60+5+60+5,y+35+22*6+1,60,20).build(),15-3+60+5+60+5,35+22*6+1));
+                    }
+                }
+                else if(elType == PathType.DECIMAL_COLOR) {//TODO dec logic
+                    widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
+                }
+                else {
+                    widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
                 }
             }
         }
@@ -4507,7 +4571,7 @@ public class ItemBuilder extends GenericScreen {
         protected PosWidget[] wids;
 
         //blank
-        private RowWidget() {
+        public RowWidget() {
             super();
             this.children = Lists.newArrayList();
             setup();
@@ -5818,12 +5882,16 @@ public class ItemBuilder extends GenericScreen {
 
             Text btnTxt = Text.of(startVal);
             if(!startVal.equals("")) {
-                if(ComponentHelper.isText(path)) {
+                if(ComponentHelper.getPathInfo(path).type()==PathType.TEXT) {
                     if(BlackMagick.jsonFromString(startVal).isValid()) {
                         btnTxt = BlackMagick.jsonFromString(startVal).text();
+                        if(path.endsWith("components.custom_name"))
+                            btnTxt = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text()).append(btnTxt.copy());
+                        else if(path.contains("components.lore["))
+                            btnTxt = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text()).append(btnTxt.copy());
                     }
                 }
-                else if(ComponentHelper.isDecimalColor(path)) {
+                else if(ComponentHelper.getPathInfo(path).type()==PathType.DECIMAL_COLOR) {
                     if(BlackMagick.colorHexFromDec(startVal) != null)
                         btnTxt = BlackMagick.jsonFromString("{\"text\":\""+startVal+"\",\"color\":\""+BlackMagick.colorHexFromDec(startVal)+"\"}").text();
                     else
@@ -5862,7 +5930,7 @@ public class ItemBuilder extends GenericScreen {
 
         /**
          * Row to edit any element in base compound.
-         * Contains button to set and txt to input.
+         * Contains button to set and txt to input (or others depending on path and key).
          * Element is removed on set when txt is empty.
          * 
          * @param key element key within compound
@@ -5872,72 +5940,105 @@ public class ItemBuilder extends GenericScreen {
 
             this.lbl = key;
             int size = sizeFromName(key);
+            String fullPath = path+"."+key;
 
-            final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(base,key));
+            // if(ComponentHelper.isText(fullPath)) {
+            //     //TODO other el types
+            // }
+            // else if(ComponentHelper.isDecimalColor(fullPath)) {
 
-            final String[] suggestions;
-            if(startVal.length()>0)
-                suggestions = new String[]{startVal};
-            else
-                suggestions = null;
+            // }
+            // else if(ComponentHelper.getCompType(fullPath)==CompType.TRINARY) {
 
-            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
-                ItemBuilder.this.x+ROW_LEFT+5+size, 5, ROW_RIGHT-ROW_LEFT-size-5, 20, Text.of(""))};
-            this.txtX = new int[]{ROW_LEFT+5+size};
-            this.txts[0].setMaxLength(131072);
+            // }
+            // else if(ComponentHelper.getCompType(fullPath)==CompType.TOOLTIP_UNIT) {
+                
+            // }
+            // else if(ComponentHelper.getCompType(fullPath)==CompType.UNIT) {
+                
+            // }
+            // else {
+            {
+                final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(base,key));
 
-            this.txts[0].setChangedListener(value -> {
-                inpError = null;
-
-                NbtElement el = BlackMagick.nbtFromString(value);
-                if(value.equals(""))
-                    el = null;
-
-                if((value != null && !value.equals(startVal))) {
-                    this.txts[0].setEditableColor(0xFFFFFF);
-                    
-                    if(value.length()>0 && el==null) {
-                        inpError = "Invalid element";
-                    }
-
-                    if(inpError != null) {
-                        this.txts[0].setEditableColor(0xFF5555);
-                    }
+                String[] baseSuggestions = ComponentHelper.getPathInfo(fullPath).suggs();
+                final String[] suggestions;
+                if(baseSuggestions == null) {
+                    if(startVal.length()>0)
+                        suggestions = new String[]{startVal};
+                    else
+                        suggestions = null;
                 }
                 else {
-                    this.txts[0].setEditableColor(LABEL_COLOR);
-                }
-                
-                if(tempEl != null && tempEl.getType()==NbtElement.COMPOUND_TYPE) {
-                    setEditingElement(path,BlackMagick.setNbtPath((NbtCompound)tempEl,key,el),saveBtn);
+                    if(startVal.length()>0) {
+                        suggestions = new String[baseSuggestions.length+1];
+                        suggestions[0]=startVal;
+                        for(int i=1; i<suggestions.length; i++)
+                            suggestions[i] = baseSuggestions[i-1];
+                    }
+                    else
+                        suggestions = baseSuggestions;
                 }
 
-                if(!currentTxt.contains(this.txts[0])) {
-                    resetSuggs();
-                    currentTxt.add(this.txts[0]);
-                    suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                    if(suggestions != null && suggestions.length > 0)
-                        suggs.setSuggestions(suggestions);
-                }
-                else{
-                    if(suggs != null)
-                        suggs.refresh();
+                this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
+                    ItemBuilder.this.x+ROW_LEFT+5+size, 5, ROW_RIGHT-ROW_LEFT-size-5, 20, Text.of(""))};
+                this.txtX = new int[]{ROW_LEFT+5+size};
+                this.txts[0].setMaxLength(131072);
+
+                this.txts[0].setChangedListener(value -> {
+                    inpError = null;
+
+                    NbtElement el = BlackMagick.nbtFromString(value);
+                    if(value.equals(""))
+                        el = null;
+
+                    if((value != null && !value.equals(startVal))) {
+                        this.txts[0].setEditableColor(0xFFFFFF);
+                        
+                        if(value.length()>0 && el==null) {
+                            inpError = "Invalid element";
+                        }
+
+                        if(inpError != null) {
+                            this.txts[0].setEditableColor(0xFF5555);
+                        }
+                    }
                     else {
+                        this.txts[0].setEditableColor(LABEL_COLOR);
+                    }
+                    
+                    if(blankTabEl != null && blankTabEl.getType()==NbtElement.COMPOUND_TYPE) {
+                        setEditingElement(path,BlackMagick.setNbtPath((NbtCompound)blankTabEl,key,el),saveBtn);
+                    }
+
+                    if(!currentTxt.contains(this.txts[0])) {
                         resetSuggs();
+                        currentTxt.add(this.txts[0]);
                         suggs = new TextSuggestor(client, this.txts[0], textRenderer);
                         if(suggestions != null && suggestions.length > 0)
                             suggs.setSuggestions(suggestions);
                     }
+                    else{
+                        if(suggs != null)
+                            suggs.refresh();
+                        else {
+                            resetSuggs();
+                            suggs = new TextSuggestor(client, this.txts[0], textRenderer);
+                            if(suggestions != null && suggestions.length > 0)
+                                suggs.setSuggestions(suggestions);
+                        }
+                    }
+
+                });
+
+                this.txts[0].setText(startVal);
+
+                for(int i=0; i<txts.length; i++) {
+                    this.children.add(this.txts[i]);
+                    ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
                 }
+            }
 
-            });
-
-            this.txts[0].setText(startVal);
-
-            for(int i=0; i<txts.length; i++) {
-                this.children.add(this.txts[i]);
-                ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
-            }            
         }
 
     }
@@ -6354,11 +6455,13 @@ public class ItemBuilder extends GenericScreen {
         }
         if(inpError != null)
             context.drawCenteredTextWithShadow(this.textRenderer, Text.of(inpError), this.width / 2, y+this.backgroundHeight+3, 0xFF5555);
-        if(jsonPreview != null || jsonPreview2 != null) {
+        if(tab==CACHE_TAB_BLANK && blankTabLbl != null)
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.of(blankTabLbl), this.width / 2, y+11, 0xFFFFFF);
+        if(jsonPreview != null) {
             if(listCurrentPath.equals("pages")) {
                 int i = x - 150 - 1;
                 int j = y+7;
-                StringVisitable stringVisitable = jsonPreview2 == null ? jsonPreview : jsonPreview2;
+                StringVisitable stringVisitable = jsonPreview;
                 List<OrderedText> page = this.textRenderer.wrapLines(stringVisitable, 114);
                 int l = Math.min(128 / this.textRenderer.fontHeight, page.size());
                 for (int m = 0; m < l; ++m) {
@@ -6370,14 +6473,11 @@ public class ItemBuilder extends GenericScreen {
                     context.drawHoverEvent(this.textRenderer, style, mouseX, mouseY);
                 }
             }
-            else if(jsonPreview2 != null)
-                context.drawCenteredTextWithShadow(this.textRenderer, jsonPreview2, this.width / 2, y-14, 0xFFFFFF);
             else
                 context.drawCenteredTextWithShadow(this.textRenderer, jsonPreview, this.width / 2, y-14, 0xFFFFFF);
 
             if(tab != CACHE_TAB_BLANK) {
                 jsonPreview = null;
-                jsonPreview2 = null;
             }
         }
         if(showBannerPreview && bannerChangePreview != null) {

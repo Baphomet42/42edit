@@ -159,8 +159,7 @@ public class BlackMagick {
     }
 
     /**
-     * Converts json to Text object. Valid forms include: {"text":""}, [{"text":""}], and quoted versions of those.
-     * Passing a string literal must be in two sets of quotes like: "\"Minecraft\"", "'Minecraft'", etc.
+     * Converts json to Text object. Valid forms include: {"text":""}, [{"text":""}], '{"text":""}', "Minecraft", etc
      * 
      * @param inp raw json
      * @return parsed Text or error message
@@ -168,10 +167,16 @@ public class BlackMagick {
     public static ParsedText jsonFromString(String inp) {
         RegistryWrapper.WrapperLookup reg = DynamicRegistryManager.EMPTY;
         try {
-            if(inp.startsWith("\"") && inp.endsWith("\""))
-                inp = inp.substring(1,inp.length()-1);
-            else if(inp.startsWith("'") && inp.endsWith("'"))
-                inp = inp.substring(1,inp.length()-1);
+            String modInp = inp;
+            if(modInp.startsWith("\"") && modInp.endsWith("\""))
+                modInp = modInp.substring(1,modInp.length()-1);
+            else if(modInp.startsWith("'") && modInp.endsWith("'"))
+                modInp = modInp.substring(1,modInp.length()-1);
+            Text temp = Text.Serialization.fromJson(modInp,reg);
+            if(temp != null)
+                return new ParsedText(true,temp.copy());
+        } catch(Exception ex) {}
+        try {
             Text temp = Text.Serialization.fromJson(inp,reg);
             if(temp != null)
                 return new ParsedText(true,temp.copy());
@@ -329,10 +334,8 @@ public class BlackMagick {
                     first = false;
 
                 String key = k;
-                String value = comps.get(k).asString();
+                String value = BlackMagick.nbtToString(comps.get(k));
 
-                if(comps.get(k).getType() == NbtElement.STRING_TYPE)
-                    value = "\""+value+"\"";
                 cmd += key+"="+value;
             }
             cmd += "]";
