@@ -37,6 +37,7 @@ import net.minecraft.client.gui.widget.ButtonWidget.PressAction;
 import net.minecraft.client.item.TooltipType;
 import net.minecraft.client.option.HotbarStorage;
 import net.minecraft.command.argument.ItemStackArgumentType;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.item.Item.TooltipContext;
@@ -57,6 +58,7 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
@@ -129,25 +131,18 @@ public class ItemBuilder extends GenericScreen {
     private Map<String,int[]> cacheI = Maps.newHashMap();
     private Text jsonPreview = Text.of("");
     private int jsonEffectMode = -1;
+    private String jsonEffectPath = null;
+    private String jsonEffectBase = null;
     private static int[] jsonEffects = new int[8];//bold,italic,underlined,strikethrough,obfuscated,radgrad,colmode,elmode
     private static double[] tabScroll = new double[tabs.length];
     private boolean pauseSaveScroll = false;
     protected NbtElement blankTabEl = null;
     protected String blankTabLbl = null;
-
-    // protected String editPath = ""; // path to component
-    // protected String editPath2 = ""; // apend to editPath to get path to list
-    // protected int editPath2Index = 0; // index of list from editPath2
-    // protected NbtElement editElement[] = new NbtElement[2]; // 0 is startVal, 1 is kept updated (they can be null)
-    // protected NbtElement editElement2[] = new NbtElement[2]; // 0 is startVal, 1 is kept updated (they can be null)
-    // protected int editPathMode = 0; // 0 for component, 1 for compound in list, 2+ for other
-    // protected String editPathArg = null; // use when switching between tabs and always set to null after use
-
+    private String jsonBaseText = "";
     private boolean jsonBaseValid = false;
     private boolean jsonEffectValid = false;
     private String jsonEffectFull = "";
     private static String jsonLastColor = "reset";
-
     private NbtCompound listCurrent = null;
     private boolean listCurrentValid = false;
     private String listCurrentPath = "";
@@ -439,7 +434,13 @@ public class ItemBuilder extends GenericScreen {
         String itemData = "";
         itemData += BlackMagick.itemToNbt(stack).asString();
         itemData = makeItemTooltipShorten(itemData);
-        return Tooltip.of(Text.empty().append(stack.getName()).append(Text.of("\n"+itemData)));
+
+        MutableText mutableText = Text.empty().append(stack.getName()).formatted(stack.getRarity().getFormatting());
+        if (stack.contains(DataComponentTypes.CUSTOM_NAME)) {
+            mutableText.formatted(Formatting.ITALIC);
+        }
+
+        return Tooltip.of(Text.empty().append(mutableText).append(Text.of("\n"+itemData)));
     }
 
     protected Tooltip makeItemTooltip(NbtCompound nbt, ItemStack stack) {
@@ -448,8 +449,17 @@ public class ItemBuilder extends GenericScreen {
         String itemData = "";
         itemData += nbt.asString();
         itemData = makeItemTooltipShorten(itemData);
+
+        MutableText mutableText = null;
+        if(stack != null) {
+            mutableText = Text.empty().append(stack.getName()).formatted(stack.getRarity().getFormatting());
+            if (stack.contains(DataComponentTypes.CUSTOM_NAME)) {
+                mutableText.formatted(Formatting.ITALIC);
+            }
+        }
+
         return Tooltip.of(Text.empty().append(stack == null ? BlackMagick.jsonFromString("{\"text\":\"Failed to read item\",\"color\":\"red\"}").text() :
-            stack.getName()).append(Text.of("\n"+itemData)));
+            mutableText).append(Text.of("\n"+itemData)));
     }
 
     private String makeItemTooltipShorten(String itemData) {
@@ -904,53 +914,36 @@ public class ItemBuilder extends GenericScreen {
         updateJsonPreview(path,jsonBase,null);
     }
     private void updateJsonPreview(String path, String jsonBase, String jsonEffect) {
-        // int[] editSave = null;
-        // if(editPathMode == 0) {
-        //     editElement[1] = null;
-        //     editSave = cacheI.get("editSave");
-        //     ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]).w).active = false;
-        // }
-        // else if(editPathMode == 1) {
-        //     editElement2[1] = null;
-        //     editSave = cacheI.get("editSave2");
-        //     ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]).w).active = false;
-        //     ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]-1).w).active = false;
-        // }
+        jsonBaseText = jsonBase;
         jsonBaseValid = false;
         jsonEffectValid = false;
         jsonPreview = BlackMagick.jsonFromString(jsonBase).text();
         if(BlackMagick.jsonFromString(jsonBase).isValid()) {
             jsonBaseValid = true;
-            // if(editPathMode == 0) {
-            //     editElement[1] = NbtString.of(jsonBase);
-            //     ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]).w).active = true;
-            // }
-            // else if(editPathMode == 1) {
-            //     editElement2[1] = NbtString.of(jsonBase);
-            //     ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]).w).active = true;
-            //     if(editElement[1] != null && editElement2[0] != null)
-            //         ((ButtonWidget)noScrollWidgets.get(editSave[0]).get(editSave[1]-1).w).active = true;
-            // }
-
             if(jsonEffect != null && BlackMagick.jsonFromString(appendJsonEffect(jsonBase,jsonEffect)).isValid()) {
                 jsonPreview = BlackMagick.jsonFromString(appendJsonEffect(jsonBase,jsonEffect)).text();
                 if(jsonEffect.length()>0 && !jsonEffect.equals("{\"text\":\"\"}"))
                     jsonEffectValid = true;
                 jsonEffectFull = appendJsonEffect(jsonBase,jsonEffect);
             }
-            if(path.endsWith("components.custom_name"))
-                jsonPreview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text()).append(jsonPreview.copy());
-            else if(path.contains("components.lore["))
-                jsonPreview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text()).append(jsonPreview.copy());
+            if(path != null) {
+                if(path.endsWith("components.custom_name"))
+                    jsonPreview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text()).append(jsonPreview.copy());
+                else if(path.contains("components.lore["))
+                    jsonPreview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text()).append(jsonPreview.copy());
+            }
         }
-        if(cacheI.containsKey("jsonAdd") && cacheI.get("jsonAdd")[0] == tab && noScrollWidgets.size() > cacheI.get("jsonAdd")[0]
+        if(jsonEffectMode>=0 && cacheI.containsKey("jsonAdd") && cacheI.get("jsonAdd")[0] == tab && noScrollWidgets.size() > cacheI.get("jsonAdd")[0]
         && noScrollWidgets.get(cacheI.get("jsonAdd")[0]).size() > cacheI.get("jsonAdd")[1]) {
             int[] jsonAddBtn = cacheI.get("jsonAdd");
-            ((ButtonWidget)noScrollWidgets.get(jsonAddBtn[0]).get(jsonAddBtn[1]).w).active = (jsonEffectValid && client.player.getAbilities().creativeMode);
-            if(jsonEffect != null && jsonEffect.length()>0)
-                ((ButtonWidget)noScrollWidgets.get(jsonAddBtn[0]).get(jsonAddBtn[1]).w).setTooltip(Tooltip.of(Text.of(jsonEffect)));
-            else
-                ((ButtonWidget)noScrollWidgets.get(jsonAddBtn[0]).get(jsonAddBtn[1]).w).setTooltip(null);
+            if(jsonEffectValid && jsonEffect != null && jsonEffect.length()>0) {
+                ((ButtonWidget)noScrollWidgets.get(jsonAddBtn[0]).get(jsonAddBtn[1]).w).active = true;
+                ((ButtonWidget)noScrollWidgets.get(jsonAddBtn[0]).get(jsonAddBtn[1]).w).setTooltip(Tooltip.of(Text.of("Set text to:\n"+jsonEffectFull)));
+            }
+            else {
+                ((ButtonWidget)noScrollWidgets.get(jsonAddBtn[0]).get(jsonAddBtn[1]).w).active = false;
+                ((ButtonWidget)noScrollWidgets.get(jsonAddBtn[0]).get(jsonAddBtn[1]).w).setTooltip(Tooltip.of(Text.of("Invalid JSON")));
+            }
         }
     }
 
@@ -963,7 +956,7 @@ public class ItemBuilder extends GenericScreen {
                 return jsonBase.substring(0,jsonBase.length()-1) +","+ jsonEffect +"]";
             else if(jsonBase.length()>=2 && jsonBase.charAt(0)=='{' && jsonBase.charAt(jsonBase.length()-1)=='}')
                 return "["+jsonBase+","+jsonEffect+"]";
-            return "{\"text\":\"Invalid JSON\",\"color\":\"red\"}";
+            return null;
         }
         else if(jsonEffectMode == 2) {
             if(jsonBase.length()>4 && jsonBase.charAt(0)=='[' && jsonBase.charAt(jsonBase.length()-1)==']'
@@ -971,10 +964,10 @@ public class ItemBuilder extends GenericScreen {
                 return jsonBase.substring(0,jsonBase.length()-2) + jsonEffect +"}]";
             else if(jsonBase.length()>2 && jsonBase.charAt(0)=='{' && jsonBase.charAt(jsonBase.length()-1)=='}')
                 return jsonBase.substring(0,jsonBase.length()-1) + jsonEffect +"}";
-            return "{\"text\":\"Invalid JSON\",\"color\":\"red\"}";
+            return null;
         }
         else
-            return "{\"text\":\"Invalid JSON\",\"color\":\"red\"}";
+            return null;
     }
 
     private void updateJsonEffectBtns() {
@@ -1049,6 +1042,8 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private void updateJsonEffect() {
+        if(jsonEffectPath == null || jsonEffectBase == null)
+            return;
         if(jsonEffectMode == 0) {
             if(!cacheI.containsKey("jsonEffectTxt") || tab != cacheI.get("jsonEffectTxt")[0])
                 return;
@@ -1167,7 +1162,7 @@ public class ItemBuilder extends GenericScreen {
             }
             if(value == null || value.equals(""))
                 val = "{\"text\":\"\"}";
-            //updateJsonPreview(val);
+            updateJsonPreview(jsonEffectPath,jsonEffectBase,val);
         }
         else if(jsonEffectMode == 1) {
             if(!cacheI.containsKey("jsonEffectTxt") || tab != cacheI.get("jsonEffectTxt")[0])
@@ -1224,7 +1219,7 @@ public class ItemBuilder extends GenericScreen {
             val+="}";
             if(value == null || value.equals(""))
                 val = "{\"text\":\"\"}";
-            //updateJsonPreview(val);
+            updateJsonPreview(jsonEffectPath,jsonEffectBase,val);
         }
         else if(jsonEffectMode == 2) {
             if(!cacheI.containsKey("clickEventLbl") || tab != cacheI.get("clickEventLbl")[0])
@@ -1248,7 +1243,7 @@ public class ItemBuilder extends GenericScreen {
             if(hover != null && hover.length()>0 && contents != null && contents.length()>0) {
                 val += ",\"hoverEvent\":{\"action\":\""+hover+"\",\"contents\":"+contents+"}";
             }
-            //updateJsonPreview(val);
+            updateJsonPreview(jsonEffectPath,jsonEffectBase,val);
         }
 
     }
@@ -1272,6 +1267,29 @@ public class ItemBuilder extends GenericScreen {
             return null;
         }
         return null;
+    }
+
+    /**
+     * Sets index of all lists in a path to 0.
+     * Used for looking up nbt in SUPER_ITEM.
+     * 
+     * @param path like foo.bar.list[3]
+     * @return path like foo.bar.list[0]
+     */
+    private String simplifyPath(String path) {
+        String superPath = "";
+        while(path.contains("[") && path.contains("]") && (path.indexOf("[")<path.indexOf("]")-1)) {
+            superPath += path.substring(0,path.indexOf("["));
+            superPath += "[0]";
+            path = path.substring(path.indexOf("]"));
+            if(path.length()>1)
+                path = path.substring(1);
+            else
+                path = "";
+        }
+        if(path.length()>0)
+            superPath += path;
+        return superPath;
     }
 
     // private void updateListTab() {
@@ -1553,19 +1571,38 @@ public class ItemBuilder extends GenericScreen {
     }
 
     public boolean setEditingElement(String path, NbtElement newEl, ButtonWidget saveBtn) {
+        return setEditingElement(path,newEl,saveBtn,false,null);
+    }
+
+    public boolean setEditingElement(String path, NbtElement newEl, ButtonWidget saveBtn, boolean deep, NbtElement displayEl) {
         blankTabEl = newEl;
-        saveBtn.setTooltip(Tooltip.of(Text.of("Invalid component:\n" + (blankTabEl==null ? "null" : blankTabEl.asString()))));
+        saveBtn.setTooltip(Tooltip.of(Text.of("Invalid component:\n" + (blankTabEl==null ? "null" : BlackMagick.nbtToString(blankTabEl)))));
+        if(deep)
+            saveBtn.setTooltip(Tooltip.of(Text.of("Invalid element:\n" + (displayEl==null ? "null" : BlackMagick.nbtToString(displayEl)))));
         saveBtn.active = false;
         if(blankTabEl != null && saveBtn != null) {
             ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,blankTabEl));
             if(ItemStack.areEqual(selItem,newItem)) {
-                saveBtn.setTooltip(Tooltip.of(Text.of("Item unchanged")));
+                if(!deep)
+                    saveBtn.setTooltip(Tooltip.of(Text.of("Item unchanged")));
+                else if(displayEl != null) {
+                    saveBtn.setTooltip(Tooltip.of(Text.of("Element unchanged")));
+                    saveBtn.active = true;
+                    return true;
+                }
             }
             else if(newItem != null) {
                 if(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(newItem),path) != null) {
-                    saveBtn.setTooltip(Tooltip.of(Text.of("Set component to:\n"+BlackMagick.nbtToString(blankTabEl))));
-                    saveBtn.active = true;
-                    return true;
+                    if(!deep) {
+                        saveBtn.setTooltip(Tooltip.of(Text.of("Set component to:\n"+BlackMagick.nbtToString(blankTabEl))));
+                        saveBtn.active = true;
+                        return true;
+                    }
+                    else if(displayEl != null) {
+                        saveBtn.setTooltip(Tooltip.of(Text.of("Set element to:\n"+(displayEl==null ? "null" : BlackMagick.nbtToString(displayEl)))));
+                        saveBtn.active = true;
+                        return true;
+                    }
                 }
             }
         }
@@ -2998,813 +3035,6 @@ public class ItemBuilder extends GenericScreen {
                 widgets.get(tabNum).add(new RowWidgetInvRow(stacks));
             }
         }
-        else if(tabNum == CACHE_TAB_BLANK) {//TODO copy text1 and text2 screens
-            // if(editPathMode==0) {
-            //     {
-            //         noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Cancel"),
-            //             btn -> this.btnTab(CACHE_TAB_MAIN)).dimensions(x+5,y+5,40,20).build(),5,5));
-            //     }
-            //     {
-            //         ButtonWidget w = ButtonWidget.builder(Text.of("Delete"), btn -> {
-            //             BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),editPath,null)));
-            //             this.btnTab(CACHE_TAB_MAIN);
-            //         }).dimensions(x+120-40-10,y+5,40,20).build();
-            //         if(!client.player.getAbilities().creativeMode || editElement[0]==null)
-            //             w.active = false;
-            //         noScrollWidgets.get(tabNum).add(new PosWidget(w,120-40-10,5));
-            //     }
-            //     {
-            //         cacheI.put("editSave",new int[]{tabNum,noScrollWidgets.get(tabNum).size()});
-            //         ButtonWidget w = ButtonWidget.builder(Text.of("Save"), btn -> {
-            //             if(editElement[1] != null) {
-            //                 BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),editPath,editElement[1])));
-            //                 this.btnTab(CACHE_TAB_MAIN);
-            //             }
-            //             unsel = true;
-            //         }).dimensions(x+240-5-40,y+5,40,20).build();
-            //         if(!client.player.getAbilities().creativeMode)
-            //             w.active = false;
-            //         noScrollWidgets.get(tabNum).add(new PosWidget(w,240-5-40,5));
-            //     }
-            // }
-            // else if(editPathMode==1) {
-            //     editElement2[0] = BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),editPath+editPath2+"["+editPath2Index+"]");
-            //     {
-            //         noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Cancel"),btn -> {
-            //             editPathMode = 0;
-            //             createWidgets(tab);
-            //             this.btnTab(tab);
-            //         }).dimensions(x+5,y+5,40,20).build(),5,5));
-            //     }
-            //     {
-            //         ButtonWidget w = ButtonWidget.builder(Text.of("Delete"), btn -> {
-            //             if(editElement[1] != null) {
-            //                 NbtElement temp = BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-            //                     BlackMagick.itemToNbtAll(selItem),editPath+editPath2+"["+editPath2Index+"]",null),editPath);
-            //                 if(temp != null)
-            //                     editPathArg = temp.asString();
-            //                 editPathMode = 0;
-            //                 createWidgets(tab);
-            //                 this.btnTab(tab);
-            //             }
-            //             unsel = true;
-            //         }).dimensions(x+120-40-10,y+5,40,20).build();
-            //         if(!client.player.getAbilities().creativeMode || editElement[0]==null)
-            //             w.active = false;
-            //         noScrollWidgets.get(tabNum).add(new PosWidget(w,120-40-10,5));
-            //     }
-            //     {
-            //         ButtonWidget w = ButtonWidget.builder(Text.of("Clone"), btn -> {
-            //             if(editElement[1] != null && editElement2[0] != null && editElement2[1] != null) {
-            //                 NbtCompound temp = (BlackMagick.cloneListElement(BlackMagick.itemToNbtAll(selItem),editPath+editPath2,editPath2Index));
-            //                 NbtElement temp2 = BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-            //                     temp,editPath+editPath2+"["+(editPath2Index+1)+"]",editElement2[1]),editPath);
-            //                 if(temp2 != null)
-            //                     editPathArg = temp2.asString();
-            //                 editPathMode = 0;
-            //                 createWidgets(tab);
-            //                 this.btnTab(tab);
-            //             }
-            //         }).dimensions(x+120+10,y+5,40,20).build();
-            //         if(!client.player.getAbilities().creativeMode)
-            //             w.active = false;
-            //         noScrollWidgets.get(tabNum).add(new PosWidget(w,120+10,5));
-            //     }
-            //     {
-            //         cacheI.put("editSave2",new int[]{tabNum,noScrollWidgets.get(tabNum).size()});
-            //         ButtonWidget w = ButtonWidget.builder(Text.of("Save"), btn -> {
-            //             if(editElement[1] != null) {
-            //                 NbtElement temp = BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-            //                     BlackMagick.itemToNbtAll(selItem),editPath+editPath2+"["+editPath2Index+"]",editElement2[1]),editPath);
-            //                 if(temp != null)
-            //                     editPathArg = temp.asString();
-            //                 editPathMode = 0;
-            //                 createWidgets(tab);
-            //                 this.btnTab(tab);
-            //             }
-            //             unsel = true;
-            //         }).dimensions(x+240-5-40,y+5,40,20).build();
-            //         if(!client.player.getAbilities().creativeMode)
-            //             w.active = false;
-            //         noScrollWidgets.get(tabNum).add(new PosWidget(w,240-5-40,5));
-            //     }
-            // }
-
-            // if(editPathMode<2) {
-            //     if(editPath.equals("components.custom_name") || (editPath.startsWith("components.lore") && editPath2Index >-1)) {
-            //         jsonEffectMode=-1;
-            //         jsonUnsaved[0] = false;
-            //         {  
-            //             TextFieldWidget w = new TextFieldWidget(this.textRenderer,x-15,y+5+1,15,18,Text.of(""));
-            //             w.setEditable(false);
-            //             w.setText("\u00a7");
-            //             w.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
-            //             noScrollWidgets.get(tabNum).add(new PosWidget(w,-15,5+1));
-            //         }
-            //         {
-            //             cacheI.put("jsonBox",new int[]{tabNum,noScrollWidgets.get(tabNum).size()});
-            //             EditBoxWidget w = new EditBoxWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, x+15-3, y+35, 240-36, 22*6, Text.of(""), Text.of(""));
-            //             if(editPathMode == 0 && editElement[0] != null)
-            //                 w.setText(editElement[0].asString());
-            //             else if(editPathMode == 1 && editElement2[0] != null)
-            //                 w.setText(editElement2[0].asString());
-            //             if(editPathArg != null) {
-            //                 w.setText(editPathArg);
-            //                 editPathArg = null;
-            //             }
-            //             w.setChangeListener(value -> {
-            //                 jsonUnsaved[0] = true;
-            //                 updateJsonPreview();
-            //             });
-            //             noScrollWidgets.get(tabNum).add(new PosWidget(w,15-3,35));
-            //             this.allTxtWidgets.add(w);
-            //             updateJsonPreview();
-            //         }
-            //         {
-            //             noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Text"), button -> {
-            //                 jsonEffectMode = 1;
-            //                 editPathMode += 2;
-            //                 createWidgets(tab);
-            //                 this.btnTab(tab);
-            //                 ItemBuilder.this.unsel = true;
-            //             }).dimensions(x+15-3,y+35+22*6+1,60,20).build(),15-3,35+22*6+1));
-            //         }
-            //         {
-            //             noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Effect"), button -> {
-            //                 jsonEffectMode = 0;
-            //                 editPathMode += 2;
-            //                 createWidgets(tab);
-            //                 this.btnTab(tab);
-            //                 ItemBuilder.this.unsel = true;
-            //             }).dimensions(x+15-3+60+5,y+35+22*6+1,60,20).build(),15-3+60+5,35+22*6+1));
-            //         }
-            //         if(listCurrentPath.equals("pages")) {
-            //             noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Set Event"), button -> {
-            //                 jsonEffectMode = 2;
-            //                 editPathMode += 2;
-            //                 createWidgets(tab);
-            //                 this.btnTab(tab);
-            //                 ItemBuilder.this.unsel = true;
-            //             }).dimensions(x+15-3+60+5+60+5,y+35+22*6+1,60,20).build(),15-3+60+5+60+5,35+22*6+1));
-            //         }
-            //     }
-            //     else if(editPath.equals("components.lore")) {
-            //         {
-            //             widgets.get(tabNum).add(new RowWidget(editPath.replaceAll("components.","")));
-            //         }
-            //     }
-            //     else {
-            //         {
-            //             widgets.get(tabNum).add(new RowWidget(editPath.replaceAll("components.","")));
-            //         }
-            //         {
-            //             //widgets.get(tabNum).add(new RowWidgetComponent(editPath));
-            //         }
-            //     }
-            // }
-            // else if(editPathMode == 2 || editPathMode == 3) {
-            //     jsonUnsaved[1] = false;
-            //     updateJsonPreview();
-            //     {
-            //         noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Cancel"), btn -> {
-            //             jsonUnsaved[1] = false;
-            //             jsonEffectMode = -1;
-            //             editPathMode -= 2;
-            //             createWidgets(tab);
-            //             this.btnTab(tab);
-            //             updateJsonPreview();
-            //         }).dimensions(x+5,y+5,40,20).build(),5,5));
-            //     }
-            //     {
-            //         cacheI.put("jsonAdd",new int[]{tabNum,noScrollWidgets.get(tabNum).size()});
-            //         ButtonWidget w = ButtonWidget.builder(Text.of("Add"), btn -> {
-            //             if(jsonEffectValid) {
-            //                 if(editPathMode==2) {
-            //                     NbtElement temp = BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-            //                         BlackMagick.itemToNbtAll(selItem),editPath,NbtString.of(jsonEffectFull)),editPath);
-            //                     if(temp != null)
-            //                         editPathArg = temp.asString();
-            //                 }
-            //                 else {
-            //                     NbtElement temp = BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-            //                         BlackMagick.itemToNbtAll(selItem),editPath+editPath2+"["+editPath2Index+"]",NbtString.of(jsonEffectFull)),
-            //                         editPath+editPath2+"["+editPath2Index+"]");
-            //                     if(temp != null)
-            //                         editPathArg = temp.asString();
-            //                 }
-
-            //                 jsonUnsaved[1] = false;
-            //                 jsonEffectMode = -1;
-            //                 editPathMode -= 2;
-
-            //                 createWidgets(tab);
-            //                 this.btnTab(tab);
-            //                 updateJsonPreview();
-            //             }
-            //             unsel = true;
-            //         }).dimensions(x+240-5-40,y+5,40,20).build();
-            //         w.active = false;
-            //         noScrollWidgets.get(tabNum).add(new PosWidget(w,240-5-40,5));
-            //     }
-            //     {  
-            //         TextFieldWidget w = new TextFieldWidget(this.textRenderer,x-15,y+5+1,15,18,Text.of(""));
-            //         w.setEditable(false);
-            //         w.setText("\u00a7");
-            //         w.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
-            //         noScrollWidgets.get(tabNum).add(new PosWidget(w,-15,5+1));
-            //     }
-            //     if(jsonEffectMode == 0) {
-            //         widgets.get(tabNum).add(new RowWidget("Gradient"));
-            //     }
-            //     else if(jsonEffectMode == 1) {
-            //         widgets.get(tabNum).add(new RowWidget("Text Element"));
-            //     }
-            //     if(jsonEffectMode == 0 || jsonEffectMode == 1) {
-            //         cacheI.put("jsonEffectTxt",new int[]{tabNum,widgets.get(tabNum).size()});
-            //         TextFieldWidget w = new TextFieldWidget(this.textRenderer,x+15-3,y+35,240-36,20,Text.of(""));
-            //         w.setMaxLength(131072);
-            //         w.setChangedListener(value -> {
-            //             updateJsonEffect();
-            //             if(jsonEffectMode == 1) {
-            //                 if(jsonEffects[7]==1 || jsonEffects[7]==2) {
-    
-            //                     String[] suggestions = jsonEffects[7]==1 ? FortytwoEdit.getCacheKeybinds() : FortytwoEdit.getCacheTranslations();
-    
-            //                     if(!currentTxt.contains(w)) {
-            //                         resetSuggs();
-            //                         currentTxt.add(w);
-            //                         suggs = new TextSuggestor(client, w, textRenderer);
-            //                         if(suggestions != null && suggestions.length > 0)
-            //                             suggs.setSuggestions(suggestions);
-            //                     }
-            //                     else{
-            //                         if(suggs != null)
-            //                             suggs.refresh();
-            //                         else {
-            //                             resetSuggs();
-            //                             suggs = new TextSuggestor(client, w, textRenderer);
-            //                             if(suggestions != null && suggestions.length > 0)
-            //                                 suggs.setSuggestions(suggestions);
-            //                         }
-            //                     }
-            //                 }
-            //                 else
-            //                     resetSuggs();
-            //             }
-            //         });
-            //         widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
-            //         this.allTxtWidgets.add(w);
-            //     }
-            //     if(jsonEffectMode == 0 || jsonEffectMode == 1) {
-            //         cacheI.put("jsonEffectBtns",new int[]{tabNum,widgets.get(tabNum).size()});
-            //         widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("\u00a7ll"),Text.of("\u00a7oo"),Text.of("\u00a7nn"),Text.of("\u00a7mm"),
-            //         Text.of("\u00a7kk")},new int[]{20,20,20,20,20},new String[]{"none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r",
-            //         "none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r"},
-            //         null,true,btn -> {
-            //             unsel = true;
-            //             jsonEffects[0]++;
-            //             if(jsonEffects[0]>2)
-            //                 jsonEffects[0]=0;
-            //             updateJsonEffect();
-            //             updateJsonEffectBtns();
-            //         },btn -> {
-            //             unsel = true;
-            //             jsonEffects[1]++;
-            //             if(jsonEffects[1]>2)
-            //                 jsonEffects[1]=0;
-            //             updateJsonEffect();
-            //             updateJsonEffectBtns();
-            //         },btn -> {
-            //             unsel = true;
-            //             jsonEffects[2]++;
-            //             if(jsonEffects[2]>2)
-            //                 jsonEffects[2]=0;
-            //             updateJsonEffect();
-            //             updateJsonEffectBtns();
-            //         },btn -> {
-            //             unsel = true;
-            //             jsonEffects[3]++;
-            //             if(jsonEffects[3]>2)
-            //                 jsonEffects[3]=0;
-            //             updateJsonEffect();
-            //             updateJsonEffectBtns();
-            //         },btn -> {
-            //             unsel = true;
-            //             jsonEffects[4]++;
-            //             if(jsonEffects[4]>2)
-            //                 jsonEffects[4]=0;
-            //             updateJsonEffect();
-            //             updateJsonEffectBtns();
-            //         }));
-            //     }
-            //     if(jsonEffectMode == 0) {
-            //         widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Radial]")},
-            //         new int[]{60},new String[]{"Radial | Linear"},null,true,btn -> {
-            //             unsel = true;
-            //             jsonEffects[5]++;
-            //             if(jsonEffects[5]>1)
-            //                 jsonEffects[5]=0;
-            //             updateJsonEffect();
-            //             updateJsonEffectBtns();
-            //         }));
-            //     }
-            //     else if(jsonEffectMode == 1) {
-            //         ButtonWidget w = ButtonWidget.builder(Text.of("Color [RGB]"), btn -> {
-            //             unsel = true;
-            //             jsonEffects[6]++;
-            //             if(jsonEffects[6]>2)
-            //                 jsonEffects[6]=0;
-            //             updateJsonEffect();
-            //             updateJsonEffectBtns();
-            //         }).dimensions(0,0,80,20).build();
-            //         w.setTooltip(Tooltip.of(Text.of("RGB | Vanilla | None")));
-            //         TextFieldWidget w2 = new TextFieldWidget(this.textRenderer,0,0,240-36-80-5,20,Text.of(""));
-            //         w2.setMaxLength(131072);
-            //         w2.setChangedListener(value -> {
-            //             if(jsonEffects[6]==1) {
-            //                 jsonLastColor = value;
-    
-            //                 String[] suggestions = new String[]{"reset","aqua","black","blue","dark_aqua","dark_blue","dark_gray","dark_green","dark_purple","dark_red",
-            //                     "gold","gray","green","light_purple","red","white","yellow"};
-    
-            //                 if(!currentTxt.contains(w2)) {
-            //                     resetSuggs();
-            //                     currentTxt.add(w2);
-            //                     suggs = new TextSuggestor(client, w2, textRenderer);
-            //                     if(suggestions != null && suggestions.length > 0)
-            //                         suggs.setSuggestions(suggestions);
-            //                 }
-            //                 else{
-            //                     if(suggs != null)
-            //                         suggs.refresh();
-            //                     else {
-            //                         resetSuggs();
-            //                         suggs = new TextSuggestor(client, w2, textRenderer);
-            //                         if(suggestions != null && suggestions.length > 0)
-            //                             suggs.setSuggestions(suggestions);
-            //                     }
-            //                 }
-    
-            //                 updateJsonEffect();
-            //             }
-            //             else
-            //                 resetSuggs();
-            //         });
-            //         widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0), new PosWidget(w2,15+80+5,0)}));
-            //     }
-            //     if(jsonEffectMode == 0) {
-            //         {
-            //             RgbSlider w = new RgbSlider(3);
-            //             RgbSlider w2 = new RgbSlider(6);
-            //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
-            //         }
-            //         {
-            //             RgbSlider w = new RgbSlider(4);
-            //             RgbSlider w2 = new RgbSlider(7);
-            //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
-            //         }
-            //         {
-            //             RgbSlider w = new RgbSlider(5);
-            //             RgbSlider w2 = new RgbSlider(8);
-            //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
-            //         }
-            //         {
-            //             TextFieldWidget w = new TextFieldWidget(textRenderer, x+15, 0, 60, 20, Text.of(""));
-            //             TextFieldWidget w2 = new TextFieldWidget(textRenderer, x+15+100+5, 0, 60, 20, Text.of(""));
-            //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
-            //         }
-            //     }
-            //     else if(jsonEffectMode == 1) {
-            //         {
-            //             RgbSlider w = new RgbSlider(0);
-            //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
-            //         }
-            //         {
-            //             RgbSlider w = new RgbSlider(1);
-            //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
-            //         }
-            //         {
-            //             RgbSlider w = new RgbSlider(2);
-            //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
-            //         }
-            //         {
-            //             widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Text]")},
-            //             new int[]{80},new String[]{"Text | Keybind | Translate"},null,true,btn -> {
-            //                 unsel = true;
-            //                 jsonEffects[7]++;
-            //                 if(jsonEffects[7]>2)
-            //                     jsonEffects[7]=0;
-            //                 updateJsonEffect();
-            //                 updateJsonEffectBtns();
-            //             }));
-            //         }
-            //         {
-            //             widgets.get(tabNum).add(new RowWidget("Translations Only"));
-            //         }
-            //         {
-            //             widgets.get(tabNum).add(new RowWidget("Params:",60,3));
-            //         }
-            //         {
-            //             widgets.get(tabNum).add(new RowWidget("Fallback:",60,4));
-            //         }
-            //     }
-            //     else if(jsonEffectMode == 2) {
-            //         {
-            //             cacheI.put("clickEventLbl",new int[]{tabNum,widgets.get(tabNum).size()});
-            //             widgets.get(tabNum).add(new RowWidget("clickEvent"));
-            //         }
-            //         {
-            //             widgets.get(tabNum).add(new RowWidget("action:",60,5));
-            //         }
-            //         {
-            //             widgets.get(tabNum).add(new RowWidget("value:",60,6));
-            //         }
-            //         {
-            //             widgets.get(tabNum).add(new RowWidget("hoverEvent"));
-            //         }
-            //         {
-            //             widgets.get(tabNum).add(new RowWidget("action:",60,7));
-            //         }
-            //         {
-            //             widgets.get(tabNum).add(new RowWidget("contents:",60,8));
-            //         }
-            //     }
-            //     updateJsonEffectBtns();
-            //     updateRgbSliders();
-            // }
-        }
-        // else if(tabNum == 8) {   //createBlock json
-        //     boolean noItem = client.player.getMainHandStack().isEmpty();
-        //     {
-        //         widgets.get(tabNum).add(new RowWidget("Name",new ItemStack(Items.NAME_TAG),50));
-        //     }
-        //     if(jsonName != null) {
-        //         widgets.get(tabNum).add(new RowWidget(jsonName.copy(),"display/Name",0,0));
-        //     }
-        //     else {
-        //         widgets.get(tabNum).add(new RowWidget(null,"display/Name",NbtString.of("{\"text\":\"\"}"),noItem));
-        //     }
-        //     {
-        //         widgets.get(tabNum).add(new RowWidget("Lore",new ItemStack(Items.PAPER),50));
-        //     }
-        //     if(jsonLore != null)
-        //         for(int k=0; k<jsonLore.size(); k++) {
-        //             final int index = k;
-        //             widgets.get(tabNum).add(new RowWidget(((NbtString)jsonLore.get(k)).copy(),"display/Lore",index,jsonLore.size()-1));
-        //         }
-        //     {
-        //         widgets.get(tabNum).add(new RowWidget(jsonLore,"display/Lore",NbtString.of("{\"text\":\"\"}"),noItem));
-        //     }
-        //     if(selItem.getItem().toString().startsWith("written_book")) {
-        //         {
-        //             widgets.get(tabNum).add(new RowWidget("pages",new ItemStack(Items.WRITTEN_BOOK),50));
-        //         }
-        //         if(jsonPages != null)
-        //             for(int k=0; k<jsonPages.size(); k++) {
-        //                 final int index = k;
-        //                 widgets.get(tabNum).add(new RowWidget(((NbtString)jsonPages.get(k)).copy(),"pages",index,jsonPages.size()-1));
-        //             }
-        //         {
-        //             widgets.get(tabNum).add(new RowWidget(jsonPages,"pages",NbtString.of("{\"text\":\"\"}"),noItem));
-        //         }
-        //     }
-        // }
-        // else if(tabNum == 9) {  //createBlock jsonEdit
-        //     jsonUnsaved = false;
-        //     {
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Cancel"), btn -> this.btnTab(8)).dimensions(x+5,y+5,40,20).build(),5,5));
-        //     }
-        //     {
-        //         ButtonWidget w = ButtonWidget.builder(Text.of("Delete"), btn -> {
-        //             // String delPath = listCurrentPath + "";
-        //             // if(!delPath.equals("display/Name"))
-        //             //     delPath += "/"+listCurrentIndex+":";
-        //             // BlackMagick.removeNbt(null,delPath);
-        //             // this.btnTab(8);
-        //         }).dimensions(x+120-40-10,y+5,40,20).build();
-        //         if(!client.player.getAbilities().creativeMode)
-        //             w.active = false;
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(w,120-40-10,5));
-        //     }
-        //     {
-        //         ButtonWidget w = ButtonWidget.builder(Text.of("Clone"), btn -> {
-        //             // ItemStack temp = BlackMagick.cloneListElement(null,listCurrentPath,listCurrentIndex);
-        //             // if(temp != null && jsonUnsaved) {
-        //             //     BlackMagick.setNbt(temp,listCurrentPath+"/"+(listCurrentIndex+1)+":",NbtString.of(((EditBoxWidget)noScrollWidgets.get(cacheI.get("jsonBox")[0])
-        //             //         .get(cacheI.get("jsonBox")[1]).w).getText()));
-        //             // }
-        //             // this.btnTab(8);
-        //         }).dimensions(x+120+10,y+5,40,20).build();
-        //         if(!client.player.getAbilities().creativeMode || listCurrentPath.equals("display/Name"))
-        //             w.active = false;
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(w,120+10,5));
-        //     }
-        //     {
-        //         ButtonWidget w = ButtonWidget.builder(Text.of("Save"), btn -> {
-        //             // String setPath = listCurrentPath + "";
-        //             // if(!setPath.equals("display/Name"))
-        //             //     setPath += "/"+listCurrentIndex+":";
-        //             // BlackMagick.setNbt(null,setPath,NbtString.of(((EditBoxWidget)noScrollWidgets.get(cacheI.get("jsonBox")[0])
-        //             //     .get(cacheI.get("jsonBox")[1]).w).getText()));
-        //             // this.btnTab(8);
-        //         }).dimensions(x+240-5-40,y+5,40,20).build();
-        //         if(!client.player.getAbilities().creativeMode)
-        //             w.active = false;
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(w,240-5-40,5));
-        //     }
-        //     {  
-        //         TextFieldWidget w = new TextFieldWidget(this.textRenderer,x-15,y+5+1,15,18,Text.of(""));
-        //         w.setEditable(false);
-        //         w.setText("\u00a7");
-        //         w.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(w,-15,5+1));
-        //     }
-        //     {
-        //         cacheI.put("jsonBox",new int[]{tabNum,noScrollWidgets.get(tabNum).size()});
-        //         EditBoxWidget w = new EditBoxWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, x+15-3, y+35, 240-36, 22*6, Text.of(""), Text.of(""));
-        //         w.setText(jsonCurrent.asString());
-        //         w.setChangeListener(value -> {
-        //             jsonUnsaved = true;
-        //             updateJsonPreview();
-        //         });
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(w,15-3,35));
-        //         this.allTxtWidgets.add(w);
-        //         updateJsonPreview();
-        //     }
-        //     {
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Text"), button -> {
-        //             jsonEffectMode = 1;
-        //             createWidgets(10);
-        //             this.btnTab(10);
-        //             ItemBuilder.this.unsel = true;
-        //         }).dimensions(x+15-3,y+35+22*6+1,60,20).build(),15-3,35+22*6+1));
-        //     }
-        //     {
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Effect"), button -> {
-        //             jsonEffectMode = 0;
-        //             createWidgets(10);
-        //             this.btnTab(10);
-        //             ItemBuilder.this.unsel = true;
-        //         }).dimensions(x+15-3+60+5,y+35+22*6+1,60,20).build(),15-3+60+5,35+22*6+1));
-        //     }
-        //     if(listCurrentPath.equals("pages")) {
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Set Event"), button -> {
-        //             jsonEffectMode = 2;
-        //             createWidgets(10);
-        //             this.btnTab(10);
-        //             ItemBuilder.this.unsel = true;
-        //         }).dimensions(x+15-3+60+5+60+5,y+35+22*6+1,60,20).build(),15-3+60+5+60+5,35+22*6+1));
-        //     }
-        // }
-        // else if(tabNum == 10) { //createBlock jsonEffects
-        //     json2Unsaved = false;
-        //     updateJsonPreview();
-        //     {
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Cancel"), btn -> {
-        //             json2Unsaved = false;
-        //             this.btnTab(9);
-        //             updateJsonPreview();
-        //         }).dimensions(x+5,y+5,40,20).build(),5,5));
-        //     }
-        //     {
-        //         ButtonWidget w = ButtonWidget.builder(Text.of("Add"), btn -> {
-        //             // if(jsonEffectValid) {
-        //             //     String setPath = listCurrentPath + "";
-        //             //     if(!setPath.equals("display/Name"))
-        //             //         setPath += "/"+listCurrentIndex+":";
-        //             //     BlackMagick.setNbt(null,setPath,NbtString.of(jsonEffectFull));
-        //             //     this.btnTab(8);
-        //             // }
-        //         }).dimensions(x+240-5-40,y+5,40,20).build();
-        //         w.active = false;
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(w,240-5-40,5));
-        //     }
-        //     {  
-        //         TextFieldWidget w = new TextFieldWidget(this.textRenderer,x-15,y+5+1,15,18,Text.of(""));
-        //         w.setEditable(false);
-        //         w.setText("\u00a7");
-        //         w.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
-        //         noScrollWidgets.get(tabNum).add(new PosWidget(w,-15,5+1));
-        //     }
-        //     if(jsonEffectMode == 0) {
-        //         widgets.get(tabNum).add(new RowWidget("Gradient"));
-        //     }
-        //     else if(jsonEffectMode == 1) {
-        //         widgets.get(tabNum).add(new RowWidget("Text Element"));
-        //     }
-        //     if(jsonEffectMode == 0 || jsonEffectMode == 1) {
-        //         cacheI.put("jsonEffectTxt",new int[]{tabNum,widgets.get(tabNum).size()});
-        //         TextFieldWidget w = new TextFieldWidget(this.textRenderer,x+15-3,y+35,240-36,20,Text.of(""));
-        //         w.setMaxLength(131072);
-        //         w.setChangedListener(value -> {
-        //             updateJsonEffect();
-        //             if(jsonEffectMode == 1) {
-        //                 if(jsonEffects[7]==1 || jsonEffects[7]==2) {
-
-        //                     String[] suggestions = jsonEffects[7]==1 ? FortytwoEdit.getCacheKeybinds() : FortytwoEdit.getCacheTranslations();
-
-        //                     if(!currentTxt.contains(w)) {
-        //                         resetSuggs();
-        //                         currentTxt.add(w);
-        //                         suggs = new TextSuggestor(client, w, textRenderer);
-        //                         if(suggestions != null && suggestions.length > 0)
-        //                             suggs.setSuggestions(suggestions);
-        //                     }
-        //                     else{
-        //                         if(suggs != null)
-        //                             suggs.refresh();
-        //                         else {
-        //                             resetSuggs();
-        //                             suggs = new TextSuggestor(client, w, textRenderer);
-        //                             if(suggestions != null && suggestions.length > 0)
-        //                                 suggs.setSuggestions(suggestions);
-        //                         }
-        //                     }
-        //                 }
-        //                 else
-        //                     resetSuggs();
-        //             }
-        //         });
-        //         widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
-        //         this.allTxtWidgets.add(w);
-        //     }
-        //     if(jsonEffectMode == 0 || jsonEffectMode == 1) {
-        //         cacheI.put("jsonEffectBtns",new int[]{tabNum,widgets.get(tabNum).size()});
-        //         widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("\u00a7ll"),Text.of("\u00a7oo"),Text.of("\u00a7nn"),Text.of("\u00a7mm"),
-        //         Text.of("\u00a7kk")},new int[]{20,20,20,20,20},new String[]{"none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r",
-        //         "none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r"},
-        //         null,true,btn -> {
-        //             unsel = true;
-        //             jsonEffects[0]++;
-        //             if(jsonEffects[0]>2)
-        //                 jsonEffects[0]=0;
-        //             updateJsonEffect();
-        //             updateJsonEffectBtns();
-        //         },btn -> {
-        //             unsel = true;
-        //             jsonEffects[1]++;
-        //             if(jsonEffects[1]>2)
-        //                 jsonEffects[1]=0;
-        //             updateJsonEffect();
-        //             updateJsonEffectBtns();
-        //         },btn -> {
-        //             unsel = true;
-        //             jsonEffects[2]++;
-        //             if(jsonEffects[2]>2)
-        //                 jsonEffects[2]=0;
-        //             updateJsonEffect();
-        //             updateJsonEffectBtns();
-        //         },btn -> {
-        //             unsel = true;
-        //             jsonEffects[3]++;
-        //             if(jsonEffects[3]>2)
-        //                 jsonEffects[3]=0;
-        //             updateJsonEffect();
-        //             updateJsonEffectBtns();
-        //         },btn -> {
-        //             unsel = true;
-        //             jsonEffects[4]++;
-        //             if(jsonEffects[4]>2)
-        //                 jsonEffects[4]=0;
-        //             updateJsonEffect();
-        //             updateJsonEffectBtns();
-        //         }));
-        //     }
-        //     if(jsonEffectMode == 0) {
-        //         widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Radial]")},
-        //         new int[]{60},new String[]{"Radial | Linear"},null,true,btn -> {
-        //             unsel = true;
-        //             jsonEffects[5]++;
-        //             if(jsonEffects[5]>1)
-        //                 jsonEffects[5]=0;
-        //             updateJsonEffect();
-        //             updateJsonEffectBtns();
-        //         }));
-        //     }
-        //     else if(jsonEffectMode == 1) {
-        //         ButtonWidget w = ButtonWidget.builder(Text.of("Color [RGB]"), btn -> {
-        //             unsel = true;
-        //             jsonEffects[6]++;
-        //             if(jsonEffects[6]>2)
-        //                 jsonEffects[6]=0;
-        //             updateJsonEffect();
-        //             updateJsonEffectBtns();
-        //         }).dimensions(0,0,80,20).build();
-        //         w.setTooltip(Tooltip.of(Text.of("RGB | Vanilla | None")));
-        //         TextFieldWidget w2 = new TextFieldWidget(this.textRenderer,0,0,240-36-80-5,20,Text.of(""));
-        //         w2.setMaxLength(131072);
-        //         w2.setChangedListener(value -> {
-        //             if(jsonEffects[6]==1) {
-        //                 jsonLastColor = value;
-
-        //                 String[] suggestions = new String[]{"reset","aqua","black","blue","dark_aqua","dark_blue","dark_gray","dark_green","dark_purple","dark_red",
-        //                     "gold","gray","green","light_purple","red","white","yellow"};
-
-        //                 if(!currentTxt.contains(w2)) {
-        //                     resetSuggs();
-        //                     currentTxt.add(w2);
-        //                     suggs = new TextSuggestor(client, w2, textRenderer);
-        //                     if(suggestions != null && suggestions.length > 0)
-        //                         suggs.setSuggestions(suggestions);
-        //                 }
-        //                 else{
-        //                     if(suggs != null)
-        //                         suggs.refresh();
-        //                     else {
-        //                         resetSuggs();
-        //                         suggs = new TextSuggestor(client, w2, textRenderer);
-        //                         if(suggestions != null && suggestions.length > 0)
-        //                             suggs.setSuggestions(suggestions);
-        //                     }
-        //                 }
-
-        //                 updateJsonEffect();
-        //             }
-        //             else
-        //                 resetSuggs();
-        //         });
-        //         widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0), new PosWidget(w2,15+80+5,0)}));
-        //     }
-        //     if(jsonEffectMode == 0) {
-        //         {
-        //             RgbSlider w = new RgbSlider(3);
-        //             RgbSlider w2 = new RgbSlider(6);
-        //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
-        //         }
-        //         {
-        //             RgbSlider w = new RgbSlider(4);
-        //             RgbSlider w2 = new RgbSlider(7);
-        //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
-        //         }
-        //         {
-        //             RgbSlider w = new RgbSlider(5);
-        //             RgbSlider w2 = new RgbSlider(8);
-        //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
-        //         }
-        //         {
-        //             TextFieldWidget w = new TextFieldWidget(textRenderer, x+15, 0, 60, 20, Text.of(""));
-        //             TextFieldWidget w2 = new TextFieldWidget(textRenderer, x+15+100+5, 0, 60, 20, Text.of(""));
-        //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
-        //         }
-        //     }
-        //     else if(jsonEffectMode == 1) {
-        //         {
-        //             RgbSlider w = new RgbSlider(0);
-        //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
-        //         }
-        //         {
-        //             RgbSlider w = new RgbSlider(1);
-        //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
-        //         }
-        //         {
-        //             RgbSlider w = new RgbSlider(2);
-        //             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
-        //         }
-        //         {
-        //             widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Text]")},
-        //             new int[]{80},new String[]{"Text | Keybind | Translate"},null,true,btn -> {
-        //                 unsel = true;
-        //                 jsonEffects[7]++;
-        //                 if(jsonEffects[7]>2)
-        //                     jsonEffects[7]=0;
-        //                 updateJsonEffect();
-        //                 updateJsonEffectBtns();
-        //             }));
-        //         }
-        //         {
-        //             widgets.get(tabNum).add(new RowWidget("Translations Only"));
-        //         }
-        //         {
-        //             widgets.get(tabNum).add(new RowWidget("Params:",60,3));
-        //         }
-        //         {
-        //             widgets.get(tabNum).add(new RowWidget("Fallback:",60,4));
-        //         }
-        //     }
-        //     else if(jsonEffectMode == 2) {
-        //         {
-        //             cacheI.put("clickEventLbl",new int[]{tabNum,widgets.get(tabNum).size()});
-        //             widgets.get(tabNum).add(new RowWidget("clickEvent"));
-        //         }
-        //         {
-        //             widgets.get(tabNum).add(new RowWidget("action:",60,5));
-        //         }
-        //         {
-        //             widgets.get(tabNum).add(new RowWidget("value:",60,6));
-        //         }
-        //         {
-        //             widgets.get(tabNum).add(new RowWidget("hoverEvent"));
-        //         }
-        //         {
-        //             widgets.get(tabNum).add(new RowWidget("action:",60,7));
-        //         }
-        //         {
-        //             widgets.get(tabNum).add(new RowWidget("contents:",60,8));
-        //         }
-        //     }
-        //     updateJsonEffectBtns();
-        //     updateRgbSliders();
-        // }
         // else if(tabNum == 11) { //createBlock attributes/enchants
         //     boolean noItem = client.player.getMainHandStack().isEmpty();
         //     int num = 0;
@@ -4348,6 +3578,7 @@ public class ItemBuilder extends GenericScreen {
     public void createWidgets(int mode, NbtCompound args) {
         int tabNum = CACHE_TAB_BLANK;
         blankTabLbl = null;
+        jsonPreview = null;
         if(!pauseSaveScroll && tabWidget != null) {
             tabScroll[tab] = tabWidget.getScrollAmount();
             pauseSaveScroll = true;
@@ -4368,89 +3599,160 @@ public class ItemBuilder extends GenericScreen {
         boolean valid = false;
 
         if(mode==0) { // display current component
-            if(args.contains("path",NbtElement.STRING_TYPE)); {
+            if(args.contains("path",NbtElement.STRING_TYPE)) {
                 String path = args.get("path").asString();
+                String[] path2;
+                if(args.contains("path2",NbtElement.LIST_TYPE) && ((NbtList)args.get("path2")).size()>0
+                && ((NbtList)args.get("path2")).get(0).getType()==NbtElement.STRING_TYPE) {
+                    NbtList pathList = (NbtList)args.get("path2");
+                    path2 = new String[pathList.size()];
+                    for(int i=0; i<path2.length; i++)
+                        path2[i] = pathList.get(i).asString();
+                }
+                else
+                    path2 = null;
+                String fullPath;
+                if(path2 != null)
+                    fullPath = path+path2[0];
+                else
+                    fullPath = path;
+
                 NbtElement el = BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path);
                 valid = true;
-                {
+
+                if(path2 == null) {
                     ButtonWidget w = ButtonWidget.builder(Text.of("Cancel"),btn -> this.btnTab(CACHE_TAB_MAIN)).dimensions(x+5,y+5,40,20).build();
                     if(el == null)
                         w.setTooltip(Tooltip.of(Text.of("Keep component empty")));
                     else
-                        w.setTooltip(Tooltip.of(Text.of("Keep component as:\n"+el.asString())));
+                        w.setTooltip(Tooltip.of(Text.of("Keep component as:\n"+BlackMagick.nbtToString(el))));
                     noScrollWidgets.get(tabNum).add(new PosWidget(w,5,5));
                 }
-                // {
-                //     ButtonWidget w = ButtonWidget.builder(Text.of("Delete"), btn -> {
-                //         BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,null)));
-                //         this.btnTab(CACHE_TAB_MAIN);
-                //     }).dimensions(x+120-40-10,y+5,40,20).build();
-                //     if(!client.player.getAbilities().creativeMode || el==null)
-                //         w.active = false;
-                //     noScrollWidgets.get(tabNum).add(new PosWidget(w,120-40-10,5));
-                // }
                 final ButtonWidget saveBtn;
-                saveBtn = ButtonWidget.builder(Text.of("Save"), btn -> {
-                    if(blankTabEl != null) {
-                        ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,blankTabEl));
-                        if(newItem != null) {
-                            if(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(newItem),path) != null) {
-                                BlackMagick.setItemMain(newItem);
-                                this.btnTab(CACHE_TAB_MAIN);
+                {
+                    saveBtn = ButtonWidget.builder(Text.of(path2 != null ? "Done" : "Save"), btn -> {
+                        if(path2 == null) {
+                            if(blankTabEl != null) {
+                                ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtAll(selItem),path,blankTabEl));
+                                if(newItem != null) {
+                                    if(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(newItem),path) != null) {
+                                        BlackMagick.setItemMain(newItem);
+                                        this.btnTab(CACHE_TAB_MAIN);
+                                    }
+                                }
                             }
                         }
-                    }
-                    unsel = true;
-                }).dimensions(x+240-5-40,y+5,40,20).build();
-                {
+                        else {
+                            if(blankTabEl != null) {
+                                if(path2.length==1)
+                                    createWidgets(0,BlackMagick.validCompound(
+                                        BlackMagick.nbtFromString("{path:\""+path+"\",overrideEl:"+BlackMagick.nbtToString(blankTabEl)+"}")));
+                                else {
+                                    NbtList pathList = new NbtList();
+                                    for(int i=1; i<path2.length; i++)
+                                        pathList.add(NbtString.of(path2[i]));
+                                    createWidgets(0,BlackMagick.validCompound(
+                                        BlackMagick.nbtFromString("{path:\""+path+"\",overrideEl:"+BlackMagick.nbtToString(blankTabEl)+",path2:"+pathList.asString()+"}")));
+                                }
+                            }
+                        }
+                        unsel = true;
+                    }).dimensions(x+240-5-40,y+5,40,20).build();
                     noScrollWidgets.get(tabNum).add(new PosWidget(saveBtn,240-5-40,5));
                 }
-                setEditingElement(path,null,saveBtn);
+
+                if(args.contains("overrideEl"))
+                    el = args.get("overrideEl");
                 if(el != null)
                     setEditingElement(path,el.copy(),saveBtn);
-
-                PathType elType = ComponentHelper.getPathInfo(path).type();
-                if(el != null) {
-                    switch(el.getType()) {
-                        case NbtElement.COMPOUND_TYPE : elType = PathType.COMPOUND; break;
-                        case NbtElement.LIST_TYPE : elType = PathType.LIST; break;
-                        default : break;
+                else
+                    setEditingElement(path,null,saveBtn);
+                    
+                NbtElement el2 = null;
+                PathType elType = ComponentHelper.getPathInfo(fullPath).type();
+                if(path2 == null) {
+                    if(el != null) {
+                        el2 = el.copy();
+                        switch(el.getType()) {
+                            case NbtElement.COMPOUND_TYPE : elType = PathType.COMPOUND; break;
+                            case NbtElement.LIST_TYPE : elType = PathType.LIST; break;
+                            default : break;
+                        }
+                    }
+                }
+                else {
+                    NbtCompound nbt = BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,el);
+                    el2 = BlackMagick.getNbtPath(nbt,fullPath); 
+                    if(el2 != null) {
+                        switch(el2.getType()) {
+                            case NbtElement.COMPOUND_TYPE : elType = PathType.COMPOUND; break;
+                            case NbtElement.LIST_TYPE : elType = PathType.LIST; break;
+                            default : break;
+                        }
                     }
                 }
 
-                blankTabLbl = path.replace("components.","");
+                if(path2 != null) {
+                    setEditingElement(path,blankTabEl,saveBtn,true,el2);
+                }
+
+                blankTabLbl = fullPath;
+                if(blankTabLbl.startsWith("components."))
+                    blankTabLbl = blankTabLbl.replaceFirst("components.","");
 
                 if(elType == PathType.COMPOUND) {
                     if(el==null || el.getType()!=NbtElement.COMPOUND_TYPE) {
                         el = new NbtCompound();
                         setEditingElement(path,el.copy(),saveBtn);
                     }
+                    if(el2==null || el2.getType()!=NbtElement.COMPOUND_TYPE) {
+                        el2 = new NbtCompound();
+                    }
+                    if(path2 != null) {
+                        setEditingElement(path,blankTabEl,saveBtn,true,el2);
+                    }
 
                     Set<String> keys = Sets.newHashSet();
-                    for(String k : BlackMagick.validCompound(BlackMagick.getNbtPath(ComponentHelper.SUPER_ITEM,path)).getKeys()) {
+                    for(String k : BlackMagick.validCompound(BlackMagick.getNbtPath(ComponentHelper.SUPER_ITEM,simplifyPath(fullPath))).getKeys()) {
                         keys.add(k);
                     }
-                    for(String k : ((NbtCompound)el).getKeys()) {
+                    for(String k : ((NbtCompound)el2).getKeys()) {
                         keys.add(k);
                     }
                     for(String k : BlackMagick.sortSet(keys)) {
-                        widgets.get(tabNum).add(new RowWidgetElement(path,saveBtn,(NbtCompound)el,k));
+                        widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,fullPath+"."+k,k));
                     }
                 }
                 else if(elType == PathType.LIST) {
                     //TODO list logic
-                    widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
+                    widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,fullPath));
                 }
-                else if(elType == PathType.TEXT) {//TODO text logic
-                    jsonEffectMode=-1;
+                else if(elType == PathType.TEXT) {
+                    jsonEffectMode = -1;
+                    jsonEffectPath = null;
+                    jsonEffectBase = null;
+                    cacheI.remove("jsonAdd");
                     String startVal = "";
+
                     if(el != null && el.getType()==NbtElement.STRING_TYPE)
                         startVal = ((NbtString)el).asString();
                     else {
                         startVal = "{\"text\":\"\"}";
                         el = NbtString.of(startVal);
-                        setEditingElement(path,el,saveBtn);
+                        setEditingElement(path,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
+                            BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,blankTabEl),fullPath,el),path),saveBtn,
+                            path2!=null,el);
                     }
+
+                    if(el2 != null && el2.getType()==NbtElement.STRING_TYPE)
+                        startVal = ((NbtString)el2).asString();
+                    else {
+                        startVal = "{\"text\":\"\"}";
+                        el2 = NbtString.of(startVal);
+                    }
+
+                    if(args.contains("jsonOverride",NbtElement.STRING_TYPE))
+                        startVal = args.get("jsonOverride").asString();
 
                     {  
                         TextFieldWidget w = new TextFieldWidget(this.textRenderer,x-15,y+5+1,15,18,Text.of(""));
@@ -4464,12 +3766,17 @@ public class ItemBuilder extends GenericScreen {
                         EditBoxWidget w = new EditBoxWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, x+15-3, y+35, 240-36, 22*6, Text.of(""), Text.of(""));
                         w.setChangeListener(value -> {
                             inpError = null;
-                            updateJsonPreview(path,value);
+                            updateJsonPreview(fullPath,value);
                             if(jsonBaseValid) {
-                                setEditingElement(path,BlackMagick.nbtFromString("'"+value+"'",NbtElement.STRING_TYPE),saveBtn);
+                                setEditingElement(path,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
+                                    BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,blankTabEl),fullPath,
+                                    BlackMagick.nbtFromString("'"+value+"'",NbtElement.STRING_TYPE)),path),saveBtn,
+                                    path2!=null,BlackMagick.nbtFromString("'"+value+"'",NbtElement.STRING_TYPE));
                             }
                             else {
-                                setEditingElement(path,null,saveBtn);
+                                setEditingElement(path,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
+                                    BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,blankTabEl),fullPath,null),path),saveBtn,
+                                    path2!=null,null);
                             }
                         });
                         noScrollWidgets.get(tabNum).add(new PosWidget(w,15-3,35));
@@ -4479,34 +3786,345 @@ public class ItemBuilder extends GenericScreen {
                     {
                         noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Text"), button -> {
                             jsonEffectMode = 1;
-                            // createWidgets(tab);
-                            // this.btnTab(tab);
-                            ItemBuilder.this.unsel = true;
+                            String baseJson;
+                            if(jsonBaseValid)
+                                baseJson = jsonBaseText;
+                            else
+                                baseJson = "{\"text\":\"\"}";
+                                
+                            NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}"));
+                            newArgs.putString("baseJson",baseJson);
+                            if(args.contains("path2",NbtElement.LIST_TYPE))
+                                newArgs.put("path2",args.get("path2"));
+                            if(blankTabEl != null)
+                                newArgs.put("overrideEl",blankTabEl);
+                            createWidgets(2,newArgs);
+
+                            unsel = true;
                         }).dimensions(x+15-3,y+35+22*6+1,60,20).build(),15-3,35+22*6+1));
                     }
                     {
                         noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Add Effect"), button -> {
                             jsonEffectMode = 0;
-                            // createWidgets(tab);
-                            // this.btnTab(tab);
-                            ItemBuilder.this.unsel = true;
+                            String baseJson;
+                            if(jsonBaseValid)
+                                baseJson = jsonBaseText;
+                            else
+                                baseJson = "{\"text\":\"\"}";
+                                
+                            NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}"));
+                            newArgs.putString("baseJson",baseJson);
+                            if(args.contains("path2",NbtElement.LIST_TYPE))
+                                newArgs.put("path2",args.get("path2"));
+                            if(blankTabEl != null)
+                                newArgs.put("overrideEl",blankTabEl);
+                            createWidgets(2,newArgs);
+
+                            unsel = true;
                         }).dimensions(x+15-3+60+5,y+35+22*6+1,60,20).build(),15-3+60+5,35+22*6+1));
                     }
                     if(path.contains("written_book_content")) {
                         noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Set Event"), button -> {
                             jsonEffectMode = 2;
-                            // createWidgets(tab);
-                            // this.btnTab(tab);
-                            ItemBuilder.this.unsel = true;
+                            String baseJson;
+                            if(jsonBaseValid)
+                                baseJson = jsonBaseText;
+                            else
+                                baseJson = "{\"text\":\"\"}";
+                                
+                            NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}"));
+                            newArgs.putString("baseJson",baseJson);
+                            if(args.contains("path2",NbtElement.LIST_TYPE))
+                                newArgs.put("path2",args.get("path2"));
+                            if(blankTabEl != null)
+                                newArgs.put("overrideEl",blankTabEl);
+                            createWidgets(2,newArgs);
+
+                            unsel = true;
                         }).dimensions(x+15-3+60+5+60+5,y+35+22*6+1,60,20).build(),15-3+60+5+60+5,35+22*6+1));
                     }
                 }
                 else if(elType == PathType.DECIMAL_COLOR) {//TODO dec logic
-                    widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
+                    widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,fullPath));
                 }
                 else {
-                    widgets.get(tabNum).add(new RowWidgetComponent(path,saveBtn));
+                    widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,fullPath));
                 }
+            }
+        }
+        else if(mode==2) { // json effects
+            if(args.contains("path",NbtElement.STRING_TYPE) && args.contains("baseJson",NbtElement.STRING_TYPE) && jsonEffectMode>=0 && jsonEffectMode<=2) {
+                String path = args.get("path").asString();
+                String baseJson = args.get("baseJson").asString();
+                jsonEffectPath = path;
+                jsonEffectBase = baseJson;
+                valid = true;
+                {
+                    ButtonWidget w = ButtonWidget.builder(Text.of("Cancel"),btn -> {
+                        jsonEffectMode = -1;
+                        jsonEffectPath = null;
+                        jsonEffectBase = null;
+                        cacheI.remove("jsonAdd");
+                        NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}"));
+                        if(args.contains("path2",NbtElement.LIST_TYPE))
+                            newArgs.put("path2",args.get("path2"));
+                        newArgs.put("jsonOverride",args.get("baseJson"));
+                        if(blankTabEl != null)
+                            newArgs.put("overrideEl",blankTabEl);
+                        createWidgets(0,newArgs);
+                    }).dimensions(x+5,y+5,40,20).build();
+                    w.setTooltip(Tooltip.of(Text.of("Keep text as:\n"+baseJson)));
+                    noScrollWidgets.get(tabNum).add(new PosWidget(w,5,5));
+                }
+                final ButtonWidget saveBtn;
+                {
+                    cacheI.put("jsonAdd",new int[]{tabNum,noScrollWidgets.get(tabNum).size()});
+                    saveBtn = ButtonWidget.builder(Text.of("Add"), btn -> {
+                        if(jsonEffectValid) {
+                            jsonEffectMode = -1;
+                            jsonEffectPath = null;
+                            jsonEffectBase = null;
+                            cacheI.remove("jsonAdd");
+                            NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString(
+                                "{path:\""+path+"\",jsonOverride:"+BlackMagick.nbtToString(NbtString.of(jsonEffectFull))+"}"));
+                            if(args.contains("path2",NbtElement.LIST_TYPE))
+                                newArgs.put("path2",args.get("path2"));
+                            if(blankTabEl != null)
+                                newArgs.put("overrideEl",blankTabEl);
+                            createWidgets(0,newArgs);
+                        }
+                        unsel = true;
+                    }).dimensions(x+240-5-40,y+5,40,20).build();
+                    noScrollWidgets.get(tabNum).add(new PosWidget(saveBtn,240-5-40,5));
+                }
+                blankTabLbl = path.replace("components.","");
+                updateJsonPreview(path,baseJson);
+
+                {  
+                    TextFieldWidget w = new TextFieldWidget(this.textRenderer,x-15,y+5+1,15,18,Text.of(""));
+                    w.setEditable(false);
+                    w.setText("\u00a7");
+                    w.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
+                    noScrollWidgets.get(tabNum).add(new PosWidget(w,-15,5+1));
+                }
+                if(jsonEffectMode == 0) {
+                    widgets.get(tabNum).add(new RowWidget("Gradient"));
+                }
+                else if(jsonEffectMode == 1) {
+                    widgets.get(tabNum).add(new RowWidget("Text Element"));
+                }
+                if(jsonEffectMode == 0 || jsonEffectMode == 1) {
+                    cacheI.put("jsonEffectTxt",new int[]{tabNum,widgets.get(tabNum).size()});
+                    TextFieldWidget w = new TextFieldWidget(this.textRenderer,x+15-3,y+35,240-36,20,Text.of(""));
+                    w.setMaxLength(131072);
+                    w.setChangedListener(value -> {
+                        updateJsonEffect();
+                        if(jsonEffectMode == 1) {
+                            if(jsonEffects[7]==1 || jsonEffects[7]==2) {
+    
+                                String[] suggestions = jsonEffects[7]==1 ? FortytwoEdit.getCacheKeybinds() : FortytwoEdit.getCacheTranslations();
+    
+                                if(!currentTxt.contains(w)) {
+                                    resetSuggs();
+                                    currentTxt.add(w);
+                                    suggs = new TextSuggestor(client, w, textRenderer);
+                                    if(suggestions != null && suggestions.length > 0)
+                                        suggs.setSuggestions(suggestions);
+                                }
+                                else{
+                                    if(suggs != null)
+                                        suggs.refresh();
+                                    else {
+                                        resetSuggs();
+                                        suggs = new TextSuggestor(client, w, textRenderer);
+                                        if(suggestions != null && suggestions.length > 0)
+                                            suggs.setSuggestions(suggestions);
+                                    }
+                                }
+                            }
+                            else
+                                resetSuggs();
+                        }
+                    });
+                    widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
+                    this.allTxtWidgets.add(w);
+                }
+                if(jsonEffectMode == 0 || jsonEffectMode == 1) {
+                    cacheI.put("jsonEffectBtns",new int[]{tabNum,widgets.get(tabNum).size()});
+                    widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("\u00a7ll"),Text.of("\u00a7oo"),Text.of("\u00a7nn"),Text.of("\u00a7mm"),
+                    Text.of("\u00a7kk")},new int[]{20,20,20,20,20},new String[]{"none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r",
+                    "none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r"},
+                    null,true,btn -> {
+                        unsel = true;
+                        jsonEffects[0]++;
+                        if(jsonEffects[0]>2)
+                            jsonEffects[0]=0;
+                        updateJsonEffect();
+                        updateJsonEffectBtns();
+                    },btn -> {
+                        unsel = true;
+                        jsonEffects[1]++;
+                        if(jsonEffects[1]>2)
+                            jsonEffects[1]=0;
+                        updateJsonEffect();
+                        updateJsonEffectBtns();
+                    },btn -> {
+                        unsel = true;
+                        jsonEffects[2]++;
+                        if(jsonEffects[2]>2)
+                            jsonEffects[2]=0;
+                        updateJsonEffect();
+                        updateJsonEffectBtns();
+                    },btn -> {
+                        unsel = true;
+                        jsonEffects[3]++;
+                        if(jsonEffects[3]>2)
+                            jsonEffects[3]=0;
+                        updateJsonEffect();
+                        updateJsonEffectBtns();
+                    },btn -> {
+                        unsel = true;
+                        jsonEffects[4]++;
+                        if(jsonEffects[4]>2)
+                            jsonEffects[4]=0;
+                        updateJsonEffect();
+                        updateJsonEffectBtns();
+                    }));
+                }
+                if(jsonEffectMode == 0) {
+                    widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Radial]")},
+                    new int[]{60},new String[]{"Radial | Linear"},null,true,btn -> {
+                        unsel = true;
+                        jsonEffects[5]++;
+                        if(jsonEffects[5]>1)
+                            jsonEffects[5]=0;
+                        updateJsonEffect();
+                        updateJsonEffectBtns();
+                    }));
+                }
+                else if(jsonEffectMode == 1) {
+                    ButtonWidget w = ButtonWidget.builder(Text.of("Color [RGB]"), btn -> {
+                        unsel = true;
+                        jsonEffects[6]++;
+                        if(jsonEffects[6]>2)
+                            jsonEffects[6]=0;
+                        updateJsonEffect();
+                        updateJsonEffectBtns();
+                    }).dimensions(0,0,80,20).build();
+                    w.setTooltip(Tooltip.of(Text.of("RGB | Vanilla | None")));
+                    TextFieldWidget w2 = new TextFieldWidget(this.textRenderer,0,0,240-36-80-5,20,Text.of(""));
+                    w2.setMaxLength(131072);
+                    w2.setChangedListener(value -> {
+                        if(jsonEffects[6]==1) {
+                            jsonLastColor = value;
+    
+                            String[] suggestions = new String[]{"reset","aqua","black","blue","dark_aqua","dark_blue","dark_gray","dark_green","dark_purple","dark_red",
+                                "gold","gray","green","light_purple","red","white","yellow"};
+    
+                            if(!currentTxt.contains(w2)) {
+                                resetSuggs();
+                                currentTxt.add(w2);
+                                suggs = new TextSuggestor(client, w2, textRenderer);
+                                if(suggestions != null && suggestions.length > 0)
+                                    suggs.setSuggestions(suggestions);
+                            }
+                            else{
+                                if(suggs != null)
+                                    suggs.refresh();
+                                else {
+                                    resetSuggs();
+                                    suggs = new TextSuggestor(client, w2, textRenderer);
+                                    if(suggestions != null && suggestions.length > 0)
+                                        suggs.setSuggestions(suggestions);
+                                }
+                            }
+    
+                            updateJsonEffect();
+                        }
+                        else
+                            resetSuggs();
+                    });
+                    widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0), new PosWidget(w2,15+80+5,0)}));
+                }
+                if(jsonEffectMode == 0) {
+                    {
+                        RgbSlider w = new RgbSlider(3);
+                        RgbSlider w2 = new RgbSlider(6);
+                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+                    }
+                    {
+                        RgbSlider w = new RgbSlider(4);
+                        RgbSlider w2 = new RgbSlider(7);
+                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+                    }
+                    {
+                        RgbSlider w = new RgbSlider(5);
+                        RgbSlider w2 = new RgbSlider(8);
+                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+                    }
+                    {
+                        TextFieldWidget w = new TextFieldWidget(textRenderer, x+15, 0, 60, 20, Text.of(""));
+                        TextFieldWidget w2 = new TextFieldWidget(textRenderer, x+15+100+5, 0, 60, 20, Text.of(""));
+                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+                    }
+                }
+                else if(jsonEffectMode == 1) {
+                    {
+                        RgbSlider w = new RgbSlider(0);
+                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
+                    }
+                    {
+                        RgbSlider w = new RgbSlider(1);
+                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
+                    }
+                    {
+                        RgbSlider w = new RgbSlider(2);
+                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
+                    }
+                    {
+                        widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Text]")},
+                        new int[]{80},new String[]{"Text | Keybind | Translate"},null,true,btn -> {
+                            unsel = true;
+                            jsonEffects[7]++;
+                            if(jsonEffects[7]>2)
+                                jsonEffects[7]=0;
+                            updateJsonEffect();
+                            updateJsonEffectBtns();
+                        }));
+                    }
+                    {
+                        widgets.get(tabNum).add(new RowWidget("Translations Only"));
+                    }
+                    {
+                        widgets.get(tabNum).add(new RowWidget("Params:",60,3));
+                    }
+                    {
+                        widgets.get(tabNum).add(new RowWidget("Fallback:",60,4));
+                    }
+                }
+                else if(jsonEffectMode == 2) {
+                    {
+                        cacheI.put("clickEventLbl",new int[]{tabNum,widgets.get(tabNum).size()});
+                        widgets.get(tabNum).add(new RowWidget("clickEvent"));
+                    }
+                    {
+                        widgets.get(tabNum).add(new RowWidget("action:",60,5));
+                    }
+                    {
+                        widgets.get(tabNum).add(new RowWidget("value:",60,6));
+                    }
+                    {
+                        widgets.get(tabNum).add(new RowWidget("hoverEvent"));
+                    }
+                    {
+                        widgets.get(tabNum).add(new RowWidget("action:",60,7));
+                    }
+                    {
+                        widgets.get(tabNum).add(new RowWidget("contents:",60,8));
+                    }
+                }
+                updateJsonEffectBtns();
+                updateRgbSliders();
             }
         }
 
@@ -4762,7 +4380,7 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }
                 if(suggsNum >= 3 && suggsNum <= 8) {
-                    //updateJsonEffect();
+                    updateJsonEffect();
                 }
             });
             this.txts[0].setMaxLength(131072);
@@ -5779,82 +5397,6 @@ public class ItemBuilder extends GenericScreen {
             }            
         }
 
-        /**
-         * Used for editPath fallback (only one textfieldwidget).
-         * Set or delete using component page buttons.
-         * 
-         * @param path nbt path in format: components.foo.bar.list[0]
-         */
-        public RowWidgetComponent(String path, ButtonWidget saveBtn) {
-            super();
-
-            final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbtAll(selItem),path));
-
-            final String[] suggestions = new String[]{startVal};
-
-            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
-                ItemBuilder.this.x+ROW_LEFT, 5, ROW_RIGHT-ROW_LEFT, 20, Text.of(""))};
-            this.txtX = new int[]{ROW_LEFT};
-            this.txts[0].setMaxLength(131072);
-
-            this.txts[0].setChangedListener(value -> {
-                inpError = null;
-
-                if((value != null && !value.equals(startVal))) {
-                    this.txts[0].setEditableColor(0xFFFFFF);
-
-                    if(path.startsWith("components.")) {
-                        try {
-                            ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader("stone["+path.replaceAll("components.","")+"="+value+"]"));
-                        } catch(Exception ex) {
-                            if(ex instanceof CommandSyntaxException) {
-                                inpError = ((CommandSyntaxException)ex).getMessage();
-                            }
-                        }
-                    }
-
-                    if(inpError != null) {
-                        this.txts[0].setEditableColor(0xFF5555);
-                        if(inpError.contains(" at position ")) {
-                            inpError = inpError.substring(0,inpError.indexOf(" at position "));
-                        }
-                    }
-                }
-                else {
-                    this.txts[0].setEditableColor(LABEL_COLOR);
-                }
-            
-                setEditingElement(path,BlackMagick.nbtFromString(value),saveBtn);
-
-                if(!currentTxt.contains(this.txts[0])) {
-                    resetSuggs();
-                    currentTxt.add(this.txts[0]);
-                    suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                    if(suggestions != null && suggestions.length > 0)
-                        suggs.setSuggestions(suggestions);
-                }
-                else{
-                    if(suggs != null)
-                        suggs.refresh();
-                    else {
-                        resetSuggs();
-                        suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                        if(suggestions != null && suggestions.length > 0)
-                            suggs.setSuggestions(suggestions);
-                    }
-                }
-            });
-
-            this.txts[0].setText(startVal);
-
-            for(int i=0; i<btns.length; i++)
-                this.children.add(this.btns[i]);
-            for(int i=0; i<txts.length; i++) {
-                this.children.add(this.txts[i]);
-                ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
-            }            
-        }
-
     }
 
     class RowWidgetCompound extends RowWidget {
@@ -5921,7 +5463,7 @@ public class ItemBuilder extends GenericScreen {
             this.btns[1].setTooltip(Tooltip.of(Text.of(startVal.equals("") ? "Create component" : "Delete component")));
 
             for(int i=0; i<btns.length; i++)
-                this.children.add(this.btns[i]);          
+                this.children.add(this.btns[i]);
         }
 
     }
@@ -5932,36 +5474,96 @@ public class ItemBuilder extends GenericScreen {
          * Row to edit any element in base compound.
          * Contains button to set and txt to input (or others depending on path and key).
          * Element is removed on set when txt is empty.
-         * 
-         * @param key element key within compound
          */
-        public RowWidgetElement(String path, ButtonWidget saveBtn, NbtCompound base, String key) {
+        public RowWidgetElement(String blankElPath, NbtList path2, ButtonWidget saveBtn, String fullPath, String key) {
             super();
 
             this.lbl = key;
             int size = sizeFromName(key);
-            String fullPath = path+"."+key;
+            NbtElement tempEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),fullPath);
+            final String startVal = BlackMagick.nbtToString(tempEl);
+            tempEl = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath);
+            final String currentVal = BlackMagick.nbtToString(tempEl);
+            PathType widType = ComponentHelper.getPathInfo(simplifyPath(fullPath)).type();
 
-            // if(ComponentHelper.isText(fullPath)) {
+            if(widType==PathType.TEXT || widType==PathType.DECIMAL_COLOR || widType==PathType.COMPOUND || widType==PathType.LIST) {
+                Text btnTxt = Text.of(currentVal);
+                if(!currentVal.equals("")) {
+                    if(widType==PathType.TEXT) {
+                        if(BlackMagick.jsonFromString(currentVal).isValid()) {
+                            btnTxt = BlackMagick.jsonFromString(currentVal).text();
+                            if(fullPath.endsWith("components.custom_name"))
+                                btnTxt = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text()).append(btnTxt.copy());
+                            else if(fullPath.contains("components.lore["))
+                                btnTxt = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text()).append(btnTxt.copy());
+                        }
+                    }
+                    else if(widType==PathType.DECIMAL_COLOR) {
+                        if(BlackMagick.colorHexFromDec(currentVal) != null)
+                            btnTxt = BlackMagick.jsonFromString("{\"text\":\""+currentVal+"\",\"color\":\""+BlackMagick.colorHexFromDec(currentVal)+"\"}").text();
+                        else
+                            btnTxt = BlackMagick.jsonFromString("{\"text\":\"Invalid Color: "+currentVal+"\",\"color\":\"red\"}").text();
+                    }
+                }
+    
+                this.btns = new ButtonWidget[]{
+                ButtonWidget.builder(btnTxt, btn -> {
+                    NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+blankElPath+"\"}"));
+                    NbtList newPath2 = new NbtList();
+                    newPath2.add(NbtString.of("."+key));
+                    if(path2 != null) {
+                        for(int i=0; i<path2.size(); i++)
+                            newPath2.add(path2.get(i));
+                    }
+                    newArgs.put("path2",newPath2);
+                    if(blankTabEl != null)
+                        newArgs.put("overrideEl",blankTabEl);
+                    createWidgets(0,newArgs);
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_LEFT+size,5,ROW_RIGHT-ROW_LEFT-20-size-5,20).build(),
+                ButtonWidget.builder(Text.of(currentVal.equals("") ? "+" : "X"), btn -> {
+                    if(currentVal.equals("")) {
+                        NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+blankElPath+"\"}"));
+                        NbtList newPath2 = new NbtList();
+                        newPath2.add(NbtString.of("."+key));
+                        if(path2 != null) {
+                            for(int i=0; i<path2.size(); i++)
+                                newPath2.add(path2.get(i));
+                        }
+                        newArgs.put("path2",newPath2);
+                        if(blankTabEl != null)
+                            newArgs.put("overrideEl",blankTabEl);
+                        createWidgets(0,newArgs);
+                    }
+                    else {
+                        setEditingElement(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
+                            BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,null),blankElPath),saveBtn,
+                            path2!=null,null);
+                        NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+blankElPath+"\"}"));
+                        if(path2 != null) {
+                            newArgs.put("path2",path2);
+                        }
+                        if(blankTabEl != null)
+                            newArgs.put("overrideEl",blankTabEl);
+                        createWidgets(0,newArgs);
+                    }
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_RIGHT-20,5,20,20).build()};
+                this.btnX = new int[]{ROW_LEFT+size+5,ROW_RIGHT-20};
+                if(!currentVal.equals(""))
+                    this.btns[0].setTooltip(Tooltip.of(Text.of("Edit element")));
+                else
+                    this.btns[0].active = false;
+                this.btns[1].setTooltip(Tooltip.of(Text.of(currentVal.equals("") ? "Create element" : "Delete element")));
+    
+                for(int i=0; i<btns.length; i++)
+                    this.children.add(this.btns[i]);
+            }
+            // else if(widType==PathType.TRINARY || widType==PathType.TOOLTIP_UNIT || widType==PathType.UNIT) {
             //     //TODO other el types
             // }
-            // else if(ComponentHelper.isDecimalColor(fullPath)) {
-
-            // }
-            // else if(ComponentHelper.getCompType(fullPath)==CompType.TRINARY) {
-
-            // }
-            // else if(ComponentHelper.getCompType(fullPath)==CompType.TOOLTIP_UNIT) {
-                
-            // }
-            // else if(ComponentHelper.getCompType(fullPath)==CompType.UNIT) {
-                
-            // }
-            // else {
-            {
-                final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(base,key));
-
-                String[] baseSuggestions = ComponentHelper.getPathInfo(fullPath).suggs();
+            else {
+                String[] baseSuggestions = ComponentHelper.getPathInfo(simplifyPath(fullPath)).suggs();
                 final String[] suggestions;
                 if(baseSuggestions == null) {
                     if(startVal.length()>0)
@@ -6008,7 +5610,9 @@ public class ItemBuilder extends GenericScreen {
                     }
                     
                     if(blankTabEl != null && blankTabEl.getType()==NbtElement.COMPOUND_TYPE) {
-                        setEditingElement(path,BlackMagick.setNbtPath((NbtCompound)blankTabEl,key,el),saveBtn);
+                        setEditingElement(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
+                            BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,el),blankElPath),saveBtn,
+                            path2!=null,el);
                     }
 
                     if(!currentTxt.contains(this.txts[0])) {
@@ -6031,7 +5635,7 @@ public class ItemBuilder extends GenericScreen {
 
                 });
 
-                this.txts[0].setText(startVal);
+                this.txts[0].setText(currentVal);
 
                 for(int i=0; i<txts.length; i++) {
                     this.children.add(this.txts[i]);
@@ -6039,6 +5643,102 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
 
+        }
+
+        /**
+         * Used for editPath fallback (only one textfieldwidget).
+         */
+        public RowWidgetElement(String blankElPath, NbtList path2, ButtonWidget saveBtn, String fullPath) {
+            super();
+
+            NbtElement tempEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),fullPath);
+            final String startVal = BlackMagick.nbtToString(tempEl);
+            tempEl = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath);
+            final String currentVal = BlackMagick.nbtToString(tempEl);
+
+            String[] baseSuggestions = ComponentHelper.getPathInfo(simplifyPath(fullPath)).suggs();
+            final String[] suggestions;
+            if(baseSuggestions == null) {
+                if(startVal.length()>0)
+                    suggestions = new String[]{startVal};
+                else
+                    suggestions = null;
+            }
+            else {
+                if(startVal.length()>0) {
+                    suggestions = new String[baseSuggestions.length+1];
+                    suggestions[0]=startVal;
+                    for(int i=1; i<suggestions.length; i++)
+                        suggestions[i] = baseSuggestions[i-1];
+                }
+                else
+                    suggestions = baseSuggestions;
+            }
+
+            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
+                ItemBuilder.this.x+ROW_LEFT, 5, ROW_RIGHT-ROW_LEFT, 20, Text.of(""))};
+            this.txtX = new int[]{ROW_LEFT};
+            this.txts[0].setMaxLength(131072);
+
+            this.txts[0].setChangedListener(value -> {
+                inpError = null;
+
+                if((value != null && !value.equals(startVal))) {
+                    this.txts[0].setEditableColor(0xFFFFFF);
+
+                    // if(path.startsWith("components.")) {//TODO fix inpError for fallback
+                    //     try {
+                    //         ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader("stone["+path.replaceAll("components.","")+"="+value+"]"));
+                    //     } catch(Exception ex) {
+                    //         if(ex instanceof CommandSyntaxException) {
+                    //             inpError = ((CommandSyntaxException)ex).getMessage();
+                    //         }
+                    //     }
+                    // }
+
+                    if(inpError != null) {
+                        this.txts[0].setEditableColor(0xFF5555);
+                        if(inpError.contains(" at position ")) {
+                            inpError = inpError.substring(0,inpError.indexOf(" at position "));
+                        }
+                    }
+                }
+                else {
+                    this.txts[0].setEditableColor(LABEL_COLOR);
+                }
+            
+                NbtElement el = BlackMagick.nbtFromString(value);
+                setEditingElement(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
+                    BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,el),blankElPath),saveBtn,
+                    path2!=null,el);
+
+                if(!currentTxt.contains(this.txts[0])) {
+                    resetSuggs();
+                    currentTxt.add(this.txts[0]);
+                    suggs = new TextSuggestor(client, this.txts[0], textRenderer);
+                    if(suggestions != null && suggestions.length > 0)
+                        suggs.setSuggestions(suggestions);
+                }
+                else{
+                    if(suggs != null)
+                        suggs.refresh();
+                    else {
+                        resetSuggs();
+                        suggs = new TextSuggestor(client, this.txts[0], textRenderer);
+                        if(suggestions != null && suggestions.length > 0)
+                            suggs.setSuggestions(suggestions);
+                    }
+                }
+            });
+
+            this.txts[0].setText(currentVal);
+
+            for(int i=0; i<btns.length; i++)
+                this.children.add(this.btns[i]);
+            for(int i=0; i<txts.length; i++) {
+                this.children.add(this.txts[i]);
+                ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
+            }            
         }
 
     }
@@ -6514,7 +6214,7 @@ public class ItemBuilder extends GenericScreen {
             return true;
         }
         if (FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
-            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !unsavedPose) {
+            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !unsavedPose && !tabs[tab].hideTabs) {
                 if(!pauseSaveScroll && tabWidget != null) {
                     tabScroll[tab] = tabWidget.getScrollAmount();
                 }

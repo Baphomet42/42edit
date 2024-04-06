@@ -191,8 +191,8 @@ public class ComponentHelper {
         if(path.endsWith("components.custom_name")
             || path.endsWith("components.item_name")
             || path.endsWith("CustomName")
-            || path.contains("lore[")
-            || (path.contains("pages[") && path.contains("written_book_content")))
+            || path.contains("components.lore[")
+            || (path.contains("pages[") && path.contains("components.written_book_content")))
             return new PathInfo(PathType.TEXT,null);
 
         if(path.endsWith("rgb")
