@@ -643,20 +643,15 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         Registries.DATA_COMPONENT_TYPE.forEach(c -> {
-            list.add(Registries.DATA_COMPONENT_TYPE.getId(c).getPath());
+            list.add(Registries.DATA_COMPONENT_TYPE.getId(c).toString());
         });
 
-        list.remove("creative_slot_lock");
-        list.remove("map_post_processing");
-
-        Set<String> superKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(ComponentHelper.SUPER_ITEM,"components",NbtElement.COMPOUND_TYPE)).getKeys();
-        for(String k : superKeys) {
-            if(!list.contains(k))
-                LOGGER.warn("Unknown component in ComponentHelper: "+k);
-        }
+        list.remove("minecraft:creative_slot_lock");
+        list.remove("minecraft:map_post_processing");
+        
         for(String k : list) {
-            if(!superKeys.contains(k))
-                LOGGER.warn("ComponentHelper does not contain component: "+k);
+            // this will log warnings if ComponentHelper doesn't include a vanilla component
+            ComponentHelper.getPathInfo("components."+k);
         }
 
         Collections.sort(list);

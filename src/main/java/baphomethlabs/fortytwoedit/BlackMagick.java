@@ -216,7 +216,7 @@ public class BlackMagick {
 
     /**
      * Get compound representation of an item, or an empty compound if invalid.
-     * The minecraft namespace is removed from id and components.
+     * The minecraft namespace is removed from id.
      * Count is removed if only 1.
      * 
      * @param item
@@ -232,24 +232,12 @@ public class BlackMagick {
             nbt.putString("id",nbt.getString("id").substring(10));
         if(nbt.contains("count",NbtElement.INT_TYPE) && nbt.getInt("count")<2)
             nbt.remove("count");
-        if(nbt.contains("components",NbtElement.COMPOUND_TYPE)) {
-            NbtCompound comps = nbt.getCompound("components");
-            NbtCompound newComps = new NbtCompound();
-            for(String k : comps.getKeys()) {
-                if(k.startsWith("minecraft:") && k.length()>10) {
-                    newComps.put(k.substring(10),comps.get(k));
-                }
-                else
-                    newComps.put(k,comps.get(k));
-            }
-            nbt.put("components",newComps);
-        }
         return nbt;
     }
 
     /**
      * Get compound representation of an item, or an empty compound if invalid.
-     * The minecraft namespace is removed from id and components.
+     * The minecraft namespace is removed from id.
      * All components are kept, even if they are the default values.
      * 
      * @param item
@@ -269,18 +257,6 @@ public class BlackMagick {
         }
         if(nbt.contains("id",NbtElement.STRING_TYPE) && nbt.getString("id").startsWith("minecraft:") && nbt.getString("id").length()>10)
             nbt.putString("id",nbt.getString("id").substring(10));
-        if(nbt.contains("components",NbtElement.COMPOUND_TYPE)) {
-            NbtCompound comps = nbt.getCompound("components");
-            NbtCompound newComps = new NbtCompound();
-            for(String k : comps.getKeys()) {
-                if(k.startsWith("minecraft:") && k.length()>10) {
-                    newComps.put(k.substring(10),comps.get(k));
-                }
-                else
-                    newComps.put(k,comps.get(k));
-            }
-            nbt.put("components",newComps);
-        }
         return nbt;
     }
 
@@ -311,14 +287,30 @@ public class BlackMagick {
      * 
      * @param item
      * @param keepAll whether or not default components should be listed (and count if 1)
+     * @param keepCount whether or not to remove count from item representation
      * @return item argument in form: stone[custom_data={foo:bar}] 4
      */
-    public static String itemToGive(ItemStack item, boolean keepAll) {
+    public static String itemToGive(ItemStack item, boolean keepAll, boolean keepCount) {
         NbtCompound nbt;
         if(!keepAll)
             nbt = itemToNbt(item);
         else
             nbt = itemToNbtAll(item);
+        return itemToGive(nbt,keepAll,keepCount);
+    }
+
+    /**
+     * Returns the item argument that can be used in the give command to get the item.
+     * Count will appear at the end if it's higher than 1.
+     * The minecraft namespace is removed from id and components.
+     * 
+     * @param item item compound with id/count/components
+     * @param keepAll whether or not default components should be listed (and count if 1)
+     * @param keepCount whether or not to remove count from item representation
+     * @return item argument in form: stone[custom_data={foo:bar}] 4
+     */
+    public static String itemToGive(NbtCompound item, boolean keepAll, boolean keepCount) {
+        NbtCompound nbt = item==null ? null : item.copy();
         if(nbt == null || !nbt.contains("id",NbtElement.STRING_TYPE) || nbt.getString("id").equals(""))
             return "";
         String cmd = nbt.getString("id");
@@ -341,7 +333,7 @@ public class BlackMagick {
             cmd += "]";
         }
 
-        if(nbt.contains("count",NbtElement.INT_TYPE) && (nbt.getInt("count") > 1 || keepAll))
+        if(keepCount && nbt.contains("count",NbtElement.INT_TYPE) && (nbt.getInt("count") > 1 || keepAll))
             cmd += " " + nbt.getInt("count");
         return cmd;
     }
