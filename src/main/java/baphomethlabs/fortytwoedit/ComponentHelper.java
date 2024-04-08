@@ -64,13 +64,14 @@ public class ComponentHelper {
     public static boolean componentRead(ItemStack stack, String component) {
         if(stack==null || component == null)
             return false;
+        String originalComp = component;
         if(component.startsWith("minecraft:"))
             component = component.replaceFirst("minecraft:","");
         Item item = stack.getItem();
         String itemId = item.toString();
         if(itemId.equals("ender_chest") && (component.equals("container") || component.equals("container_loot")))
             return false;
-        if(hasComponent(item.getComponents(),component))
+        if(hasComponent(item.getComponents(),originalComp))
             return true;
         switch(component) {
             case "banner_patterns":
@@ -91,7 +92,7 @@ public class ComponentHelper {
             case "stored_enchantments":
             case "suspicious_stew_effects":
             case "writable_book_content":
-                return hasComponent(item.getComponents(),component);
+                return hasComponent(item.getComponents(),originalComp);
             case "base_color": return itemId.equals("shield");
             case "block_entity_data": return (BlackMagick.stringEquals(itemId,"beacon","beehive","bee_nest","blast_furnace","brewing_stand","campfire","chiseled_bookshelf","command_block","chain_command_block","repeating_command_block","crafter","furnace","smoker","soul_campfire","spawner","trial_spawner","jukebox","lectern")
                 || item instanceof SignItem || item instanceof HangingSignItem); // see https://minecraft.wiki/w/Chunk_format

@@ -8,11 +8,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.spongepowered.asm.mixin.injection.struct.InjectorGroupInfo.Map;
+import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandRegistryAccess;
+import net.minecraft.command.argument.ItemStackArgumentType;
 import net.minecraft.command.argument.NbtPathArgumentType.NbtPath;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.component.DataComponentType;
@@ -246,11 +248,18 @@ public class BlackMagick {
     public static NbtCompound itemToNbtAll(ItemStack item) {
         NbtCompound nbt = new NbtCompound();
         if(item != null && !item.isEmpty()) {
-            NbtElement comps = new NbtCompound();
+            NbtCompound comps = new NbtCompound();
             String compsString = componentsAsString(item.getComponents());
             if(compsString != null && compsString.length()>0)
-                comps = BlackMagick.nbtFromString("{"+compsString+"}",NbtElement.COMPOUND_TYPE);
-            if(comps != null && !((NbtCompound)comps).isEmpty())
+                comps = BlackMagick.validCompound(BlackMagick.nbtFromString("{"+compsString+"}"));
+
+            NbtCompound itemComps = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbt(item),"components"));
+            for(String k : itemComps.getKeys()) {
+                if(k.startsWith("!"))
+                    comps.put(k,itemComps.get(k));
+            }
+
+            if(!comps.isEmpty())
                 nbt.put("components",comps);
             nbt.putInt("count",item.getCount());
             nbt.putString("id",item.getItem().toString());
@@ -281,61 +290,35 @@ public class BlackMagick {
     }
 
     /**
-     * Returns the item argument that can be used in the give command to get the item.
-     * Count will appear at the end if it's higher than 1.
-     * The minecraft namespace is removed from id and components.
+     * Find invalid components in an item compound.
+     * If error is found, changes inpError to the new error message.
+     * Otherwise returns previous inpError.
      * 
-     * @param item
-     * @param keepAll whether or not default components should be listed (and count if 1)
-     * @param keepCount whether or not to remove count from item representation
-     * @return item argument in form: stone[custom_data={foo:bar}] 4
+     * @param item stringified compound with id/count/components
+     * @param inpError existing error message, or null
+     * @return String describing errors, or null
      */
-    public static String itemToGive(ItemStack item, boolean keepAll, boolean keepCount) {
-        NbtCompound nbt;
-        if(!keepAll)
-            nbt = itemToNbt(item);
-        else
-            nbt = itemToNbtAll(item);
-        return itemToGive(nbt,keepAll,keepCount);
-    }
-
-    /**
-     * Returns the item argument that can be used in the give command to get the item.
-     * Count will appear at the end if it's higher than 1.
-     * The minecraft namespace is removed from id and components.
-     * 
-     * @param item item compound with id/count/components
-     * @param keepAll whether or not default components should be listed (and count if 1)
-     * @param keepCount whether or not to remove count from item representation
-     * @return item argument in form: stone[custom_data={foo:bar}] 4
-     */
-    public static String itemToGive(NbtCompound item, boolean keepAll, boolean keepCount) {
-        NbtCompound nbt = item==null ? null : item.copy();
-        if(nbt == null || !nbt.contains("id",NbtElement.STRING_TYPE) || nbt.getString("id").equals(""))
-            return "";
-        String cmd = nbt.getString("id");
-
-        if(nbt.contains("components",NbtElement.COMPOUND_TYPE)) {
-            NbtCompound comps = nbt.getCompound("components");
-            cmd += "[";
-            boolean first = true;
-            for(String k : comps.getKeys()) {
-                if(!first)
-                    cmd += ",";
-                else
-                    first = false;
-
-                String key = k;
-                String value = BlackMagick.nbtToString(comps.get(k));
-
-                cmd += key+"="+value;
+    public static String getItemCompoundErrors(String item, String inpError) {
+        String invalidMsg = "Invalid item";
+        if(item==null || item.length()==0)
+            return invalidMsg;
+        try {
+            String giveMsg = "bundle[bundle_contents=["+item+"]]";
+            ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader(giveMsg));
+        } catch(Exception ex) {
+            if(ex instanceof CommandSyntaxException) {
+                String err = ((CommandSyntaxException)ex).getMessage();
+                String bundleErr = "Malformed 'minecraft:bundle_contents' component: ";
+                if(err.startsWith(bundleErr))
+                    err = err.replaceFirst(bundleErr,"");
+                if(err.contains(" at position ")) {
+                    err = err.substring(0,err.indexOf(" at position "));
+                }
+                return err;
             }
-            cmd += "]";
+            return invalidMsg;
         }
-
-        if(keepCount && nbt.contains("count",NbtElement.INT_TYPE) && (nbt.getInt("count") > 1 || keepAll))
-            cmd += " " + nbt.getInt("count");
-        return cmd;
+        return inpError;
     }
 
     /**
@@ -389,20 +372,47 @@ public class BlackMagick {
      * @return copy with changes made
      */
     public static NbtCompound setNbtPath(NbtCompound base, String path, NbtElement el) {
-        NbtCompound nbt = new NbtCompound();
+        NbtCompound nbt;
         if(base != null)
             nbt = base.copy();
+        else
+            nbt = new NbtCompound();
 
         try {
             NbtPath p = NbtPath.parse(path);
             if(el == null)
                 p.remove(nbt);
-            else
+            else {
                 p.put(nbt,el.copy());
+                if(!path.contains("!"))
+                    nbt = removeComponentLocks(nbt,path);
+            }
         } catch(Exception ex) {
             return base.copy();
         }
         
+        return nbt;
+    }
+
+    private static NbtCompound removeComponentLocks(NbtCompound base, String path) {
+        if(base == null)
+            return null;
+        NbtCompound nbt = base.copy();
+
+        path = "."+path;
+        while(path.contains(".components.")) {
+            String component = path.substring(path.lastIndexOf(".components.")+12);
+            if(component.contains("."))
+                component = component.substring(0,component.indexOf("."));
+            if(component.contains("["))
+                component = component.substring(0,component.indexOf("["));
+            path = path.substring(0,path.lastIndexOf(".components."));
+            if(path.length()==0)
+                nbt = setNbtPath(nbt,"components.!"+component,null);
+            else
+                nbt = setNbtPath(nbt,path.substring(1)+".components.!"+component,null);
+        }
+
         return nbt;
     }
 
