@@ -1026,13 +1026,12 @@ public class FortytwoEdit implements ClientModInitializer {
                     NbtCompound jsonItem = (NbtCompound)items.get(i);
                     NbtCompound nbt = new NbtCompound();
                     nbt.put("id",jsonItem.get("id"));
-                    nbt.put("Count",NbtInt.of(1));
                     if(jsonItem.contains("count",NbtElement.INT_TYPE))
-                        nbt.put("Count",jsonItem.get("count"));
-                    if(jsonItem.contains("tag",NbtElement.STRING_TYPE)) {//TODO update web items validation system
-                        NbtElement el = BlackMagick.nbtFromString(((NbtString)jsonItem.get("tag")).asString());
+                        nbt.put("count",jsonItem.get("count"));
+                    if(jsonItem.contains("components",NbtElement.STRING_TYPE)) {
+                        NbtElement el = BlackMagick.nbtFromString(((NbtString)jsonItem.get("components")).asString());
                         if(el != null && el.getType()==NbtElement.COMPOUND_TYPE)
-                            nbt.put("tag",el);
+                            nbt.put("components",el);
                     }
                     itemList.add(nbt);
                 }

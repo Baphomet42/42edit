@@ -183,7 +183,7 @@ public class Hacks extends GenericScreen {
             if(items.size()==1)
                 item = BlackMagick.itemFromNbt((NbtCompound)bundle.get(0));
 
-            client.keyboard.setClipboard(BlackMagick.itemToNbt(item).asString());
+            client.keyboard.setClipboard(BlackMagick.itemToNbtStorage(item).asString());
 
             if (client.player.getAbilities().creativeMode && !item.isEmpty()) {
                 client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);

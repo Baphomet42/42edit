@@ -20,10 +20,20 @@ import net.minecraft.component.ComponentMap;
 import net.minecraft.component.DataComponentType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtByte;
+import net.minecraft.nbt.NbtByteArray;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtDouble;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtFloat;
+import net.minecraft.nbt.NbtInt;
+import net.minecraft.nbt.NbtIntArray;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtLong;
+import net.minecraft.nbt.NbtLongArray;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.NbtShort;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registries;
@@ -72,7 +82,7 @@ public class BlackMagick {
             // Removing the bundle item in an inventory may result in a ghost item.
             // Emptying the bundle with the use key ingame will spawn the item, and it will not be a ghost.
             if (!item.isEmpty() && !client.player.networkHandler.hasFeature(item.getItem().getRequiredFeatures())) {
-                ItemStack newStack = BlackMagick.itemFromString("{id:bundle,components:{bundle_contents:["+BlackMagick.itemToNbt(item).asString()+"]}}");
+                ItemStack newStack = BlackMagick.itemFromString("{id:bundle,components:{bundle_contents:["+BlackMagick.itemToNbtStorage(item).asString()+"]}}");
                 if(!newStack.isEmpty()) {
                     item = newStack;
                 }
@@ -224,7 +234,7 @@ public class BlackMagick {
      * @param item
      * @return compound with id/count/components (or empty compound)
      */
-    public static NbtCompound itemToNbt(ItemStack item) {
+    public static NbtCompound itemToNbtStorage(ItemStack item) {
         NbtCompound nbt = new NbtCompound();
         final MinecraftClient client = MinecraftClient.getInstance();
         if(client.world != null && item != null && !item.isEmpty()) {
@@ -245,7 +255,7 @@ public class BlackMagick {
      * @param item
      * @return compound with id/count/components (or empty compound)
      */
-    public static NbtCompound itemToNbtAll(ItemStack item) {
+    public static NbtCompound itemToNbt(ItemStack item) {
         NbtCompound nbt = new NbtCompound();
         if(item != null && !item.isEmpty()) {
             NbtCompound comps = new NbtCompound();
@@ -253,7 +263,7 @@ public class BlackMagick {
             if(compsString != null && compsString.length()>0)
                 comps = BlackMagick.validCompound(BlackMagick.nbtFromString("{"+compsString+"}"));
 
-            NbtCompound itemComps = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbt(item),"components"));
+            NbtCompound itemComps = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(item),"components"));
             for(String k : itemComps.getKeys()) {
                 if(k.startsWith("!"))
                     comps.put(k,itemComps.get(k));
@@ -268,6 +278,39 @@ public class BlackMagick {
             nbt.putString("id",nbt.getString("id").substring(10));
         return nbt;
     }
+
+    // /**
+    //  * Get a command to give @p the item. Command does not start with /
+    //  * 
+    //  * @param item
+    //  * @return command to give the item (or empty string if invalid)
+    //  */
+    // public static String itemToGive(ItemStack item) {
+    //     return itemToGive(BlackMagick.itemToNbtStorage(item));
+    // }
+
+    // todo: uncomment these, make it set the item count, test it, and implement somewhere? 
+
+    // /**
+    //  * Get a command to give @p the item. Command does not start with /
+    //  * 
+    //  * @param item an item in compound form with id/count/components
+    //  * @return command to give the item (or empty string if invalid)
+    //  */
+    // public static String itemToGive(NbtCompound item) {
+    //     // The loot command is used as give cannot give items with
+    //     // removed default components like {id:stick,components:{"!repair_cost":{}}}
+    //     // Example loot command:
+    //     // loot give @s loot {pools:[{rolls:1,entries:[{type:"item",name:"golden_sword",functions:[{function:"set_components",components:{"!damage":{}}}]}]}]}
+    //     if(item != null && item.contains("id",NbtElement.STRING_TYPE)) {
+    //         String cmd = "loot give @s loot {pools:[{rolls:1,entries:[{type:\"item\",name:\""+item.getString("id")+"\"";
+    //         if(item.contains("components",NbtElement.COMPOUND_TYPE))
+    //             cmd += ",functions:[{function:\"set_components\",components:"+item.getCompound("components").asString()+"}]";
+    //         cmd += "}]}]}";
+    //         return cmd;
+    //     }
+    //     return "";
+    // }
 
     // modified from net.minecraft.command.argument.ItemStackArgument
     // change = to : in return line and surround identifier in quotes
@@ -394,6 +437,32 @@ public class BlackMagick {
         return nbt;
     }
 
+    /**
+     * Create default NbtElement for a given type
+     * 
+     * @param type from NbtElement.getType()
+     * @return a new NbtElement or null if the type is unknown
+     */
+    public static NbtElement getDefaultNbt(byte type) {
+        switch(type) {
+            case NbtElement.COMPOUND_TYPE : return new NbtCompound();
+            case NbtElement.LIST_TYPE : return new NbtList();
+            case NbtElement.BYTE_TYPE : return NbtByte.ZERO;
+            case NbtElement.BYTE_ARRAY_TYPE : return new NbtByteArray(new byte[0]);
+            case NbtElement.SHORT_TYPE : return NbtShort.of((short)0);
+            case NbtElement.INT_TYPE : return NbtInt.of(0);
+            case NbtElement.INT_ARRAY_TYPE : return new NbtIntArray(new int[0]);
+            case NbtElement.LONG_TYPE : return NbtLong.of((long)0);
+            case NbtElement.LONG_ARRAY_TYPE : return new NbtLongArray(new long[0]);
+            case NbtElement.DOUBLE_TYPE : return NbtDouble.of((double)0);
+            case NbtElement.FLOAT_TYPE : return NbtFloat.of((float)0);
+            case NbtElement.STRING_TYPE : return NbtString.of("");
+            default: break;
+        }
+        FortytwoEdit.LOGGER.error("Failed to create default NbtElement for type: "+type);
+        return null;
+    }
+
     private static NbtCompound removeComponentLocks(NbtCompound base, String path) {
         if(base == null)
             return null;
@@ -435,7 +504,7 @@ public class BlackMagick {
 
         if(getNbtPath(nbt,path,NbtElement.LIST_TYPE) != null) {
             NbtList list = (NbtList)getNbtPath(nbt,path);
-            if(list.size()>index && !((index==0 && up) || (index==list.size()-1 && !up))) {
+            if(list.size()>index && index>=0 && !((index==0 && up) || (index==list.size()-1 && !up))) {
                 NbtElement el = list.remove(index);
                 if(up)
                     list.add(index-1,el);
@@ -466,7 +535,7 @@ public class BlackMagick {
 
         if(getNbtPath(nbt,path,NbtElement.LIST_TYPE) != null) {
             NbtList list = (NbtList)getNbtPath(nbt,path);
-            if(list.size()>index) {
+            if(list.size()>index && index>=0) {
                 NbtElement el = list.get(index).copy();
                 list.add(index,el);
                 nbt = setNbtPath(nbt, path, list);

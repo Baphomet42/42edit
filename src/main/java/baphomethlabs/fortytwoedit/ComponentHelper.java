@@ -14,6 +14,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.MinecartItem;
 import net.minecraft.item.SignItem;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.Identifier;
@@ -171,7 +172,7 @@ public class ComponentHelper {
             if(path.endsWith("components.attribute_modifiers"))
                 return new PathInfo(Set.of("modifiers","show_in_tooltip"));
             if(path.endsWith("components.attribute_modifiers.modifiers"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.attribute_modifiers.modifiers[0]"))
                 return new PathInfo(Set.of("type","slot","uuid","name","amount","operation"));
             if(path.endsWith("components.attribute_modifiers.modifiers[0].type"))
@@ -192,7 +193,7 @@ public class ComponentHelper {
 
         if(path.contains("components.banner_patterns")) {
             if(path.endsWith("components.banner_patterns"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.banner_patterns[0]"))
                 return new PathInfo(Set.of("color","pattern"));
             if(path.endsWith("components.banner_patterns[0].color"))
@@ -206,7 +207,7 @@ public class ComponentHelper {
 
         if(path.contains("components.bees")) {
             if(path.endsWith("components.bees"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.bees[0]"))
                 return new PathInfo(Set.of("entity_data","min_ticks_in_hive","ticks_in_hive"));
             if(path.endsWith("components.bees[0].entity_data"))
@@ -256,7 +257,7 @@ public class ComponentHelper {
 
         if(path.contains("components.bundle_contents")) {
             if(path.endsWith("components.bundle_contents"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.bundle_contents[0]"))
                 return INFO_ITEM_NODE;
         }
@@ -304,7 +305,7 @@ public class ComponentHelper {
 
         if(path.contains("components.container")) {
             if(path.endsWith("components.container"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.container[0]"))
                 return new PathInfo(Set.of("item","slot"));
             if(path.endsWith("components.container[0].item"))
@@ -386,10 +387,10 @@ public class ComponentHelper {
                 return new PathInfo();
             if(path.endsWith("components.entity_data.OnGround"))
                 return new PathInfo();
-            // if(path.endsWith("components.entity_data.Passengers"))
-            //     return new PathInfo();
-            // if(path.endsWith("components.entity_data.PortalCooldown"))
-            //     return new PathInfo();
+            if(path.endsWith("components.entity_data.Passengers"))
+                return new PathInfo();
+            if(path.endsWith("components.entity_data.PortalCooldown"))
+                return new PathInfo();
             if(path.endsWith("components.entity_data.Pos"))
                 return new PathInfo();
             if(path.endsWith("components.entity_data.Rotation"))
@@ -430,7 +431,7 @@ public class ComponentHelper {
             if(path.endsWith("components.fireworks"))
                 return new PathInfo(Set.of("explosions","flight_duration"));
             if(path.endsWith("components.fireworks.explosions"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.fireworks.explosions[0]"))
                 return new PathInfo(Set.of("shape","colors","fade_colors","has_trail","has_twinkle"));
             if(path.endsWith("components.fireworks.explosions[0].shape"))
@@ -449,10 +450,10 @@ public class ComponentHelper {
 
         if(path.contains("components.food")) {
             if(path.endsWith("components.food"))
-                return new PathInfo(Set.of("nutrition","saturation_modifier","is_meat","can_always_eat","eat_seconds","effects"));
+                return new PathInfo(Set.of("nutrition","saturation","is_meat","can_always_eat","eat_seconds","effects"));
             if(path.endsWith("components.food.nutrition"))
                 return new PathInfo();
-            if(path.endsWith("components.food.saturation_modifier"))
+            if(path.endsWith("components.food.saturation"))
                 return new PathInfo();
             if(path.endsWith("components.food.is_meat"))
                 return new PathInfo();
@@ -461,7 +462,7 @@ public class ComponentHelper {
             if(path.endsWith("components.food.eat_seconds"))
                 return new PathInfo();
             if(path.endsWith("components.food.effects"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.food.effects[0]"))
                 return new PathInfo(Set.of("effect","probability"));
             if(path.endsWith("components.food.effects[0].effect"))
@@ -516,7 +517,7 @@ public class ComponentHelper {
 
         if(path.contains("components.lore")) {
             if(path.endsWith("components.lore"))
-                return INFO_LIST;
+                return INFO_LIST_STRING;
             if(path.endsWith("components.lore[0]"))
                 return INFO_TEXT;
         }
@@ -544,7 +545,7 @@ public class ComponentHelper {
 
         if(path.contains("components.pot_decorations")) {
             if(path.endsWith("components.pot_decorations"))
-                return INFO_LIST;
+                return INFO_LIST_STRING;
             if(path.endsWith("components.pot_decorations[0]"))
                 return new PathInfo();
         }
@@ -557,7 +558,7 @@ public class ComponentHelper {
             if(path.endsWith("components.potion_contents.custom_color"))
                 return INFO_DECIMAL_COLOR;
             if(path.endsWith("components.potion_contents.custom_effects"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.potion_contents.custom_effects[0]"))
                 return INFO_EFFECT_NODE;
             if(path.endsWith("components.potion_contents.custom_effects[0].id"))
@@ -582,7 +583,7 @@ public class ComponentHelper {
             if(path.endsWith("components.profile.id"))
                 return new PathInfo();
             if(path.endsWith("components.profile.properties"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.profile.properties[0]"))
                 return new PathInfo(Set.of("name","value","signature"));
             if(path.endsWith("components.profile.properties[0].name"))
@@ -598,7 +599,7 @@ public class ComponentHelper {
 
         if(path.contains("components.recipes")) {
             if(path.endsWith("components.recipes"))
-                return INFO_LIST;
+                return INFO_LIST_STRING;
             if(path.endsWith("components.recipes[0]"))
                 return new PathInfo();
         }
@@ -617,7 +618,7 @@ public class ComponentHelper {
 
         if(path.contains("components.suspicious_stew_effects")) {
             if(path.endsWith("components.suspicious_stew_effects"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.suspicious_stew_effects[0]"))
                 return new PathInfo(Set.of("id","duration"));
             if(path.endsWith("components.suspicious_stew_effects[0].id"))
@@ -634,11 +635,11 @@ public class ComponentHelper {
             if(path.endsWith("components.tool.damage_per_block"))
                 return new PathInfo();
             if(path.endsWith("components.tool.rules"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.tool.rules[0]"))
                 return new PathInfo(Set.of("blocks","speed","correct_for_drops"));
             if(path.endsWith("components.tool.rules[0].blocks"))
-                return INFO_LIST;
+                return new PathInfo();
             if(path.endsWith("components.tool.rules[0].blocks[0]"))
                 return new PathInfo();
             if(path.endsWith("components.tool.rules[0].speed"))
@@ -665,7 +666,7 @@ public class ComponentHelper {
             if(path.endsWith("components.writable_book_content"))
                 return new PathInfo(Set.of("pages"));
             if(path.endsWith("components.writable_book_content.pages"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.writable_book_content.pages[0]"))
                 return new PathInfo(Set.of("raw","filtered"));
             if(path.endsWith("components.writable_book_content.pages[0].raw"))
@@ -678,7 +679,7 @@ public class ComponentHelper {
             if(path.endsWith("components.written_book_content"))
                 return new PathInfo(Set.of("pages","title","author","generation","resolved"));
             if(path.endsWith("components.written_book_content.pages"))
-                return INFO_LIST;
+                return INFO_LIST_COMPOUND;
             if(path.endsWith("components.written_book_content.pages[0]"))
                 return new PathInfo(Set.of("raw","filtered"));
             if(path.endsWith("components.written_book_content.pages[0].raw"))
@@ -700,7 +701,7 @@ public class ComponentHelper {
         }
 
         if(path.endsWith("id"))
-            return INFO_ITEM_ID;
+            return new PathInfo(PathType.STRING,FortytwoEdit.ITEMS);
 
         if(path.endsWith("count"))
             return INFO_ITEM_COUNT;
@@ -717,7 +718,7 @@ public class ComponentHelper {
      * String[] suggs - for textbox suggestions
      * Tooltip description - displays in tooltip
      */
-    public record PathInfo(PathType type, String[] suggs, Tooltip description, Set<String> keys) {
+    public record PathInfo(PathType type, String[] suggs, Tooltip description, Set<String> keys, byte listType) {
 
         public PathInfo() {
             this(PathType.DEFAULT);
@@ -732,11 +733,15 @@ public class ComponentHelper {
         }
 
         public PathInfo(PathType type, String[] suggs, Tooltip description) {
-            this(type,suggs,description,Collections.emptySet());
+            this(type,suggs,description,Collections.emptySet(),(byte)(-1));
         }
 
         public PathInfo(Set<String> keys) {
-            this(PathType.COMPOUND,null,null,keys);
+            this(PathType.COMPOUND,null,null,keys,(byte)(-1));
+        }
+
+        public PathInfo(byte listType) {
+            this(PathType.LIST,null,null,Collections.emptySet(),listType);
         }
 
     }
@@ -779,11 +784,11 @@ public class ComponentHelper {
     private static final PathInfo INFO_UNIT = new PathInfo(PathType.UNIT,new String[]{"","{}"});
     private static final PathInfo INFO_TOOLTIP_UNIT = new PathInfo(PathType.TOOLTIP_UNIT,new String[]{"","{show_in_tooltip:0b}","{}"});
     private static final PathInfo INFO_TRINARY = new PathInfo(PathType.TRINARY,new String[]{"","0b","1b"});
-    private static final PathInfo INFO_LIST = new PathInfo(PathType.LIST);
+    private static final PathInfo INFO_LIST_COMPOUND = new PathInfo(NbtElement.COMPOUND_TYPE);
+    private static final PathInfo INFO_LIST_STRING = new PathInfo(NbtElement.STRING_TYPE);
     private static final PathInfo INFO_TEXT = new PathInfo(PathType.TEXT,new String[]{"'{\"text\":\"\"}'"});
     private static final PathInfo INFO_DECIMAL_COLOR = new PathInfo(PathType.DECIMAL_COLOR,new String[]{"0","16777215"});
     private static final PathInfo INFO_RARITY = new PathInfo(PathType.STRING,new String[]{"common","uncommon","rare","epic"});
-    private static final PathInfo INFO_ITEM_ID = new PathInfo(PathType.STRING,FortytwoEdit.ITEMS);
     private static final PathInfo INFO_ITEM_NODE = new PathInfo(Set.of("id","count","components"));
     private static final PathInfo INFO_ITEM_COUNT = new PathInfo(PathType.INT,new String[]{"1","16","64","99"});
     private static final PathInfo INFO_EFFECT_NODE = new PathInfo(Set.of("id","amplifier","duration","ambient","show_particles","show_icon"));
