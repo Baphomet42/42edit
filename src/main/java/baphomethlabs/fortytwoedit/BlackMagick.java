@@ -41,6 +41,7 @@ import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.state.property.Property;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
@@ -171,7 +172,7 @@ public class BlackMagick {
     }
 
     /**
-     * Converts json to Text object. Valid forms include: {"text":""}, [{"text":""}], '{"text":""}', "Minecraft", etc
+     * Converts json to Text object. Valid forms include {"text":""} [{"text":""}] ""
      * 
      * @param inp raw json
      * @return parsed Text or error message
@@ -179,21 +180,11 @@ public class BlackMagick {
     public static ParsedText jsonFromString(String inp) {
         RegistryWrapper.WrapperLookup reg = DynamicRegistryManager.EMPTY;
         try {
-            String modInp = inp;
-            if(modInp.startsWith("\"") && modInp.endsWith("\""))
-                modInp = modInp.substring(1,modInp.length()-1);
-            else if(modInp.startsWith("'") && modInp.endsWith("'"))
-                modInp = modInp.substring(1,modInp.length()-1);
-            Text temp = Text.Serialization.fromJson(modInp,reg);
-            if(temp != null)
-                return new ParsedText(true,temp.copy());
-        } catch(Exception ex) {}
-        try {
             Text temp = Text.Serialization.fromJson(inp,reg);
             if(temp != null)
                 return new ParsedText(true,temp.copy());
         } catch(Exception ex) {}
-        return new ParsedText(false,Text.Serialization.fromJson("{\"text\":\"Invalid JSON\",\"color\":\"red\"}",reg).copy());
+        return new ParsedText(false,Text.of("Invalid JSON").copy().formatted(Formatting.RED));
     }
 
     /**

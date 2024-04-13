@@ -9,16 +9,13 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
 import org.lwjgl.glfw.GLFW;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.Rect2i;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Formatting;
@@ -220,7 +217,7 @@ public class TextSuggestor {
                 //context.drawTextWithShadow(TextSuggestor.this.textRenderer, suggestion.getText(), this.area.getX() + 1, this.area.getY() + 2 + 12 * l, l + this.inWindowIndex == this.selection ? -256 : -5592406);
                 Text t = Text.of(suggestion.getText());
                 if(l + this.inWindowIndex == this.selection)
-                    t = ((MutableText)t).formatted(Formatting.YELLOW);
+                    t = t.copy().formatted(Formatting.YELLOW);
                 textList.add(t);
                 width = Math.max(width, textRenderer.getWidth(suggestion.getText()));
             }

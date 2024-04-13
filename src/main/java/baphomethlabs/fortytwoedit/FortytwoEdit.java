@@ -46,6 +46,7 @@ import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtInt;
+import net.minecraft.nbt.NbtIntArray;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.registry.Registries;
@@ -111,15 +112,11 @@ public class FortytwoEdit implements ClientModInitializer {
     public static int[] randoSlots;
     public static boolean randoMode = false;
 
-    public static String randomUUID() {
-        String uuid = "[I;";
-        for(int i=0; i<4; i++) {
-            if(i!=0)
-                uuid+=",";
-            uuid += rand.nextInt(Integer.MIN_VALUE,Integer.MAX_VALUE);
-        }
-        uuid+="]";
-        return uuid;
+    public static NbtIntArray randomUUID() {
+        int[] uuid = new int[4];
+        for(int i=0; i<4; i++)
+            uuid[i] = rand.nextInt(Integer.MIN_VALUE,Integer.MAX_VALUE);
+        return new NbtIntArray(uuid);
     }
 
     // opticapes

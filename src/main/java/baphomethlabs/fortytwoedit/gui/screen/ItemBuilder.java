@@ -3,7 +3,6 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
@@ -930,9 +929,9 @@ public class ItemBuilder extends GenericScreen {
             }
             if(path != null) {
                 if(path.endsWith("custom_name"))
-                    jsonPreview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text()).append(jsonPreview.copy());
+                    jsonPreview = BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text().copy().append(jsonPreview.copy());
                 else if(path.contains("lore["))
-                    jsonPreview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text()).append(jsonPreview.copy());
+                    jsonPreview = BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text().copy().append(jsonPreview.copy());
                 else if(path.contains("written_book_content.pages["))
                     jsonPreviewBook = true;
             }
@@ -1587,14 +1586,15 @@ public class ItemBuilder extends GenericScreen {
         if(!val.equals("")) {
             PathInfo pi = ComponentHelper.getPathInfo(path);
             if(pi.type()==PathType.TEXT) {
-                if(BlackMagick.jsonFromString(val).isValid()) {
-                    Text btnTxt = BlackMagick.jsonFromString(val).text();
+                NbtElement valNbt = BlackMagick.nbtFromString(val);
+                Text btnTxt = BlackMagick.jsonFromString(valNbt == null ? "" : valNbt.asString()).text();
+                if(valNbt != null && BlackMagick.jsonFromString(valNbt.asString()).isValid()) {
                     if(path.endsWith("custom_name"))
-                        btnTxt = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text()).append(btnTxt.copy());
+                        btnTxt = BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text().copy().append(btnTxt.copy());
                     else if(path.contains("lore["))
-                        btnTxt = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text()).append(btnTxt.copy());
-                    return btnTxt;
+                        btnTxt = BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text().copy().append(btnTxt.copy());
                 }
+                return btnTxt;
             }
             else if(pi.type()==PathType.DECIMAL_COLOR) {
                 if(BlackMagick.colorHexFromDec(val) != null)
@@ -1648,7 +1648,7 @@ public class ItemBuilder extends GenericScreen {
                                 saveBtn.active = true;
                             }
                             else {
-                                saveBtn.setTooltip(Tooltip.of(((MutableText)ERROR_CREATIVE.copy()).append("\n").append(tempText)));
+                                saveBtn.setTooltip(Tooltip.of(ERROR_CREATIVE.copy().append("\n").append(tempText)));
                                 saveBtn.active = false;
                             }
                             return true;
@@ -1961,7 +1961,7 @@ public class ItemBuilder extends GenericScreen {
 
                     if(inp.startsWith("{") && inp.endsWith("}")) {
                         if(BlackMagick.nbtFromString(inp,NbtElement.COMPOUND_TYPE) != null) {
-                            isCompound = true;//TODO test items equal
+                            isCompound = true;
                             item = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString(inp,NbtElement.COMPOUND_TYPE));
 
                             if(!ItemStack.areEqual(BlackMagick.itemFromNbt(BlackMagick.itemToNbt(selItem).copyFrom(
@@ -4764,66 +4764,6 @@ public class ItemBuilder extends GenericScreen {
             this.children.add(this.rgbSlider);
         }
 
-        //json btn
-        public RowWidget(NbtString nbt, String path, int index, int maxIndex) {
-            super();
-            this.children = Lists.newArrayList();
-            setup();
-
-            if(path.equals("display/Name")) {
-                this.btns = new ButtonWidget[1];
-                this.btnX = new int[]{15};
-            }
-            else {
-                this.btns = new ButtonWidget[3];
-                this.btnX = new int[]{15,15+190,15+190};
-                this.btnY = new int[]{0,0,10};
-            }
-
-            Text preview = BlackMagick.jsonFromString(nbt.asString()).text();
-            if(BlackMagick.jsonFromString(nbt.asString()).isValid()) {
-                if(path.equals("display/Name"))
-                    preview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text()).append(preview.copy());
-                else if(path.equals("display/Lore"))
-                    preview = ((MutableText)BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text()).append(preview.copy());
-                else if(path.equals("pages")) {
-                    MutableText builder = (MutableText)Text.of("");
-                    ((StringVisitable)preview).visit((style, message) -> {
-                        builder.append(((MutableText)Text.of(message.replaceAll("\n"," "))).setStyle(style));
-                        return Optional.empty();
-                    }, Style.EMPTY);
-                    preview = builder;
-                }
-            }
-            //final NbtString copyList = nbt.copy();
-            this.btns[0] = ButtonWidget.builder(preview, btn -> {
-                // ItemBuilder.this.unsel = true;
-                // jsonCurrent = copyList.copy();
-                // listCurrentPath = path;
-                // listCurrentIndex = index;
-                // createWidgets(9);
-                // btnTab(9);
-            }).dimensions(this.btnX[0],5,190,20).build();
-            this.btns[0].setTooltip(Tooltip.of(Text.of(nbt.asString())));
-            if(!path.equals("display/Name")) {
-                this.btns[1] = ButtonWidget.builder(Text.of("\u2227"), btn -> {
-                    // BlackMagick.moveListElement(null,path,index,true);
-                    // ItemBuilder.this.unsel = true;
-                }).dimensions(this.btnX[1],5+this.btnY[1],20,10).build();
-                if(index==0 || !client.player.getAbilities().creativeMode)
-                    this.btns[1].active = false;
-                this.btns[2] = ButtonWidget.builder(Text.of("\u2228"), btn -> {
-                    // BlackMagick.moveListElement(null,path,index,false);
-                    // ItemBuilder.this.unsel = true;
-                }).dimensions(this.btnX[2],5+this.btnY[2],20,10).build();
-                if(index==maxIndex || !client.player.getAbilities().creativeMode)
-                    this.btns[2].active = false;
-            }
-
-            for(int i=0; i<btns.length; i++)
-                this.children.add(this.btns[i]);
-        }
-
         //list create new btn
         public RowWidget(NbtList nbt, String path, NbtElement newEntry, boolean disabledBtns) {
             super();
@@ -4964,9 +4904,9 @@ public class ItemBuilder extends GenericScreen {
                     textList = item.getTooltip(TooltipContext.DEFAULT,client.player,TooltipType.ADVANCED.withCreative());
                     addedPreview = true;
                     if(textList.size()>6)
-                        preview.add(((MutableText)Text.of("Any Slot: ")).append(textList.get(3)).setStyle(Style.EMPTY));
+                        preview.add(Text.of("Any Slot: ").copy().append(textList.get(3)).setStyle(Style.EMPTY));
                     else if(textList.size()>3)
-                        preview.add(((MutableText)textList.get(2)).append(Text.of(" ")).append(textList.get(3)).setStyle(Style.EMPTY));
+                        preview.add(textList.get(2).copy().append(Text.of(" ")).append(textList.get(3)).setStyle(Style.EMPTY));
                     else
                         addedPreview = false;
 
@@ -5378,7 +5318,7 @@ public class ItemBuilder extends GenericScreen {
                         ItemBuilder.this.markSaved(this.txts[0]);
 
                     if(path.startsWith("components.") && value.length()>0) {
-                        try {
+                        try {//TODO get inpError from context so stone can get maxdamage when maxstacksize=1
                             ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader("stone["+path.replaceAll("components.","")+"="+value+"]"));
                         } catch(Exception ex) {
                             if(ex instanceof CommandSyntaxException) {
@@ -5551,20 +5491,26 @@ public class ItemBuilder extends GenericScreen {
             String pagePath = blankElPath+currentPath2;
             String fullPath = pagePath+"."+key;
 
+            NbtElement tempEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),fullPath);
+            final String startVal = BlackMagick.nbtToString(tempEl);
+            tempEl = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath);
+            final String currentVal = BlackMagick.nbtToString(tempEl);
+            PathInfo pi = ComponentHelper.getPathInfo(fullPath);
+
             String keyBtnTxt = key.replace("minecraft:","");
             int size = sizeFromName(keyBtnTxt);
             ButtonWidget keyBtn = ButtonWidget.builder(Text.of(keyBtnTxt), btn -> {})
                 .dimensions(ItemBuilder.this.x+ROW_LEFT,5,size,20).build();
             keyBtn.active = false;
-            keyBtn.setTooltip(Tooltip.of(Text.of("Key: "+key)));
 
-            NbtElement tempEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),fullPath);
-            final String startVal = BlackMagick.nbtToString(tempEl);
-            tempEl = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath);
-            final String currentVal = BlackMagick.nbtToString(tempEl);
-            PathType widType = ComponentHelper.getPathInfo(fullPath).type();
+            MutableText btnTt = Text.empty().append(Text.of("Key: "+key));
+            if(ComponentHelper.pathTypeToNbtType(pi.type()) != -1)
+                btnTt = btnTt.append(Text.of("\nNBT Type: "+ComponentHelper.formatNbtType(ComponentHelper.pathTypeToNbtType(pi.type()))));
+            if(pi.description() != null)
+                btnTt = btnTt.append(Text.of("\n\n")).append(pi.description());
+            keyBtn.setTooltip(Tooltip.of(btnTt));
 
-            if(widType==PathType.TEXT || widType==PathType.DECIMAL_COLOR || widType==PathType.COMPOUND || widType==PathType.LIST) {    
+            if(pi.type()==PathType.TEXT || pi.type()==PathType.DECIMAL_COLOR || pi.type()==PathType.COMPOUND || pi.type()==PathType.LIST) {    
                 this.btns = new ButtonWidget[]{
                 keyBtn,
                 ButtonWidget.builder(getButtonText(fullPath,currentVal), btn -> {
@@ -5619,7 +5565,7 @@ public class ItemBuilder extends GenericScreen {
                 for(int i=0; i<btns.length; i++)
                     this.children.add(this.btns[i]);
             }
-            else if(widType==PathType.TRINARY) {
+            else if(pi.type()==PathType.TRINARY) {
                 int selBtn;
                 if(currentVal != null && currentVal.length()>0) {
                     selBtn = currentVal.equals("1b") ? 2 : 1;
@@ -5674,7 +5620,7 @@ public class ItemBuilder extends GenericScreen {
                 for(int i=0; i<btns.length; i++)
                     this.children.add(this.btns[i]);
             }
-            else if(widType==PathType.TOOLTIP_UNIT) {
+            else if(pi.type()==PathType.TOOLTIP_UNIT) {
                 int selBtn;
                 if(currentVal != null && currentVal.length()>0) {
                     selBtn = currentVal.equals("{show_in_tooltip:0b}") ? 1 : 2;
@@ -5730,7 +5676,7 @@ public class ItemBuilder extends GenericScreen {
                 for(int i=0; i<btns.length; i++)
                     this.children.add(this.btns[i]);  
             }
-            else if(widType==PathType.UNIT) {
+            else if(pi.type()==PathType.UNIT) {
                 int selBtn;
                 if(currentVal != null && currentVal.length()>0) {
                     selBtn = 1;
