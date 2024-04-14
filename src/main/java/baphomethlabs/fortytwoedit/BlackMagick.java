@@ -709,6 +709,38 @@ public class BlackMagick {
     }
 
     /**
+     * Returns a list of strings sorted alphabetically.
+     * Treats uppercase and lowercase the same.
+     * 
+     * @param array
+     * @return
+     */
+    public static List<String> sortArray(String[] array) {
+        List<String> list = new ArrayList<>();
+
+        for(String s : array)
+            list.add(s);
+
+        Collections.sort(list, String.CASE_INSENSITIVE_ORDER);
+        return list;
+    }
+
+    public static String[] getIntRangeArray(int min, int max) {
+        if(min == max)
+            return new String[]{""+min};
+        if(min > max) {
+            int temp = min;
+            min = max;
+            max = temp;
+        }
+        String[] arr = new String[max-min+1];
+        for(int i=0; i<arr.length; i++) {
+            arr[i] = "" + (min + i);
+        }
+        return arr;
+    }
+
+    /**
      * Converts decimal color like 4327014 to hex color like #420666.
      * Returns null if input is not a valid decimal color.
      * 

@@ -83,7 +83,7 @@ public class ItemBuilder extends GenericScreen {
     protected static final int ROW_LEFT = 15;
     protected static final int ROW_RIGHT = 219;
     protected ItemStack selItem = ItemStack.EMPTY;
-    protected List<List<String>> cacheStates = new ArrayList<>();
+    protected static List<List<String>> cacheStates = new ArrayList<>();
     protected ButtonWidget itemBtn = null;
     protected ButtonWidget swapBtn;
     protected ButtonWidget swapCopyBtn;
@@ -114,12 +114,11 @@ public class ItemBuilder extends GenericScreen {
     protected final int playerX = 240+10;
     protected final int playerY = -10;
     private static final int RENDER_SIZE = 35;
-    private static final Text ERROR_CREATIVE = Text.of("Creative Required");
+    private static final Text ERROR_CREATIVE = Text.of("Creative required to edit");
     private ArrayList<RowWidget> sliders = new ArrayList<>();
     private ArrayList<RowWidget> sliderBtns = new ArrayList<>();
     private ButtonWidget setPoseButton;
     private boolean editArmorStand = false;
-    private boolean unsavedPose = false;
     private float[][] armorPose;
     public static final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
     public static final String[] BANNER_CHAR_LIST = new String[BANNER_PRESET_CHARS.replaceAll("\\s","").length()+1];
@@ -139,6 +138,7 @@ public class ItemBuilder extends GenericScreen {
     private static double[] tabScroll = new double[tabs.length];
     private boolean pauseSaveScroll = false;
     protected NbtElement blankTabEl = null;
+    protected boolean blankTabUnsaved = false;
     private String jsonBaseText = "";
     private boolean jsonBaseValid = false;
     private boolean jsonEffectValid = false;
@@ -202,15 +202,23 @@ public class ItemBuilder extends GenericScreen {
             txtFormat.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
             swapCopyBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("c*"), button -> this.btnSwapOff(true)).dimensions(width/2 - 50,y+5,20,20).build());
             swapBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("c"), button -> this.btnSwapOff(false)).dimensions(width/2 - 30,y+5,15,20).build());
-            this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnChangeSlot(true)).dimensions(width/2 - 15,y+5,15,20).build());
-            this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnChangeSlot(false)).dimensions(width/2,y+5,15,20).build());
-            this.addDrawableChild(ButtonWidget.builder(Text.of("Q"), button -> this.btnThrow(false)).dimensions(width/2 + 15,y+5,15,20).build());
+            ButtonWidget hotbarLeftBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnChangeSlot(true)).dimensions(width/2 - 15,y+5,15,20).build());
+            ButtonWidget hotbarRightBtn = this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnChangeSlot(false)).dimensions(width/2,y+5,15,20).build());
+            ButtonWidget throwBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("Q"), button -> this.btnThrow(false)).dimensions(width/2 + 15,y+5,15,20).build());
             throwCopyBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("Q*"), button -> this.btnThrow(true)).dimensions(width/2 + 30,y+5,20,20).build());
             
             if(!client.player.getAbilities().creativeMode) {
                 swapCopyBtn.active = false;
                 throwCopyBtn.active = false;
                 swapBtn.active = false;
+            }
+            if(client.player.isSpectator()) {
+                swapCopyBtn.active = false;
+                swapBtn.active = false;
+                hotbarLeftBtn.active = false;
+                hotbarRightBtn.active = false;
+                throwBtn.active = false;
+                throwCopyBtn.active = false;
             }
 
             itemBtn = this.addDrawableChild(ButtonWidget.builder(Text.of(""), button -> this.btnCopyNbt()).dimensions(x+240-20-5,y+5,20,20).build());
@@ -278,21 +286,23 @@ public class ItemBuilder extends GenericScreen {
     }
 
     protected void btnSwapOff(boolean copy) {
-        if(!copy) {
-            if(client.player.getAbilities().creativeMode) {
-                ItemStack mainhand = client.player.getMainHandStack().copy();
-                ItemStack offhand = client.player.getOffHandStack().copy();
-                BlackMagick.setItemMain(offhand);
-                BlackMagick.setItemOff(mainhand);
-            }
-        }
-        else {
-            if(client.player.getAbilities().creativeMode) {
-                if(!client.player.getMainHandStack().isEmpty()) {
-                    BlackMagick.setItemOff(client.player.getMainHandStack());
+        if(!client.player.isSpectator()) {
+            if(!copy) {
+                if(client.player.getAbilities().creativeMode) {
+                    ItemStack mainhand = client.player.getMainHandStack().copy();
+                    ItemStack offhand = client.player.getOffHandStack().copy();
+                    BlackMagick.setItemMain(offhand);
+                    BlackMagick.setItemOff(mainhand);
                 }
-                else if(!client.player.getOffHandStack().isEmpty()) {
-                    BlackMagick.setItemMain(client.player.getOffHandStack());
+            }
+            else {
+                if(client.player.getAbilities().creativeMode) {
+                    if(!client.player.getMainHandStack().isEmpty()) {
+                        BlackMagick.setItemOff(client.player.getMainHandStack());
+                    }
+                    else if(!client.player.getOffHandStack().isEmpty()) {
+                        BlackMagick.setItemMain(client.player.getOffHandStack());
+                    }
                 }
             }
         }
@@ -300,29 +310,33 @@ public class ItemBuilder extends GenericScreen {
     }
 
     protected void btnChangeSlot(boolean left) {
-        int slot = client.player.getInventory().selectedSlot;
-        if(left)
-            slot--;
-        else
-            slot++;
-        if(slot<0)
-            slot = 8;
-        else if(slot>8)
-            slot = 0;
-        client.player.getInventory().selectedSlot = slot;
+        if(!client.player.isSpectator()) {
+            int slot = client.player.getInventory().selectedSlot;
+            if(left)
+                slot--;
+            else
+                slot++;
+            if(slot<0)
+                slot = 8;
+            else if(slot>8)
+                slot = 0;
+            client.player.getInventory().selectedSlot = slot;
+        }
         unsel = true;
     }
 
     protected void btnThrow(boolean copy) {
-        if(!copy) {
-            client.player.dropSelectedItem(true);
-            client.player.playerScreenHandler.sendContentUpdates();
-        }
-        else if(client.player.getAbilities().creativeMode) {
-            ItemStack item = client.player.getMainHandStack().copy();
-            client.player.dropSelectedItem(true);
-            client.player.playerScreenHandler.sendContentUpdates();
-            BlackMagick.setItemMain(item);
+        if(!client.player.isSpectator()) {
+            if(!copy) {
+                client.player.dropSelectedItem(true);
+                client.player.playerScreenHandler.sendContentUpdates();
+            }
+            else if(client.player.getAbilities().creativeMode) {
+                ItemStack item = client.player.getMainHandStack().copy();
+                client.player.dropSelectedItem(true);
+                client.player.playerScreenHandler.sendContentUpdates();
+                BlackMagick.setItemMain(item);
+            }
         }
         unsel = true;
     }
@@ -332,6 +346,8 @@ public class ItemBuilder extends GenericScreen {
             tabScroll[tab] = tabWidget.getScrollAmount();
             pauseSaveScroll = true;
         }
+        if(tab != i && (i == CACHE_TAB_NBT))
+            inpError = null;
         tab = i;
         this.resize(this.client,this.width,this.height);
         resetSuggs();
@@ -565,11 +581,10 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private void resetSuggs() {
-        if(!currentTxt.isEmpty()) {
-            currentTxt.clear();
-        }
+        currentTxt.clear();
         suggs = null;
-        inpError = null;
+        if(tab != CACHE_TAB_BLANK && tab != CACHE_TAB_NBT)
+            inpError = null;
     }
 
     private NbtCompound updateArmorStand(ItemStack stand) {
@@ -797,7 +812,7 @@ public class ItemBuilder extends GenericScreen {
     //     unsel = true;
     // }
 
-    private String[] getStatesArr() {
+    public static String[] getStatesArr() {
         if(cacheStates.size()>0) {
             String[] temp = new String[cacheStates.size()];
             for(int i=0; i<temp.length; i++)
@@ -807,7 +822,7 @@ public class ItemBuilder extends GenericScreen {
         return null;
     }
 
-    private String[] getStateVals(String key) {
+    public static String[] getStateVals(String key) {
         if(cacheStates.size()>0) {
             for(int i=0; i<cacheStates.size(); i++) {
                 if(cacheStates.get(i).get(0).equals(key) && cacheStates.get(i).size()>1) {
@@ -1540,24 +1555,6 @@ public class ItemBuilder extends GenericScreen {
         }
     }
 
-    protected void buildComponentWidget(List<RowWidget> list, String path) {
-        String name = ComponentHelper.getCompNickname(path);
-
-        switch(ComponentHelper.getPathInfo(path).type()) {
-
-            case UNIT : list.add(new RowWidgetBinary(path,name)); break;
-            case TOOLTIP_UNIT : list.add(new RowWidgetTrinary(path)); break;
-            case TRINARY : list.add(new RowWidgetTrinary(path,name)); break;
-            case COMPOUND :
-            case LIST :
-            case TEXT :
-            case DECIMAL_COLOR :
-                list.add(new RowWidgetCompound(path,name));
-                break;
-            default : list.add(new RowWidgetComponent(path,name,ComponentHelper.getPathInfo(path).suggs())); break;
-        }
-    }
-
     /**
      * Make path look better for labels. Do not use for actual path searches.
      * 
@@ -1606,12 +1603,22 @@ public class ItemBuilder extends GenericScreen {
         return Text.of(val);
     }
 
+    private Text getButtonTooltip(PathInfo pi, String key) {
+        MutableText btnTt = Text.empty().append(Text.of("Key: "+key));
+        if(ComponentHelper.pathTypeToNbtType(pi.type()) != -1)
+            btnTt = btnTt.append(Text.of("\nNBT Type: "+ComponentHelper.formatNbtType(ComponentHelper.pathTypeToNbtType(pi.type()))));
+        if(pi.description() != null)
+            btnTt = btnTt.append(Text.of("\n\n")).append(pi.description());
+        return btnTt;
+    }
+
     public boolean setEditingElement(String path, NbtElement newEl, ButtonWidget saveBtn) {
         return setEditingElement(path,newEl,saveBtn,null);
     }
 
     public boolean setEditingElement(String path, NbtElement newEl, ButtonWidget saveBtn, String pagePath) {
         blankTabEl = newEl;
+        blankTabUnsaved = true;
         
         NbtElement displayEl = null;
         if(pagePath == null)
@@ -1628,6 +1635,7 @@ public class ItemBuilder extends GenericScreen {
         if(blankTabEl != null && inpError == null) {
             ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,blankTabEl));
             if(ItemStack.areEqual(selItem,newItem)) {
+                blankTabUnsaved = false;
                 if(pagePath == null)
                     saveBtn.setTooltip(Tooltip.of(Text.of("Item unchanged")));
                 else {
@@ -2953,11 +2961,11 @@ public class ItemBuilder extends GenericScreen {
 
         if(tabNum == CACHE_TAB_MAIN) {   //createBlock components
             {
-                buildComponentWidget(widgets.get(tabNum), "id");
+                widgets.get(tabNum).add(new RowWidgetComponent("id"));
             }
             if(!selItem.isEmpty()) {
                 {
-                    buildComponentWidget(widgets.get(tabNum), "count");
+                    widgets.get(tabNum).add(new RowWidgetComponent("count"));
                 }
                 {
                     widgets.get(tabNum).add(new RowWidget("components"));
@@ -2966,7 +2974,7 @@ public class ItemBuilder extends GenericScreen {
                 for(String c : FortytwoEdit.COMPONENTS)
                 {
                     if(ComponentHelper.hasComponent(selItem.getComponents(),c))
-                        buildComponentWidget(widgets.get(tabNum), "components."+c);
+                        widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
                     else
                         unset.add(c);
 
@@ -2976,7 +2984,7 @@ public class ItemBuilder extends GenericScreen {
                     widgets.get(tabNum).add(new RowWidget("unset"));
                     for(String c : unset) {
                         if(ComponentHelper.componentRead(selItem,c))
-                            buildComponentWidget(widgets.get(tabNum), "components."+c);
+                            widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
                         else
                             unused.add(c);
                     }
@@ -2997,7 +3005,7 @@ public class ItemBuilder extends GenericScreen {
                             createWidgets(CACHE_TAB_MAIN);
                         }));
                         for(String c : unused)
-                            buildComponentWidget(widgets.get(tabNum), "components."+c);
+                            widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
                     }
                 }
             }
@@ -3644,6 +3652,8 @@ public class ItemBuilder extends GenericScreen {
         int tabNum = CACHE_TAB_BLANK;
         jsonPreview = null;
         tabScroll[tabNum] = 0d;
+        inpError = null;
+
         if(!pauseSaveScroll && tabWidget != null) {
             tabScroll[tab] = tabWidget.getScrollAmount();
             pauseSaveScroll = true;
@@ -3782,7 +3792,20 @@ public class ItemBuilder extends GenericScreen {
                     else
                         currentList = new NbtList();
                     
-                    widgets.get(tabNum).add(new RowWidget("List:"));
+                    {
+                        ButtonWidget keyBtn = ButtonWidget.builder(Text.of("List:"), btn -> {})
+                            .dimensions((width/2)-20,5,40,20).build();
+                        keyBtn.active = false;
+                        String key = fullPath;
+                        if(key.contains(".") && key.length()>key.lastIndexOf(".")+1)
+                            key = key.substring(key.lastIndexOf(".")+1);
+                        if(key.contains("]") && key.length()>key.lastIndexOf("]")+1)
+                            key = key.substring(key.lastIndexOf("]")+1);
+                        if(key.startsWith("minecraft:"))
+                            key = key.replaceFirst("minecraft:","");
+                        keyBtn.setTooltip(Tooltip.of(getButtonTooltip(ComponentHelper.getPathInfo(fullPath),key)));
+                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(keyBtn,(width/2)-20-x,0)}));
+                    }
 
                     for(int i=0; i<=currentList.size(); i++) {
                         widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,i,currentList.size()-1));
@@ -3885,7 +3908,7 @@ public class ItemBuilder extends GenericScreen {
                         }).dimensions(x+15-3+60+5+60+5,y+35+22*6+1,60,20).build(),15-3+60+5+60+5,35+22*6+1));
                     }
                 }
-                else if(elType == PathType.DECIMAL_COLOR) {//TODO dec color page
+                else if(elType == PathType.DECIMAL_COLOR) {
                     widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn));
                 }
                 else {
@@ -4273,11 +4296,11 @@ public class ItemBuilder extends GenericScreen {
             this.txts[0].setChangedListener(value -> {
                 if(value != null && !value.equals("")) {
                     this.txts[0].setEditableColor(0xFFFFFF);
-                    ItemBuilder.this.markUnsaved(this.txts[0]);
+                    //ItemBuilder.this.markUnsaved(this.txts[0]);
                 }
                 else {
                     this.txts[0].setEditableColor(LABEL_COLOR);
-                    ItemBuilder.this.markSaved(this.txts[0]);
+                    //ItemBuilder.this.markSaved(this.txts[0]);
                 }
                 if(!currentTxt.contains(this.txts[0])) {
                     resetSuggs();
@@ -4323,11 +4346,11 @@ public class ItemBuilder extends GenericScreen {
             this.txts[0].setChangedListener(value -> {
                 if(value != null && !value.equals("")) {
                     this.txts[0].setEditableColor(0xFFFFFF);
-                    ItemBuilder.this.markUnsaved(this.txts[0]);
+                    //ItemBuilder.this.markUnsaved(this.txts[0]);
                 }
                 else {
                     this.txts[0].setEditableColor(LABEL_COLOR);
-                    ItemBuilder.this.markSaved(this.txts[0]);
+                    //ItemBuilder.this.markSaved(this.txts[0]);
                 }
                 if(!currentTxt.contains(this.txts[0])) {
                     resetSuggs();
@@ -4397,11 +4420,11 @@ public class ItemBuilder extends GenericScreen {
             this.txts[0].setChangedListener(value -> {
                 if(value != null && !value.equals("")) {
                     this.txts[0].setEditableColor(0xFFFFFF);
-                    ItemBuilder.this.markUnsaved(this.txts[0]);
+                    //ItemBuilder.this.markUnsaved(this.txts[0]);
                 }
                 else {
                     this.txts[0].setEditableColor(LABEL_COLOR);
-                    ItemBuilder.this.markSaved(this.txts[0]);
+                    //ItemBuilder.this.markSaved(this.txts[0]);
                 }
                 if(!currentTxt.contains(this.txts[0])) {
                     resetSuggs();
@@ -4485,11 +4508,11 @@ public class ItemBuilder extends GenericScreen {
                     this.txts[i].setChangedListener(value -> {
                         if(value != null && !value.equals("")) {
                             this.txts[ii].setEditableColor(0xFFFFFF);
-                            ItemBuilder.this.markUnsaved(this.txts[ii]);
+                            //ItemBuilder.this.markUnsaved(this.txts[ii]);
                         }
                         else {
                             this.txts[ii].setEditableColor(LABEL_COLOR);
-                            ItemBuilder.this.markSaved(this.txts[ii]);
+                            //ItemBuilder.this.markSaved(this.txts[ii]);
                         }
                         if(!currentTxt.contains(this.txts[ii])) {
                             resetSuggs();
@@ -4550,11 +4573,11 @@ public class ItemBuilder extends GenericScreen {
                     this.txts[i].setChangedListener(value -> {
                         if(value != null && !value.equals("")) {
                             this.txts[ii].setEditableColor(0xFFFFFF);
-                            ItemBuilder.this.markUnsaved(this.txts[ii]);
+                            //ItemBuilder.this.markUnsaved(this.txts[ii]);
                         }
                         else {
                             this.txts[ii].setEditableColor(LABEL_COLOR);
-                            ItemBuilder.this.markSaved(this.txts[ii]);
+                            //ItemBuilder.this.markSaved(this.txts[ii]);
                         }
                         if(!currentTxt.contains(this.txts[ii])) {
                             resetSuggs();
@@ -4729,7 +4752,7 @@ public class ItemBuilder extends GenericScreen {
                 this.btns[0].setTooltip(Tooltip.of(Text.of("No pose")));
                 this.btns[0].active = false;
                 updatePose();
-                unsavedPose = true;
+                //unsavedPose = true;
             }).dimensions(ItemBuilder.this.x+15,5,60,20).build()};
             this.btnX = new int[]{100};
 
@@ -4915,7 +4938,7 @@ public class ItemBuilder extends GenericScreen {
                 }
                 if(!addedPreview)
                     preview.add(BlackMagick.jsonFromString("{\"text\":\"Invalid attribute\",\"color\":\"red\"}").text());
-            }//TODO getButtonText for attributes/etc like here
+            }
             else if(path.equals("Enchantments")) {
                 // List<Text> textList = new ArrayList<>();
                 // Registries.ENCHANTMENT.getOrEmpty(EnchantmentHelper.getIdFromNbt(nbt)).ifPresent(e -> textList.add(e.getName(EnchantmentHelper.getLevelFromNbt(nbt))));
@@ -5235,120 +5258,273 @@ public class ItemBuilder extends GenericScreen {
     class RowWidgetComponent extends RowWidget {
 
         /**
-         * Row to edit component nbt (or id/count).
-         * Contains button to set and txt to input.
-         * Component is removed on set when txt is empty.
+         * For use in components screen only.
+         * Row contains txt/btn, btns to edit/delete/add, or btns to set trinary/binary values.
          * 
          * @param path nbt path in format: components.minecraft:foo.bar.list[0]
          */
-        public RowWidgetComponent(String path, String name, String[] baseSuggestions) {
+        public RowWidgetComponent(String path) {
             super();
 
-            if(name==null)
-                name = path;
-            name = cleanPath(name);
+            PathInfo pi = ComponentHelper.getPathInfo(path);
+            Text btnTt = getButtonTooltip(pi,path);
+            
+            String keyBtnTxt = cleanPath(path);
+            if(keyBtnTxt.equals("enchantment_glint_override"))
+                keyBtnTxt = "ench glint override";
+            int size = sizeFromName(keyBtnTxt);
+            if((size>80) && (pi.type() == PathType.TRINARY || pi.type() == PathType.TOOLTIP_UNIT))
+                size = 80;
+            ButtonWidget keyBtn = ButtonWidget.builder(Text.of(keyBtnTxt), btn -> {})
+                .dimensions(ItemBuilder.this.x+ROW_LEFT,5,size,20).build();
+            keyBtn.active = false;
+            keyBtn.setTooltip(Tooltip.of(btnTt));
 
-            int size = sizeFromName(name);
-
-            final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path));
-
-            final String[] suggestions;
-            if(baseSuggestions == null)
-                suggestions = new String[]{startVal};
-            else {
-                suggestions = new String[baseSuggestions.length+1];
-                suggestions[0]=startVal;
-                for(int i=1; i<suggestions.length; i++)
-                    suggestions[i] = baseSuggestions[i-1];
-            }
-
-            this.btns = new ButtonWidget[]{ButtonWidget.builder(Text.of(name), btn -> {
-                String inp = this.txts[0].getText();
-                if(path.equals("id") && inp.equals("")) {
-                    inp = "stone";
-                    this.txts[0].setText("stone");
-                }
-                NbtElement el = BlackMagick.nbtFromString(inp);
-                if(inp.equals("") || el != null) {
-                    ItemStack newItem;
-                    if(inp.equals("")) {
+            if(ComponentHelper.isComplex(pi.type())) {
+                final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path));
+    
+                this.btns = new ButtonWidget[]{
+                keyBtn,
+                ButtonWidget.builder(getButtonText(path,startVal), btn -> {
+                    createWidgets(0,BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}")));
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_LEFT+size+5,5,ROW_RIGHT-ROW_LEFT-20-size-5,20).build(),
+                ButtonWidget.builder(Text.of(startVal.equals("") ? "+" : "X"), btn -> {
+                    if(startVal.equals("")) {
+                        createWidgets(0,BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}")));
+                    }
+                    else if(path.startsWith("components.")) {
                         String comp = path.replaceFirst("components.","");
-                        newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound()));
+                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
+                            BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
                     }
-                    else
-                        newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,el));
-                    BlackMagick.setItemMain(newItem);
-                    createWidgets(CACHE_TAB_MAIN); // required certain components
-                }
-                unsel = true;
-            }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,size,20).build()};
-            this.btnX = new int[]{ROW_LEFT};
-
-            this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
-                ItemBuilder.this.x+ROW_LEFT+5+size, 5, 240-41-size, 20, Text.of(""))};
-            this.txtX = new int[]{ROW_LEFT+5+size};
-            this.txts[0].setMaxLength(131072);
-
-            this.txts[0].setChangedListener(value -> {
-                inpError = null;
-                this.btns[0].setTooltip(null);
-                this.btns[0].active = false;
-
-                boolean noUnsaved = false;
-                boolean removeItem = false;
-                String keyType = "component";
-                if(path.equals("count") && value.equals(""))
-                    value = "1";
-                else if(path.equals("id")) {
-                    if(value.equals("")) {
-                        removeItem = true;
-                        value = "stone";
-                        if(startVal.equals(""))
-                            noUnsaved = true;
-                    }
-                    else if(value.equals("air"))
-                        value = "";
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_RIGHT-20,5,20,20).build()};
+                this.btnX = new int[]{ROW_LEFT,ROW_LEFT+size+5,ROW_RIGHT-20};
+                if(!startVal.equals(""))
+                    this.btns[1].setTooltip(Tooltip.of(Text.of("Edit component:\n"+startVal)));
+                else
+                    this.btns[1].active = false;
+    
+                this.btns[2].setTooltip(Tooltip.of(Text.of(startVal.equals("") ? "Create component" : "Delete component")));
+                if(!client.player.getAbilities().creativeMode && !startVal.equals("")) {
+                    this.btns[2].active = false;
+                    this.btns[2].setTooltip(Tooltip.of(ERROR_CREATIVE));
                 }
 
-                if((value != null && !value.equals(startVal)) || removeItem) {
-                    this.txts[0].setEditableColor(0xFFFFFF);
-                    if(!noUnsaved)
-                        ItemBuilder.this.markUnsaved(this.txts[0]);
-                    else
-                        ItemBuilder.this.markSaved(this.txts[0]);
+                for(int i=0; i<btns.length; i++)
+                    this.children.add(this.btns[i]);
+            }
+            else if(pi.type() == PathType.UNIT) {
+                final int startVal;
+                if(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path) != null) {
+                    startVal = 1;
+                }
+                else
+                    startVal = 0;
+    
+                final int btnSize = 35;
+                final int btnSpacing = 2;
+                this.btns = new ButtonWidget[]{
+                keyBtn,
+                ButtonWidget.builder(Text.of("False"), btn -> {
+                    String comp = path.replaceFirst("components.","");
+                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
+                        BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(2*btnSize+btnSpacing),5,btnSize,20).build(),
+                ButtonWidget.builder(Text.of("True"), btn -> {
+                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,new NbtCompound())));
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
+                this.btnX = new int[]{ROW_LEFT,ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
+    
+                this.btns[startVal+1].active=false;
+    
+                for(int i=0; i<btns.length; i++) {
+                    if(i>0 && this.btns[i].active) {
+                        if(!client.player.getAbilities().creativeMode)
+                            this.btns[i].setTooltip(Tooltip.of(ERROR_CREATIVE));
+                        else
+                            this.btns[i].setTooltip(Tooltip.of(Text.of("Set component")));
+                    }
+                    this.children.add(this.btns[i]);
+                }
+            }
+            else if(pi.type() == PathType.TRINARY) {
+                final int startVal;
+                if(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path) != null) {
+                    startVal = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path).asString().equals("1b") ? 2 : 1;
+                }
+                else
+                    startVal = 0;
+    
+                final int btnSize = 35;
+                final int btnSpacing = 2;
+                this.btns = new ButtonWidget[]{
+                keyBtn,
+                ButtonWidget.builder(Text.of("Unset"), btn -> {
+                    String comp = path.replaceFirst("components.","");
+                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
+                        BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(3*btnSize+2*btnSpacing),5,btnSize,20).build(),
+                ButtonWidget.builder(Text.of("False"), btn -> {
+                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,NbtByte.ZERO)));
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(2*btnSize+btnSpacing),5,btnSize,20).build(),
+                ButtonWidget.builder(Text.of("True"), btn -> {
+                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,NbtByte.ONE)));
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
+                this.btnX = new int[]{ROW_LEFT,ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
+    
+                this.btns[startVal+1].active=false;
+    
+                for(int i=0; i<btns.length; i++) {
+                    if(i>0 && this.btns[i].active) {
+                        if(!client.player.getAbilities().creativeMode)
+                            this.btns[i].setTooltip(Tooltip.of(ERROR_CREATIVE));
+                        else
+                            this.btns[i].setTooltip(Tooltip.of(Text.of("Set component")));
+                    }
+                    this.children.add(this.btns[i]);
+                }
+            }
+            else if(pi.type() == PathType.TOOLTIP_UNIT) {
+                final int startVal;
+                if(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path) != null) {
+                    startVal = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path).asString().equals("{show_in_tooltip:0b}") ? 1 : 2;
+                }
+                else
+                    startVal = 0;
+    
+                final int btnSize = 35;
+                final int btnSpacing = 2;
+                this.btns = new ButtonWidget[]{
+                keyBtn,
+                ButtonWidget.builder(Text.of("False"), btn -> {
+                    String comp = path.replaceFirst("components.","");
+                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
+                        BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(3*btnSize+2*btnSpacing),5,btnSize,20).build(),
+                ButtonWidget.builder(Text.of("Hide"), btn -> {
+                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,
+                        BlackMagick.validCompound(BlackMagick.nbtFromString("{show_in_tooltip:0b}")))));
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(2*btnSize+btnSpacing),5,btnSize,20).build(),
+                ButtonWidget.builder(Text.of("Show"), btn -> {
+                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,new NbtCompound())));
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
+                this.btnX = new int[]{ROW_LEFT,ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
+    
+                this.btns[startVal+1].active=false;
+    
+                for(int i=0; i<btns.length; i++) {
+                    if(i>0 && this.btns[i].active) {
+                        if(!client.player.getAbilities().creativeMode)
+                            this.btns[i].setTooltip(Tooltip.of(ERROR_CREATIVE));
+                        else
+                            this.btns[i].setTooltip(Tooltip.of(Text.of("Set component")));
+                    }
+                    this.children.add(this.btns[i]);
+                }
+            }
+            else { // inline component
+                String[] baseSuggestions = ComponentHelper.getPathInfo(path).suggs();
 
-                    if(path.startsWith("components.") && value.length()>0) {
-                        try {//TODO get inpError from context so stone can get maxdamage when maxstacksize=1
-                            ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader("stone["+path.replaceAll("components.","")+"="+value+"]"));
-                        } catch(Exception ex) {
-                            if(ex instanceof CommandSyntaxException) {
-                                inpError = ((CommandSyntaxException)ex).getMessage();
-                                if(inpError.contains(" at position ")) {
-                                    inpError = inpError.substring(0,inpError.indexOf(" at position "));
-                                }
-                            }
+                final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path));
+
+                final String[] suggestions;
+                if(baseSuggestions == null)
+                    suggestions = new String[]{startVal};
+                else {
+                    suggestions = new String[baseSuggestions.length+1];
+                    suggestions[0]=startVal;
+                    for(int i=1; i<suggestions.length; i++)
+                        suggestions[i] = baseSuggestions[i-1];
+                }
+
+                this.btns = new ButtonWidget[]{ButtonWidget.builder(Text.of(keyBtnTxt), btn -> {
+                    String inp = this.txts[0].getText();
+                    if(path.equals("id") && inp.equals("")) {
+                        inp = "stone";
+                        this.txts[0].setText("stone");
+                    }
+                    NbtElement el = BlackMagick.nbtFromString(inp);
+                    if(inp.equals("") || el != null) {
+                        ItemStack newItem;
+                        if(inp.equals("")) {
+                            String comp = path.replaceFirst("components.","");
+                            newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound()));
                         }
+                        else
+                            newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,el));
+                        BlackMagick.setItemMain(newItem);
+                        createWidgets(CACHE_TAB_MAIN); // required certain components
                     }
+                    unsel = true;
+                }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,size,20).build()};
+                this.btnX = new int[]{ROW_LEFT};
+
+                this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
+                    ItemBuilder.this.x+ROW_LEFT+5+size, 5, 240-41-size, 20, Text.of(""))};
+                this.txtX = new int[]{ROW_LEFT+5+size};
+                this.txts[0].setMaxLength(131072);
+
+                this.txts[0].setChangedListener(value -> {
+                    inpError = null;
+                    MutableText newBtnTt = btnTt.copy();
+                    this.btns[0].active = false;
+
+                    boolean noUnsaved = false;
+                    boolean removeItem = false;
+                    String keyType = "component";
+                    if(path.equals("count") && value.equals(""))
+                        value = "1";
                     else if(path.equals("id")) {
-                        keyType = "id";
-                        if(value.length()==0)
+                        if(value.equals("")) {
+                            removeItem = true;
                             value = "stone";
-                        try {
-                            ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader(value));
-                        } catch(Exception ex) {
-                            if(ex instanceof CommandSyntaxException) {
-                                inpError = ((CommandSyntaxException)ex).getMessage();
-                                if(inpError.contains(" at position ")) {
-                                    inpError = inpError.substring(0,inpError.indexOf(" at position "));
+                            if(startVal.equals(""))
+                                noUnsaved = true;
+                        }
+                        else if(value.equals("air"))
+                            value = "";
+                    }
+
+                    if((value != null && !value.equals(startVal)) || removeItem) {
+                        this.txts[0].setEditableColor(0xFFFFFF);
+                        if(!noUnsaved)
+                            ItemBuilder.this.markUnsaved(this.txts[0]);
+                        else
+                            ItemBuilder.this.markSaved(this.txts[0]);
+
+                        if(path.startsWith("components.") && value.length()>0) {
+                            NbtElement el = BlackMagick.nbtFromString(value);
+                            if(el != null)
+                                inpError = BlackMagick.getItemCompoundErrors(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,el).asString(),inpError);
+                            else {
+                                try {
+                                    ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader("stone["+path.replaceAll("components.","")+"="+value+"]"));
+                                } catch(Exception ex) {
+                                    if(ex instanceof CommandSyntaxException) {
+                                        inpError = ((CommandSyntaxException)ex).getMessage();
+                                        if(inpError.contains(" at position ")) {
+                                            inpError = inpError.substring(0,inpError.indexOf(" at position "));
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                    else if(path.equals("count")) {
-                        keyType = "count";
-                        if(value.length()>0) {
+                        else if(path.equals("id")) {
+                            keyType = "id";
+                            if(value.length()==0)
+                                value = "stone";
                             try {
-                                IntegerArgumentType.integer(1,selItem.getMaxCount()).parse(new StringReader(value));
+                                ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader(value));
                             } catch(Exception ex) {
                                 if(ex instanceof CommandSyntaxException) {
                                     inpError = ((CommandSyntaxException)ex).getMessage();
@@ -5357,118 +5533,80 @@ public class ItemBuilder extends GenericScreen {
                                     }
                                 }
                             }
-                            try {
-                                Integer.parseInt(value);
-                            } catch(Exception ex) {
-                                inpError = "Expected integer";
+                        }
+                        else if(path.equals("count")) {
+                            keyType = "count";
+                            if(value.length()>0) {
+                                try {
+                                    IntegerArgumentType.integer(1,selItem.getMaxCount()).parse(new StringReader(value));
+                                } catch(Exception ex) {
+                                    if(ex instanceof CommandSyntaxException) {
+                                        inpError = ((CommandSyntaxException)ex).getMessage();
+                                        if(inpError.contains(" at position ")) {
+                                            inpError = inpError.substring(0,inpError.indexOf(" at position "));
+                                        }
+                                    }
+                                }
+                                try {
+                                    Integer.parseInt(value);
+                                } catch(Exception ex) {
+                                    inpError = "Expected integer";
+                                }
                             }
                         }
-                    }
 
-                    if(inpError != null) {
-                        this.txts[0].setEditableColor(0xFF5555);
+                        if(inpError != null) {
+                            this.txts[0].setEditableColor(0xFF5555);
+                        }
+                        else {
+                            if(client.player.getAbilities().creativeMode) {
+                                if(value.length()==0)
+                                    newBtnTt = Text.empty().append(Text.of("Remove "+keyType+"\n\n")).append(btnTt);
+                                else
+                                    newBtnTt = Text.empty().append(Text.of("Set "+keyType+"\n\n")).append(btnTt);
+                                this.btns[0].active = true;
+                            }
+                            else
+                                newBtnTt = Text.empty().append(ERROR_CREATIVE).append("\n\n").append(btnTt);
+                        }
                     }
                     else {
-                        if(value.length()==0)
-                            this.btns[0].setTooltip(Tooltip.of(Text.of("Remove "+keyType)));
-                        else
-                            this.btns[0].setTooltip(Tooltip.of(Text.of("Set "+keyType)));
-
-                        if(client.player.getAbilities().creativeMode)
-                            this.btns[0].active = true;
-                        else
-                            this.btns[0].setTooltip(Tooltip.of(ERROR_CREATIVE));
+                        this.txts[0].setEditableColor(LABEL_COLOR);
+                        ItemBuilder.this.markSaved(this.txts[0]);
                     }
-                }
-                else {
-                    this.txts[0].setEditableColor(LABEL_COLOR);
-                    ItemBuilder.this.markSaved(this.txts[0]);
-                }
 
-                if(!currentTxt.contains(this.txts[0])) {
-                    resetSuggs();
-                    currentTxt.add(this.txts[0]);
-                    suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                    if(suggestions != null && suggestions.length > 0)
-                        suggs.setSuggestions(suggestions);
-                }
-                else{
-                    if(suggs != null)
-                        suggs.refresh();
-                    else {
+                    if(!currentTxt.contains(this.txts[0])) {
                         resetSuggs();
+                        currentTxt.add(this.txts[0]);
                         suggs = new TextSuggestor(client, this.txts[0], textRenderer);
                         if(suggestions != null && suggestions.length > 0)
                             suggs.setSuggestions(suggestions);
                     }
+                    else{
+                        if(suggs != null)
+                            suggs.refresh();
+                        else {
+                            resetSuggs();
+                            suggs = new TextSuggestor(client, this.txts[0], textRenderer);
+                            if(suggestions != null && suggestions.length > 0)
+                                suggs.setSuggestions(suggestions);
+                        }
+                    }
+
+                    this.btns[0].setTooltip(Tooltip.of(newBtnTt));
+                });
+
+                this.btns[0].setTooltip(Tooltip.of(btnTt));
+                this.txts[0].setText(startVal);
+
+                for(int i=0; i<btns.length; i++)
+                    this.children.add(this.btns[i]);
+                for(int i=0; i<txts.length; i++) {
+                    this.children.add(this.txts[i]);
+                    ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
                 }
-
-            });
-
-            this.txts[0].setText(startVal);
-
-            for(int i=0; i<btns.length; i++)
-                this.children.add(this.btns[i]);
-            for(int i=0; i<txts.length; i++) {
-                this.children.add(this.txts[i]);
-                ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
-            }            
-        }
-
-    }
-
-    class RowWidgetCompound extends RowWidget {
-
-        /**
-         * Used on components page to represent a compound, list, Text, or decimal color.
-         * Contains button to view and button to delete. (or button to add if null)
-         * 
-         * @param path nbt path in format: components.minecraft:foo.bar.list[0]
-         * @param name
-         */
-        public RowWidgetCompound(String path, String name) {
-            super();
-
-            if(name==null)
-                name = path;
-            name = cleanPath(name);
-
-            lbl = name;
-
-            int size = sizeFromName(name);
-
-            final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path));
-
-            this.btns = new ButtonWidget[]{
-            ButtonWidget.builder(getButtonText(path,startVal), btn -> {
-                createWidgets(0,BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}")));
-                unsel = true;
-            }).dimensions(ItemBuilder.this.x+ROW_LEFT+size+5,5,ROW_RIGHT-ROW_LEFT-20-size-5,20).build(),
-            ButtonWidget.builder(Text.of(startVal.equals("") ? "+" : "X"), btn -> {
-                if(startVal.equals("")) {
-                    createWidgets(0,BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}")));
-                }
-                else if(path.startsWith("components.")) {
-                    String comp = path.replaceFirst("components.","");
-                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                        BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
-                }
-                unsel = true;
-            }).dimensions(ItemBuilder.this.x+ROW_RIGHT-20,5,20,20).build()};
-            this.btnX = new int[]{ROW_LEFT+size+5,ROW_RIGHT-20};
-            if(!startVal.equals(""))
-                this.btns[0].setTooltip(Tooltip.of(Text.of("Edit component:\n"+startVal)));
-            else
-                this.btns[0].active = false;
-
-            this.btns[1].setTooltip(Tooltip.of(Text.of(startVal.equals("") ? "Create component" : "Delete component")));
-            if(!client.player.getAbilities().creativeMode && !startVal.equals("")) {
-                this.btns[1].active = false;
-                this.btns[1].setTooltip(Tooltip.of(ERROR_CREATIVE));
             }
 
-            for(int i=0; i<btns.length; i++)
-                this.children.add(this.btns[i]);
         }
 
     }
@@ -5499,18 +5637,14 @@ public class ItemBuilder extends GenericScreen {
 
             String keyBtnTxt = key.replace("minecraft:","");
             int size = sizeFromName(keyBtnTxt);
+            if((size>80) && (pi.type() == PathType.TRINARY || pi.type() == PathType.TOOLTIP_UNIT))
+                size = 80;
             ButtonWidget keyBtn = ButtonWidget.builder(Text.of(keyBtnTxt), btn -> {})
                 .dimensions(ItemBuilder.this.x+ROW_LEFT,5,size,20).build();
             keyBtn.active = false;
+            keyBtn.setTooltip(Tooltip.of(getButtonTooltip(pi,key)));
 
-            MutableText btnTt = Text.empty().append(Text.of("Key: "+key));
-            if(ComponentHelper.pathTypeToNbtType(pi.type()) != -1)
-                btnTt = btnTt.append(Text.of("\nNBT Type: "+ComponentHelper.formatNbtType(ComponentHelper.pathTypeToNbtType(pi.type()))));
-            if(pi.description() != null)
-                btnTt = btnTt.append(Text.of("\n\n")).append(pi.description());
-            keyBtn.setTooltip(Tooltip.of(btnTt));
-
-            if(pi.type()==PathType.TEXT || pi.type()==PathType.DECIMAL_COLOR || pi.type()==PathType.COMPOUND || pi.type()==PathType.LIST) {    
+            if(ComponentHelper.isComplex(pi.type())) {    
                 this.btns = new ButtonWidget[]{
                 keyBtn,
                 ButtonWidget.builder(getButtonText(fullPath,currentVal), btn -> {
@@ -5827,15 +5961,15 @@ public class ItemBuilder extends GenericScreen {
                 final String startVal = BlackMagick.nbtToString(tempEl);
                 tempEl = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath);
                 final String currentVal = BlackMagick.nbtToString(tempEl);
-                PathType widType = ComponentHelper.getPathInfo(fullPath).type();
+                PathInfo pi = ComponentHelper.getPathInfo(fullPath);
                 Text btnTxt = null;
                 int listElWidth = ROW_RIGHT-ROW_LEFT-15-15-15;
 
-                if(widType==PathType.TEXT || widType==PathType.DECIMAL_COLOR || widType==PathType.COMPOUND || widType==PathType.LIST) {
+                if(ComponentHelper.isComplex(pi.type())) {
                     btnTxt = getButtonText(fullPath,currentVal);
                 }
                 else {
-                    String[] baseSuggestions = ComponentHelper.getPathInfo(fullPath).suggs();
+                    String[] baseSuggestions = pi.suggs();
                     final String[] suggestions;
                     if(baseSuggestions == null) {
                         if(startVal.length()>0)
@@ -6071,6 +6205,7 @@ public class ItemBuilder extends GenericScreen {
                     createWidgets(0,newArgs);
                 }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,80,20).build()};
                 this.btnX = new int[]{ROW_LEFT};
+                this.btns[0].setTooltip(Tooltip.of(Text.of("Add a default element to the list")));
 
                 for(int i=0; i<btns.length; i++)
                     this.children.add(this.btns[i]);
@@ -6172,167 +6307,6 @@ public class ItemBuilder extends GenericScreen {
                 this.children.add(this.txts[i]);
                 ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
             }            
-        }
-
-    }
-
-    class RowWidgetTrinary extends RowWidget {
-
-        /**
-         * Used for bool type components.
-         * Contains [ Unset | False | True ] buttons.
-         * 
-         * @param path nbt path in format: components.minecraft:foo.bar.list[0]
-         * @param name override lbl name
-         */
-        public RowWidgetTrinary(String path, String name) {
-            super();
-
-            if(name==null)
-                name = path;
-            name = cleanPath(name);
-
-            lbl = name;
-
-            final int startVal;
-            if(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path) != null) {
-                startVal = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path).asString().equals("1b") ? 2 : 1;
-            }
-            else
-                startVal = 0;
-
-            final int btnSize = 35;
-            final int btnSpacing = 2;
-            this.btns = new ButtonWidget[]{
-            ButtonWidget.builder(Text.of("Unset"), btn -> {
-                String comp = path.replaceFirst("components.","");
-                BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                    BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
-                unsel = true;
-            }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(3*btnSize+2*btnSpacing),5,btnSize,20).build(),
-            ButtonWidget.builder(Text.of("False"), btn -> {
-                BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,NbtByte.ZERO)));
-                unsel = true;
-            }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(2*btnSize+btnSpacing),5,btnSize,20).build(),
-            ButtonWidget.builder(Text.of("True"), btn -> {
-                BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,NbtByte.ONE)));
-                unsel = true;
-            }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
-            this.btnX = new int[]{ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
-
-            this.btns[startVal].active=false;
-
-            for(int i=0; i<btns.length; i++) {
-                if(this.btns[i].active) {
-                    if(!client.player.getAbilities().creativeMode)
-                        this.btns[i].setTooltip(Tooltip.of(ERROR_CREATIVE));
-                    else
-                        this.btns[i].setTooltip(Tooltip.of(Text.of("Set component")));
-                }
-                this.children.add(this.btns[i]);
-            }
-        }
-
-        /**
-         * Used for Unit type with show_in_tooltip option.
-         * Contains [ False | Hide | Show ] buttons.
-         * 
-         * @param path nbt path in format: components.minecraft:foo.bar.list[0]
-         */
-        public RowWidgetTrinary(String path) {
-            super();
-
-            lbl = cleanPath(path);
-
-            final int startVal;
-            if(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path) != null) {
-                startVal = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path).asString().equals("{show_in_tooltip:0b}") ? 1 : 2;
-            }
-            else
-                startVal = 0;
-
-            final int btnSize = 35;
-            final int btnSpacing = 2;
-            this.btns = new ButtonWidget[]{
-            ButtonWidget.builder(Text.of("False"), btn -> {
-                String comp = path.replaceFirst("components.","");
-                BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                    BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
-                unsel = true;
-            }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(3*btnSize+2*btnSpacing),5,btnSize,20).build(),
-            ButtonWidget.builder(Text.of("Hide"), btn -> {
-                BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,
-                    BlackMagick.validCompound(BlackMagick.nbtFromString("{show_in_tooltip:0b}")))));
-                unsel = true;
-            }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(2*btnSize+btnSpacing),5,btnSize,20).build(),
-            ButtonWidget.builder(Text.of("Show"), btn -> {
-                BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,new NbtCompound())));
-                unsel = true;
-            }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
-            this.btnX = new int[]{ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
-
-            this.btns[startVal].active=false;
-
-            for(int i=0; i<btns.length; i++) {
-                if(this.btns[i].active) {
-                    if(!client.player.getAbilities().creativeMode)
-                        this.btns[i].setTooltip(Tooltip.of(ERROR_CREATIVE));
-                    else
-                        this.btns[i].setTooltip(Tooltip.of(Text.of("Set component")));
-                }
-                this.children.add(this.btns[i]);
-            }       
-        }
-
-    }
-
-    class RowWidgetBinary extends RowWidget {
-
-        /**
-         * Used for Unit type components.
-         * Contains buttons [ False | True ]
-         * 
-         * @param path nbt path in format: components.minecraft:foo.bar.list[0]
-         * @param name override display name
-         */
-        public RowWidgetBinary(String path, String name) {
-            super();
-
-            lbl = cleanPath(path);
-
-            final int startVal;
-            if(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path) != null) {
-                startVal = 1;
-            }
-            else
-                startVal = 0;
-
-            final int btnSize = 35;
-            final int btnSpacing = 2;
-            this.btns = new ButtonWidget[]{
-            ButtonWidget.builder(Text.of("False"), btn -> {
-                String comp = path.replaceFirst("components.","");
-                BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                    BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
-                unsel = true;
-            }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(2*btnSize+btnSpacing),5,btnSize,20).build(),
-            ButtonWidget.builder(Text.of("True"), btn -> {
-                BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,new NbtCompound())));
-                unsel = true;
-            }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
-            this.btnX = new int[]{ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
-
-            this.btns[startVal].active=false;
-
-            for(int i=0; i<btns.length; i++) {
-                if(this.btns[i].active) {
-                    if(!client.player.getAbilities().creativeMode)
-                        this.btns[i].setTooltip(Tooltip.of(ERROR_CREATIVE));
-                    else
-                        this.btns[i].setTooltip(Tooltip.of(Text.of("Set component")));
-                }
-                this.children.add(this.btns[i]);
-            }
         }
 
     }
@@ -6441,7 +6415,7 @@ public class ItemBuilder extends GenericScreen {
 
             ItemBuilder.this.armorPose[part][num] = (float)val;
             updatePose();
-            ItemBuilder.this.unsavedPose = true;
+            //ItemBuilder.this.unsavedPose = true;
 
             if(sliderBtns.size() > part) {
                 sliderBtns.get(part).btns[0].setTooltip(Tooltip.of(Text.of("Remove Pose")));
@@ -6475,7 +6449,7 @@ public class ItemBuilder extends GenericScreen {
             ItemBuilder.this.armorPose[part][num] = val;
             updatePose();
             updateMessage();
-            ItemBuilder.this.unsavedPose = true;
+            //ItemBuilder.this.unsavedPose = true;
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -6599,14 +6573,18 @@ public class ItemBuilder extends GenericScreen {
             drawItem(context,selItem, x+240-20-5+2, y+5+2);
             txtFormat.setX(x+50);
             txtFormat.render(context, mouseX, mouseY, delta);
-            if(!this.unsavedTxtWidgets.isEmpty() || unsavedPose)
+            if(!this.unsavedTxtWidgets.isEmpty())
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
             if(savedError)
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
         }
-        else if(jsonPreview != null) {
-            txtFormat.setX(x-15);
-            txtFormat.render(context, mouseX, mouseY, delta);
+        else {
+            if(blankTabUnsaved && tab == CACHE_TAB_BLANK)
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
+            if(jsonPreview != null) {
+                txtFormat.setX(x-15);
+                txtFormat.render(context, mouseX, mouseY, delta);
+            }
         }
         if(inpError != null)
             context.drawCenteredTextWithShadow(this.textRenderer, Text.of(trimStringSize(inpError)), this.width / 2, y+this.backgroundHeight+3, 0xFF5555);
@@ -6667,7 +6645,7 @@ public class ItemBuilder extends GenericScreen {
             return true;
         }
         if (FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
-            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !unsavedPose && !tabs[tab].hideTabs) {
+            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !tabs[tab].hideTabs) {
                 if(!pauseSaveScroll && tabWidget != null) {
                     tabScroll[tab] = tabWidget.getScrollAmount();
                 }

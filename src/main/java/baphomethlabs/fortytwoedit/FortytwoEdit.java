@@ -342,24 +342,40 @@ public class FortytwoEdit implements ClientModInitializer {
         suggs.setSuggestions(new String[]{""});
 
         cmdSuggsPendingSuggestions.thenRun(() -> {
-            List<String> list = new ArrayList<>();
 
-            if(joinLists != null)
-                for(int i=0; i<joinLists.length; i++)
-                    for(int j=0; j<joinLists[i].length; j++)
-                        list.add(joinLists[i][j]);
-
-            Suggestions suggestions;
-            if (cmdSuggsPendingSuggestions != null && cmdSuggsPendingSuggestions.isDone() && !(suggestions = cmdSuggsPendingSuggestions.join()).isEmpty()) {
-                for (Suggestion suggestion : suggestions.getList())
-                    list.add(suggestion.getText().replaceFirst("minecraft:",""));                
+            List<Suggestion> cmdSuggs = null;
+            if (cmdSuggsPendingSuggestions != null && cmdSuggsPendingSuggestions.isDone()) { 
+                Suggestions suggestions = cmdSuggsPendingSuggestions.join();
+                if(!suggestions.isEmpty())
+                    cmdSuggs = suggestions.getList();
             }
 
-            list = new ArrayList<String>((new HashSet<String>(list)));
-            Collections.sort(list);
-            if(list.size()>0)
-                suggs.setSuggestions(list.toArray(new String[0]));
+            String[] suggsArr = joinCommandSuggs(joinLists, cmdSuggs);
+
+            if(suggsArr.length>0)
+                suggs.setSuggestions(suggsArr);
         });
+    }
+
+    public static String[] joinCommandSuggs(String[][] joinLists, List<Suggestion> cmdSuggs) {
+        List<String> list = new ArrayList<>();
+
+        if(joinLists != null)
+            for(int i=0; i<joinLists.length; i++) {
+                if(joinLists[i] != null)
+                    for(int j=0; j<joinLists[i].length; j++)
+                        list.add(joinLists[i][j]);
+            }
+
+        if(cmdSuggs != null)
+            for (Suggestion suggestion : cmdSuggs)
+                list.add(suggestion.getText().replaceFirst("minecraft:",""));     
+
+        list = new ArrayList<String>((new HashSet<String>(list)));
+        Collections.sort(list);
+        if(list.size()>0)
+            return list.toArray(new String[0]);
+        return null;
     }
 
     //web items
@@ -681,7 +697,7 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         Registries.ENCHANTMENT.forEach(e -> {
-            list.add(Registries.ENCHANTMENT.getId(e).getPath());
+            list.add(Registries.ENCHANTMENT.getId(e).toString());
         });
 
         Collections.sort(list);
