@@ -645,7 +645,7 @@ public class FortytwoEdit implements ClientModInitializer {
         HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
         VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/blocks", map::putIfAbsent);
         map.keySet().forEach(t -> {
-            list.add(t.getPath().replaceFirst("tags/blocks/","").replaceFirst(".json",""));
+            list.add("#"+t.getPath().replaceFirst("tags/blocks/","").replaceFirst(".json",""));
         });
 
         Collections.sort(list);

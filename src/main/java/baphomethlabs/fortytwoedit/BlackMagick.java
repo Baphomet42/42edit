@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.spongepowered.asm.mixin.injection.struct.InjectorGroupInfo.Map;
+import com.google.common.collect.Sets;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.block.Block;
@@ -40,6 +41,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.state.property.Property;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -770,6 +772,89 @@ public class BlackMagick {
         if(client.world != null)
             return CommandRegistryAccess.of(client.world.getRegistryManager(), FortytwoEdit.FEATURES);
         return CommandRegistryAccess.of(DynamicRegistryManager.EMPTY, FortytwoEdit.FEATURES);
+    }
+
+    /**
+     * Display element differences with colored text.
+     * 
+     * @param left
+     * @param right
+     * @return formatted Text listing element differences and full content
+     */
+    public static Text getElementDifferences(NbtElement left, NbtElement right) {
+        if(left==null && right==null)
+            return Text.of("null").copy().formatted(Formatting.ITALIC);
+        if(left==null)
+            return Text.of(right.asString()).copy().formatted(Formatting.GREEN);
+        if(right==null)
+            return Text.of(left.asString()).copy().formatted(Formatting.RED);
+        
+        if(left.getType() == right.getType()) {
+            if(left.asString().equals(right.asString()))
+                return Text.of(left.asString());
+            if(left.getType() == NbtElement.COMPOUND_TYPE) {
+                NbtCompound leftCmp = (NbtCompound)left;
+                NbtCompound rightCmp = (NbtCompound)right;
+                MutableText output = Text.empty().append(Text.of("{"));
+
+                Set<String> allKeys = Sets.newHashSet();
+                for(String k : ((NbtCompound)left).getKeys())
+                    allKeys.add(k);
+                for(String k : ((NbtCompound)right).getKeys())
+                    allKeys.add(k);
+
+                boolean first = true;
+                for(String k : allKeys) {
+                    if(!first)
+                        output.append(Text.of(","));
+                    else
+                        first = false;
+
+                    if(leftCmp.contains(k) && rightCmp.contains(k)) {
+                        output.append(Text.of(k+":"));
+                        output.append(getElementDifferences(leftCmp.get(k),rightCmp.get(k)));
+                    }
+                    else if(leftCmp.contains(k)) {
+                        output.append((Text.of(k+":").copy().append(Text.of(leftCmp.get(k).asString()))).formatted(Formatting.RED));
+                    }
+                    else {
+                        output.append((Text.of(k+":").copy().append(Text.of(rightCmp.get(k).asString()))).formatted(Formatting.GREEN));
+                    }
+                }
+
+                output.append(Text.of("}"));
+                return output;
+            }
+            if(left.getType() == NbtElement.LIST_TYPE) {
+                NbtList leftList = (NbtList)left;
+                NbtList rightList = (NbtList)right;
+                MutableText output = Text.empty().append(Text.of("["));
+
+                int maxSize = Math.max(((NbtList)left).size(),((NbtList)right).size());
+
+                boolean first = true;
+                for(int i=0; i<maxSize; i++) {
+                    if(!first)
+                        output.append(Text.of(","));
+                    else
+                        first = false;
+
+                    if(leftList.size()>i && rightList.size()>i) {
+                        output.append(getElementDifferences(leftList.get(i),rightList.get(i)));
+                    }
+                    else if(leftList.size()>i) {
+                        output.append((Text.of(leftList.get(i).asString()).copy()).formatted(Formatting.RED));
+                    }
+                    else {
+                        output.append((Text.of(rightList.get(i).asString()).copy()).formatted(Formatting.GREEN));
+                    }
+                }
+
+                output.append(Text.of("]"));
+                return output;
+            }
+        }
+        return Text.empty().append(Text.of(left.asString()).copy().formatted(Formatting.RED)).append(Text.of(right.asString()).copy().formatted(Formatting.GREEN));
     }
 
 

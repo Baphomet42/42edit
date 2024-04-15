@@ -292,9 +292,8 @@ public class ComponentHelper {
             if(path.endsWith("components.can_break.predicates[0]"))
                 return new PathInfo(List.of("blocks","nbt","state"));
             if(path.endsWith("components.can_break.predicates[0].blocks"))
-                return INFO_LIST_STRING;
-            if(path.endsWith("components.can_break.predicates[0].blocks[0]"))
-                return INFO_BLOCK_TAG;
+                return new PathInfo(PathType.DEFAULT,FortytwoEdit.joinCommandSuggs(new String[][]{new String[]{"[\"stone\",\"dirt\"]"},FortytwoEdit.BLOCKS,FortytwoEdit.BLOCKTAGS},
+                null),Text.of("Can be either:\na) NbtString of a block ID or block tag\nb) NbtList of block ID NbtStrings"));//keep consistent with can_place_on, can_break, tool
             if(path.endsWith("components.can_break.predicates[0].nbt"))
                 return new PathInfo();
             if(path.endsWith("components.can_break.predicates[0].state"))
@@ -311,9 +310,8 @@ public class ComponentHelper {
             if(path.endsWith("components.can_place_on.predicates[0]"))
                 return new PathInfo(List.of("blocks","nbt","state"));
             if(path.endsWith("components.can_place_on.predicates[0].blocks"))
-                return INFO_LIST_STRING;
-            if(path.endsWith("components.can_place_on.predicates[0].blocks[0]"))
-                return INFO_BLOCK_TAG;
+                return new PathInfo(PathType.DEFAULT,FortytwoEdit.joinCommandSuggs(new String[][]{new String[]{"[\"stone\",\"dirt\"]"},FortytwoEdit.BLOCKS,FortytwoEdit.BLOCKTAGS},
+                null),Text.of("Can be either:\na) NbtString of a block ID or block tag\nb) NbtList of block ID NbtStrings"));//keep consistent with can_place_on, can_break, tool
             if(path.endsWith("components.can_place_on.predicates[0].nbt"))
                 return new PathInfo();
             if(path.endsWith("components.can_place_on.predicates[0].state"))
@@ -743,7 +741,8 @@ public class ComponentHelper {
             if(path.endsWith("components.tool.rules[0].blocks"))
                 return INFO_LIST_STRING;
             if(path.endsWith("components.tool.rules[0].blocks[0]"))
-                return INFO_BLOCK_TAG;
+                return new PathInfo(PathType.DEFAULT,FortytwoEdit.joinCommandSuggs(new String[][]{new String[]{"[\"stone\",\"dirt\"]"},FortytwoEdit.BLOCKS,FortytwoEdit.BLOCKTAGS},
+                null),Text.of("Can be either:\na) NbtString of a block ID or block tag\nb) NbtList of block ID NbtStrings"));//keep consistent with can_place_on, can_break, tool
             if(path.endsWith("components.tool.rules[0].speed"))
                 return new PathInfo();
             if(path.endsWith("components.tool.rules[0].correct_for_drops"))
@@ -1018,7 +1017,6 @@ public class ComponentHelper {
         "active_effects","ArmorDropChances","ArmorItems","Attributes","CanPickUpLoot","FallFlying","Health","HandDropChances","HandItems","Leash","LeftHanded","NoAI","PersistenceRequired","Team",
         "DisabledSlots","Invisible","Marker","NoBasePlate","Pose","ShowArms","Small"));
     private static final PathInfo INFO_SHERD_ITEM = new PathInfo(PathType.STRING,new String[]{"brick","angler_pottery_sherd","archer_pottery_sherd","arms_up_pottery_sherd","blade_pottery_sherd","brewer_pottery_sherd","burn_pottery_sherd","danger_pottery_sherd","explorer_pottery_sherd","flow_pottery_sherd","friend_pottery_sherd","guster_pottery_sherd","heart_pottery_sherd","heartbreak_pottery_sherd","howl_pottery_sherd","miner_pottery_sherd","mourner_pottery_sherd","plenty_pottery_sherd","prize_pottery_sherd","scrape_pottery_sherd","sheaf_pottery_sherd","shelter_pottery_sherd","skull_pottery_sherd","snort_pottery_sherd"});
-    private static final PathInfo INFO_BLOCK_TAG = new PathInfo(PathType.STRING,FortytwoEdit.joinCommandSuggs(new String[][]{FortytwoEdit.BLOCKS,FortytwoEdit.BLOCKTAGS},null));
     private static final PathInfo INFO_TRIM_MATERIAL = new PathInfo(PathType.STRING,new String[]{"amethyst","copper","diamond","emerald","gold","iron","lapis","netherite","quartz","redstone"});
     private static final PathInfo INFO_TRIM_PATTERN = new PathInfo(PathType.STRING,new String[]{"bolt","coast","dune","eye","flow","host","raiser","rib","sentry","shaper","silence","snout","spire","tide","vex","ward","wayfinder","wild"});
 
