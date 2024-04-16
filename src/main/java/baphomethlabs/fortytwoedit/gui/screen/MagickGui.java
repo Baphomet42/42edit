@@ -3,6 +3,7 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -11,23 +12,28 @@ import net.minecraft.util.Formatting;
 
 public class MagickGui extends GenericScreen {
 
-    ButtonWidget btnWgtAutoClick;
-    ButtonWidget btnWgtHat;
+    private ButtonWidget btnWgtAutoClick;
+    private ButtonWidget btnWgtHat;
+    private static final int LEFT_OFFSET = 20;
+    private static final int TOP_OFFSET = 1;
+    private static final int ITEM_OFFSET = 2;
     
     public MagickGui() {}
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(ButtonWidget.builder(Text.of("42edit..."), button -> this.btnItem()).dimensions(x+20,y+44+1,80,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Hacks..."), button -> this.btnHacks()).dimensions(x+20,y+66+1,80,20).build());
-        btnWgtHat = this.addDrawableChild(ButtonWidget.builder(Text.of("Hat"), button -> this.btnHat()).dimensions(x+20,y+22*4+1,60,20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of("42edit..."), button -> this.btnItem()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Hacks..."), button -> this.btnHacks()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
+        btnWgtHat = this.addDrawableChild(ButtonWidget.builder(Text.of("Hat"), button -> this.btnHat()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET,60,WID_HEIGHT).build());
         if(!client.player.getAbilities().creativeMode)
             btnWgtHat.active = false;
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Super Secret Settings..."), button -> this.btnSuperSecretSettings()).dimensions(x+20,y+22*5+1,165,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Capes..."), button -> this.btnCapes()).dimensions(x+20,y+22*6+1,80,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("AutoClick..."), button -> this.btnAutoClickSettings()).dimensions(x+20,y+22*7+1,90,20).build());
-        btnWgtAutoClick = this.addDrawableChild(ButtonWidget.builder(Text.of(""), button -> this.btnAutoClick()).dimensions(x+20+90+5,y+22*7+1,70,20).build());
+        else
+            btnWgtHat.setTooltip(Tooltip.of(Text.of("Swap current item with helmet slot")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Super Secret Settings..."), button -> this.btnSuperSecretSettings()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET,165,WID_HEIGHT).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Capes..."), button -> this.btnCapes()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of("AutoClick..."), button -> this.btnAutoClickSettings()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET,90,WID_HEIGHT).build());
+        btnWgtAutoClick = this.addDrawableChild(ButtonWidget.builder(Text.of(""), button -> this.btnAutoClick()).dimensions(x+LEFT_OFFSET+90+5,y+ROW_HEIGHT*7+TOP_OFFSET,70,WID_HEIGHT).build());
         setAutoClickMessage();
     }
 
@@ -92,6 +98,7 @@ public class MagickGui extends GenericScreen {
             btnWgtAutoClick.setMessage(Text.of("[Attack .65]"));
         else
             btnWgtAutoClick.setMessage(Text.of("[Custom]"));
+        btnWgtAutoClick.setTooltip(Tooltip.of(Text.of("Cycle auto click mode")));
     }
     
     @Override
@@ -100,12 +107,12 @@ public class MagickGui extends GenericScreen {
         context.drawItem(new ItemStack(Items.JIGSAW), x+6, y+6);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Black Magick by BaphomethLabs").copy().withColor(0x420666).formatted(Formatting.BOLD),
             this.width / 2, y+11, 0xFFFFFF);
-		context.drawItem(new ItemStack(Items.SPONGE),x+20+2,y+44+1+2);
-		context.drawItem(new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+20+2,y+22*3+1+2);
-		context.drawItem(new ItemStack(Items.DIAMOND_HELMET),x+20+2,y+22*4+1+2);
-		context.drawItem(new ItemStack(Items.STRUCTURE_BLOCK),x+20+2,y+22*5+1+2);
-		context.drawItem(new ItemStack(Items.ELYTRA),x+20+2,y+22*6+1+2);
-		context.drawItem(new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+22*7+1+2);
+		context.drawItem(new ItemStack(Items.SPONGE),x+LEFT_OFFSET+ITEM_OFFSET,y+44+TOP_OFFSET+ITEM_OFFSET);
+		context.drawItem(new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET+ITEM_OFFSET);
+		context.drawItem(new ItemStack(Items.DIAMOND_HELMET),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET+ITEM_OFFSET);
+		context.drawItem(new ItemStack(Items.STRUCTURE_BLOCK),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET+ITEM_OFFSET);
+		context.drawItem(new ItemStack(Items.ELYTRA),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET+ITEM_OFFSET);
+		context.drawItem(new ItemStack(Items.GOLDEN_SWORD),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET+ITEM_OFFSET);
     }
 
     @Override

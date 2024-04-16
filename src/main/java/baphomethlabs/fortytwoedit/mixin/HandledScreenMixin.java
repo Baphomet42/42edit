@@ -76,7 +76,7 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                 }
 
                 if(!empty) {
-                    stack.remove(DataComponentTypes.CONTAINER);
+                    stack.set(DataComponentTypes.CONTAINER,ContainerComponent.DEFAULT);
                     Optional<TooltipData> data = Optional.of(new ContainerTooltipData(items,rows,columns));
                     context.drawTooltip(this.textRenderer, this.getTooltipFromItem(stack), data, x, y);
                     c.cancel();

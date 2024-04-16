@@ -145,10 +145,8 @@ public class Hacks extends GenericScreen {
                 else {
                     nbt.putString("id","ender_dragon_spawn_egg");
                     entityData.putString("id",current.getType().toString().replace("entity.minecraft.",""));
-                    NbtList nbtLore = new NbtList();
-                    components.put("custom_name",nbtLore);
-                    nbtLore.add(NbtString.of("{\"text\":\""+
-                        current.getType().toString().replace("entity.minecraft.","")+" Spawn Egg\",\"italic\":false}"));
+                    components.put("item_name",NbtString.of("{\"text\":\"Custom "+
+                    current.getType().toString().replace("entity.minecraft.","")+" Spawn Egg\",\"italic\":false}"));
                 }
                 if(mode == 1) {
                     entityData.remove("Air");
@@ -186,8 +184,7 @@ public class Hacks extends GenericScreen {
             client.keyboard.setClipboard(BlackMagick.itemToNbtStorage(item).asString());
 
             if (client.player.getAbilities().creativeMode && !item.isEmpty()) {
-                client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-                client.player.playerScreenHandler.sendContentUpdates();
+                BlackMagick.setItemMain(item);
             }
         }
         this.resize(this.client,this.width,this.height);

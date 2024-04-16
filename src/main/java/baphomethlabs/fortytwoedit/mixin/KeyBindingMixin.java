@@ -9,6 +9,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
+import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 
 @Mixin(KeyBinding.class)
@@ -30,8 +31,7 @@ public abstract class KeyBindingMixin {
             else if(key.equals(((KeyBindingAccessor)client.options.pickItemKey).getBoundKey())) {
                 ItemStack item = FortytwoEdit.copyLookAt();
                 if(item != null && !item.isEmpty() && client.player.getAbilities().creativeMode) {
-                    client.interactionManager.clickCreativeStack(item, 36 + client.player.getInventory().selectedSlot);
-                    client.player.playerScreenHandler.sendContentUpdates();
+                    BlackMagick.setItemMain(item);
                     while(client.options.pickItemKey.wasPressed()) {}
                 }
             }

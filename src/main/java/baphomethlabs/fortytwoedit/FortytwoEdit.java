@@ -604,7 +604,6 @@ public class FortytwoEdit implements ClientModInitializer {
                 }
                 states += "}";
 
-                tag.put("lore",BlackMagick.nbtFromString("['{\"text\":\"(+BlockStateTag)\"}']"));
                 tag.put("block_state",BlackMagick.nbtFromString(states));
                 stack.put("components",tag);
                 return BlackMagick.itemFromNbt(stack);

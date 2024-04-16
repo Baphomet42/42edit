@@ -1,5 +1,7 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
+import java.time.Duration;
+
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -15,6 +17,9 @@ public abstract class GenericScreen extends Screen {
     protected int x;
     protected int y;
     protected static final int LABEL_COLOR = 0xA0A0A0;
+    protected static final int WID_HEIGHT = 20;
+    protected static final int ROW_HEIGHT = 22;
+    protected static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
     
     public GenericScreen() {
         super(NarratorManager.EMPTY);
