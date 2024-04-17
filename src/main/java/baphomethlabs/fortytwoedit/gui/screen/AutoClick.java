@@ -4,6 +4,7 @@ import org.lwjgl.glfw.GLFW;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -25,15 +26,15 @@ public class AutoClick extends GenericScreen {
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Use [On]"), Text.literal("Use [Off]")).initially(FortytwoEdit.autoClick).omitKeyText().build(x+20,y+44+1,100,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick((boolean)trackOutput,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
             this.resize(this.client,this.width,this.height);
-        }));
+        })).setTooltip(Tooltip.of(Text.of("Toggle use key in auto click mode\n\nWhen on: auto click mode will hold the use key down")));
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Mine [On]"), Text.literal("Mine [Off]")).initially(FortytwoEdit.autoMine).omitKeyText().build(x+20,y+22*3+1,100,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,(boolean)trackOutput,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
             this.resize(this.client,this.width,this.height);
-        }));
+        })).setTooltip(Tooltip.of(Text.of("Toggle mine key in auto click mode\n\nWhen on: auto click mode will hold the mine key down")));
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Attack [On]"), Text.literal("Attack [Off]")).initially(FortytwoEdit.autoAttack).omitKeyText().build(x+20,y+22*4+1,100,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,(boolean)trackOutput,FortytwoEdit.attackWait);
             this.resize(this.client,this.width,this.height);
-        }));
+        })).setTooltip(Tooltip.of(Text.of("Toggle auto attack in auto click mode\n\nWhen on: auto click mode will use the attack key once per cooldown (1500ms default)")));
         this.txtAttackCooldown = new TextFieldWidget(this.textRenderer,x+20+100+5+1,y+22*6+1,40-2,20,Text.of(""));
         this.txtAttackCooldown.setMaxLength(4);
         this.txtAttackCooldown.setText(""+FortytwoEdit.attackWait);

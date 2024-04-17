@@ -12,6 +12,7 @@ import org.joml.Vector3f;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -39,32 +40,38 @@ public class Capes extends GenericScreen {
             FortytwoEdit.updateOptions();
             FortytwoEdit.clearCapes();
             this.resize(this.client,this.width,this.height);
-        }));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Refresh"), button -> this.btnReloadCapes()).dimensions(x+20+80+5,y+22*3+1,60,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Edit"), button -> this.btnEditCape()).dimensions(x+20+80+5+60+5,y+22*3+1,40,20).build());
+        })).setTooltip(Tooltip.of(Text.of("Toggle OptiFine capes mode\n\nWhen on: you can see players' OptiFine capes")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Refresh"), button -> this.btnReloadCapes()).dimensions(x+20+80+5,y+22*3+1,60,20).build())
+            .setTooltip(Tooltip.of(Text.of("Refresh all OptiFine capes")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Edit"), button -> this.btnEditCape()).dimensions(x+20+80+5+60+5,y+22*3+1,40,20).build())
+            .setTooltip(Tooltip.of(Text.of("Edit your OptiFine cape (requires donation to OptiFine)")));
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Custom [On]"), Text.literal("Custom [Off]")).initially(FortytwoEdit.showClientCape).omitKeyText().build(x+20,y+22*4+1,80,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.showClientCape = (boolean)trackOutput;
             FortytwoEdit.updateOptions();
             this.resize(this.client,this.width,this.height);
-        }));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnDecCustom()).dimensions(x+20+80+5,y+22*4+1,15,20).build());
+        })).setTooltip(Tooltip.of(Text.of("Toggle custom capes mode\n\nWhen on: change your cape (only you can see this)")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnDecCustom()).dimensions(x+20+80+5,y+22*4+1,15,20).build())
+            .setTooltip(Tooltip.of(Text.of("Cycle custom cape left")));
         this.txtCustom = new TextFieldWidget(this.textRenderer,x+20+1+80+5+15,y+22*4+1,90-2,20,Text.of(""));
         this.txtCustom.setMaxLength(64);
         this.txtCustom.setEditable(false);
         this.txtCustom.setText(FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]);
-        this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnIncCustom()).dimensions(x+20+80+5+15+90,y+22*4+1,15,20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnIncCustom()).dimensions(x+20+80+5+15+90,y+22*4+1,15,20).build())
+            .setTooltip(Tooltip.of(Text.of("Cycle custom cape right")));
+
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Custom [On]"), Text.literal("Custom [Off]")).initially(FortytwoEdit.showClientSkin).omitKeyText().build(x+20,y+22*6+1,80,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.showClientSkin = (boolean)trackOutput;
             this.resize(this.client,this.width,this.height);
-        }));
+        })).setTooltip(Tooltip.of(Text.of("Toggle custom skin mode\n\nWhen on: change your skin (only you can see this)")));
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("3px"), Text.literal("4px")).initially(FortytwoEdit.clientSkinSlim).omitKeyText().build(x+20+80+5,y+22*6+1,30,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.clientSkinSlim = (boolean)trackOutput;
             this.resize(this.client,this.width,this.height);
-        }));
+        })).setTooltip(Tooltip.of(Text.of("Toggle skin model between wide/slim (requires custom skin mode)")));
         this.txtCustomSkin = new TextFieldWidget(this.textRenderer,x+20+1,y+22*7+1,200-2,20,Text.of(""));
         this.txtCustomSkin.setMaxLength(2048);
         this.txtCustomSkin.setEditable(false);
         this.txtCustomSkin.setText(FortytwoEdit.customSkinName.equals("") ? "<Drag and drop skin into this window>" : FortytwoEdit.customSkinName);
+        this.txtCustomSkin.setTooltip(Tooltip.of(Text.of("Drag and drop a skin into this window to set a custom skin")));
         playerX = x + 240+40;
         playerY = this.height/2 + 30;
     }

@@ -29,7 +29,6 @@ import net.minecraft.util.math.GlobalPos;
 public class Hacks extends GenericScreen {
 
     protected ButtonWidget btnWgtFindInvis;
-    protected CyclingButtonWidget<Boolean> btnWgtAutoFish;
     protected TextFieldWidget txtRando;
     protected boolean unsaved = false;
     
@@ -46,7 +45,8 @@ public class Hacks extends GenericScreen {
             else if((boolean)trackOutput && FortytwoEdit.randoSlots != null)
                 FortytwoEdit.randoMode = true;
             this.resize(this.client,this.width,this.height);
-        }));
+        })).setTooltip(Tooltip.of(Text.of("Toggle mix mode\n\nWhen on: after placing a block, change to a random hotbar slot\n\n"
+            +"If numbers are specified, the random slot will be selected from those.\nExample: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)")));
         this.txtRando = new TextFieldWidget(this.textRenderer,x+105+1,y+44+1,100-2,20,Text.of(""));
         this.txtRando.setMaxLength(15);
         if(FortytwoEdit.randoSlots != null) {
@@ -58,27 +58,35 @@ public class Hacks extends GenericScreen {
         }
         this.txtRando.setChangedListener(this::editTxtRando);
         this.addDrawableChild(this.txtRando);
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Get Entity"), button -> this.btnGetEntity(1)).dimensions(x+20,y+22*3+1,80,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Full Data"), button -> this.btnGetEntity(0)).dimensions(x+20+80+5,y+22*3+1,60,20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Get Entity"), button -> this.btnGetEntity(1)).dimensions(x+20,y+22*3+1,80,20).build())
+            .setTooltip(Tooltip.of(Text.of("Copy entity data within 2.5 blocks and get a spawn egg for the entities")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Full Data"), button -> this.btnGetEntity(0)).dimensions(x+20+80+5,y+22*3+1,60,20).build())
+            .setTooltip(Tooltip.of(Text.of("Get Entity without removing position, uuid, etc.")));
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Xray [On]"), Text.literal("Xray [Off]")).initially(FortytwoEdit.seeInvis).omitKeyText().build(x+20,y+22*4+1,100,20, Text.of(""), (button, trackOutput) -> {
             client.worldRenderer.reload();
             FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
             FortytwoEdit.xrayEntity = FortytwoEdit.seeInvis;
             this.resize(this.client,this.width,this.height);
-        }));
+        })).setTooltip(Tooltip.of(Text.of("Toggle xray mode\n\nWhen on: barriers, light blocks, and other invisible blocks will appear as full blocks")));
         btnWgtFindInvis = this.addDrawableChild(ButtonWidget.builder(Text.of("Find Invis Entities"), button -> this.btnFindInvis()).dimensions(x+20+100+5,y+22*4+1,100,20).build());
         if(!client.player.getAbilities().creativeMode)
             btnWgtFindInvis.active = false;
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Death Pos"), button -> this.btnDeathPos()).dimensions(x+20,y+22*5+1,100,20).build());
-        btnWgtAutoFish = this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("   Auto Fish [On]"), Text.literal("   Auto Fish [Off]")).initially(FortytwoEdit.autoFish).omitKeyText().build(x+20+100+5,y+22*5+1,100,20, Text.of(""), (button, trackOutput) -> {
+        else
+            btnWgtFindInvis.setTooltip(Tooltip.of(Text.of("Print positions of invisible entities (only you can see this)")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Death Pos"), button -> this.btnDeathPos()).dimensions(x+20,y+22*5+1,100,20).build())
+            .setTooltip(Tooltip.of(Text.of("Print your last position of death (only you can see this)")));
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("   Auto Fish [On]"), Text.literal("   Auto Fish [Off]")).initially(FortytwoEdit.autoFish).omitKeyText().build(x+20+100+5,y+22*5+1,100,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.autoFish = !FortytwoEdit.autoFish;
             this.resize(this.client,this.width,this.height);
-        }));
-        btnWgtAutoFish.setTooltip(Tooltip.of(Text.of("Requires subtitles to be on")));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Look N"), button -> this.btnLookN()).dimensions(x+20,y+22*7+1,40,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Rotate"), button -> this.btnLookR()).dimensions(x+20+40+5,y+22*7+1,40,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Pano"), button -> this.btnPano()).dimensions(x+20+40+5+40+5,y+22*7+1,40,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("View Pano"), button -> this.btnScreenshots()).dimensions(x+20+120+15,y+22*7+1,60,20).build());
+        })).setTooltip(Tooltip.of(Text.of("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Look N"), button -> this.btnLookN()).dimensions(x+20,y+22*7+1,40,20).build())
+            .setTooltip(Tooltip.of(Text.of("Set your rotation to straight north")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Rotate"), button -> this.btnLookR()).dimensions(x+20+40+5,y+22*7+1,40,20).build())
+            .setTooltip(Tooltip.of(Text.of("Rotate 90\u00b0 clockwise")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Pano"), button -> this.btnPano()).dimensions(x+20+40+5+40+5,y+22*7+1,40,20).build())
+            .setTooltip(Tooltip.of(Text.of("Take a panorama screenshot")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("View Pano"), button -> this.btnScreenshots()).dimensions(x+20+120+15,y+22*7+1,60,20).build())
+            .setTooltip(Tooltip.of(Text.of("Open screenshots folder to view panorama")));
     }
 
     protected void btnBack() {
