@@ -59,7 +59,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Property;
 import net.minecraft.text.Text;
-import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
@@ -103,6 +102,7 @@ public class FortytwoEdit implements ClientModInitializer {
     private static long lastFish = 0;
     private static boolean didFish = false;
     private static final int fishWait = 1000;
+    public static boolean suppressKeybind = false;
 
     // xray mode
     public static boolean seeInvis = false;
@@ -123,7 +123,7 @@ public class FortytwoEdit implements ClientModInitializer {
     private static long lastCapeLoaded = System.currentTimeMillis();
 
     public static boolean capeTimeCheck() {
-        if (System.currentTimeMillis() - lastCapeLoaded > 50) {
+        if(System.currentTimeMillis() - lastCapeLoaded > 50) {
             lastCapeLoaded = System.currentTimeMillis();
             return true;
         }
@@ -180,7 +180,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     public static boolean tryLoadCape(String name) {
         final MinecraftClient client = MinecraftClient.getInstance();
-        if (capeNames.size() == 0 && !name.equals(client.getSession().getUsername()))
+        if(capeNames.size() == 0 && !name.equals(client.getSession().getUsername()))
             tryLoadCape(client.getSession().getUsername());
         capeNames.add(name);
         try {
@@ -283,12 +283,12 @@ public class FortytwoEdit implements ClientModInitializer {
     }
     public static void cycleSuperSecretSetting() {
         final MinecraftClient client = MinecraftClient.getInstance();
-        if (client.getCameraEntity() instanceof PlayerEntity) {
-            if (client.gameRenderer.getPostProcessor() != null) {
+        if(client.getCameraEntity() instanceof PlayerEntity) {
+            if(client.gameRenderer.getPostProcessor() != null) {
                 client.gameRenderer.getPostProcessor().close();
             }
             superSecretSettingIndex = (superSecretSettingIndex + 1) % (SUPER_SECRET_SETTING_PROGRAMS.length + 1);
-            if (superSecretSettingIndex == SUPER_SECRET_SETTING_PROGRAMS.length) {
+            if(superSecretSettingIndex == SUPER_SECRET_SETTING_PROGRAMS.length) {
                 client.gameRenderer.disablePostProcessor();
             } else {
                 ((GameRendererInvoker)client.gameRenderer).invokeLoadPostProcessor(SUPER_SECRET_SETTING_PROGRAMS[superSecretSettingIndex]);
@@ -345,7 +345,7 @@ public class FortytwoEdit implements ClientModInitializer {
             cmdSuggsPendingSuggestions.thenRun(() -> {
 
                 List<Suggestion> cmdSuggs = null;
-                if (cmdSuggsPendingSuggestions != null && cmdSuggsPendingSuggestions.isDone()) { 
+                if(cmdSuggsPendingSuggestions != null && cmdSuggsPendingSuggestions.isDone()) { 
                     Suggestions suggestions = cmdSuggsPendingSuggestions.join();
                     if(!suggestions.isEmpty())
                         cmdSuggs = suggestions.getList();
@@ -426,7 +426,7 @@ public class FortytwoEdit implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
 
             // magickgui
-            if (magickGuiKey.wasPressed()) {
+            if(magickGuiKey.wasPressed()) {
                 if(quickScreen == 1)
                     client.setScreen(new ItemBuilder());
                 else
@@ -434,46 +434,52 @@ public class FortytwoEdit implements ClientModInitializer {
             }
 
             // zoom
-            if (zoom.isPressed() && !zoomed) {
+            if(zoom.isPressed() && !zoomed) {
                 smooth = client.options.smoothCameraEnabled;
                 client.options.smoothCameraEnabled = true;
                 zoomed = true;
-            } else if (!zoom.isPressed() && zoomed) {
+            }
+            else if(!zoom.isPressed() && zoomed) {
                 client.options.smoothCameraEnabled = smooth;
                 zoomed = false;
             }
 
             // afkMove
-            if (afkMove.wasPressed()) {
+            if(afkMove.wasPressed()) {
                 autoMove = !autoMove;
-                if (!autoMove)
-                    KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.forwardKey).getBoundKey(), false);
+                client.options.forwardKey.setPressed(false);
+                while(client.options.forwardKey.wasPressed()) {}
             }
-            if (autoMove && client.player != null) {
-                KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.forwardKey).getBoundKey(), true);
+            if(autoMove && client.player != null) {
+                if(client.options.forwardKey.wasPressed()) {
+                    autoMove = false;
+                    client.options.forwardKey.setPressed(false);
+                    while(client.options.forwardKey.wasPressed()) {}
+                }
+                else
+                    client.options.forwardKey.setPressed(true);
             }
 
             //afkClick
             if(afkClick.wasPressed()) {
                 autoClicker = !autoClicker;
-
-                if (!autoClicker && autoClick)
-                    KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey(), false);
-                if (!autoClicker && autoMine)
-                    KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey(), false);
+                client.options.useKey.setPressed(false);
+                client.options.attackKey.setPressed(false);
+                while(client.options.useKey.wasPressed()) {}
+                while(client.options.attackKey.wasPressed()) {}
             }
             if(autoClicker && client.player != null) {
-                if (autoClick) {
-                    KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey(), true);
+                if(autoClick) {
+                    client.options.useKey.setPressed(true);
                 }
-                if (autoAttack && System.currentTimeMillis()>=lastAttack + attackWait && client.crosshairTarget instanceof EntityHitResult) {
+                if(autoAttack && System.currentTimeMillis()>=lastAttack + attackWait && client.crosshairTarget instanceof EntityHitResult) {
                     lastAttack = System.currentTimeMillis();
-                    client.interactionManager.attackEntity(client.player, ((EntityHitResult)client.crosshairTarget).getEntity());
-                    client.player.resetLastAttackedTicks();
-                    client.player.swingHand(Hand.MAIN_HAND);
+                    suppressKeybind = true;
+                    KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey());
+                    suppressKeybind = false;
                 }
-                if (autoMine) {
-                    KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey(), true);
+                if(autoMine) {
+                    client.options.attackKey.setPressed(true);
                 }
             }
 
@@ -500,13 +506,13 @@ public class FortytwoEdit implements ClientModInitializer {
 
             //freelook
             if(freeLook.isPressed()) {
-                if (!isFreeLooking) {
+                if(!isFreeLooking) {
                     lastPerspective = client.options.getPerspective();
                     Entity view = client.getCameraEntity() == null ? client.player : client.getCameraEntity();
                     cameraRotation[0] = view.getYaw();
                     cameraRotation[1] = view.getPitch();
 
-                    if (lastPerspective == Perspective.FIRST_PERSON)
+                    if(lastPerspective == Perspective.FIRST_PERSON)
                         client.options.setPerspective(Perspective.THIRD_PERSON_BACK);
 
                     isFreeLooking = true;
@@ -530,13 +536,13 @@ public class FortytwoEdit implements ClientModInitializer {
             }
 
             //clear cached optifine capes when leaving world/server
-            if (capeNames.size() > 0 && MinecraftClient.getInstance().player == null) {
+            if(capeNames.size() > 0 && MinecraftClient.getInstance().player == null) {
                 clearCapes();
             }
 
             // rando
-            if (randoMode) {
-                if (client.options.useKey.isPressed())
+            if(randoMode) {
+                if(client.options.useKey.isPressed())
                     changeRandoSlot();
             }
 
@@ -558,16 +564,15 @@ public class FortytwoEdit implements ClientModInitializer {
         else if(wait > 9999)
             attackWait = 9999;
 
-
-        KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey(), false);
-        KeyBinding.setKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey(), false);
+        client.options.useKey.setPressed(false);
+        client.options.attackKey.setPressed(false);
     }
 
     private static boolean testRandoSlot() {
         final MinecraftClient client = MinecraftClient.getInstance();
         int selected = client.player.getInventory().selectedSlot + 1;
         for (int i = 0; i < randoSlots.length; i++) {
-            if (randoSlots[i] == selected)
+            if(randoSlots[i] == selected)
                 return true;
         }
         return false;
@@ -585,14 +590,14 @@ public class FortytwoEdit implements ClientModInitializer {
     public static ItemStack copyLookAt() {
         final MinecraftClient client = MinecraftClient.getInstance();
         HitResult hitResult = client.crosshairTarget;
-        if (hitResult == null) {
+        if(hitResult == null) {
             return null;
         }
         if(hitResult.getType() == HitResult.Type.BLOCK) {
             BlockPos blockPos = ((BlockHitResult)hitResult).getBlockPos();
             BlockState blockState = client.player.getWorld().getBlockState(blockPos);
             
-            if (!blockState.getProperties().isEmpty()) {
+            if(!blockState.getProperties().isEmpty()) {
                 NbtCompound stack = new NbtCompound();
                 stack.put("id",NbtString.of(blockState.getBlock().asItem().toString()));
                 NbtCompound tag = new NbtCompound();
@@ -601,7 +606,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 states += "{";
                 boolean bl = false;
                 for (Map.Entry<Property<?>,Comparable<?>> entry : blockState.getEntries().entrySet()) {
-                    if (bl) {
+                    if(bl) {
                         states += ",";
                     }
                     states += entry.getKey().getName();
@@ -817,9 +822,9 @@ public class FortytwoEdit implements ClientModInitializer {
         final MinecraftClient client = MinecraftClient.getInstance();
         String optionsString = "";
         try {
-            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
-            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).exists())
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).exists())
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).createNewFile();
                 
             Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt"), StandardCharsets.UTF_8);
@@ -865,9 +870,9 @@ public class FortytwoEdit implements ClientModInitializer {
         try {
 
             final MinecraftClient client = MinecraftClient.getInstance();
-            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
-            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).exists())
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).exists())
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).createNewFile();
 
             String options = "{CustomCapeToggle:"+ (showClientCape ? "1b" : "0b")
@@ -893,9 +898,9 @@ public class FortytwoEdit implements ClientModInitializer {
         final MinecraftClient client = MinecraftClient.getInstance();
         String savedString = "";
         try {
-            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
-            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).exists()) {
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).exists()) {
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).createNewFile();
                 FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", StandardCharsets.UTF_8, false);
                 writer.write("[]");
@@ -935,9 +940,9 @@ public class FortytwoEdit implements ClientModInitializer {
         try {
 
             final MinecraftClient client = MinecraftClient.getInstance();
-            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
-            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).exists())
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).exists())
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).createNewFile();
 
             String items = "[]";
@@ -960,9 +965,9 @@ public class FortytwoEdit implements ClientModInitializer {
         final MinecraftClient client = MinecraftClient.getInstance();
         String cacheString = "";
         try {
-            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
-            if (!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt")).exists()) {
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt")).exists()) {
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt")).createNewFile();
                 FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt", StandardCharsets.UTF_8, false);
                 writer.write("{}");

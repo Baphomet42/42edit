@@ -67,7 +67,7 @@ public class Hacks extends GenericScreen {
             FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
             FortytwoEdit.xrayEntity = FortytwoEdit.seeInvis;
             this.resize(this.client,this.width,this.height);
-        })).setTooltip(Tooltip.of(Text.of("Toggle xray mode\n\nWhen on: barriers, light blocks, and other invisible blocks will appear as full blocks")));
+        })).setTooltip(Tooltip.of(Text.of("Toggle xray mode\n\nWhen on: barriers, light blocks, and other invisible blocks will appear as solid blocks")));
         btnWgtFindInvis = this.addDrawableChild(ButtonWidget.builder(Text.of("Find Invis Entities"), button -> this.btnFindInvis()).dimensions(x+20+100+5,y+22*4+1,100,20).build());
         if(!client.player.getAbilities().creativeMode)
             btnWgtFindInvis.active = false;
@@ -154,7 +154,7 @@ public class Hacks extends GenericScreen {
                     nbt.putString("id","ender_dragon_spawn_egg");
                     entityData.putString("id",current.getType().toString().replace("entity.minecraft.",""));
                     components.put("item_name",NbtString.of("{\"text\":\"Custom "+
-                    current.getType().toString().replace("entity.minecraft.","")+" Spawn Egg\",\"italic\":false}"));
+                    current.getType().getName().getString()+" Spawn Egg\",\"italic\":false}"));
                 }
                 if(mode == 1) {
                     entityData.remove("Air");
@@ -171,6 +171,11 @@ public class Hacks extends GenericScreen {
                     entityData.remove("DeathTime");
                     entityData.remove("HurtByTimestamp");
                     entityData.remove("HurtTime");
+
+                    entityData.remove("Facing");
+                    entityData.remove("TileX");
+                    entityData.remove("TileY");
+                    entityData.remove("TileZ");
                 }
                 items.add(nbt);
             }

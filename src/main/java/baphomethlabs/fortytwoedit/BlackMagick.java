@@ -129,8 +129,8 @@ public class BlackMagick {
     }
 
     /**
-     * Get stringified nbt where NbtStrings are quoted if necessary.
-     * Quotes may be double or single, and are not included if they aren't needed.
+     * Get stringified nbt where NbtStrings are quoted.
+     * Quotes may be double or single, and some characters may be escaped.
      * A null element will return an empty string.
      * 
      * @param inp
@@ -140,10 +140,6 @@ public class BlackMagick {
         if(inp == null)
             return "";
         else if(inp.getType()==NbtElement.STRING_TYPE) {
-            NbtElement el = nbtFromString(inp.asString());
-            if(el != null && el.getType()==NbtElement.STRING_TYPE && el.asString().equals(inp.asString()))
-                return inp.asString();
-
             NbtCompound temp = new NbtCompound();
             temp.put("temp",inp);
             String parsed = temp.asString();
@@ -461,18 +457,15 @@ public class BlackMagick {
             return null;
         NbtCompound nbt = base.copy();
 
-        path = "."+path;
-        while(path.contains(".components.")) {
-            String component = path.substring(path.lastIndexOf(".components.")+12);
+        if(path.startsWith("components.")) {
+            String component = path.substring(11);
             if(component.contains("."))
                 component = component.substring(0,component.indexOf("."));
             if(component.contains("["))
                 component = component.substring(0,component.indexOf("["));
-            path = path.substring(0,path.lastIndexOf(".components."));
-            if(path.length()==0)
+            
+            if(nbtToString(getNbtPath(nbt,"components.!"+component)).equals("{}"))
                 nbt = setNbtPath(nbt,"components.!"+component,null);
-            else
-                nbt = setNbtPath(nbt,path.substring(1)+".components.!"+component,null);
         }
 
         return nbt;
@@ -725,6 +718,23 @@ public class BlackMagick {
 
         Collections.sort(list, String.CASE_INSENSITIVE_ORDER);
         return list;
+    }
+
+    /**
+     * Format suggs so that they represent an NbtString.
+     * Required when string suggs are used in a txt not setup for NbtStrings.
+     * 
+     * @param suggs
+     * @return
+     */
+    public static String[] formatStringSuggs(String[] suggs) {
+        List<String> list = new ArrayList<>();
+        
+        for(String s : suggs) {
+            list.add(nbtToString(NbtString.of(s)));
+        }
+
+        return list.toArray(new String[0]);
     }
 
     public static String[] getIntRangeArray(int min, int max) {

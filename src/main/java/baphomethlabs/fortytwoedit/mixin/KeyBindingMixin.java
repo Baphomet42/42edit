@@ -20,23 +20,45 @@ public abstract class KeyBindingMixin {
 
     @Inject(method="onKeyPressed(Lnet/minecraft/client/util/InputUtil$Key;)V", at=@At("TAIL"))
     private static void detectKeyPress(InputUtil.Key key, CallbackInfo c) {
+
         if(FortytwoEdit.modKey.isPressed() && !FortytwoEdit.spamClick.isPressed()) {
             final MinecraftClient client = MinecraftClient.getInstance();
 
             if(key.equals(((KeyBindingAccessor)client.options.attackKey).getBoundKey())) {
                 KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
                 if(FortytwoEdit.randoMode)
-                        FortytwoEdit.changeRandoSlot();
+                    FortytwoEdit.changeRandoSlot();
+                client.options.attackKey.setPressed(false);
             }
             else if(key.equals(((KeyBindingAccessor)client.options.pickItemKey).getBoundKey())) {
                 ItemStack item = FortytwoEdit.copyLookAt();
                 if(item != null && !item.isEmpty() && client.player.getAbilities().creativeMode) {
                     BlackMagick.setItemMain(item);
                     while(client.options.pickItemKey.wasPressed()) {}
+                    client.options.pickItemKey.setPressed(false);
                 }
             }
 
         }
+        else if(FortytwoEdit.autoClicker && !FortytwoEdit.suppressKeybind) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            boolean stopAutoClicker = false;
+
+            if((FortytwoEdit.autoMine || FortytwoEdit.autoAttack) && key.equals(((KeyBindingAccessor)client.options.attackKey).getBoundKey()))
+                stopAutoClicker = true;
+            else if(FortytwoEdit.autoClick && key.equals(((KeyBindingAccessor)client.options.useKey).getBoundKey()))
+                stopAutoClicker = true;
+            
+            if(stopAutoClicker) {
+                FortytwoEdit.autoClicker = false;
+                client.options.useKey.setPressed(false);
+                client.options.attackKey.setPressed(false);
+                while(client.options.useKey.wasPressed()) {}
+                while(client.options.attackKey.wasPressed()) {}
+            }
+
+        }
+
     }
 
 }
