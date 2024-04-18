@@ -558,7 +558,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.potion_contents"))
                 return PathInfos.POTION_CONTENTS.withGroup(lbl);
             if(path.endsWith(".entity_data.Particle"))
-                return (new PathInfo(PathType.INLINE_COMPOUND,FortytwoEdit.PARTICLES)).withDesc(Text.of("Format like {type:\"dust\",color:[.5d,0d,1d],scale:2}")).withGroup(lbl);
+                return (new PathInfo(PathType.INLINE_COMPOUND,BlackMagick.formatSuggs(FortytwoEdit.PARTICLES,"{type:","}"))).withDesc(Text.of("Format like {type:\"dust\",color:[.5d,0d,1d],scale:2}")).withGroup(lbl);
             if(path.endsWith(".entity_data.Radius"))
                 return PathInfos.FLOAT.withGroup(lbl);
             if(path.endsWith(".entity_data.RadiusOnUse"))

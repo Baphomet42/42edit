@@ -737,6 +737,22 @@ public class BlackMagick {
         return list.toArray(new String[0]);
     }
 
+    /**
+     * Format suggs with a prefix and suffix
+     * 
+     * @param suggs
+     * @return
+     */
+    public static String[] formatSuggs(String[] suggs, String prefix, String suffix) {
+        List<String> list = new ArrayList<>();
+        
+        for(String s : suggs) {
+            list.add(prefix+s+suffix);
+        }
+
+        return list.toArray(new String[0]);
+    }
+
     public static String[] getIntRangeArray(int min, int max) {
         if(min == max)
             return new String[]{""+min};

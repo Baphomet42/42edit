@@ -571,8 +571,8 @@ public class ItemBuilder extends GenericScreen {
         updateSavedTab();
     }
     private void updateSavedTab() {
-        if(widgets.get(CACHE_TAB_SAVED).size() == FortytwoEdit.SAVED_ROWS+1) // +/- 1 to account for blank row at bottom of tab
-            for(int i=0; i<FortytwoEdit.SAVED_ROWS-1; i++)
+        if(widgets.get(CACHE_TAB_SAVED).size() >= FortytwoEdit.SAVED_ROWS)
+            for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
                 widgets.get(CACHE_TAB_SAVED).get(i).updateSavedDisplay();
     }
 
@@ -2095,7 +2095,7 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
                 widgets.get(tabNum).add(new RowWidget(i));
             {
-                widgets.get(tabNum).add(new RowWidget()); // if adding or removing any rows, modify updateSavedTab()
+                widgets.get(tabNum).add(new RowWidget());
             }
             refreshSaved();
             if(webItems == null)
@@ -4834,7 +4834,7 @@ public class ItemBuilder extends GenericScreen {
 
     }
 
-    class RowWidgetInvRow extends RowWidget {//TODO invrow
+    class RowWidgetInvRow extends RowWidget {
         
         private final Sprite[] SPRITES = new Sprite[]{
             client.getSpriteAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE).apply(PlayerScreenHandler.EMPTY_BOOTS_SLOT_TEXTURE),
@@ -4861,14 +4861,13 @@ public class ItemBuilder extends GenericScreen {
                 this.savedStacks = new ItemStack[9];
                 this.btns = new ButtonWidget[9];
                 this.btnX = new int[9];
-                if(row==3)
-                    isHotbarRow = true;
             }
             else if(row == 4) {
                 this.slotSprites = new int[]{1,2,3,4,5};
                 this.savedStacks = new ItemStack[5];
                 this.btns = new ButtonWidget[5];
                 this.btnX = new int[5];
+                isHotbarRow = true;
             }
 
             int currentX = 10+30;
@@ -4947,8 +4946,7 @@ public class ItemBuilder extends GenericScreen {
             }
             if(this.isHotbarRow) {
                 int sel = client.player.getInventory().selectedSlot;
-                if(this.btnX.length>sel)
-                    context.drawGuiTexture(SEL_SLOT, x+this.btnX[sel]-2, y-2, 24, 23);
+                context.drawGuiTexture(SEL_SLOT, x+(sel*20)+40-2, y-20-2, 24, 23);
             }
         }
 
