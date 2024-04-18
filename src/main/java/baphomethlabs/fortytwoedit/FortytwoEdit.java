@@ -333,31 +333,33 @@ public class FortytwoEdit implements ClientModInitializer {
     private static String[] TRANSLATIONS = null;
 
     //live command suggestions
-    public static void setCommandSuggs(String cmd, TextSuggestor suggs, String[][] joinLists) {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        CommandDispatcher<CommandSource> commandDispatcher = client.player.networkHandler.getCommandDispatcher();
-        ParseResults<CommandSource> cmdSuggsParse = commandDispatcher.parse(cmd, (CommandSource)client.player.networkHandler.getCommandSource());
-        CompletableFuture<Suggestions> cmdSuggsPendingSuggestions = commandDispatcher.getCompletionSuggestions(cmdSuggsParse, cmd.length());
+    public static void setCommandSuggs(String cmd, TextSuggestor suggs, String[] suggsList) {
+        if(cmd != null && suggs != null) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            CommandDispatcher<CommandSource> commandDispatcher = client.player.networkHandler.getCommandDispatcher();
+            ParseResults<CommandSource> cmdSuggsParse = commandDispatcher.parse(cmd, (CommandSource)client.player.networkHandler.getCommandSource());
+            CompletableFuture<Suggestions> cmdSuggsPendingSuggestions = commandDispatcher.getCompletionSuggestions(cmdSuggsParse, cmd.length());
 
-        suggs.setSuggestions(new String[]{""});
+            suggs.setSuggestions(new String[]{""});
 
-        cmdSuggsPendingSuggestions.thenRun(() -> {
+            cmdSuggsPendingSuggestions.thenRun(() -> {
 
-            List<Suggestion> cmdSuggs = null;
-            if (cmdSuggsPendingSuggestions != null && cmdSuggsPendingSuggestions.isDone()) { 
-                Suggestions suggestions = cmdSuggsPendingSuggestions.join();
-                if(!suggestions.isEmpty())
-                    cmdSuggs = suggestions.getList();
-            }
+                List<Suggestion> cmdSuggs = null;
+                if (cmdSuggsPendingSuggestions != null && cmdSuggsPendingSuggestions.isDone()) { 
+                    Suggestions suggestions = cmdSuggsPendingSuggestions.join();
+                    if(!suggestions.isEmpty())
+                        cmdSuggs = suggestions.getList();
+                }
 
-            String[] suggsArr = joinCommandSuggs(joinLists, cmdSuggs);
+                String[] suggsArr = joinCommandSuggs(new String[][]{suggsList}, cmdSuggs, null);
 
-            if(suggsArr.length>0)
-                suggs.setSuggestions(suggsArr);
-        });
+                if(suggsArr.length>0)
+                    suggs.setSuggestions(suggsArr);
+            });
+        }
     }
 
-    public static String[] joinCommandSuggs(String[][] joinLists, List<Suggestion> cmdSuggs) {
+    public static String[] joinCommandSuggs(String[][] joinLists, List<Suggestion> cmdSuggs, String[] startVals) {
         List<String> list = new ArrayList<>();
 
         if(joinLists != null)
@@ -368,11 +370,16 @@ public class FortytwoEdit implements ClientModInitializer {
             }
 
         if(cmdSuggs != null)
-            for (Suggestion suggestion : cmdSuggs)
+            for(Suggestion suggestion : cmdSuggs)
                 list.add(suggestion.getText().replaceFirst("minecraft:",""));     
 
         list = new ArrayList<String>((new HashSet<String>(list)));
         Collections.sort(list);
+
+        if(startVals != null)
+            for(int i=0; i<startVals.length; i++)
+                list.add(0,startVals[startVals.length-1-i]);
+
         if(list.size()>0)
             return list.toArray(new String[0]);
         return null;

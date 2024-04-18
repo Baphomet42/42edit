@@ -570,8 +570,8 @@ public class ItemBuilder extends GenericScreen {
         updateSavedTab();
     }
     private void updateSavedTab() {
-        if(widgets.get(CACHE_TAB_SAVED).size() == FortytwoEdit.SAVED_ROWS)
-            for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
+        if(widgets.get(CACHE_TAB_SAVED).size() == FortytwoEdit.SAVED_ROWS+1) // +/- 1 to account for blank row at bottom of tab
+            for(int i=0; i<FortytwoEdit.SAVED_ROWS-1; i++)
                 widgets.get(CACHE_TAB_SAVED).get(i).updateSavedDisplay();
     }
 
@@ -1480,6 +1480,41 @@ public class ItemBuilder extends GenericScreen {
         return btnTt;
     }
 
+    private void suggsOnChanged(TextFieldWidget w, String[] suggestions, String startVal) {
+        if(w == null)
+            return;
+
+        boolean shouldSetSuggs = false;
+        if(!currentTxt.contains(w)) {
+            resetSuggs();
+            currentTxt.add(w);
+            suggs = new TextSuggestor(client, w, textRenderer);
+            shouldSetSuggs = true;
+        }
+        else{
+            if(suggs != null)
+                suggs.refresh();
+            else {
+                resetSuggs();
+                suggs = new TextSuggestor(client, w, textRenderer);
+                shouldSetSuggs = true;
+            }
+        }
+        if(shouldSetSuggs) {
+            if(suggs == null)
+                return;
+            String[] startVals = null;
+            if(startVal != null)
+                startVals = new String[]{startVal};
+            String[][] joinSuggs = null;
+            if(suggestions != null)
+                joinSuggs = new String[][]{suggestions};
+            String[] suggsArr = FortytwoEdit.joinCommandSuggs(joinSuggs, null, startVals);
+            if(suggsArr != null && suggsArr.length>0)
+                suggs.setSuggestions(suggsArr);
+        }
+    }
+
     public boolean setEditingElement(String path, NbtElement newEl, ButtonWidget saveBtn) {
         return setEditingElement(path,newEl,saveBtn,null);
     }
@@ -1562,7 +1597,7 @@ public class ItemBuilder extends GenericScreen {
                 widgets.get(tabNum).add(new RowWidget("\u00a76\u00a7oBaphomethLabs\u00a7r"));
             }
             {//public RowWidget(Text[] names, String[] tooltips, String[][] suggestions, boolean survival, PressAction... onPressActions) {
-                widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("Item Lore"),Text.of("Bottle Lore"),Text.of("Watermark")},new int[]{60,60,60},
+                widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("Item Lore"),Text.of("Bottle Lore"),Text.of("Watermark")},new int[]{65,64,65},
                 new String[]{"Add \u00a76\u00a7oBaphomethLabs\u00a7r watermark to lore","Add \u00a76\u00a7oBottled by BaphomethLabs\u00a7r watermark to lore",
                 "Add watermark in custom_data"},null,false,btn -> {
                     if(!selItem.isEmpty()) {
@@ -1807,6 +1842,9 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }));
             }
+            {
+                widgets.get(tabNum).add(new RowWidget());
+            }
         }
 
         {
@@ -2020,6 +2058,9 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }).dimensions(x+15-3+5+60+5+60,y+35+22*6+1,60,20).build(),15-3+5+60+5+60,35+22*6+1));
             }
+            {
+                widgets.get(tabNum).add(new RowWidget());
+            }
             ((EditBoxWidget)noScrollWidgets.get(tabNum).get(0).w).setText("");
         }
 
@@ -2054,6 +2095,9 @@ public class ItemBuilder extends GenericScreen {
             }
             for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
                 widgets.get(tabNum).add(new RowWidget(i));
+            {
+                widgets.get(tabNum).add(new RowWidget()); // if adding or removing any rows, modify updateSavedTab()
+            }
             refreshSaved();
             if(webItems == null)
                 getWebItems();
@@ -2287,6 +2331,9 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }
             }
+            {
+                widgets.get(tabNum).add(new RowWidget());
+            }
         }
         else if(tabNum == CACHE_TAB_INV) {   //createBlock inventory
             {
@@ -2384,6 +2431,9 @@ public class ItemBuilder extends GenericScreen {
                         stacks[c] = ItemStack.EMPTY;
                 }
                 widgets.get(tabNum).add(new RowWidgetInvRow(stacks));
+            }
+            {
+                widgets.get(tabNum).add(new RowWidget());
             }
         }
         // else if(tabNum == 12) { //createBlock listEdit
@@ -2638,6 +2688,10 @@ public class ItemBuilder extends GenericScreen {
                             widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,k));
                         }
                     }
+
+                    {
+                        widgets.get(tabNum).add(new RowWidget());
+                    }
                 }
                 else if(elType == PathType.LIST) {
                     NbtList currentList = null;
@@ -2664,6 +2718,10 @@ public class ItemBuilder extends GenericScreen {
 
                     for(int i=0; i<=currentList.size(); i++) {
                         widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,i,currentList.size()-1));
+                    }
+
+                    {
+                        widgets.get(tabNum).add(new RowWidget());
                     }
                 }
                 else if(elType == PathType.TEXT) {
@@ -2860,26 +2918,8 @@ public class ItemBuilder extends GenericScreen {
                         updateJsonEffect();
                         if(jsonEffectMode == 1) {
                             if(jsonEffects[7]==1 || jsonEffects[7]==2) {
-    
                                 String[] suggestions = jsonEffects[7]==1 ? FortytwoEdit.getCacheKeybinds() : FortytwoEdit.getCacheTranslations();
-    
-                                if(!currentTxt.contains(w)) {
-                                    resetSuggs();
-                                    currentTxt.add(w);
-                                    suggs = new TextSuggestor(client, w, textRenderer);
-                                    if(suggestions != null && suggestions.length > 0)
-                                        suggs.setSuggestions(suggestions);
-                                }
-                                else{
-                                    if(suggs != null)
-                                        suggs.refresh();
-                                    else {
-                                        resetSuggs();
-                                        suggs = new TextSuggestor(client, w, textRenderer);
-                                        if(suggestions != null && suggestions.length > 0)
-                                            suggs.setSuggestions(suggestions);
-                                    }
-                                }
+                                suggsOnChanged(w,suggestions,null);
                             }
                             else
                                 resetSuggs();
@@ -2956,28 +2996,7 @@ public class ItemBuilder extends GenericScreen {
                     w2.setChangedListener(value -> {
                         if(jsonEffects[6]==1) {
                             jsonLastColor = value;
-    
-                            String[] suggestions = new String[]{"reset","aqua","black","blue","dark_aqua","dark_blue","dark_gray","dark_green","dark_purple","dark_red",
-                                "gold","gray","green","light_purple","red","white","yellow"};
-    
-                            if(!currentTxt.contains(w2)) {
-                                resetSuggs();
-                                currentTxt.add(w2);
-                                suggs = new TextSuggestor(client, w2, textRenderer);
-                                if(suggestions != null && suggestions.length > 0)
-                                    suggs.setSuggestions(suggestions);
-                            }
-                            else{
-                                if(suggs != null)
-                                    suggs.refresh();
-                                else {
-                                    resetSuggs();
-                                    suggs = new TextSuggestor(client, w2, textRenderer);
-                                    if(suggestions != null && suggestions.length > 0)
-                                        suggs.setSuggestions(suggestions);
-                                }
-                            }
-    
+                            suggsOnChanged(w2,ComponentHelper.FORMAT_COLORS,null);
                             updateJsonEffect();
                         }
                         else
@@ -3061,6 +3080,9 @@ public class ItemBuilder extends GenericScreen {
                     {
                         widgets.get(tabNum).add(new RowWidget("contents:",8));
                     }
+                }
+                {
+                    widgets.get(tabNum).add(new RowWidget());
                 }
                 updateJsonEffectBtns();
                 updateRgbSliders();
@@ -3163,23 +3185,7 @@ public class ItemBuilder extends GenericScreen {
                     this.txts[0].setEditableColor(LABEL_COLOR);
                     //ItemBuilder.this.markSaved(this.txts[0]);
                 }
-                if(!currentTxt.contains(this.txts[0])) {
-                    resetSuggs();
-                    currentTxt.add(this.txts[0]);
-                    suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                    if(suggestions != null && suggestions.length > 0)
-                        suggs.setSuggestions(suggestions);
-                }
-                else{
-                    if(suggs != null)
-                        suggs.refresh();
-                    else {
-                        resetSuggs();
-                        suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                        if(suggestions != null && suggestions.length > 0)
-                            suggs.setSuggestions(suggestions);
-                    }
-                }
+                suggsOnChanged(this.txts[0],suggestions,null);
             });
             this.txts[0].setMaxLength(131072);
             for(int i=0; i<btns.length; i++)
@@ -3203,6 +3209,7 @@ public class ItemBuilder extends GenericScreen {
         }
 
         /**
+         * Used for JSON effects tab.
          * lbl(size) txt [custom suggs]
          */
         public RowWidget(String name, int suggsNum) {
@@ -3228,8 +3235,6 @@ public class ItemBuilder extends GenericScreen {
                     currentTxt.add(this.txts[0]);
                     suggs = new TextSuggestor(client, this.txts[0], textRenderer);
                     switch(suggsNum) {
-                        case 1: FortytwoEdit.setCommandSuggs("loot spawn ~ ~ ~ loot ", suggs, new String[][]{FortytwoEdit.LOOT}); break;
-                        case 2: FortytwoEdit.setCommandSuggs("execute if block ~ ~ ~ ", suggs, new String[][]{FortytwoEdit.BLOCKS,FortytwoEdit.BLOCKTAGS}); break;
                         case 3: suggs.setSuggestions(new String[]{"[\"\"]","[{\"text\":\"\"}]"}); break;
                         case 4: resetSuggs(); break;
                         case 5: suggs.setSuggestions(new String[]{"change_page","copy_to_clipboard","run_command","open_url","open_file"}); break;
@@ -3247,8 +3252,6 @@ public class ItemBuilder extends GenericScreen {
                         resetSuggs();
                         suggs = new TextSuggestor(client, this.txts[0], textRenderer);
                         switch(suggsNum) {
-                            case 1: FortytwoEdit.setCommandSuggs("loot spawn ~ ~ ~ loot ", suggs, new String[][]{FortytwoEdit.LOOT}); break;
-                            case 2: FortytwoEdit.setCommandSuggs("execute if block ~ ~ ~ ", suggs, new String[][]{FortytwoEdit.BLOCKS,FortytwoEdit.BLOCKTAGS}); break;
                             case 3: suggs.setSuggestions(new String[]{"[\"\"]","[{\"text\":\"\"}]"}); break;
                             case 4: resetSuggs(); break;
                             case 5: suggs.setSuggestions(new String[]{"change_page","copy_to_clipboard","run_command","open_url","open_file"}); break;
@@ -3313,23 +3316,11 @@ public class ItemBuilder extends GenericScreen {
                             this.txts[ii].setEditableColor(LABEL_COLOR);
                             //ItemBuilder.this.markSaved(this.txts[ii]);
                         }
-                        if(!currentTxt.contains(this.txts[ii])) {
-                            resetSuggs();
-                            currentTxt.add(this.txts[ii]);
-                            suggs = new TextSuggestor(client, this.txts[ii], textRenderer);
-                            if(suggestions != null && suggestions.length > ii && suggestions[ii] != null)
-                                suggs.setSuggestions(suggestions[ii]);
-                        }
-                        else{
-                            if(suggs != null)
-                                suggs.refresh();
-                            else {
-                                resetSuggs();
-                                suggs = new TextSuggestor(client, this.txts[ii], textRenderer);
-                                if(suggestions != null && suggestions.length > ii && suggestions[ii] != null)
-                                    suggs.setSuggestions(suggestions[ii]);
-                            }
-                        }
+
+                        String[] suggestionsList = null;
+                        if(suggestions != null && suggestions.length > ii && suggestions[ii] != null)
+                            suggestionsList = suggestions[ii];
+                        suggsOnChanged(this.txts[ii],suggestionsList,null);
                     });
                     this.txts[i].setMaxLength(131072);
 
@@ -3881,11 +3872,13 @@ public class ItemBuilder extends GenericScreen {
             }
             if(savedStacksMode == 1 && this.savedStacks != null && this.savedStacks.length == 9)
                 for(int i=0; i<9; i++) {
-                    drawItem(context,this.savedStacks[i],x+this.btnX[i]+2,y+2);
-                    if(savedModeSet && !viewBlackMarket && !this.savedStacks[i].isEmpty())
-                        drawItem(context,savedModeItems[2],x+this.btnX[i]+2,y+2);
-                    if(savedStacksWarn != null && savedStacksWarn.length==9 && savedStacksWarn[i])
-                        drawItem(context,savedModeItems[2],x+this.btnX[i]+2,y+2);
+                    if(this.savedStacks[i] != null) {
+                        drawItem(context,this.savedStacks[i],x+this.btnX[i]+2,y+2);
+                        if(savedModeSet && !viewBlackMarket && !this.savedStacks[i].isEmpty())
+                            drawItem(context,savedModeItems[2],x+this.btnX[i]+2,y+2);
+                        if(savedStacksWarn != null && savedStacksWarn.length==9 && savedStacksWarn[i])
+                            drawItem(context,savedModeItems[2],x+this.btnX[i]+2,y+2);
+                    }
                 }
             else if(savedStacksMode == 0 && this.savedStacks != null && this.savedStacks.length == this.btnX.length)
                 for(int i=0; i<this.savedStacks.length; i++)
@@ -4096,19 +4089,9 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
             else { // inline component
-                String[] baseSuggestions = ComponentHelper.getPathInfo(path).suggs();
+                String[] baseSuggestions = pi.suggs();
 
                 final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path));
-
-                final String[] suggestions;
-                if(baseSuggestions == null)
-                    suggestions = new String[]{startVal};
-                else {
-                    suggestions = new String[baseSuggestions.length+1];
-                    suggestions[0]=startVal;
-                    for(int i=1; i<suggestions.length; i++)
-                        suggestions[i] = baseSuggestions[i-1];
-                }
 
                 this.btns = new ButtonWidget[]{ButtonWidget.builder(Text.of(keyBtnTxt), btn -> {
                     String inp = this.txts[0].getText();
@@ -4238,24 +4221,7 @@ public class ItemBuilder extends GenericScreen {
                         ItemBuilder.this.markSaved(this.txts[0]);
                     }
 
-                    if(!currentTxt.contains(this.txts[0])) {
-                        resetSuggs();
-                        currentTxt.add(this.txts[0]);
-                        suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                        if(suggestions != null && suggestions.length > 0)
-                            suggs.setSuggestions(suggestions);
-                    }
-                    else{
-                        if(suggs != null)
-                            suggs.refresh();
-                        else {
-                            resetSuggs();
-                            suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                            if(suggestions != null && suggestions.length > 0)
-                                suggs.setSuggestions(suggestions);
-                        }
-                    }
-
+                    suggsOnChanged(this.txts[0],baseSuggestions,startVal);
                     this.btns[0].setTooltip(Tooltip.of(newBtnTt));
                 });
 
@@ -4583,23 +4549,7 @@ public class ItemBuilder extends GenericScreen {
                         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,el),blankElPath),saveBtn,
                         path2==null ? null : pagePath);
 
-                    if(!currentTxt.contains(this.txts[0])) {
-                        resetSuggs();
-                        currentTxt.add(this.txts[0]);
-                        suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                        if(suggestions != null && suggestions.length > 0)
-                            suggs.setSuggestions(suggestions);
-                    }
-                    else{
-                        if(suggs != null)
-                            suggs.refresh();
-                        else {
-                            resetSuggs();
-                            suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                            if(suggestions != null && suggestions.length > 0)
-                                suggs.setSuggestions(suggestions);
-                        }
-                    }
+                    suggsOnChanged(this.txts[0],baseSuggestions,startVal);
 
                 });
 
@@ -4692,24 +4642,7 @@ public class ItemBuilder extends GenericScreen {
                                 BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,el),blankElPath),saveBtn,
                                 path2==null ? null : pagePath);
 
-                        if(!currentTxt.contains(this.txts[0])) {
-                            resetSuggs();
-                            currentTxt.add(this.txts[0]);
-                            suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                            if(suggestions != null && suggestions.length > 0)
-                                suggs.setSuggestions(suggestions);
-                        }
-                        else{
-                            if(suggs != null)
-                                suggs.refresh();
-                            else {
-                                resetSuggs();
-                                suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                                if(suggestions != null && suggestions.length > 0)
-                                    suggs.setSuggestions(suggestions);
-                            }
-                        }
-
+                        suggsOnChanged(this.txts[0],baseSuggestions,startVal);
                     });
 
                     this.txts[0].setText(currentVal);
@@ -4911,7 +4844,8 @@ public class ItemBuilder extends GenericScreen {
             tempEl = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath);
             final String currentVal = BlackMagick.nbtToString(tempEl);
 
-            String[] baseSuggestions = ComponentHelper.getPathInfo(fullPath).suggs();
+            PathInfo pi = ComponentHelper.getPathInfo(fullPath);
+            String[] baseSuggestions = pi.suggs();
             final String[] suggestions;
             if(baseSuggestions == null) {
                 if(startVal.length()>0)
@@ -4958,23 +4892,7 @@ public class ItemBuilder extends GenericScreen {
                 if(inpError != null)
                     this.txts[0].setEditableColor(0xFF5555);
 
-                if(!currentTxt.contains(this.txts[0])) {
-                    resetSuggs();
-                    currentTxt.add(this.txts[0]);
-                    suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                    if(suggestions != null && suggestions.length > 0)
-                        suggs.setSuggestions(suggestions);
-                }
-                else{
-                    if(suggs != null)
-                        suggs.refresh();
-                    else {
-                        resetSuggs();
-                        suggs = new TextSuggestor(client, this.txts[0], textRenderer);
-                        if(suggestions != null && suggestions.length > 0)
-                            suggs.setSuggestions(suggestions);
-                    }
-                }
+                suggsOnChanged(this.txts[0],baseSuggestions,startVal);
             });
 
             this.txts[0].setText(currentVal);
