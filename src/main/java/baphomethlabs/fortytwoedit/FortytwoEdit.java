@@ -1045,12 +1045,13 @@ public class FortytwoEdit implements ClientModInitializer {
         if(newItems != null && newItems.contains(blackMarketKey,NbtElement.LIST_TYPE) && ((NbtList)newItems.get(blackMarketKey)).size()>0
         && ((NbtList)newItems.get(blackMarketKey)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
             NbtList items = (NbtList)newItems.get(blackMarketKey);
-
             NbtList itemList = new NbtList();
 
             for(int i=0; i<items.size(); i++) {
-                if(((NbtCompound)items.get(i)).contains("item",NbtElement.COMPOUND_TYPE)) {
-                    itemList.add(((NbtCompound)items.get(i)).getCompound("item"));
+                if(((NbtCompound)items.get(i)).contains("item",NbtElement.STRING_TYPE)) {
+                    NbtCompound stack = BlackMagick.validCompound(BlackMagick.nbtFromString(((NbtCompound)items.get(i)).getString("item")));
+                    if(!stack.isEmpty())
+                        itemList.add(stack);
                 }
             }
 
