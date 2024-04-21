@@ -72,7 +72,11 @@ import net.minecraft.client.MinecraftClient;
 
 public class FortytwoEdit implements ClientModInitializer {
 
+    //log
 	public static final Logger LOGGER = LoggerFactory.getLogger("42edit");
+
+    //black market item key
+    public static String blackMarketKey = "items_41"; // replace with new data number after major item format change
 
     //gui
     public static KeyBinding magickGuiKey;
@@ -988,8 +992,8 @@ public class FortytwoEdit implements ClientModInitializer {
                 NbtCompound cache = (NbtCompound)BlackMagick.nbtFromString(cacheString);
                 if(cache.contains("version",NbtElement.INT_TYPE))
                     cacheVer = ((NbtInt)cache.get("version")).intValue();
-                if(cacheVer > -1 && cache.contains("items",NbtElement.LIST_TYPE) && ((NbtList)cache.get("items")).size()>0
-                        && ((NbtList)cache.get("items")).get(0).getType()==NbtElement.COMPOUND_TYPE)
+                if(cacheVer > -1 && cache.contains(blackMarketKey,NbtElement.LIST_TYPE) && ((NbtList)cache.get(blackMarketKey)).size()>0
+                        && ((NbtList)cache.get(blackMarketKey)).get(0).getType()==NbtElement.COMPOUND_TYPE)
                     newItems = cache.copy();
             }
             else
@@ -1017,8 +1021,8 @@ public class FortytwoEdit implements ClientModInitializer {
                 int webVer = -1;
                 if(cache.contains("version",NbtElement.INT_TYPE))
                     webVer = ((NbtInt)cache.get("version")).intValue();
-                if(webVer > -1 && cache.contains("items",NbtElement.LIST_TYPE) && ((NbtList)cache.get("items")).size()>0
-                        && ((NbtList)cache.get("items")).get(0).getType()==NbtElement.COMPOUND_TYPE && webVer > cacheVer) {
+                if(webVer > -1 && cache.contains(blackMarketKey,NbtElement.LIST_TYPE) && ((NbtList)cache.get(blackMarketKey)).size()>0
+                        && ((NbtList)cache.get(blackMarketKey)).get(0).getType()==NbtElement.COMPOUND_TYPE && webVer > cacheVer) {
 
                     LOGGER.info("Updating Black Market items [Version "+webVer+"]");
                     newItems = cache.copy();
@@ -1038,26 +1042,15 @@ public class FortytwoEdit implements ClientModInitializer {
                 LOGGER.warn("Failed connection to BaphomethLabs");
         }
 
-        String key = "items";   // replace items with items_snapshot when needed
-        if(newItems != null && newItems.contains(key,NbtElement.LIST_TYPE) && ((NbtList)newItems.get(key)).size()>0
-        && ((NbtList)newItems.get(key)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
-            NbtList items = (NbtList)newItems.get(key);
+        if(newItems != null && newItems.contains(blackMarketKey,NbtElement.LIST_TYPE) && ((NbtList)newItems.get(blackMarketKey)).size()>0
+        && ((NbtList)newItems.get(blackMarketKey)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
+            NbtList items = (NbtList)newItems.get(blackMarketKey);
 
             NbtList itemList = new NbtList();
 
             for(int i=0; i<items.size(); i++) {
-                if(((NbtCompound)items.get(i)).contains("id",NbtElement.STRING_TYPE)) {
-                    NbtCompound jsonItem = (NbtCompound)items.get(i);
-                    NbtCompound nbt = new NbtCompound();
-                    nbt.put("id",jsonItem.get("id"));
-                    if(jsonItem.contains("count",NbtElement.INT_TYPE))
-                        nbt.put("count",jsonItem.get("count"));
-                    if(jsonItem.contains("components",NbtElement.STRING_TYPE)) {
-                        NbtElement el = BlackMagick.nbtFromString(((NbtString)jsonItem.get("components")).asString());
-                        if(el != null && el.getType()==NbtElement.COMPOUND_TYPE)
-                            nbt.put("components",el);
-                    }
-                    itemList.add(nbt);
+                if(((NbtCompound)items.get(i)).contains("item",NbtElement.COMPOUND_TYPE)) {
+                    itemList.add(((NbtCompound)items.get(i)).getCompound("item"));
                 }
             }
 

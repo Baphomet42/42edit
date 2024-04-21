@@ -49,6 +49,7 @@ dependencies {
 	//	update FortytwoEdit.FEATURES
 	//	update ComponentHelper (search HARDCODED)
 	//	verify ordinals (ScrollableWidgetMixin/StringHelperMixin)
+	//	change FortytwoEdit.blackMarketKey if item format has major change
 
 	//	TOOLS
 	//	Ctrl-P search MC classes starting with #

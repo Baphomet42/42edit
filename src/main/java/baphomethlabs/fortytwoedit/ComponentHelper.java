@@ -415,10 +415,10 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data"))
                 return new PathInfo(List.of("id",
                 "CustomName","CustomNameVisible","Glowing","HasVisualFire","Invulnerable","Motion","NoGravity","Pos","Rotation","Silent","Tags",
-                "active_effects","ArmorDropChances","ArmorItems","Attributes","CanPickUpLoot","FallFlying","Health","HandDropChances","HandItems","Leash","LeftHanded","NoAI","PersistenceRequired","Team",
+                "active_effects","ArmorDropChances","ArmorItems","Attributes","CanPickUpLoot","FallFlying","Health","HandDropChances","HandItems","leash","LeftHanded","NoAI","PersistenceRequired","Team",
                 "DisabledSlots","Invisible","Marker","NoBasePlate","Pose","ShowArms","Small",
                 "Fixed","Invisible","Item","ItemDropChance","ItemRotation",
-                "BeamTarget","ShowBottom",
+                "beam_target","ShowBottom",
                 "SoundEvent",
                 "Duration","DurationOnUse","potion_contents","Particle","Radius","RadiusOnUse","RadiusPerTick","ReapplicationDelay","WaitTime"));
             if(path.endsWith(".entity_data.id"))
@@ -501,7 +501,7 @@ public class ComponentHelper {
                 return PathInfos.LIST_COMPOUND.withDesc(Text.of("[mainhand, offhand]")).withGroup(lbl);
             if(path.endsWith(".entity_data.HandItems[0]"))
                 return PathInfos.ITEM_NODE;
-            if(path.endsWith(".entity_data.Leash"))
+            if(path.endsWith(".entity_data.leash"))
                 return (new PathInfo(PathType.INLINE_COMPOUND,new String[]{"{UUID:[I;0,0,0,0]}","{X:0,Y:0,Z:0}"}).withDesc(Text.of("Compound with int array UUID or int X, Y, and Z values"))).withGroup(lbl);
             if(path.endsWith(".entity_data.LeftHanded"))
                 return PathInfos.TRINARY.withGroup(lbl);
@@ -541,8 +541,8 @@ public class ComponentHelper {
                 return (new PathInfo(PathType.BYTE,new String[]{"0","1","2","3","4","5","6","7"})).withDesc(Text.of("Number of times the item is rotated clockwise")).withGroup(lbl);
 
             lbl = "End Crystals";
-            if(path.endsWith(".entity_data.BeamTarget"))
-                return (new PathInfo(PathType.INLINE_COMPOUND,new String[]{"{X:0,Y:0,Z:0}"})).withGroup(lbl);
+            if(path.endsWith(".entity_data.beam_target"))
+                return PathInfos.INT_ARRAY_POS.withGroup(lbl);
             if(path.endsWith(".entity_data.ShowBottom"))
                 return PathInfos.TRINARY.withGroup(lbl);
 
@@ -673,9 +673,9 @@ public class ComponentHelper {
             if(path.endsWith("components.lodestone_tracker.target"))
                 return new PathInfo(List.of("pos","dimension"));
             if(path.endsWith("components.lodestone_tracker.target.pos"))
-                return new PathInfo(PathType.INT_ARRAY,new String[]{"[I;0,0,0]"}).withDesc(Text.of("[I; X, Y, Z] block coordinates"));
+                return PathInfos.INT_ARRAY_POS.asRequired();
             if(path.endsWith("components.lodestone_tracker.target.dimension"))
-                return new PathInfo(PathType.STRING,new String[]{"overworld","the_nether","the_end"});
+                return new PathInfo(PathType.STRING,new String[]{"overworld","the_nether","the_end"}).asRequired();
             if(path.endsWith("components.lodestone_tracker.tracked"))
                 return PathInfos.TRINARY;
         }
@@ -1138,6 +1138,7 @@ public class ComponentHelper {
         private static final PathInfo TEXT = new PathInfo(PathType.TEXT,new String[]{"'{\"text\":\"\"}'"}).withDesc(Text.of("Raw JSON text"));
         private static final PathInfo DECIMAL_COLOR = new PathInfo(PathType.DECIMAL_COLOR,new String[]{"0","16777215"}).withDesc(Text.of("0xRRGGBB hex color converted to integer"));
         private static final PathInfo UUID = new PathInfo(PathType.UUID,new String[]{"[I;0,0,0,0]"});
+        private static final PathInfo INT_ARRAY_POS = new PathInfo(PathType.INT_ARRAY,new String[]{"[I;0,0,0]"}).withDesc(Text.of("[I; X, Y, Z] block coordinates"));
 
         private static final PathInfo ITEM_NODE = new PathInfo(List.of("id","count","components"));
         private static final PathInfo ITEM_COUNT = new PathInfo(PathType.INT,new String[]{"1","16","64","99"});
