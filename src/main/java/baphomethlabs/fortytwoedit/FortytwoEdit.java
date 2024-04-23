@@ -45,7 +45,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtInt;
 import net.minecraft.nbt.NbtIntArray;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
@@ -984,15 +983,12 @@ public class FortytwoEdit implements ClientModInitializer {
             scan.close();
         } catch (Exception e) {}
 
-        int cacheVer = -1;
         NbtCompound newItems = null;
 
         if(!overwriteCache) {
             if(BlackMagick.nbtFromString(cacheString) != null && BlackMagick.nbtFromString(cacheString).getType()==NbtElement.COMPOUND_TYPE) {
                 NbtCompound cache = (NbtCompound)BlackMagick.nbtFromString(cacheString);
-                if(cache.contains("version",NbtElement.INT_TYPE))
-                    cacheVer = ((NbtInt)cache.get("version")).intValue();
-                if(cacheVer > -1 && cache.contains(blackMarketKey,NbtElement.LIST_TYPE) && ((NbtList)cache.get(blackMarketKey)).size()>0
+                if(cache.contains(blackMarketKey,NbtElement.LIST_TYPE) && ((NbtList)cache.get(blackMarketKey)).size()>0
                         && ((NbtList)cache.get(blackMarketKey)).get(0).getType()==NbtElement.COMPOUND_TYPE)
                     newItems = cache.copy();
             }
@@ -1018,22 +1014,25 @@ public class FortytwoEdit implements ClientModInitializer {
 
             if(BlackMagick.nbtFromString(webJson) != null && BlackMagick.nbtFromString(webJson).getType()==NbtElement.COMPOUND_TYPE) {
                 NbtCompound cache = (NbtCompound)BlackMagick.nbtFromString(webJson);
-                int webVer = -1;
-                if(cache.contains("version",NbtElement.INT_TYPE))
-                    webVer = ((NbtInt)cache.get("version")).intValue();
-                if(webVer > -1 && cache.contains(blackMarketKey,NbtElement.LIST_TYPE) && ((NbtList)cache.get(blackMarketKey)).size()>0
-                        && ((NbtList)cache.get(blackMarketKey)).get(0).getType()==NbtElement.COMPOUND_TYPE && webVer > cacheVer) {
+                if(cache.contains(blackMarketKey,NbtElement.LIST_TYPE) && ((NbtList)cache.get(blackMarketKey)).size()>0
+                        && ((NbtList)cache.get(blackMarketKey)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
 
-                    LOGGER.info("Updating Black Market items [Version "+webVer+"]");
                     newItems = cache.copy();
                     String items = newItems.asString();
 
-                    try {
-                        FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt", StandardCharsets.UTF_8, false);
-                        writer.write(items);
-                        writer.close();
-                    } catch(IOException e) {
-                        LOGGER.warn("Failed to save web cache");
+                    if(items.equals(cacheString)) {
+                        LOGGER.info("Black Market items are up to date ["+blackMarketKey+"]");
+                    }
+                    else {
+                        LOGGER.info("Updating Black Market items ["+blackMarketKey+"]");
+
+                        try {
+                            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt", StandardCharsets.UTF_8, false);
+                            writer.write(items);
+                            writer.close();
+                        } catch(IOException e) {
+                            LOGGER.warn("Failed to save web cache");
+                        }
                     }
 
                 }

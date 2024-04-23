@@ -20,6 +20,7 @@ public abstract class GenericScreen extends Screen {
     protected static final int WID_HEIGHT = 20;
     protected static final int ROW_HEIGHT = 22;
     protected static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
+    protected static final Duration TOOLTIP_DELAY_SHORT = Duration.ofMillis(100L);
     
     public GenericScreen() {
         super(NarratorManager.EMPTY);

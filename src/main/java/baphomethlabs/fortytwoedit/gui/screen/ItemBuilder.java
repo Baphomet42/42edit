@@ -494,17 +494,18 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private String makeItemTooltipShorten(String itemData) {
-        //remove profile component
-        while(itemData.contains("profile:{")) {
-            int propertiesIndex = itemData.indexOf("profile:{");
-            String firstHalf = itemData.substring(0,propertiesIndex)+"profile:...";
-            String secondHalf = itemData.substring(propertiesIndex+9);
+        //remove profile component properties
+        String props = "properties:[";
+        while(itemData.contains(props)) {
+            int propertiesIndex = itemData.indexOf(props);
+            String firstHalf = itemData.substring(0,propertiesIndex)+"properties:...";
+            String secondHalf = itemData.substring(propertiesIndex+props.length());
             int bracketCount = 1;
             int nextOpenBracket;
             int nextCloseBracket;
             while(bracketCount!=0 && secondHalf.length()>0) {
-                nextOpenBracket = secondHalf.indexOf('{');
-                nextCloseBracket = secondHalf.indexOf('}');
+                nextOpenBracket = secondHalf.indexOf('[');
+                nextCloseBracket = secondHalf.indexOf(']');
                 if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
                     bracketCount++;
                     secondHalf = secondHalf.substring(nextOpenBracket+1);
@@ -518,30 +519,7 @@ public class ItemBuilder extends GenericScreen {
             }
             itemData = firstHalf + secondHalf;
         }
-        while(itemData.contains("profile\":{")) {
-            int propertiesIndex = itemData.indexOf("profile\":{");
-            String firstHalf = itemData.substring(0,propertiesIndex)+"profile\":...";
-            String secondHalf = itemData.substring(propertiesIndex+10);
-            int bracketCount = 1;
-            int nextOpenBracket;
-            int nextCloseBracket;
-            while(bracketCount!=0 && secondHalf.length()>0) {
-                nextOpenBracket = secondHalf.indexOf('{');
-                nextCloseBracket = secondHalf.indexOf('}');
-                if((nextOpenBracket<nextCloseBracket || nextCloseBracket==-1) && nextOpenBracket!=-1) {
-                    bracketCount++;
-                    secondHalf = secondHalf.substring(nextOpenBracket+1);
-                }
-                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
-                    bracketCount--;
-                    secondHalf = secondHalf.substring(nextCloseBracket+1);
-                }
-                else
-                    secondHalf = "";
-            }
-            itemData = firstHalf + secondHalf;
-        }
-        itemData = itemData.replace("profile\":...","profile\":{...}");
+        itemData = itemData.replace("properties:...","properties:[...]");
         return itemData;
     }
 
@@ -1873,6 +1851,9 @@ public class ItemBuilder extends GenericScreen {
                             if(inp.contains(" "))
                                 inp = inp.substring(inp.indexOf(" ")+1); // remove selector or player name
                         }
+                        else if(inp.startsWith("summon item ~ ~ ~ {Item:") && inp.endsWith("}")) {
+                            inp = inp.substring("summon item ~ ~ ~ {Item:".length(),inp.length()-1);
+                        }
 
                         if(inp.startsWith("{") && inp.endsWith("}")) {
                             if(BlackMagick.nbtFromString(inp,NbtElement.COMPOUND_TYPE) != null) {
@@ -1993,6 +1974,9 @@ public class ItemBuilder extends GenericScreen {
                             if(inp.contains(" "))
                                 inp = inp.substring(inp.indexOf(" ")+1); // remove selector or player name
                         }
+                        else if(inp.startsWith("summon item ~ ~ ~ {Item:") && inp.endsWith("}")) {
+                            inp = inp.substring("summon item ~ ~ ~ {Item:".length(),inp.length()-1);
+                        }
 
                         if(inp.startsWith("{") && inp.endsWith("}")) {
                             if(BlackMagick.nbtFromString(inp,NbtElement.COMPOUND_TYPE) != null) {
@@ -2041,6 +2025,9 @@ public class ItemBuilder extends GenericScreen {
                             inp = inp.substring(5);
                             if(inp.contains(" "))
                                 inp = inp.substring(inp.indexOf(" ")+1); // remove selector or player name
+                        }
+                        else if(inp.startsWith("summon item ~ ~ ~ {Item:") && inp.endsWith("}")) {
+                            inp = inp.substring("summon item ~ ~ ~ {Item:".length(),inp.length()-1);
                         }
 
                         if(inp.startsWith("{") && inp.endsWith("}")) {
@@ -3410,6 +3397,7 @@ public class ItemBuilder extends GenericScreen {
                 }).dimensions(currentX,5,20,20).build();
                 currentX += 20;
                 this.btns[i].active = false;
+                this.btns[i].setTooltipDelay(TOOLTIP_DELAY_SHORT);
 
                 this.children.add(this.btns[i]);
             }
@@ -3875,6 +3863,7 @@ public class ItemBuilder extends GenericScreen {
             super();
 
             PathInfo pi = ComponentHelper.getPathInfo(path);
+            boolean isString = ComponentHelper.pathTypeToNbtType(pi.type())==NbtElement.STRING_TYPE;
             Text btnTt = getButtonTooltip(pi,path);
             
             String keyBtnTxt = cleanPath(path);
@@ -3889,7 +3878,9 @@ public class ItemBuilder extends GenericScreen {
             keyBtn.setTooltip(Tooltip.of(btnTt));
 
             if(ComponentHelper.isComplex(pi.type())) {
-                final String startVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path));
+
+                NbtElement tempEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path);
+                final String startVal = (isString && tempEl != null) ? tempEl.asString() : BlackMagick.nbtToString(tempEl);
     
                 this.btns = new ButtonWidget[]{
                 keyBtn,
@@ -4044,7 +4035,6 @@ public class ItemBuilder extends GenericScreen {
             }
             else { // inline component
                 String[] baseSuggestions = pi.suggs();
-                boolean isString = ComponentHelper.pathTypeToNbtType(pi.type())==NbtElement.STRING_TYPE;
 
                 NbtElement tempEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path);
                 final String startVal = (isString && tempEl != null) ? tempEl.asString() : BlackMagick.nbtToString(tempEl);
@@ -4886,6 +4876,7 @@ public class ItemBuilder extends GenericScreen {
                 if(row==4 && i==3)
                     currentX += 40;
                 this.btns[i].active = false;
+                this.btns[i].setTooltipDelay(TOOLTIP_DELAY_SHORT);
 
                 this.children.add(this.btns[i]);
             }
@@ -4930,6 +4921,7 @@ public class ItemBuilder extends GenericScreen {
                     this.btns[i].setTooltip(makeItemTooltip(this.savedStacks[i]));
                 currentX += 20;
                 this.btns[i].active = false;
+                this.btns[i].setTooltipDelay(TOOLTIP_DELAY_SHORT);
 
                 this.children.add(this.btns[i]);
             }
