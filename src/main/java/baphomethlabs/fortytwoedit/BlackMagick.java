@@ -217,8 +217,7 @@ public class BlackMagick {
 
     /**
      * Get compound representation of an item, or an empty compound if invalid.
-     * The minecraft namespace is removed from id.
-     * Count is removed if only 1.
+     * Compound appears exactly as it would with /data get
      * 
      * @param item
      * @return compound with id/count/components (or empty compound)
@@ -229,16 +228,11 @@ public class BlackMagick {
         if(client.world != null && item != null && !item.isEmpty()) {
             nbt = (NbtCompound)item.encodeAllowEmpty(client.world.getRegistryManager());
         }
-        if(nbt.contains("id",NbtElement.STRING_TYPE) && nbt.getString("id").startsWith("minecraft:") && nbt.getString("id").length()>10)
-            nbt.putString("id",nbt.getString("id").substring(10));
-        if(nbt.contains("count",NbtElement.INT_TYPE) && nbt.getInt("count")<2)
-            nbt.remove("count");
         return nbt;
     }
 
     /**
      * Get compound representation of an item, or an empty compound if invalid.
-     * The minecraft namespace is removed from id.
      * All components are kept, even if they are the default values.
      * 
      * @param item
@@ -261,10 +255,8 @@ public class BlackMagick {
             if(!comps.isEmpty())
                 nbt.put("components",comps);
             nbt.putInt("count",item.getCount());
-            nbt.putString("id",item.getItem().toString());
+            nbt.putString("id",BlackMagick.getItemId(item,true));
         }
-        if(nbt.contains("id",NbtElement.STRING_TYPE) && nbt.getString("id").startsWith("minecraft:") && nbt.getString("id").length()>10)
-            nbt.putString("id",nbt.getString("id").substring(10));
         return nbt;
     }
 
@@ -319,6 +311,29 @@ public class BlackMagick {
             }).collect(Collectors.joining(String.valueOf(',')));
         }
         return "";
+    }
+
+
+    /**
+     * 
+     * @param stack
+     * @param namespace if id should begin with minecraft:
+     * @return item id like stone or minecraft:stone
+     */
+    public static String getItemId(ItemStack stack, boolean namespace) {
+        return getItemId(stack.getItem(), namespace);
+    }
+
+    /**
+     * 
+     * @param item from ItemStack.getItem()
+     * @param namespace if id should begin with minecraft:
+     * @return item id like stone or minecraft:stone
+     */
+    public static String getItemId(Item item, boolean namespace) {
+        if(namespace)
+            return Registries.ITEM.getId(item).toString();
+        return Registries.ITEM.getId(item).getPath();
     }
 
     /**

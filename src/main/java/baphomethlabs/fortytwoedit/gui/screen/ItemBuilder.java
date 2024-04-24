@@ -2675,12 +2675,15 @@ public class ItemBuilder extends GenericScreen {
                     Map<String,Set<String>> keyGroups = Maps.newHashMap();
                     String opt = "Optional";
                     String req = "Required";
+                    String unk = "Unknown";
 
                     for(String k : BlackMagick.sortSet(keys)) {
                         PathInfo pi = ComponentHelper.getPathInfo(fullPath+"."+k);
                         String thisGroup;
                         if(pi.keyGroup()!=null)
                             thisGroup = pi.keyGroup();
+                        else if(pi.type()==PathType.UNKNOWN)
+                            thisGroup = unk;
                         else
                             thisGroup = opt;
 
@@ -2698,6 +2701,10 @@ public class ItemBuilder extends GenericScreen {
                     if(keyGroupLbls.contains(req)) {
                         keyGroupLbls.remove(req);
                         keyGroupLbls.add(0,req);
+                    }
+                    if(keyGroupLbls.contains(unk)) {
+                        keyGroupLbls.remove(unk);
+                        keyGroupLbls.add(0,unk);
                     }
 
                     for(int i=0; i<keyGroupLbls.size(); i++) {

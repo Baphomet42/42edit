@@ -551,6 +551,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
         });
 
+        ComponentHelper.clearCacheInfo(); // now that registries have been set, clear any caches that may have had empty lists
+
         LOGGER.info("Client initialized");
     }
 
@@ -635,7 +637,7 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         Registries.ATTRIBUTE.forEach(a -> {
-            list.add(Registries.ATTRIBUTE.getId(a).getPath());
+            list.add(Registries.ATTRIBUTE.getId(a).toString());
         });
 
         Collections.sort(list);
@@ -646,7 +648,7 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         Registries.BLOCK.forEach(b -> {
-            list.add(Registries.BLOCK.getId(b).getPath());
+            list.add(Registries.BLOCK.getId(b).toString());
         });
 
         Collections.sort(list);
@@ -659,7 +661,7 @@ public class FortytwoEdit implements ClientModInitializer {
         HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
         VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/blocks", map::putIfAbsent);
         map.keySet().forEach(t -> {
-            list.add("#"+t.getPath().replaceFirst("tags/blocks/","").replaceFirst(".json",""));
+            list.add("#"+t.toString().replaceFirst("tags/blocks/","").replaceFirst(".json",""));
         });
 
         Collections.sort(list);
@@ -689,7 +691,7 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         Registries.ITEM.forEach(i -> {
-            list.add(Registries.ITEM.getId(i).getPath());
+            list.add(Registries.ITEM.getId(i).toString());
         });
 
         Collections.sort(list);
@@ -700,7 +702,7 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         Registries.STATUS_EFFECT.forEach(e -> {
-            list.add(Registries.STATUS_EFFECT.getId(e).getPath());
+            list.add(Registries.STATUS_EFFECT.getId(e).toString());
         });
 
         Collections.sort(list);
@@ -722,7 +724,7 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         Registries.ENTITY_TYPE.forEach(e -> {
-            list.add(Registries.ENTITY_TYPE.getId(e).getPath());
+            list.add(Registries.ENTITY_TYPE.getId(e).toString());
         });
 
         Collections.sort(list);
@@ -759,7 +761,7 @@ public class FortytwoEdit implements ClientModInitializer {
         HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
         VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "loot_tables", map::putIfAbsent);
         map.keySet().forEach(l -> {
-            list.add(l.getPath().replaceFirst("loot_tables/","").replaceFirst(".json",""));
+            list.add(l.toString().replaceFirst("loot_tables/","").replaceFirst(".json",""));
         });
 
         Collections.sort(list);
@@ -770,7 +772,7 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         Registries.PARTICLE_TYPE.forEach(p -> {
-            list.add(Registries.PARTICLE_TYPE.getId(p).getPath());
+            list.add(Registries.PARTICLE_TYPE.getId(p).toString());
         });
 
         Collections.sort(list);
@@ -781,7 +783,7 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         Registries.SOUND_EVENT.forEach(s -> {
-            list.add(Registries.SOUND_EVENT.getId(s).getPath());
+            list.add(Registries.SOUND_EVENT.getId(s).toString());
         });
 
         Collections.sort(list);
@@ -794,7 +796,7 @@ public class FortytwoEdit implements ClientModInitializer {
         HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
         VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "structures", map::putIfAbsent);
         map.keySet().forEach(s -> {
-            list.add(s.getPath().replaceFirst("structures/","").replaceFirst(".nbt",""));
+            list.add(s.toString().replaceFirst("structures/","").replaceFirst(".nbt",""));
         });
 
         Collections.sort(list);
