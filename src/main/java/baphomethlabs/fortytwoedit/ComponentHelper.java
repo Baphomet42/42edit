@@ -199,13 +199,13 @@ public class ComponentHelper {
             if(path.endsWith("components.attribute_modifiers.modifiers"))
                 return PathInfos.LIST_COMPOUND.asRequired();
             if(path.endsWith("components.attribute_modifiers.modifiers[0]"))
-                return (new PathInfo(List.of("type","slot","uuid","name","amount","operation")));
+                return (new PathInfo(List.of("type","slot","uuid","name","amount","operation"))).withFlag(PathFlag.ATTRIBUTE);
             if(path.endsWith("components.attribute_modifiers.modifiers[0].type"))
                 return (new PathInfo(PathType.STRING, FortytwoEdit.ATTRIBUTES)).asRequired();
             if(path.endsWith("components.attribute_modifiers.modifiers[0].slot"))
                 return (new PathInfo(PathType.STRING, new String[]{"any","hand","mainhand","offhand","armor","head","chest","legs","feet"}));
             if(path.endsWith("components.attribute_modifiers.modifiers[0].uuid"))
-                return (new PathInfo(PathType.UUID, new String[]{"[I;0,0,0,0]",FortytwoEdit.randomUUID().asString()})).withDesc(Text.of("Keep all attributes different so they update correctly")).asRequired();
+                return (new PathInfo(PathType.UUID, new String[]{"[I;0,0,0,0]",FortytwoEdit.randomUUID().asString()})).withDesc(Text.of("Keep all attributes different so they update correctly")).asRequired().asDynamic();
             if(path.endsWith("components.attribute_modifiers.modifiers[0].name"))
                 return PathInfos.STRING.withDesc(Text.of("Name of attribute (has no effect ingame)")).asRequired();
             if(path.endsWith("components.attribute_modifiers.modifiers[0].amount"))
@@ -222,7 +222,7 @@ public class ComponentHelper {
             if(path.endsWith("components.banner_patterns"))
                 return PathInfos.LIST_COMPOUND;
             if(path.endsWith("components.banner_patterns[0]"))
-                return (new PathInfo(List.of("color","pattern")));
+                return (new PathInfo(List.of("color","pattern"))).withFlag(PathFlag.BANNER);
             if(path.endsWith("components.banner_patterns[0].color"))
                 return (new PathInfo(PathType.STRING, DYES)).asRequired();
             if(path.endsWith("components.banner_patterns[0].pattern"))
@@ -472,7 +472,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.active_effects"))
                 return PathInfos.LIST_COMPOUND.withGroup(lbl);
             if(path.endsWith(".entity_data.active_effects[0]") || path.endsWith(".hidden_effect"))
-                return (new PathInfo(List.of("ambient","amplifier","duration","hidden_effect","id","show_icon","show_particles"))).withGroup(lbl);
+                return (new PathInfo(List.of("ambient","amplifier","duration","hidden_effect","id","show_icon","show_particles"))).withGroup(lbl).withFlag(PathFlag.EFFECT);
             if(path.endsWith(".entity_data.active_effects[0].ambient") || path.endsWith(".hidden_effect.ambient"))
                 return PathInfos.TRINARY;
             if(path.endsWith(".entity_data.active_effects[0].amplifier") || path.endsWith(".hidden_effect.amplifier"))
@@ -583,7 +583,7 @@ public class ComponentHelper {
 
         if(path.contains("components.firework_explosion")) {
             if(path.endsWith("components.firework_explosion"))
-                return (new PathInfo(List.of("shape","colors","fade_colors","has_trail","has_twinkle")));
+                return (new PathInfo(List.of("shape","colors","fade_colors","has_trail","has_twinkle"))).withFlag(PathFlag.FIREWORK);
             if(path.endsWith("components.firework_explosion.shape"))
                 return (new PathInfo(PathType.STRING,new String[]{"small_ball","large_ball","star","creeper","burst"})).asRequired();
             if(path.endsWith("components.firework_explosion.colors"))
@@ -602,7 +602,7 @@ public class ComponentHelper {
             if(path.endsWith("components.fireworks.explosions"))
                 return PathInfos.LIST_COMPOUND;
             if(path.endsWith("components.fireworks.explosions[0]"))
-                return (new PathInfo(List.of("shape","colors","fade_colors","has_trail","has_twinkle")));
+                return (new PathInfo(List.of("shape","colors","fade_colors","has_trail","has_twinkle"))).withFlag(PathFlag.FIREWORK);
             if(path.endsWith("components.fireworks.explosions[0].shape"))
                 return (new PathInfo(PathType.STRING,new String[]{"small_ball","large_ball","star","creeper","burst"})).asRequired();
             if(path.endsWith("components.fireworks.explosions[0].colors"))
@@ -633,7 +633,7 @@ public class ComponentHelper {
             if(path.endsWith("components.food.effects"))
                 return PathInfos.LIST_COMPOUND;
             if(path.endsWith("components.food.effects[0]"))
-                return (new PathInfo(List.of("effect","probability")));
+                return (new PathInfo(List.of("effect","probability"))).withFlag(PathFlag.PROBABILITY_EFFECT);
             if(path.endsWith("components.food.effects[0].effect"))
                 return PathInfos.EFFECT_NODE;
             if(path.endsWith("components.food.effects[0].effect.id"))
@@ -794,7 +794,7 @@ public class ComponentHelper {
             if(path.endsWith("components.suspicious_stew_effects"))
                 return PathInfos.LIST_COMPOUND;
             if(path.endsWith("components.suspicious_stew_effects[0]"))
-                return (new PathInfo(List.of("id","duration")));
+                return (new PathInfo(List.of("id","duration"))).withFlag(PathFlag.EFFECT);
             if(path.endsWith("components.suspicious_stew_effects[0].id"))
                 return (new PathInfo(PathType.STRING,FortytwoEdit.EFFECTS)).asRequired();
             if(path.endsWith("components.suspicious_stew_effects[0].duration"))
@@ -894,7 +894,7 @@ public class ComponentHelper {
      * <p> List<String> keys - keys that can be included in compound (only for PathType.COMPOUND) </p>
      * <p> byte listType - NbtElement.getType() type of list (only for PathType.LIST) </p>
      */
-    public record PathInfo(PathType type, String[] suggs, Text description, List<String> keys, byte listType, String keyGroup, boolean dynamic) {
+    public record PathInfo(PathType type, String[] suggs, Text description, List<String> keys, byte listType, String keyGroup, boolean dynamic, PathFlag flag) {
 
         private static final byte DEFAULT_LIST_TYPE = (byte)(-1);
         private static final String DEFAULT_GROUP = null;
@@ -917,7 +917,7 @@ public class ComponentHelper {
          * @param suggs
          */
         public PathInfo(PathType type, String[] suggs) {
-            this(type,suggs,null,null,DEFAULT_LIST_TYPE,DEFAULT_GROUP,false);
+            this(type,suggs,null,null,DEFAULT_LIST_TYPE,DEFAULT_GROUP,false,PathFlag.NONE);
         }
 
         /**
@@ -926,7 +926,7 @@ public class ComponentHelper {
          * @param keys all keys that may be in the compound
          */
         public PathInfo(List<String> keys) {
-            this(PathType.COMPOUND,null,null,keys,DEFAULT_LIST_TYPE,DEFAULT_GROUP,false);
+            this(PathType.COMPOUND,null,null,keys,DEFAULT_LIST_TYPE,DEFAULT_GROUP,false,PathFlag.NONE);
         }
 
         /**
@@ -935,8 +935,10 @@ public class ComponentHelper {
          * @param listType the NbtElement.getType() that should be in the list
          */
         public PathInfo(byte listType) {
-            this(PathType.LIST,null,null,null,listType,DEFAULT_GROUP,false);
+            this(PathType.LIST,null,null,null,listType,DEFAULT_GROUP,false,PathFlag.NONE);
         }
+
+        // modifiers
 
         /**
          * Add a description to the PathInfo.
@@ -945,7 +947,7 @@ public class ComponentHelper {
          * @return a copy with the description added
          */
         public PathInfo withDesc(Text desc) {
-            return new PathInfo(this.type, this.suggs, desc, this.keys, this.listType, this.keyGroup, this.dynamic);
+            return new PathInfo(this.type, this.suggs, desc, this.keys, this.listType, this.keyGroup, this.dynamic, this.flag);
         }
 
         /**
@@ -957,7 +959,7 @@ public class ComponentHelper {
          * @return a copy with the group number added.
          */
         public PathInfo withGroup(String group) {
-            return new PathInfo(this.type, this.suggs, this.description, this.keys, this.listType, group, this.dynamic);
+            return new PathInfo(this.type, this.suggs, this.description, this.keys, this.listType, group, this.dynamic, this.flag);
         }
 
         /**
@@ -977,7 +979,16 @@ public class ComponentHelper {
          * @return
          */
         public PathInfo asDynamic() {
-            return new PathInfo(this.type, this.suggs, this.description, this.keys, this.listType, this.keyGroup, true);
+            return new PathInfo(this.type, this.suggs, this.description, this.keys, this.listType, this.keyGroup, true, this.flag);
+        }
+
+        /**
+         * Add a predefined flag
+         * 
+         * @return
+         */
+        public PathInfo withFlag(PathFlag flag) {
+            return new PathInfo(this.type, this.suggs, this.description, this.keys, this.listType, this.keyGroup, this.dynamic, flag);
         }
 
     }
@@ -1017,6 +1028,22 @@ public class ComponentHelper {
         UUID,           // an int array with 4 integers
         INLINE_LIST,    // a list that is edited in a text field (such as Motion/Pos/Rotation)
         INLINE_COMPOUND // a compound edited in a text field
+
+    }
+
+    /**
+     * Miscellaneous flags to denote a path as something specific
+     */
+    public enum PathFlag {
+
+        NONE, // default, says nothing
+
+        // used for ItemBuilder.getButtonText()
+        ATTRIBUTE,
+        BANNER,
+        EFFECT,
+        PROBABILITY_EFFECT,
+        FIREWORK
 
     }
 
@@ -1152,7 +1179,7 @@ public class ComponentHelper {
         private static final PathInfo ITEM_COUNT = (new PathInfo(PathType.INT,new String[]{"1","16","64","99"}));
 
         private static final PathInfo POTION_CONTENTS = (new PathInfo(List.of("potion","custom_color","custom_effects")));
-        private static final PathInfo EFFECT_NODE = (new PathInfo(List.of("id","amplifier","duration","ambient","show_particles","show_icon")));
+        private static final PathInfo EFFECT_NODE = (new PathInfo(List.of("id","amplifier","duration","ambient","show_particles","show_icon"))).withFlag(PathFlag.EFFECT);
         private static final PathInfo EFFECT_DURATION = (new PathInfo(PathType.INT,new String[]{"-1","1"})).withDesc(Text.of("Duration in ticks or -1 for infinity"));
         private static final PathInfo EFFECT_AMPLIFIER = (new PathInfo(PathType.BYTE,new String[]{"0","255"})).withDesc(Text.of("Amplifier 0-255 gives effect level 1-256"));
 
