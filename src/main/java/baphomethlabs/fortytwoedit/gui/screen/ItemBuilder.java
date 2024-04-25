@@ -4614,12 +4614,8 @@ public class ItemBuilder extends GenericScreen {
                         unsel = true;
                     }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,listElWidth,20).build();
                     this.btnX[0] = ROW_LEFT;
-                    if(!currentVal.equals("")) {
-                        this.btns[0].setTooltip(Tooltip.of(Text.of("Edit element:\n"+currentVal)));
-                        this.btns[0].setTooltipDelay(TOOLTIP_DELAY);
-                    }
-                    else
-                        this.btns[0].active = false;
+                    this.btns[0].setTooltip(Tooltip.of(Text.of("Edit element:\n"+currentVal)));
+                    this.btns[0].setTooltipDelay(TOOLTIP_DELAY);
                 }
 
                 this.btnX[btnOffset+0] = ROW_LEFT+listElWidth;
@@ -4712,6 +4708,8 @@ public class ItemBuilder extends GenericScreen {
             }
             else { // add new element to list
                 Text btnTxt = Text.of("Add Element");
+                PathInfo pi = ComponentHelper.getPathInfo(pagePath);
+                PathInfo pie = ComponentHelper.getPathInfo(pagePath+"[0]");
 
                 this.btns = new ButtonWidget[]{
                 ButtonWidget.builder(btnTxt, btn -> {
@@ -4725,13 +4723,16 @@ public class ItemBuilder extends GenericScreen {
                     
                     if(list.size()>0) {
                         NbtElement newEl = BlackMagick.getDefaultNbt(list.get(0).getType());
+                        if(newEl.getType() == NbtElement.STRING_TYPE && pie.type()==PathType.TEXT)
+                            newEl = NbtString.of("\"\"");
                         if(newEl != null)
                             list.add(newEl);
                     }
                     else {
-                        PathInfo pi = ComponentHelper.getPathInfo(pagePath);
                         if(pi.type()==PathType.LIST && pi.listType()>=0) {
                             NbtElement newEl = BlackMagick.getDefaultNbt(pi.listType());
+                            if(newEl.getType() == NbtElement.STRING_TYPE && pie.type()==PathType.TEXT)
+                                newEl = NbtString.of("\"\"");
                             if(newEl != null)
                                 list.add(newEl);
                         }
