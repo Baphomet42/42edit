@@ -29,6 +29,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
 import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
+import baphomethlabs.fortytwoedit.gui.screen.SecretScreen;
 import baphomethlabs.fortytwoedit.mixin.GameRendererInvoker;
 import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
 import baphomethlabs.fortytwoedit.mixin.TranslationStorageAccessor;
@@ -45,6 +46,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtHelper;
 import net.minecraft.nbt.NbtIntArray;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
@@ -106,6 +108,40 @@ public class FortytwoEdit implements ClientModInitializer {
     private static boolean didFish = false;
     private static final int fishWait = 1000;
     public static boolean suppressKeybind = false;
+
+    // item history
+    private static final NbtList itemHistList = new NbtList();
+    public static void addItemHist(ItemStack item) {
+        if(item != null && !item.isEmpty())
+            addItemHist(BlackMagick.itemToNbtStorage(item));
+    }
+    public static void addItemHist(NbtCompound itemNbt) {
+        if(itemNbt != null && !itemNbt.isEmpty()) {
+            NbtCompound item = itemNbt.copy();
+            item.remove("count");
+
+            int found = -1;
+
+            for(int i=0; i<itemHistList.size(); i++) {
+                if(itemHistList.get(i).asString().equals(item.asString())) {
+                    found = i;
+                    break;
+                }
+            }
+
+            if(found<0) {
+                itemHistList.add(0,item.copy());
+                if(itemHistList.size()>54)
+                    itemHistList.remove(itemHistList.size()-1);
+            }
+            else {
+                itemHistList.add(0,itemHistList.remove(found));
+            }
+        }
+    }
+    public static NbtList getItemHist() {
+        return itemHistList.copy();
+    }
 
     // xray mode
     public static boolean seeInvis = false;
@@ -214,7 +250,8 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean showClientCape = false;
     public static int clientCape = 0;
     public static String[] clientCapeList = {"none","migrator","vanilla","cherry","minecon2011","minecon2012","minecon2013","minecon2015","minecon2016","minecon2019","mojang-classic","mojang","mojang-studios","spartan","christmas"};
-    public static String clientUsername = "";
+    public static String USERNAME = "";
+    public static NbtIntArray UUID = new NbtIntArray(new int[]{0,0,0,0});
 
     //skin testing
     public static boolean showClientSkin = false;
@@ -420,7 +457,9 @@ public class FortytwoEdit implements ClientModInitializer {
         readOptions();
 
         // custom capes
-        clientUsername = gameClient.getSession().getUsername();
+        USERNAME = gameClient.getSession().getUsername();
+        if(gameClient.getSession().getUuidOrNull() != null)
+            UUID = NbtHelper.fromUuid(gameClient.getSession().getUuidOrNull());
         clearCapes();
 
         getSavedItems();
@@ -432,6 +471,8 @@ public class FortytwoEdit implements ClientModInitializer {
             if(magickGuiKey.wasPressed()) {
                 if(quickScreen == 1)
                     client.setScreen(new ItemBuilder());
+                else if(quickScreen == 2)
+                    client.setScreen(new SecretScreen());
                 else
                     client.setScreen(new MagickGui());
             }
@@ -536,11 +577,6 @@ public class FortytwoEdit implements ClientModInitializer {
                         changeRandoSlot();
                 }
                 lastSpam = System.currentTimeMillis();
-            }
-
-            //clear cached optifine capes when leaving world/server
-            if(capeNames.size() > 0 && MinecraftClient.getInstance().player == null) {
-                clearCapes();
             }
 
             // rando

@@ -56,8 +56,13 @@ public class MagickGui extends GenericScreen {
     }
 
     protected void btnSuperSecretSettings() {
-        FortytwoEdit.cycleSuperSecretSetting();
-        this.resize(this.client,this.width,this.height);
+        if(hasShiftDown()) {
+            client.setScreen(new SecretScreen());
+        }
+        else {
+            FortytwoEdit.cycleSuperSecretSetting();
+            this.resize(this.client,this.width,this.height);
+        }
     }
 
     protected void btnCapes() {
@@ -117,11 +122,11 @@ public class MagickGui extends GenericScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
+        if(FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
             this.client.setScreen(null);
             return true;
         }
-        if (super.keyPressed(keyCode, scanCode, modifiers)) {
+        if(super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
         return false;

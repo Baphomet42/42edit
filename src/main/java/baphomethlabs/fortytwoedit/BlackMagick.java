@@ -91,6 +91,7 @@ public class BlackMagick {
                 }
             }
 
+            FortytwoEdit.addItemHist(item);
             client.interactionManager.clickCreativeStack(item.copy(), slot);
             client.player.playerScreenHandler.sendContentUpdates();
         }

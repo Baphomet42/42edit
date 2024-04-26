@@ -205,7 +205,7 @@ public class ComponentHelper {
             if(path.endsWith("components.attribute_modifiers.modifiers[0].slot"))
                 return (new PathInfo(PathType.STRING, new String[]{"any","hand","mainhand","offhand","armor","head","chest","legs","feet"}));
             if(path.endsWith("components.attribute_modifiers.modifiers[0].uuid"))
-                return (new PathInfo(PathType.UUID, new String[]{"[I;0,0,0,0]",FortytwoEdit.randomUUID().asString()})).withDesc(Text.of("Keep all attributes different so they update correctly")).asRequired().asDynamic();
+                return (new PathInfo(PathType.UUID, new String[]{"[I;0,0,0,0]",FortytwoEdit.randomUUID().asString()})).withDesc(Text.of("All attributes on an item can have the same UUID. Different items should have different UUIDs so the attributes update correctly when switching items.")).asRequired().asDynamic();
             if(path.endsWith("components.attribute_modifiers.modifiers[0].name"))
                 return PathInfos.STRING.withDesc(Text.of("Name of attribute (has no effect ingame)")).asRequired();
             if(path.endsWith("components.attribute_modifiers.modifiers[0].amount"))
@@ -222,11 +222,12 @@ public class ComponentHelper {
             if(path.endsWith("components.banner_patterns"))
                 return PathInfos.LIST_COMPOUND;
             if(path.endsWith("components.banner_patterns[0]"))
-                return (new PathInfo(List.of("color","pattern"))).withFlag(PathFlag.BANNER);
-            if(path.endsWith("components.banner_patterns[0].color"))
-                return (new PathInfo(PathType.STRING, DYES)).asRequired();
-            if(path.endsWith("components.banner_patterns[0].pattern"))
-                return (new PathInfo(PathType.STRING,BANNER_PATTERNS)).asRequired();
+                return (new PathInfo(PathType.BANNER));
+            //     return (new PathInfo(List.of("color","pattern"))).withFlag(PathFlag.BANNER);
+            // if(path.endsWith("components.banner_patterns[0].color"))
+            //     return (new PathInfo(PathType.STRING, DYES)).asRequired();
+            // if(path.endsWith("components.banner_patterns[0].pattern"))
+            //     return (new PathInfo(PathType.STRING,BANNER_PATTERNS)).asRequired();
         }
 
         if(path.endsWith("components.base_color"))
@@ -506,7 +507,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.HandItems[0]"))
                 return PathInfos.ITEM_NODE;
             if(path.endsWith(".entity_data.leash"))
-                return (new PathInfo(PathType.INLINE_COMPOUND,new String[]{"{UUID:[I;0,0,0,0]}","{X:0,Y:0,Z:0}"})).withDesc(Text.of("Compound with int array UUID or int X, Y, and Z values")).withGroup(lbl);
+                return (new PathInfo(PathType.DEFAULT,new String[]{"{UUID:[I;0,0,0,0]}","{UUID:"+FortytwoEdit.UUID.asString()+"}","[I;0,0,0]"})).withDesc(Text.of("Can be either:\na) NbtCompound like {UUID:[I;0,0,0,0]} pointing to an entity UUID\nb) NbtIntArray containing [I; X, Y, Z]")).withGroup(lbl);
             if(path.endsWith(".entity_data.LeftHanded"))
                 return PathInfos.TRINARY.withGroup(lbl);
             if(path.endsWith(".entity_data.NoAI"))
@@ -528,7 +529,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.NoBasePlate"))
                 return PathInfos.TRINARY.withGroup(lbl);
             if(path.endsWith(".entity_data.Pose"))
-                return PathInfos.DEFAULT.withGroup(lbl);
+                return (new PathInfo(PathType.POSE)).withGroup(lbl);
             if(path.endsWith(".entity_data.ShowArms"))
                 return PathInfos.TRINARY.withGroup(lbl);
             if(path.endsWith(".entity_data.Small"))
@@ -999,7 +1000,8 @@ public class ComponentHelper {
      */
     public enum PathType {
 
-        // simple types
+        // edit inline textbox
+
         BYTE,
         SHORT,
         INT,
@@ -1007,27 +1009,31 @@ public class ComponentHelper {
         DOUBLE,
         FLOAT,
         STRING,
-
-        // array types
         BYTE_ARRAY,
         INT_ARRAY,
         LONG_ARRAY,
 
-        // complex types
+        UNKNOWN,            // return when no PathInfo is found (treated as any stringified nbt)
+        DEFAULT,            // can be used for any stringified nbt
+        UUID,
+        INLINE_LIST,        // a list that is edited in a text field (such as Motion/Pos/Rotation)
+        INLINE_COMPOUND,    // a compound edited in a text field
+
+        // edit with custom row
+
+        UNIT,               // represents nbt that is either absent or {}
+        TRINARY,            // represents nbt that is either absent, 0b, or 1b
+        TOOLTIP_UNIT,       // represents nbt that is either absent, {}, or {show_in_tooltip:0b}
+
+        // edit complex
+
         COMPOUND,
         LIST,
 
-        // custom types
-        UNKNOWN,        // return when no PathInfo is found (treated as any stringified nbt)
-        DEFAULT,        // can be used for any stringified nbt
-        TEXT,           // use for Raw JSON
-        DECIMAL_COLOR,  // use for integer color fields
-        UNIT,           // represents nbt that is either absent or {}
-        TRINARY,        // represents nbt that is either absent, 0b, or 1b
-        TOOLTIP_UNIT,   // represents nbt that is either absent, {}, or {show_in_tooltip:0b}
-        UUID,           // an int array with 4 integers
-        INLINE_LIST,    // a list that is edited in a text field (such as Motion/Pos/Rotation)
-        INLINE_COMPOUND // a compound edited in a text field
+        TEXT,               // use for Raw JSON
+        DECIMAL_COLOR,      // use for integer color fields
+        BANNER,
+        POSE,
 
     }
 
@@ -1040,7 +1046,6 @@ public class ComponentHelper {
 
         // used for ItemBuilder.getButtonText()
         ATTRIBUTE,
-        BANNER,
         EFFECT,
         PROBABILITY_EFFECT,
         FIREWORK
@@ -1082,6 +1087,8 @@ public class ComponentHelper {
                 case UUID: return false;
                 case INLINE_LIST: return false;
                 case INLINE_COMPOUND: return false;
+                case BANNER: return true;
+                case POSE: return true;
             }
         }
         return false;
@@ -1121,6 +1128,8 @@ public class ComponentHelper {
                 case UUID: return NbtElement.INT_ARRAY_TYPE;
                 case INLINE_LIST: return NbtElement.LIST_TYPE;
                 case INLINE_COMPOUND: return NbtElement.COMPOUND_TYPE;
+                case BANNER: return NbtElement.COMPOUND_TYPE;
+                case POSE: return NbtElement.COMPOUND_TYPE;
             }
         }
         return -1;

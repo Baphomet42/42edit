@@ -40,7 +40,7 @@ public abstract class AbstractClientPlayerEntityMixin {
                     FortytwoEdit.tryLoadCape(name);
                 }
             }
-            if(FortytwoEdit.showClientCape && name.equals(FortytwoEdit.clientUsername)) {
+            if(FortytwoEdit.showClientCape && name.equals(FortytwoEdit.USERNAME)) {
                 cape = new Identifier("42edit:textures/capes/"+FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]+".png");
                 if(FortytwoEdit.clientCapeList[FortytwoEdit.clientCape].equals("none"))
                     cape = null;
@@ -48,14 +48,14 @@ public abstract class AbstractClientPlayerEntityMixin {
             }
 
             //skin
-            if(FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && name.equals(FortytwoEdit.clientUsername)) {
+            if(FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && name.equals(FortytwoEdit.USERNAME)) {
                 texture = FortytwoEdit.customSkinID;
                 changed = true;
             }
 
 
             //model
-            if(FortytwoEdit.showClientSkin && name.equals(FortytwoEdit.clientUsername)) {
+            if(FortytwoEdit.showClientSkin && name.equals(FortytwoEdit.USERNAME)) {
                 if(FortytwoEdit.clientSkinSlim)
                     model = Model.SLIM;
                 else
