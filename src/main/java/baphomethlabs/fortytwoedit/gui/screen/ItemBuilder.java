@@ -412,8 +412,12 @@ public class ItemBuilder extends GenericScreen {
 
             if(cacheI.containsKey("giveBox")) {
                 int[] cacheGiveBox = cacheI.get("giveBox");
+                boolean wasUnsaved = testUnsaved((EditBoxWidget)noScrollWidgets.get(cacheGiveBox[0]).get(cacheGiveBox[1]).w);
                 ((EditBoxWidget)noScrollWidgets.get(cacheGiveBox[0]).get(cacheGiveBox[1]).w).setText(
                     ((EditBoxWidget)noScrollWidgets.get(cacheGiveBox[0]).get(cacheGiveBox[1]).w).getText());
+                if(!wasUnsaved) {
+                    markSaved((EditBoxWidget)noScrollWidgets.get(cacheGiveBox[0]).get(cacheGiveBox[1]).w);
+                }
             }
 
             if(!widgets.isEmpty())
@@ -452,6 +456,10 @@ public class ItemBuilder extends GenericScreen {
 
     protected void markSaved(ClickableWidget widget) {
         this.unsavedTxtWidgets.remove(widget);
+    }
+
+    protected boolean testUnsaved(ClickableWidget widget) {
+        return this.unsavedTxtWidgets.contains(widget);
     }
 
     protected boolean activeTxt() {
@@ -5102,14 +5110,13 @@ public class ItemBuilder extends GenericScreen {
                 tabScroll[tab] = tabWidget.getScrollAmount();
             }
         }
-        if(keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT) {
-            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !tabs[tab].hideTabs && hotbarLeftBtn.active) {
-                btnChangeSlot(keyCode == GLFW.GLFW_KEY_LEFT);
+        if(keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN) {
+            if(!activeTxt()) {
+                if(this.unsavedTxtWidgets.isEmpty() && !tabs[tab].hideTabs && hotbarLeftBtn.active) {
+                    btnChangeSlot(keyCode == GLFW.GLFW_KEY_LEFT);
+                }
+                return true;
             }
-            return true;
-        }
-        if(keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN) {
-            return true;
         }
         if(super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
