@@ -4,6 +4,7 @@ import java.time.Duration;
 
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.NarratorManager;
 import net.minecraft.util.Identifier;
@@ -24,6 +25,13 @@ public abstract class GenericScreen extends Screen {
     
     public GenericScreen() {
         super(NarratorManager.EMPTY);
+    }
+
+    public void unfocus() {
+        GuiNavigationPath guiNavigationPath = this.getFocusedPath();
+        if (guiNavigationPath != null) {
+            guiNavigationPath.setFocused(false);
+        }
     }
 
     @Override

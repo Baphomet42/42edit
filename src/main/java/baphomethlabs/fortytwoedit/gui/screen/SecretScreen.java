@@ -18,10 +18,12 @@ public class SecretScreen extends GenericScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Output Hist"), button -> this.btnOutputHist()).dimensions(x+20,y+22*3+1,80,20).build())
             .setTooltip(Tooltip.of(Text.of("Send item history info to log")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("View Log..."), button -> 
+            client.setScreen(new LogScreen())).dimensions(x+20,y+22*4+1,80,20).build());
     }
 
     protected void btnBack() {
-        client.setScreen(new MagickGui());
+        client.setScreen(new SecretScreen());
     }
 
     protected void btnOutputHist() {

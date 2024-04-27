@@ -116,7 +116,7 @@ public class FortytwoEdit implements ClientModInitializer {
             addItemHist(BlackMagick.itemToNbtStorage(item));
     }
     public static void addItemHist(NbtCompound itemNbt) {
-        if(itemNbt != null && !itemNbt.isEmpty()) {
+        if(itemNbt != null && !itemNbt.isEmpty() && itemNbt.contains("components",NbtElement.COMPOUND_TYPE)) {
             NbtCompound item = itemNbt.copy();
             item.remove("count");
 

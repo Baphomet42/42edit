@@ -24,7 +24,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
-import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -401,7 +400,7 @@ public class ItemBuilder extends GenericScreen {
             if(selItem!=null && !selItem.isEmpty())
                 cacheStates = BlackMagick.getBlockStates(selItem.getItem());
 
-            if(selItem.getItem().toString().equals("armor_stand")) {
+            if(selItem.isOf(Items.ARMOR_STAND)) {
                 updateArmorStand(selItem.copy());
                 editArmorStand = true;
             }
@@ -5152,10 +5151,7 @@ public class ItemBuilder extends GenericScreen {
             createTab(tab);
 
         if(unsel) {
-            GuiNavigationPath guiNavigationPath = this.getFocusedPath();
-            if (guiNavigationPath != null) {
-                guiNavigationPath.setFocused(false);
-            }
+            unfocus();
             unsel = false;
         }
     }
