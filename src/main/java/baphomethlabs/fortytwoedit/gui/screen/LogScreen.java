@@ -40,7 +40,7 @@ public class LogScreen extends GenericScreen {
     }
 
     protected void btnBack() {
-        client.setScreen(new MagickGui());
+        client.setScreen(new SecretScreen());
     }
 
     protected void togglePause() {

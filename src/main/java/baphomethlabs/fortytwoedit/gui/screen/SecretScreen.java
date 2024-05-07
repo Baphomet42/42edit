@@ -23,7 +23,7 @@ public class SecretScreen extends GenericScreen {
     }
 
     protected void btnBack() {
-        client.setScreen(new SecretScreen());
+        client.setScreen(new MagickGui());
     }
 
     protected void btnOutputHist() {
