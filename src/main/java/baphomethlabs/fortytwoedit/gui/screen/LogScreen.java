@@ -29,7 +29,7 @@ public class LogScreen extends GenericScreen {
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = 2;
+        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.LOG_SCREEN;
 
         logFile = new File(client.runDirectory.getAbsolutePath()+"\\logs\\latest.log");
 

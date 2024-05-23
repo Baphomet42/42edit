@@ -37,6 +37,8 @@ public class Hacks extends GenericScreen {
     @Override
     protected void init() {
         super.init();
+        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.HACKS;
+
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Mix [On]"), Text.literal("Mix [Off]")).initially(FortytwoEdit.randoMode).omitKeyText().build(x+20,y+22*2+1,80,20, Text.of(""), (button, trackOutput) -> {
             setTxtRando();

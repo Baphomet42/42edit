@@ -27,7 +27,11 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
+import baphomethlabs.fortytwoedit.gui.screen.AutoClick;
+import baphomethlabs.fortytwoedit.gui.screen.Capes;
+import baphomethlabs.fortytwoedit.gui.screen.Hacks;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
+import baphomethlabs.fortytwoedit.gui.screen.LogScreen;
 import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
 import baphomethlabs.fortytwoedit.gui.screen.SecretScreen;
 import baphomethlabs.fortytwoedit.mixin.GameRendererInvoker;
@@ -81,7 +85,17 @@ public class FortytwoEdit implements ClientModInitializer {
 
     //gui
     public static KeyBinding magickGuiKey;
-    public static int quickScreen = 0;
+    public static QuickScreen quickScreen = QuickScreen.NONE;
+    public enum QuickScreen {
+        NONE,
+
+        AUTO_CLICK,
+        CAPES,
+        HACKS,
+        ITEM_BUILDER,
+        LOG_SCREEN,
+        SECRET_SCREEN
+    }
 
     //options
     private static NbtCompound optionsExtra;
@@ -469,12 +483,15 @@ public class FortytwoEdit implements ClientModInitializer {
 
             // magickgui
             if(magickGuiKey.wasPressed()) {
-                if(quickScreen == 1)
-                    client.setScreen(new ItemBuilder());
-                else if(quickScreen == 2)
-                    client.setScreen(new SecretScreen());
-                else
-                    client.setScreen(new MagickGui());
+                switch(quickScreen) {
+                    case NONE: client.setScreen(new MagickGui()); break;
+                    case ITEM_BUILDER: client.setScreen(new ItemBuilder()); break;
+                    case SECRET_SCREEN: client.setScreen(new SecretScreen()); break;
+                    case LOG_SCREEN: client.setScreen(new LogScreen()); break;
+                    case AUTO_CLICK: client.setScreen(new AutoClick()); break;
+                    case CAPES: client.setScreen(new Capes()); break;
+                    case HACKS: client.setScreen(new Hacks()); break;
+                }
             }
 
             // zoom

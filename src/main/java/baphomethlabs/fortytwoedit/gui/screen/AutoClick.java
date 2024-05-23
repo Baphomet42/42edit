@@ -22,6 +22,8 @@ public class AutoClick extends GenericScreen {
     @Override
     protected void init() {
         super.init();
+        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.AUTO_CLICK;
+
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Use [On]"), Text.literal("Use [Off]")).initially(FortytwoEdit.autoClick).omitKeyText().build(x+20,y+44+1,100,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick((boolean)trackOutput,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);

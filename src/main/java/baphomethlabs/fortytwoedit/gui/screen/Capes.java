@@ -34,6 +34,8 @@ public class Capes extends GenericScreen {
     @Override
     protected void init() {
         super.init();
+        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.CAPES;
+
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("OptiFine [On]"), Text.literal("OptiFine [Off]")).initially(FortytwoEdit.opticapesOn).omitKeyText().build(x+20,y+22*3+1,80,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.opticapesOn = (boolean)trackOutput;

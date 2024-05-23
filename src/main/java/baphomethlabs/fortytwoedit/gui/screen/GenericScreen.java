@@ -39,7 +39,7 @@ public abstract class GenericScreen extends Screen {
         super.init();
         x = (this.width - this.backgroundWidth) / 2;
         y = (this.height - this.backgroundHeight) / 2;
-        FortytwoEdit.quickScreen = 0;
+        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.NONE;
     }
 
     @Override

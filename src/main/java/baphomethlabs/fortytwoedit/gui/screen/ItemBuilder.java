@@ -105,6 +105,8 @@ public class ItemBuilder extends GenericScreen {
     private String inpErrorTrim = null;
     private static boolean showUnusedComponents = false;
     private static boolean viewBlackMarket = false;
+    private static final Tooltip TOOLTIP_BLACK_MARKET = Tooltip.of(BlackMagick.jsonFromString("[{\"text\":\"Black Market Items\"},{\"text\":\"\n\nGet custom items produced by \",\"color\":\"gray\"},{\"text\":\"BaphomethLabs\",\"color\":\"gold\",\"italic\":true},{\"text\":\"\n(Mostly Harmless)\",\"color\":\"gray\"}]").text());
+    private static final Tooltip TOOLTIP_LOCAL_ITEMS = Tooltip.of(BlackMagick.jsonFromString("[{\"text\":\"Local Items\"},{\"text\":\"\n\nSave items for later without using up your saved hotbars\",\"color\":\"gray\"}]").text());
     private static NbtList webItems = null;
     private static final ItemStack[] savedModeItems = new ItemStack[]{BlackMagick.itemFromNbtStatic((NbtCompound)BlackMagick.nbtFromString(
         "{id:player_head,components:{profile:{properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQ"
@@ -160,7 +162,7 @@ public class ItemBuilder extends GenericScreen {
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = 1;
+        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.ITEM_BUILDER;
 
         if(firstInit) {
             if(tabs[tab].hideTabs)
@@ -567,12 +569,12 @@ public class ItemBuilder extends GenericScreen {
 
     private void setSavedModeTooltip() {
         if(viewBlackMarket) {
-            noScrollWidgets.get(CACHE_TAB_SAVED).get(0).w.setTooltip(Tooltip.of(Text.of("Black Market Items")));
+            noScrollWidgets.get(CACHE_TAB_SAVED).get(0).w.setTooltip(TOOLTIP_BLACK_MARKET);
             noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setTooltip(Tooltip.of(Text.of("Refresh from Web")));
             noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setMessage(Text.of("\u27F3"));
         }
         else {
-            noScrollWidgets.get(CACHE_TAB_SAVED).get(0).w.setTooltip(Tooltip.of(Text.of("Local Items")));
+            noScrollWidgets.get(CACHE_TAB_SAVED).get(0).w.setTooltip(TOOLTIP_LOCAL_ITEMS);
             if(savedModeSet) {
                 noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setTooltip(Tooltip.of(Text.of("C - Save to slot")));
                 noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setMessage(Text.of("C"));

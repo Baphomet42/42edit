@@ -23,6 +23,8 @@ public class MagickGui extends GenericScreen {
     @Override
     protected void init() {
         super.init();
+        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.NONE;
+
         this.addDrawableChild(ButtonWidget.builder(Text.of("42edit..."), button -> this.btnItem()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Hacks..."), button -> this.btnHacks()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
         btnWgtHat = this.addDrawableChild(ButtonWidget.builder(Text.of("Hat"), button -> this.btnHat()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET,60,WID_HEIGHT).build());

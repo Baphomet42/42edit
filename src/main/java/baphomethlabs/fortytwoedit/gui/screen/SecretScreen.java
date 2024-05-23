@@ -13,7 +13,7 @@ public class SecretScreen extends GenericScreen {
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = 2;
+        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.SECRET_SCREEN;
 
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Output Hist"), button -> this.btnOutputHist()).dimensions(x+20,y+22*3+1,80,20).build())
