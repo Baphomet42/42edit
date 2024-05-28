@@ -8,7 +8,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
 
 public class ContainerTooltipComponent implements TooltipComponent {
-    private static final Identifier BACKGROUND_TEXTURE = new Identifier("container/bundle/background");
+    private static final Identifier BACKGROUND_TEXTURE = Identifier.of("container/bundle/background");
     private final DefaultedList<ItemStack> inventory;
     private final int rowCount;
     private final int columnCount;
@@ -65,7 +65,7 @@ public class ContainerTooltipComponent implements TooltipComponent {
     }
 
     static enum Sprite {
-        SLOT(new Identifier("container/slot"), 18, 18);
+        SLOT(Identifier.of("container/slot"), 18, 18);
 
         public final Identifier texture;
         public final int width;

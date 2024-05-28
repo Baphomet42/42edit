@@ -33,7 +33,7 @@ public abstract class AbstractClientPlayerEntityMixin {
             //cape
             if(FortytwoEdit.opticapesWorking && FortytwoEdit.opticapesOn) {
                 if(FortytwoEdit.capeCached(name)) {
-                    cape = new Identifier("42edit:cache/capes/"+name.toLowerCase());
+                    cape = Identifier.of("42edit","cache/capes/"+name.toLowerCase());
                     changed = true;
                 }
                 else if(!FortytwoEdit.nameCached(name) && FortytwoEdit.capeTimeCheck()) {
@@ -41,7 +41,7 @@ public abstract class AbstractClientPlayerEntityMixin {
                 }
             }
             if(FortytwoEdit.showClientCape && name.equals(FortytwoEdit.USERNAME)) {
-                cape = new Identifier("42edit:textures/capes/"+FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]+".png");
+                cape = Identifier.of("42edit","textures/capes/"+FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]+".png");
                 if(FortytwoEdit.clientCapeList[FortytwoEdit.clientCape].equals("none"))
                     cape = null;
                 changed = true;

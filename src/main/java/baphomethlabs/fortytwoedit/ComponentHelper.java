@@ -6,7 +6,6 @@ import com.google.common.collect.Maps;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
 import net.minecraft.component.Component;
 import net.minecraft.component.ComponentMap;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.BoatItem;
 import net.minecraft.item.DecorationItem;
@@ -408,9 +407,9 @@ public class ComponentHelper {
             int maxLvl = 1;
             for(String e : FortytwoEdit.ENCHANTS) {
                 if(path.endsWith("enchantments.levels."+e.replace("minecraft:",""))) {
-                    Enchantment ench = Registries.ENCHANTMENT.get(new Identifier(e));
-                    if(ench != null)
-                        maxLvl = ench.getMaxLevel();
+                    // Enchantment ench = Registries.ENCHANTMENT.get(new Identifier(e)); // TODO new ench system
+                    // if(ench != null)
+                    //     maxLvl = ench.getMaxLevel();
                 }
             }
             return (new PathInfo(PathType.INT,BlackMagick.getIntRangeArray(1,maxLvl))).withDesc(Text.of("Max vanilla level: "+maxLvl));

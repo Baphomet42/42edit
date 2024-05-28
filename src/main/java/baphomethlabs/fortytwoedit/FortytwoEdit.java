@@ -251,7 +251,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     cape.setColor(x, y, capeInp.getColor(x, y));
 
             capeInp.close();
-            client.getTextureManager().registerTexture(new Identifier("42edit:cache/capes/"+name.toLowerCase()), new NativeImageBackedTexture(cape));
+            client.getTextureManager().registerTexture(Identifier.of("42edit","cache/capes/"+name.toLowerCase()), new NativeImageBackedTexture(cape));
             cape.close();
             capeNames2.add(name);
             return true;
@@ -271,7 +271,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean showClientSkin = false;
     public static boolean clientSkinSlim = false;
     public static String customSkinName = "";
-    public static Identifier customSkinID = new Identifier("42edit:cache/custom_skin");
+    public static Identifier customSkinID = Identifier.of("42edit","cache/custom_skin");
 
     public static boolean setCustomSkin(File file) {
         if(file.isFile() && file.getName().endsWith(".png")) {
@@ -302,7 +302,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static float[] cameraRotation = {0f,0f};
 
     //see feature items
-    public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE,FeatureFlags.UPDATE_1_21);
+    public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE);
 
     //format codes
     public static final Text formatTooltip = BlackMagick.jsonFromString("[{\"text\":\"Formatting\n"+
@@ -315,7 +315,7 @@ public class FortytwoEdit implements ClientModInitializer {
         "{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\",\"font\":\"illageralt\"}]").text();
 
     //supersecretsettings
-    public static final Identifier[] SUPER_SECRET_SETTING_PROGRAMS = new Identifier[]{/*new Identifier("42edit","shaders/post/notch.json"), new Identifier("42edit","shaders/post/fxaa.json"), new Identifier("42edit","shaders/post/art.json"), new Identifier("42edit","shaders/post/bumpy.json"), new Identifier("42edit","shaders/post/blobs2.json"), new Identifier("42edit","shaders/post/pencil.json"),*/ new Identifier("42edit","shaders/post/color_convolve.json"),/* new Identifier("42edit","shaders/post/deconverge.json"), new Identifier("42edit","shaders/post/flip.json"),*/ new Identifier("shaders/post/invert.json"),/* new Identifier("42edit","shaders/post/ntsc.json"), new Identifier("42edit","shaders/post/outline.json"), new Identifier("42edit","shaders/post/phosphor.json"), new Identifier("42edit","shaders/post/scan_pincushion.json"), new Identifier("42edit","shaders/post/sobel.json"),*/ new Identifier("42edit","shaders/post/bits.json"), new Identifier("42edit","shaders/post/desaturate.json"),/* new Identifier("42edit","shaders/post/green.json"), new Identifier("42edit","shaders/post/blur.json"), new Identifier("42edit","shaders/post/wobble.json"), new Identifier("42edit","shaders/post/blobs.json"), new Identifier("42edit","shaders/post/antialias.json"),*/ new Identifier("shaders/post/creeper.json"), new Identifier("shaders/post/spider.json")};
+    public static final Identifier[] SUPER_SECRET_SETTING_PROGRAMS = new Identifier[]{/*Identifier.of("42edit","shaders/post/notch.json"), Identifier.of("42edit","shaders/post/fxaa.json"), Identifier.of("42edit","shaders/post/art.json"), Identifier.of("42edit","shaders/post/bumpy.json"), Identifier.of("42edit","shaders/post/blobs2.json"), Identifier.of("42edit","shaders/post/pencil.json"),*/ Identifier.of("42edit","shaders/post/color_convolve.json"),/* Identifier.of("42edit","shaders/post/deconverge.json"), Identifier.of("42edit","shaders/post/flip.json"),*/ Identifier.of("shaders/post/invert.json"),/* Identifier.of("42edit","shaders/post/ntsc.json"), Identifier.of("42edit","shaders/post/outline.json"), Identifier.of("42edit","shaders/post/phosphor.json"), Identifier.of("42edit","shaders/post/scan_pincushion.json"), Identifier.of("42edit","shaders/post/sobel.json"),*/ Identifier.of("42edit","shaders/post/bits.json"), Identifier.of("42edit","shaders/post/desaturate.json"),/* Identifier.of("42edit","shaders/post/green.json"), Identifier.of("42edit","shaders/post/blur.json"), Identifier.of("42edit","shaders/post/wobble.json"), Identifier.of("42edit","shaders/post/blobs.json"), Identifier.of("42edit","shaders/post/antialias.json"),*/ Identifier.of("shaders/post/creeper.json"), Identifier.of("shaders/post/spider.json")};
     private static int superSecretSettingIndex = SUPER_SECRET_SETTING_PROGRAMS.length;
     private static final Identifier[] SECRETSOUNDS = getSecretSounds();
     private static Identifier[] getSecretSounds() {
@@ -712,9 +712,9 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/blocks", map::putIfAbsent);
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/block", map::putIfAbsent);
         map.keySet().forEach(t -> {
-            list.add("#"+t.toString().replaceFirst("tags/blocks/","").replaceFirst(".json",""));
+            list.add("#"+t.toString().replaceFirst("tags/block/","").replaceFirst(".json",""));
         });
 
         Collections.sort(list);
@@ -765,9 +765,9 @@ public class FortytwoEdit implements ClientModInitializer {
     private static String[] getCacheEnchants() {
         List<String> list = new ArrayList<>();
 
-        Registries.ENCHANTMENT.forEach(e -> {
-            list.add(Registries.ENCHANTMENT.getId(e).toString());
-        });
+        // Registries.ENCHANTMENT.forEach(e -> { // TODO new ench system
+        //     list.add(Registries.ENCHANTMENT.getId(e).toString());
+        // });
 
         Collections.sort(list);
         return list.toArray(new String[0]);
@@ -812,9 +812,9 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "loot_tables", map::putIfAbsent);
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "loot_table", map::putIfAbsent);
         map.keySet().forEach(l -> {
-            list.add(l.toString().replaceFirst("loot_tables/","").replaceFirst(".json",""));
+            list.add(l.toString().replaceFirst("loot_table/","").replaceFirst(".json",""));
         });
 
         Collections.sort(list);
@@ -847,9 +847,9 @@ public class FortytwoEdit implements ClientModInitializer {
         List<String> list = new ArrayList<>();
 
         HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "structures", map::putIfAbsent);
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "structure", map::putIfAbsent);
         map.keySet().forEach(s -> {
-            list.add(s.toString().replaceFirst("structures/","").replaceFirst(".nbt",""));
+            list.add(s.toString().replaceFirst("structure/","").replaceFirst(".nbt",""));
         });
 
         Collections.sort(list);

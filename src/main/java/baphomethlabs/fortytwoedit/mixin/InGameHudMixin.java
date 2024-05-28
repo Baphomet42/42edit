@@ -7,13 +7,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.render.RenderTickCounter;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 
 @Mixin(InGameHud.class)
 public abstract class InGameHudMixin {
 
-    @Inject(method="render(Lnet/minecraft/client/gui/DrawContext;F)V", at=@At("TAIL"))
-    private void renderHud(DrawContext context, float tickDelta, CallbackInfo c) {
+    @Inject(method="render", at=@At("TAIL"))
+    private void renderHud(DrawContext context, RenderTickCounter tickCounter, CallbackInfo c) {
         if(FortytwoEdit.autoMove || FortytwoEdit.autoClicker || FortytwoEdit.randoMode || FortytwoEdit.autoFish) {
             final MinecraftClient client = MinecraftClient.getInstance();
             int x = client.getWindow().getScaledWidth()-80;

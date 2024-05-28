@@ -18,7 +18,7 @@ import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.ItemStackArgumentType;
 import net.minecraft.command.argument.NbtPathArgumentType.NbtPath;
 import net.minecraft.component.ComponentMap;
-import net.minecraft.component.DataComponentType;
+import net.minecraft.component.ComponentType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtByte;
@@ -302,7 +302,7 @@ public class BlackMagick {
             RegistryWrapper.WrapperLookup registries = client.world.getRegistryManager();
             RegistryOps<NbtElement> dynamicOps = registries.getOps(NbtOps.INSTANCE);
             return comps.stream().flatMap(component -> {
-                DataComponentType<?> dataComponentType = component.type();
+                ComponentType<?> dataComponentType = component.type();
                 Identifier identifier = Registries.DATA_COMPONENT_TYPE.getId(dataComponentType);
                 Optional<NbtElement> optional = component.encode(dynamicOps).result();
                 if (identifier == null || optional.isEmpty()) {

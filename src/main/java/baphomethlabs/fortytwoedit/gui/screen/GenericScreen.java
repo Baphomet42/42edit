@@ -11,8 +11,8 @@ import net.minecraft.util.Identifier;
 
 public abstract class GenericScreen extends Screen {
 
-    private static final Identifier TEXTURE = new Identifier("42edit", "textures/generic_gui.png");
-    private static final Identifier TEXTURE1 = new Identifier("42edit", "textures/nbt_gui.png");
+    private static final Identifier TEXTURE = Identifier.of("42edit","textures/generic_gui.png");
+    private static final Identifier TEXTURE1 = Identifier.of("42edit","textures/nbt_gui.png");
     protected int backgroundWidth = 12*20;
     protected int backgroundHeight = 9*22;
     protected int x;

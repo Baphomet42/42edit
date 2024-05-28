@@ -22,12 +22,12 @@ public abstract class CameraMixin {
     protected abstract void setPos(double x, double y, double z);
 
     @Shadow
-    private double clipToSpace(double desiredCameraDistance) {
-        return 0d;
+    private float clipToSpace(float desiredCameraDistance) {
+        return 0f;
     }
 
     @Shadow
-    protected abstract void moveBy(double x, double y, double z);
+    protected abstract void moveBy(float x, float y, float z);
     
     @Shadow
     private float cameraY;
@@ -44,7 +44,7 @@ public abstract class CameraMixin {
             float s = 1f;
             if (focusedEntity instanceof LivingEntity)
                 s = ((LivingEntity)focusedEntity).getScale();
-            this.moveBy(-this.clipToSpace(4.0f * s), 0.0, 0.0);
+            this.moveBy(-this.clipToSpace(4.0f * s), 0.0f, 0.0f);
         }
     }
 

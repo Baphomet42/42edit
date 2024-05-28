@@ -33,7 +33,6 @@ import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.ButtonWidget.PressAction;
-import net.minecraft.client.item.TooltipType;
 import net.minecraft.client.option.HotbarStorage;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.command.argument.ItemStackArgumentType;
@@ -43,6 +42,7 @@ import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.item.Item.TooltipContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -1736,7 +1736,7 @@ public class ItemBuilder extends GenericScreen {
                         String sound = inp.trim();
                         sound = sound.replaceAll("[^a-zA-Z0-9_.:]","");
                         if(!sound.equals("")) {
-                            client.player.playSoundToPlayer(SoundEvent.of(new Identifier(sound)), SoundCategory.MASTER, 1, 1);
+                            client.player.playSoundToPlayer(SoundEvent.of(Identifier.of(sound)), SoundCategory.MASTER, 1, 1);
                         }
                     }
                 }, FortytwoEdit.SOUNDS,true));
@@ -4718,7 +4718,7 @@ public class ItemBuilder extends GenericScreen {
 
         private int slotSprites[] = null;
 
-        private static final Identifier SEL_SLOT = new Identifier("hud/hotbar_selection");
+        private static final Identifier SEL_SLOT = Identifier.of("hud/hotbar_selection");
         private boolean isHotbarRow = false;
 
         /**
