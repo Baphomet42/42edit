@@ -81,7 +81,7 @@ public class FortytwoEdit implements ClientModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger("42edit");
 
     //black market item key
-    public static String blackMarketKey = "items_41"; // replace with new data number after major item format change
+    public static String blackMarketKey = "items_45"; // replace with new data number after major item format change
 
     //gui
     public static KeyBinding magickGuiKey;
