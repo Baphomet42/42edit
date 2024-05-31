@@ -19,6 +19,7 @@ import net.minecraft.command.argument.ItemStackArgumentType;
 import net.minecraft.command.argument.NbtPathArgumentType.NbtPath;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.component.ComponentType;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtByte;
@@ -38,6 +39,7 @@ import net.minecraft.nbt.NbtString;
 import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.state.property.Property;
@@ -261,38 +263,49 @@ public class BlackMagick {
         return nbt;
     }
 
-    // /**
-    //  * Get a command to give @p the item. Command does not start with /
-    //  * 
-    //  * @param item
-    //  * @return command to give the item (or empty string if invalid)
-    //  */
-    // public static String itemToGive(ItemStack item) {
-    //     return itemToGive(BlackMagick.itemToNbtStorage(item));
-    // }
+    /**
+     * Represent ItemStack as used in give command
+     * 
+     * @param item
+     * @return arguments as used after /give (or empty string if invalid)
+     */
+    public static String itemToGive(ItemStack item) {
+        return itemToGive(BlackMagick.itemToNbtStorage(item));
+    }
 
-    // todo: uncomment these, make it set the item count, test it, and implement somewhere? 
+    /**
+     * Represent ItemStack as used in give command
+     * 
+     * @param item an item in compound form with id/count/components
+     * @return arguments as used after /give (or empty string if invalid)
+     */
+    public static String itemToGive(NbtCompound item) {
+        if(item != null && item.contains("id",NbtElement.STRING_TYPE)) {
+            String cmd = item.getString("id").replace("minecraft:","");
+            if(item.contains("components",NbtElement.COMPOUND_TYPE)) {
+                cmd += "[";
+                NbtCompound components = item.getCompound("components");
+                boolean first = true;
+                for(String k : components.getKeys()) {
+                    String key = k.replace("minecraft:","");
+                    if(!first)
+                        cmd += ",";
 
-    // /**
-    //  * Get a command to give @p the item. Command does not start with /
-    //  * 
-    //  * @param item an item in compound form with id/count/components
-    //  * @return command to give the item (or empty string if invalid)
-    //  */
-    // public static String itemToGive(NbtCompound item) {
-    //     // The loot command is used as give cannot give items with
-    //     // removed default components like {id:stick,components:{"!repair_cost":{}}}
-    //     // Example loot command:
-    //     // loot give @s loot {pools:[{rolls:1,entries:[{type:"item",name:"golden_sword",functions:[{function:"set_components",components:{"!damage":{}}}]}]}]}
-    //     if(item != null && item.contains("id",NbtElement.STRING_TYPE)) {
-    //         String cmd = "loot give @s loot {pools:[{rolls:1,entries:[{type:\"item\",name:\""+item.getString("id")+"\"";
-    //         if(item.contains("components",NbtElement.COMPOUND_TYPE))
-    //             cmd += ",functions:[{function:\"set_components\",components:"+item.getCompound("components").asString()+"}]";
-    //         cmd += "}]}]}";
-    //         return cmd;
-    //     }
-    //     return "";
-    // }
+                    if(k.startsWith("!"))
+                        cmd += key;
+                    else
+                        cmd += key+"="+BlackMagick.nbtToString(components.get(k));
+
+                    first = false;
+                }
+                cmd += "]";
+            }
+            if(item.contains("count",NbtElement.INT_TYPE) && item.getInt("count")>1)
+                cmd += " "+item.getInt("count");
+            return cmd;
+        }
+        return "";
+    }
 
     // modified from net.minecraft.command.argument.ItemStackArgument
     // change = to : in return line and surround identifier in quotes
@@ -565,6 +578,63 @@ public class BlackMagick {
             states.add(list);
         }
         return states;
+    }
+
+    public static List<String> getWorldEnchantmentList() {
+        List<String> list = new ArrayList<>();
+
+        try {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null)
+                for(Identifier i : client.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getIds())
+                    list.add(i.toString());
+        } catch(Exception e) {}
+
+        Collections.sort(list);
+        return list;
+    }
+
+    public static int getWorldEnchantmentMaxLevel(String key) {
+        int max = 1;
+
+        try {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null) {
+                Enchantment ench = client.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).get(Identifier.of(key));
+                if(ench != null)
+                    max = ench.getMaxLevel();
+            }
+        } catch(Exception e) {}
+
+        return max;
+    }
+
+    public static List<String> getWorldJukeboxList() {
+        List<String> list = new ArrayList<>();
+
+        try {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null)
+                for(Identifier i : client.world.getRegistryManager().get(RegistryKeys.JUKEBOX_SONG).getIds())
+                    list.add(i.toString());
+        } catch(Exception e) {}
+
+        Collections.sort(list);
+        return list;
+    }
+
+    public static List<String> getWorldPaintingList() {
+        List<String> list = new ArrayList<>();
+
+        try {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null)
+                for(Identifier i : client.world.getRegistryManager().get(RegistryKeys.PAINTING_VARIANT).getIds())
+                    list.add(i.toString());
+        } catch(Exception e) {}
+
+        Collections.sort(list);
+        return list;
     }
 
     /**

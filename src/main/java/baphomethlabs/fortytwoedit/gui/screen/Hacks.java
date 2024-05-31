@@ -148,7 +148,6 @@ public class Hacks extends GenericScreen {
                     entityData.putString("id","armor_stand");
                     if(mode == 1) {
                         entityData.remove("Brain");
-                        entityData.remove("FallFlying");
                         entityData.remove("Health");
                     }
                 }

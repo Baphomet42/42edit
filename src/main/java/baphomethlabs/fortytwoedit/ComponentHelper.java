@@ -204,7 +204,7 @@ public class ComponentHelper {
             if(path.endsWith("components.attribute_modifiers.modifiers[0].slot"))
                 return (new PathInfo(PathType.STRING, new String[]{"any","hand","mainhand","offhand","armor","head","chest","legs","feet"}));
             if(path.endsWith("components.attribute_modifiers.modifiers[0].id"))
-                return (new PathInfo(PathType.STRING, new String[]{"minecraft:"}).withDesc(Text.of("Unique namespaced ID used to update modifiers"))).asRequired();//TODO default attribute ids suggs
+                return (new PathInfo(PathType.STRING, new String[]{"minecraft:"+Item.BASE_ATTACK_DAMAGE_MODIFIER_ID,"minecraft:"+Item.BASE_ATTACK_SPEED_MODIFIER_ID}).withDesc(Text.of("Unique namespaced ID used to update modifiers"))).asRequired();
             if(path.endsWith("components.attribute_modifiers.modifiers[0].amount"))
                 return PathInfos.DOUBLE.asRequired();
             if(path.endsWith("components.attribute_modifiers.modifiers[0].operation"))
@@ -366,7 +366,7 @@ public class ComponentHelper {
         }
 
         if(path.endsWith("components.custom_data"))
-            return PathInfos.DEFAULT.withDesc(Text.of("Unstructured NBT unused ingame (any NBT type)"));
+            return PathInfos.INLINE_COMPOUND.withDesc(Text.of("Contains unstructured NBT unused ingame"));
 
         if(path.endsWith("components.custom_model_data"))
             return PathInfos.INT;
@@ -396,24 +396,22 @@ public class ComponentHelper {
             if(path.endsWith("components.enchantments"))
                 return (new PathInfo(List.of("levels","show_in_tooltip")));
             if(path.endsWith("components.enchantments.levels"))
-                return (new PathInfo(List.of(FortytwoEdit.ENCHANTS))).asRequired();
+                return (new PathInfo(BlackMagick.getWorldEnchantmentList())).asRequired().asDynamic();
             if(path.endsWith("components.enchantments.show_in_tooltip"))
                 return PathInfos.TRINARY;
         }
         
         if(path.contains("enchantments.levels.")) {
             int maxLvl = 1;
-            for(String e : FortytwoEdit.ENCHANTS) {
+            for(String e : BlackMagick.getWorldEnchantmentList()) {
                 if(path.endsWith("enchantments.levels."+e.replace("minecraft:",""))) {
-                    // Enchantment ench = Registries.ENCHANTMENT.get(new Identifier(e)); // TODO new ench system
-                    // if(ench != null)
-                    //     maxLvl = ench.getMaxLevel();
+                    maxLvl = BlackMagick.getWorldEnchantmentMaxLevel(e);
                 }
             }
-            return (new PathInfo(PathType.INT,BlackMagick.getIntRangeArray(1,maxLvl))).withDesc(Text.of("Max vanilla level: "+maxLvl));
+            return (new PathInfo(PathType.INT,BlackMagick.getIntRangeArray(1,maxLvl))).withDesc(Text.of("Max level: "+maxLvl)).asDynamic();
         }
 
-        if(path.contains(".entity_data")) {//TODO painting variant with live world suggs (and inline suggs)
+        if(path.contains(".entity_data")) {
             if(path.endsWith(".entity_data"))
                 return (new PathInfo(List.of("id",
                 "CustomName","CustomNameVisible","Glowing","HasVisualFire","Invulnerable","Motion","NoGravity","Pos","Rotation","Silent","Tags",
@@ -422,7 +420,8 @@ public class ComponentHelper {
                 "Fixed","Invisible","Item","ItemDropChance","ItemRotation",
                 "beam_target","ShowBottom",
                 "SoundEvent",
-                "Duration","DurationOnUse","potion_contents","Particle","Radius","RadiusOnUse","RadiusPerTick","ReapplicationDelay","WaitTime")));
+                "Duration","DurationOnUse","potion_contents","Particle","Radius","RadiusOnUse","RadiusPerTick","ReapplicationDelay","WaitTime",
+                "variant")));
             if(path.endsWith(".entity_data.id"))
                 return (new PathInfo(PathType.STRING,FortytwoEdit.ENTITIES)).asRequired();
             if(path.endsWith(".entity_data.Air"))
@@ -572,6 +571,10 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.WaitTime"))
                 return PathInfos.INT.withDesc(Text.of("Time before cloud can have a radius and effect (particles will still appear in the center)")).withGroup(lbl);
 
+            lbl = "Paintings";
+            if(path.endsWith(".entity_data.variant"))
+                return (new PathInfo(PathType.STRING,BlackMagick.getWorldPaintingList().toArray(new String[0]))).withGroup(lbl).asDynamic();//TODO inline suggs (for other types as well)
+
             // when adding new paths, also add keys to entity_data compound
             // if a key is already used for another entity, move it to common category
         }
@@ -672,7 +675,7 @@ public class ComponentHelper {
             if(path.endsWith("components.jukebox_playable"))
                 return (new PathInfo(List.of("song","show_in_tooltip")));
             if(path.endsWith("components.jukebox_playable.song"))
-                return (new PathInfo(PathType.STRING,null)).asRequired();//TODO live songs suggs
+                return (new PathInfo(PathType.STRING,BlackMagick.getWorldJukeboxList().toArray(new String[0]))).asRequired().asDynamic();
             if(path.endsWith("components.jukebox_playable.show_in_tooltip"))
                 return PathInfos.TRINARY;
         }
@@ -794,7 +797,7 @@ public class ComponentHelper {
             if(path.endsWith("components.stored_enchantments"))
                 return (new PathInfo(List.of("levels","show_in_tooltip")));
             if(path.endsWith("components.stored_enchantments.levels"))
-                return (new PathInfo(List.of(FortytwoEdit.ENCHANTS))).asRequired();
+                return (new PathInfo(BlackMagick.getWorldEnchantmentList())).asRequired().asDynamic();
             if(path.endsWith("components.stored_enchantments.show_in_tooltip"))
                 return PathInfos.TRINARY;
         }

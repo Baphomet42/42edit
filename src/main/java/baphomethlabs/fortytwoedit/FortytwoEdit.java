@@ -377,7 +377,6 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final String[] COMPONENTS = getCacheComponents();
     public static final String[] ITEMS = getCacheItems();
     public static final String[] EFFECTS = getCacheEffects();
-    public static final String[] ENCHANTS = getCacheEnchants();
     public static final String[] ENTITIES = getCacheEntities();
     private static String[] KEYBINDS = null;
     public static final String[] LOOT = getCacheLootTables();
@@ -757,17 +756,6 @@ public class FortytwoEdit implements ClientModInitializer {
         Registries.STATUS_EFFECT.forEach(e -> {
             list.add(Registries.STATUS_EFFECT.getId(e).toString());
         });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheEnchants() {
-        List<String> list = new ArrayList<>();
-
-        // Registries.ENCHANTMENT.forEach(e -> { // TODO new ench system
-        //     list.add(Registries.ENCHANTMENT.getId(e).toString());
-        // });
 
         Collections.sort(list);
         return list.toArray(new String[0]);

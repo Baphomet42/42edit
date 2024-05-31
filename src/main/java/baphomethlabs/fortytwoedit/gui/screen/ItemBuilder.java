@@ -1913,7 +1913,7 @@ public class ItemBuilder extends GenericScreen {
                         ItemBuilder.this.markSaved(w);
                     }
 
-                    if(!value.equals(BlackMagick.itemToNbt(selItem).asString())) {
+                    if(!value.equals(BlackMagick.itemToGive(client.player.getMainHandStack()))) {
                         ((ButtonWidget)noScrollWidgets.get(i).get(j+1).w).active = true;
                         ((ButtonWidget)noScrollWidgets.get(i).get(j+1).w).setTooltip(Tooltip.of(Text.of("Copy current item")));
                     }
@@ -1921,6 +1921,7 @@ public class ItemBuilder extends GenericScreen {
                         ((ButtonWidget)noScrollWidgets.get(i).get(j+1).w).active = false;
                         ((ButtonWidget)noScrollWidgets.get(i).get(j+1).w).setTooltip(Tooltip.of(Text.of("Already cloned")));
                     }
+
                     if(selItem.isEmpty()) {
                         ((ButtonWidget)noScrollWidgets.get(i).get(j+1).w).active = false;
                         ((ButtonWidget)noScrollWidgets.get(i).get(j+1).w).setTooltip(Tooltip.of(Text.of("No item to clone")));
@@ -1933,8 +1934,7 @@ public class ItemBuilder extends GenericScreen {
                 final int i = tabNum; final int j = noScrollWidgets.get(tabNum).size();
                 noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Clone"), button -> {
                     if(!client.player.getMainHandStack().isEmpty()) {
-                        String itemData = BlackMagick.itemToNbt(client.player.getMainHandStack()).asString();
-                        ((EditBoxWidget)noScrollWidgets.get(i).get(j-1).w).setText(itemData);
+                        ((EditBoxWidget)noScrollWidgets.get(i).get(j-1).w).setText(BlackMagick.itemToGive(client.player.getMainHandStack()));
                     }
                     ItemBuilder.this.unsel = true;
                 }).dimensions(x+15-3,y+35+22*6+1,60,20).build(),15-3,35+22*6+1));
