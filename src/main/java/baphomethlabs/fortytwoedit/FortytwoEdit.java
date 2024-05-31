@@ -263,7 +263,9 @@ public class FortytwoEdit implements ClientModInitializer {
     // custom capes
     public static boolean showClientCape = false;
     public static int clientCape = 0;
-    public static String[] clientCapeList = {"none","migrator","vanilla","cherry","minecon2011","minecon2012","minecon2013","minecon2015","minecon2016","minecon2019","mojang-classic","mojang","mojang-studios","spartan","christmas"};
+    public static String[] clientCapeList = {"none","migrator","vanilla","cherry","minecon2011",
+        "minecon2012","minecon2013","minecon2015","minecon2016","minecon2019",
+        "mojang-classic","mojang","mojang-studios","spartan","christmas"};
     public static String USERNAME = "";
     public static NbtIntArray UUID = new NbtIntArray(new int[]{0,0,0,0});
 

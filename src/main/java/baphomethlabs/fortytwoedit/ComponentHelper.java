@@ -573,7 +573,8 @@ public class ComponentHelper {
 
             lbl = "Paintings";
             if(path.endsWith(".entity_data.variant"))
-                return (new PathInfo(PathType.STRING,BlackMagick.getWorldPaintingList().toArray(new String[0]))).withGroup(lbl).asDynamic();//TODO inline suggs (for other types as well)
+                return (new PathInfo(PathType.DEFAULT,FortytwoEdit.joinCommandSuggs(new String[][]{BlackMagick.formatStringSuggs(BlackMagick.getWorldPaintingList().toArray(new String[0]))},
+                    null,new String[]{"{asset_id:\"\",width:1,height:1}"}))).withGroup(lbl).withDesc(Text.of("Can be either:\na) NbtString of a painting ID\nb) NbtCompound with {asset_id:\"<variant>\",width:<int>,height:<int>}")).asDynamic();
 
             // when adding new paths, also add keys to entity_data compound
             // if a key is already used for another entity, move it to common category
