@@ -42,7 +42,7 @@ public class ComponentHelper {
     /**
      * Vanilla formatting colors as they appear in JSON "color"
      */
-    public static final String[] FORMAT_COLORS = {"reset","aqua","black","blue","dark_aqua","dark_blue","dark_gray","dark_green","dark_purple","dark_red","gold","gray","green","light_purple","red","white","yellow"};
+    public static final String[] FORMAT_COLORS = {"aqua","black","blue","dark_aqua","dark_blue","dark_gray","dark_green","dark_purple","dark_red","gold","gray","green","light_purple","red","white","yellow"};
 
     /**
      * Vanilla and experimental banner pattern ids.
@@ -198,15 +198,13 @@ public class ComponentHelper {
             if(path.endsWith("components.attribute_modifiers.modifiers"))
                 return PathInfos.LIST_COMPOUND.asRequired();
             if(path.endsWith("components.attribute_modifiers.modifiers[0]"))
-                return (new PathInfo(List.of("type","slot","uuid","name","amount","operation"))).withFlag(PathFlag.ATTRIBUTE);
+                return (new PathInfo(List.of("type","slot","id","amount","operation"))).withFlag(PathFlag.ATTRIBUTE);
             if(path.endsWith("components.attribute_modifiers.modifiers[0].type"))
                 return (new PathInfo(PathType.STRING, FortytwoEdit.ATTRIBUTES)).asRequired();
             if(path.endsWith("components.attribute_modifiers.modifiers[0].slot"))
                 return (new PathInfo(PathType.STRING, new String[]{"any","hand","mainhand","offhand","armor","head","chest","legs","feet"}));
-            if(path.endsWith("components.attribute_modifiers.modifiers[0].uuid"))
-                return (new PathInfo(PathType.UUID, new String[]{"[I;0,0,0,0]",FortytwoEdit.randomUUID().asString()})).withDesc(Text.of("All attributes on an item can have the same UUID. Different items should have different UUIDs so the attributes update correctly when switching items.")).asRequired().asDynamic();
-            if(path.endsWith("components.attribute_modifiers.modifiers[0].name"))
-                return PathInfos.STRING.withDesc(Text.of("Name of attribute (has no effect ingame)")).asRequired();
+            if(path.endsWith("components.attribute_modifiers.modifiers[0].id"))
+                return (new PathInfo(PathType.STRING, new String[]{"minecraft:"}).withDesc(Text.of("Unique namespaced ID used to update modifiers"))).asRequired();//TODO default attribute ids suggs
             if(path.endsWith("components.attribute_modifiers.modifiers[0].amount"))
                 return PathInfos.DOUBLE.asRequired();
             if(path.endsWith("components.attribute_modifiers.modifiers[0].operation"))
@@ -415,11 +413,11 @@ public class ComponentHelper {
             return (new PathInfo(PathType.INT,BlackMagick.getIntRangeArray(1,maxLvl))).withDesc(Text.of("Max vanilla level: "+maxLvl));
         }
 
-        if(path.contains(".entity_data")) {
+        if(path.contains(".entity_data")) {//TODO painting variant with live world suggs (and inline suggs)
             if(path.endsWith(".entity_data"))
                 return (new PathInfo(List.of("id",
                 "CustomName","CustomNameVisible","Glowing","HasVisualFire","Invulnerable","Motion","NoGravity","Pos","Rotation","Silent","Tags",
-                "active_effects","ArmorDropChances","ArmorItems","Attributes","CanPickUpLoot","FallFlying","Health","HandDropChances","HandItems","leash","LeftHanded","NoAI","PersistenceRequired","Team",
+                "active_effects","ArmorDropChances","ArmorItems","attributes","CanPickUpLoot","FallFlying","Health","HandDropChances","HandItems","leash","LeftHanded","NoAI","PersistenceRequired","Team",
                 "DisabledSlots","Invisible","Marker","NoBasePlate","Pose","ShowArms","Small",
                 "Fixed","Invisible","Item","ItemDropChance","ItemRotation",
                 "beam_target","ShowBottom",
@@ -491,7 +489,7 @@ public class ComponentHelper {
                 return PathInfos.LIST_COMPOUND.withDesc(Text.of("[feet, legs, chest, head]")).withGroup(lbl);
             if(path.endsWith(".entity_data.ArmorItems[0]"))
                 return PathInfos.ITEM_NODE;
-            if(path.endsWith(".entity_data.Attributes"))
+            if(path.endsWith(".entity_data.attributes"))
                 return PathInfos.DEFAULT.withGroup(lbl);
             if(path.endsWith(".entity_data.CanPickUpLoot"))
                 return PathInfos.TRINARY.withGroup(lbl);
@@ -619,7 +617,7 @@ public class ComponentHelper {
 
         if(path.contains("components.food")) {
             if(path.endsWith("components.food"))
-                return (new PathInfo(List.of("nutrition","saturation","is_meat","can_always_eat","eat_seconds","effects")));
+                return (new PathInfo(List.of("nutrition","saturation","is_meat","can_always_eat","eat_seconds","effects","using_converts_to")));
             if(path.endsWith("components.food.nutrition"))
                 return PathInfos.INT.withDesc(Text.of("How many food points to restore (1 nutrition for each half of a food icon)")).asRequired();
             if(path.endsWith("components.food.saturation"))
@@ -650,6 +648,8 @@ public class ComponentHelper {
                 return PathInfos.TRINARY;
             if(path.endsWith("components.food.effects[0].probability"))
                 return (new PathInfo(PathType.FLOAT,new String[]{"1f"})).withDesc(Text.of("Chance for effect to be applied when food is eaten from 0f to 1f"));
+            if(path.endsWith("components.food.using_converts_to"))
+                return PathInfos.ITEM_NODE;
         }
 
         if(path.endsWith("components.hide_additional_tooltip"))
@@ -667,6 +667,15 @@ public class ComponentHelper {
 
         if(path.endsWith("components.item_name"))
             return PathInfos.TEXT;
+
+        if(path.contains("components.jukebox_playable")) {
+            if(path.endsWith("components.jukebox_playable"))
+                return (new PathInfo(List.of("song","show_in_tooltip")));
+            if(path.endsWith("components.jukebox_playable.song"))
+                return (new PathInfo(PathType.STRING,null)).asRequired();//TODO live songs suggs
+            if(path.endsWith("components.jukebox_playable.show_in_tooltip"))
+                return PathInfos.TRINARY;
+        }
 
         if(path.endsWith("components.lock"))
             return PathInfos.STRING.withDesc(Text.of("Literal string of item name needed to unlock"));

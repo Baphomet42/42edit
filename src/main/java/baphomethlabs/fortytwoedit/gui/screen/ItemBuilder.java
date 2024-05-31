@@ -1370,13 +1370,7 @@ public class ItemBuilder extends GenericScreen {
                 ItemStack stack = BlackMagick.itemFromString("{id:stone,components:{attribute_modifiers:{modifiers:["+el.asString()+"]}}}");
                 if(!stack.isEmpty()) {
                     List<Text> textList = stack.getTooltip(TooltipContext.DEFAULT,null,TooltipType.BASIC);
-                    if(textList.size()>21)
-                        return Text.of("Any slot: ").copy().append(textList.get(3));
-                    if(textList.size()>12)
-                        return Text.of("When equipped: ").copy().append(textList.get(3));
-                    if(textList.size()>6)
-                        return Text.of("When held: ").copy().append(textList.get(3));
-                    else if(textList.size()>3)
+                    if(textList.size()>3)
                         return Text.of(textList.get(2).getString()).copy().append(Text.of(" ")).append(textList.get(3));
                 }
             }
