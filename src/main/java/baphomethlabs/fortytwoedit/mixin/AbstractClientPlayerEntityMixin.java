@@ -41,9 +41,7 @@ public abstract class AbstractClientPlayerEntityMixin {
                 }
             }
             if(FortytwoEdit.showClientCape && name.equals(FortytwoEdit.USERNAME)) {
-                cape = Identifier.of("42edit","textures/capes/"+FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]+".png");
-                if(FortytwoEdit.clientCapeList[FortytwoEdit.clientCape].equals("none"))
-                    cape = null;
+                cape = FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].identifier();
                 changed = true;
             }
 

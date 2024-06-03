@@ -263,11 +263,59 @@ public class FortytwoEdit implements ClientModInitializer {
     // custom capes
     public static boolean showClientCape = false;
     public static int clientCape = 0;
-    public static String[] clientCapeList = {"none","migrator","vanilla","cherry","minecon2011",
-        "minecon2012","minecon2013","minecon2015","minecon2016","minecon2019",
-        "mojang-classic","mojang","mojang-studios","spartan","christmas"};
+    public static final CapeTexture[] CLIENT_CAPES = { // Update from https://namemc.com/capes
+        new CapeTexture(CapeGroup.NONE, "none", "None", null, null, null),
+
+        new CapeTexture(CapeGroup.PUBLIC, "migrator", "Migrator", "http://textures.minecraft.net/texture/2340c0e03dd24a11b15a8b33c2a7e9e32abb2051b2481d0ba7defd635ca7a933"),
+        new CapeTexture(CapeGroup.PUBLIC, "vanilla", "Vanilla", "http://textures.minecraft.net/texture/f9a76537647989f9a0b6d001e320dac591c359e9e61a31f4ce11c88f207f0ad4"),
+        new CapeTexture(CapeGroup.PUBLIC, "cherry_blossom", "Cherry Blossom", "http://textures.minecraft.net/texture/afd553b39358a24edfe3b8a9a939fa5fa4faa4d9a9c3d6af8eafb377fa05c2bb"),
+        new CapeTexture(CapeGroup.PUBLIC, "15th_anniversary", "15th Anniversary", "http://textures.minecraft.net/texture/cd9d82ab17fd92022dbd4a86cde4c382a7540e117fae7b9a2853658505a80625"),
+        new CapeTexture(CapeGroup.PUBLIC, "purple_heart", "Purple Heart", "http://textures.minecraft.net/texture/cb40a92e32b57fd732a00fc325e7afb00a7ca74936ad50d8e860152e482cfbde"),
+        //new CapeTexture(CapeGroup.PUBLIC, "followers", "Follower's Cape", ""), //TODO follower's cape (and verify purple heart cape)
+
+        new CapeTexture(CapeGroup.MINECON, "minecon_2011", "MineCon 2011", "http://textures.minecraft.net/texture/953cac8b779fe41383e675ee2b86071a71658f2180f56fbce8aa315ea70e2ed6"),
+        new CapeTexture(CapeGroup.MINECON, "minecon_2012", "MineCon 2012", "http://textures.minecraft.net/texture/a2e8d97ec79100e90a75d369d1b3ba81273c4f82bc1b737e934eed4a854be1b6"),
+        new CapeTexture(CapeGroup.MINECON, "minecon_2013", "MineCon 2013", "http://textures.minecraft.net/texture/153b1a0dfcbae953cdeb6f2c2bf6bf79943239b1372780da44bcbb29273131da"),
+        new CapeTexture(CapeGroup.MINECON, "minecon_2015", "MineCon 2015", "http://textures.minecraft.net/texture/b0cc08840700447322d953a02b965f1d65a13a603bf64b17c803c21446fe1635"),
+        new CapeTexture(CapeGroup.MINECON, "minecon_2016", "MineCon 2016", "http://textures.minecraft.net/texture/e7dfea16dc83c97df01a12fabbd1216359c0cd0ea42f9999b6e97c584963e980"),
+        new CapeTexture(CapeGroup.OTHER, "founders", "Founder's Cape"),
+
+        new CapeTexture(CapeGroup.PRIVATE, "realms_mapmaker", "Realms Mapmaker", "http://textures.minecraft.net/texture/17912790ff164b93196f08ba71d0e62129304776d0f347334f8a6eae509f8a56"),
+        new CapeTexture(CapeGroup.PRIVATE, "mojira_moderator", "Mojira Moderator", "http://textures.minecraft.net/texture/ae677f7d98ac70a533713518416df4452fe5700365c09cf45d0d156ea9396551"),
+
+        new CapeTexture(CapeGroup.MOJANG, "mojang_classic", "Mojang (Classic)", "http://textures.minecraft.net/texture/8f120319222a9f4a104e2f5cb97b2cda93199a2ee9e1585cb8d09d6f687cb761"),
+        new CapeTexture(CapeGroup.MOJANG, "mojang", "Mojang", "http://textures.minecraft.net/texture/5786fe99be377dfb6858859f926c4dbc995751e91cee373468c5fbf4865e7151"),
+        new CapeTexture(CapeGroup.MOJANG, "mojang_studios", "Mojang Studios", "http://textures.minecraft.net/texture/9e507afc56359978a3eb3e32367042b853cddd0995d17d0da995662913fb00f7"),
+
+        new CapeTexture(CapeGroup.OTHER, "spartan", "Spartan"),
+        new CapeTexture(CapeGroup.OTHER, "christmas", "Christmas"),
+        new CapeTexture(CapeGroup.OTHER, "42", "42", null, "42Richtofen42's OptiFine cape") // edit http://s.optifine.net/capes/42Richtofen42.png to 128x64
+    };
     public static String USERNAME = "";
     public static NbtIntArray UUID = new NbtIntArray(new int[]{0,0,0,0});
+    public record CapeTexture(CapeGroup group, String id, String name, String link, String desc, Identifier identifier) {
+
+        public CapeTexture(CapeGroup group, String id, String name) {
+            this(group, id, name, null, null);
+        }
+
+        public CapeTexture(CapeGroup group, String id, String name, String link) {
+            this(group, id, name, link, null);
+        }
+
+        public CapeTexture(CapeGroup group, String id, String name, String link, String desc) {
+            this(group, id, name, link, desc, Identifier.of("42edit", "textures/capes/"+id+".png"));
+        }
+
+    }
+    public enum CapeGroup {
+        NONE,       // empty cape
+        PUBLIC,     // easily available for many players
+        PRIVATE,    // very exclusive
+        MINECON,    // classic minecon capes
+        MOJANG,     // mojang
+        OTHER       // bedrock, skin pack, custom, archived, etc
+    }
 
     //skin testing
     public static boolean showClientSkin = false;
@@ -889,8 +937,8 @@ public class FortytwoEdit implements ClientModInitializer {
             if(json.contains("CustomCape",NbtElement.STRING_TYPE)) {
                 clientCape = 0;
                 String capeName = ((NbtString)json.get("CustomCape")).asString();
-                for(int i=0; i<clientCapeList.length; i++)
-                    if(capeName.equals(clientCapeList[i]))
+                for(int i=0; i<CLIENT_CAPES.length; i++)
+                    if(capeName.equals(CLIENT_CAPES[i].id()))
                         clientCape = i;
             }
             if(json.contains("OptiCapeToggle",NbtElement.BYTE_TYPE))
@@ -924,7 +972,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).createNewFile();
 
             String options = "{CustomCapeToggle:"+ (showClientCape ? "1b" : "0b")
-                +",CustomCape:\""+ clientCapeList[clientCape]+"\""
+                +",CustomCape:\""+ CLIENT_CAPES[clientCape].id()+"\""
                 +",OptiCapeToggle:"+ (opticapesOn ? "1b" : "0b")
                 +",WebItems:"+ (webItemsAuto ? "1b" : "0b");
             

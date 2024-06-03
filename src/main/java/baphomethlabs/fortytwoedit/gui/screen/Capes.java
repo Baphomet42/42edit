@@ -18,7 +18,9 @@ import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.toast.SystemToast;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 
 public class Capes extends GenericScreen {
@@ -56,8 +58,10 @@ public class Capes extends GenericScreen {
             .setTooltip(Tooltip.of(Text.of("Cycle custom cape left")));
         this.txtCustom = new TextFieldWidget(this.textRenderer,x+20+1+80+5+15,y+22*4+1,90-2,20,Text.of(""));
         this.txtCustom.setMaxLength(64);
-        this.txtCustom.setEditable(false);
-        this.txtCustom.setText(FortytwoEdit.clientCapeList[FortytwoEdit.clientCape]);
+        this.txtCustom.setText(FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].name());
+        this.txtCustom.setCursorToStart(false);
+        this.txtCustom.setTooltip(buildCapeTooltip());
+        this.addDrawableChild(this.txtCustom);
         this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnIncCustom()).dimensions(x+20+80+5+15+90,y+22*4+1,15,20).build())
             .setTooltip(Tooltip.of(Text.of("Cycle custom cape right")));
 
@@ -71,9 +75,10 @@ public class Capes extends GenericScreen {
         })).setTooltip(Tooltip.of(Text.of("Toggle skin model between wide/slim (requires custom skin mode)")));
         this.txtCustomSkin = new TextFieldWidget(this.textRenderer,x+20+1,y+22*7+1,200-2,20,Text.of(""));
         this.txtCustomSkin.setMaxLength(2048);
-        this.txtCustomSkin.setEditable(false);
         this.txtCustomSkin.setText(FortytwoEdit.customSkinName.equals("") ? "<Drag and drop skin into this window>" : FortytwoEdit.customSkinName);
+        this.txtCustomSkin.setCursorToStart(false);
         this.txtCustomSkin.setTooltip(Tooltip.of(Text.of("Drag and drop a skin into this window to set a custom skin")));
+        this.addDrawableChild(this.txtCustomSkin);
         playerX = x + 240+40;
         playerY = this.height/2 + 30;
     }
@@ -105,17 +110,24 @@ public class Capes extends GenericScreen {
     protected void btnDecCustom() {
         FortytwoEdit.clientCape--;
         if(FortytwoEdit.clientCape<0)
-            FortytwoEdit.clientCape=FortytwoEdit.clientCapeList.length-1;
+            FortytwoEdit.clientCape=FortytwoEdit.CLIENT_CAPES.length-1;
         FortytwoEdit.updateOptions();
         this.resize(this.client,this.width,this.height);
     }
 
     protected void btnIncCustom() {
         FortytwoEdit.clientCape++;
-        if(FortytwoEdit.clientCape>=FortytwoEdit.clientCapeList.length)
+        if(FortytwoEdit.clientCape>=FortytwoEdit.CLIENT_CAPES.length)
             FortytwoEdit.clientCape=0;
         FortytwoEdit.updateOptions();
         this.resize(this.client,this.width,this.height);
+    }
+
+    private Tooltip buildCapeTooltip() {
+        MutableText tt = Text.of(FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].name()).copy();
+        if(FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].desc() != null)
+            tt.append("\n\n").append(Text.of(FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].desc()).copy().formatted(Formatting.GRAY));
+        return Tooltip.of(tt);
     }
 
     @Override
@@ -165,8 +177,6 @@ public class Capes extends GenericScreen {
         context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Client Capes & Skins"), this.width / 2, y+11, 0xFFFFFF);
         context.drawTextWithShadow(this.textRenderer, Text.of("Capes"), x+20,y+7+22*2, 0xFFFFFF);
         context.drawTextWithShadow(this.textRenderer, Text.of("Skin"), x+20,y+7+22*5, 0xFFFFFF);
-        this.txtCustom.render(context, mouseX, mouseY, delta);
-        this.txtCustomSkin.render(context, mouseX, mouseY, delta);
         drawPlayer(context, playerX, playerY, 60, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
     }
 
