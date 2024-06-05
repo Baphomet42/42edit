@@ -61,6 +61,7 @@ public class Capes extends GenericScreen {
         this.txtCustom.setText(FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].name());
         this.txtCustom.setCursorToStart(false);
         this.txtCustom.setTooltip(buildCapeTooltip());
+        this.txtCustom.setEditable(false);
         this.addDrawableChild(this.txtCustom);
         this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnIncCustom()).dimensions(x+20+80+5+15+90,y+22*4+1,15,20).build())
             .setTooltip(Tooltip.of(Text.of("Cycle custom cape right")));
@@ -78,6 +79,7 @@ public class Capes extends GenericScreen {
         this.txtCustomSkin.setText(FortytwoEdit.customSkinName.equals("") ? "<Drag and drop skin into this window>" : FortytwoEdit.customSkinName);
         this.txtCustomSkin.setCursorToStart(false);
         this.txtCustomSkin.setTooltip(Tooltip.of(Text.of("Drag and drop a skin into this window to set a custom skin")));
+        this.txtCustomSkin.setEditable(false);
         this.addDrawableChild(this.txtCustomSkin);
         playerX = x + 240+40;
         playerY = this.height/2 + 30;
