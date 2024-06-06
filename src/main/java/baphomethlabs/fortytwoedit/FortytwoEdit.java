@@ -264,7 +264,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean showClientCape = false;
     public static int clientCape = 0;
     public static final CapeTexture[] CLIENT_CAPES = { // Update from https://namemc.com/capes
-        new CapeTexture(CapeGroup.NONE, "none", "None", null, null, null),
+        new CapeTexture(CapeGroup.NONE, "none", "No cape", null, null, null),
 
         new CapeTexture(CapeGroup.PUBLIC, "migrator", "Migrator", "http://textures.minecraft.net/texture/2340c0e03dd24a11b15a8b33c2a7e9e32abb2051b2481d0ba7defd635ca7a933"),
         new CapeTexture(CapeGroup.PUBLIC, "vanilla", "Vanilla", "http://textures.minecraft.net/texture/f9a76537647989f9a0b6d001e320dac591c359e9e61a31f4ce11c88f207f0ad4"),
@@ -282,6 +282,9 @@ public class FortytwoEdit implements ClientModInitializer {
 
         new CapeTexture(CapeGroup.PRIVATE, "realms_mapmaker", "Realms Mapmaker", "http://textures.minecraft.net/texture/17912790ff164b93196f08ba71d0e62129304776d0f347334f8a6eae509f8a56"),
         new CapeTexture(CapeGroup.PRIVATE, "mojira_moderator", "Mojira Moderator", "http://textures.minecraft.net/texture/ae677f7d98ac70a533713518416df4452fe5700365c09cf45d0d156ea9396551"),
+        //new CapeTexture(CapeGroup.PRIVATE, "translator", "Translator", ""),
+        //new CapeTexture(CapeGroup.PRIVATE, "cobalt", "Cobalt", ""),
+        //new CapeTexture(CapeGroup.PRIVATE, "scrolls", "Scrolls", ""),
 
         new CapeTexture(CapeGroup.MOJANG, "mojang_classic", "Mojang (Classic)", "http://textures.minecraft.net/texture/8f120319222a9f4a104e2f5cb97b2cda93199a2ee9e1585cb8d09d6f687cb761"),
         new CapeTexture(CapeGroup.MOJANG, "mojang", "Mojang", "http://textures.minecraft.net/texture/5786fe99be377dfb6858859f926c4dbc995751e91cee373468c5fbf4865e7151"),

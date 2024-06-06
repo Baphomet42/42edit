@@ -897,13 +897,13 @@ public class BlackMagick {
         if(left==null && right==null)
             return Text.of("null").copy().formatted(Formatting.ITALIC);
         if(left==null)
-            return Text.of(right.asString()).copy().formatted(Formatting.GREEN);
+            return Text.of(BlackMagick.nbtToString(right)).copy().formatted(Formatting.GREEN);
         if(right==null)
-            return Text.of(left.asString()).copy().formatted(Formatting.RED);
+            return Text.of(BlackMagick.nbtToString(left)).copy().formatted(Formatting.RED);
         
         if(left.getType() == right.getType()) {
-            if(left.asString().equals(right.asString()))
-                return Text.of(left.asString());
+            if(BlackMagick.nbtToString(left).equals(BlackMagick.nbtToString(right)))
+                return Text.of(BlackMagick.nbtToString(left));
             if(left.getType() == NbtElement.COMPOUND_TYPE) {
                 NbtCompound leftCmp = (NbtCompound)left;
                 NbtCompound rightCmp = (NbtCompound)right;
@@ -927,10 +927,10 @@ public class BlackMagick {
                         output.append(getElementDifferences(leftCmp.get(k),rightCmp.get(k)));
                     }
                     else if(leftCmp.contains(k)) {
-                        output.append((Text.of(k+":").copy().append(Text.of(leftCmp.get(k).asString()))).formatted(Formatting.RED));
+                        output.append((Text.of(k+":").copy().append(Text.of(BlackMagick.nbtToString(leftCmp.get(k))))).formatted(Formatting.RED));
                     }
                     else {
-                        output.append((Text.of(k+":").copy().append(Text.of(rightCmp.get(k).asString()))).formatted(Formatting.GREEN));
+                        output.append((Text.of(k+":").copy().append(Text.of(BlackMagick.nbtToString(rightCmp.get(k))))).formatted(Formatting.GREEN));
                     }
                 }
 
@@ -955,10 +955,10 @@ public class BlackMagick {
                         output.append(getElementDifferences(leftList.get(i),rightList.get(i)));
                     }
                     else if(leftList.size()>i) {
-                        output.append((Text.of(leftList.get(i).asString()).copy()).formatted(Formatting.RED));
+                        output.append((Text.of(BlackMagick.nbtToString(leftList.get(i))).copy()).formatted(Formatting.RED));
                     }
                     else {
-                        output.append((Text.of(rightList.get(i).asString()).copy()).formatted(Formatting.GREEN));
+                        output.append((Text.of(BlackMagick.nbtToString(rightList.get(i))).copy()).formatted(Formatting.GREEN));
                     }
                 }
 
@@ -966,7 +966,7 @@ public class BlackMagick {
                 return output;
             }
         }
-        return Text.empty().append(Text.of(left.asString()).copy().formatted(Formatting.RED)).append(Text.of(right.asString()).copy().formatted(Formatting.GREEN));
+        return Text.empty().append(Text.of(BlackMagick.nbtToString(left)).copy().formatted(Formatting.RED)).append(Text.of(BlackMagick.nbtToString(right)).copy().formatted(Formatting.GREEN));
     }
 
 

@@ -48,7 +48,7 @@ public class ComponentHelper {
      * Vanilla and experimental banner pattern ids.
      * Update from {@link net.minecraft.block.entity.BannerPatterns}
      */
-    public static final String[] BANNER_PATTERNS = BlackMagick.sortArray(new String[]{
+    public static final String[] BANNER_PATTERNS = BlackMagick.formatSuggs(BlackMagick.sortArray(new String[]{
         "base","square_bottom_left","square_bottom_right","square_top_left","square_top_right",
         "stripe_bottom","stripe_top","stripe_left","stripe_right","stripe_center",
         "stripe_middle","stripe_downright","stripe_downleft","small_stripes","cross",
@@ -58,7 +58,7 @@ public class ComponentHelper {
         "border","curly_border","gradient","gradient_up","bricks",
         "globe","creeper","skull","flower","mojang",
         "piglin","flow","guster"
-    }).toArray(new String[0]);
+    }).toArray(new String[0]),"minecraft:","");
 
     /**
      * 

@@ -50,6 +50,7 @@ import net.minecraft.nbt.NbtFloat;
 import net.minecraft.nbt.NbtInt;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -926,8 +927,9 @@ public class ItemBuilder extends GenericScreen {
             if(path != null) {
                 if(path.endsWith("custom_name"))
                     jsonPreview = BlackMagick.jsonFromString("{\"text\":\"\",\"italic\":true}").text().copy().append(jsonPreview.copy());
-                else if(path.contains("lore["))
+                else if(path.contains("lore[")) {
                     jsonPreview = BlackMagick.jsonFromString("{\"text\":\"\",\"color\":\"dark_purple\",\"italic\":true}").text().copy().append(jsonPreview.copy());
+                }
                 else if(path.contains("written_book_content.pages["))
                     jsonPreviewBook = true;
             }
@@ -2315,10 +2317,9 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<2; i++) {
                 ItemStack current = i==0 ? client.player.getMainHandStack() : client.player.getOffHandStack();
                 if(current != null && !current.isEmpty()) {
-                    String id = current.getItem().toString();
-                    int[] size = BlackMagick.containerSize(id);
+                    int[] size = BlackMagick.containerSize(current.getItem().toString());
 
-                    if(id.equals("bundle")) {
+                    if(current.isOf(Items.BUNDLE)) {
                         {
                             widgets.get(tabNum).add(new RowWidget(i==0 ? "Selected Bundle" : "Offhand Bundle"));
                         }
@@ -2341,7 +2342,7 @@ public class ItemBuilder extends GenericScreen {
                             widgets.get(tabNum).add(new RowWidgetInvRow(stackRow));
                         }
                     }
-                    else if(id.equals("armor_stand")) {
+                    else if(current.isOf(Items.ARMOR_STAND)) {
                         {
                             widgets.get(tabNum).add(new RowWidget(i==0 ? "Selected Armor Stand" : "Offhand Armor Stand"));
                         }
@@ -2534,7 +2535,7 @@ public class ItemBuilder extends GenericScreen {
                         w.setTooltip(Tooltip.of(Text.of("Keep component as:\n"+BlackMagick.nbtToString(selItemComp))));
                     noScrollWidgets.get(tabNum).add(new PosWidget(w,5,5));
                 }
-                // else {
+                // else { // requires saving temp history in path2 (also use temp history for done button changes?)
                 //     NbtElement pageCreateEl = el2!=null ? el2.copy() : null;
 
                 //     ButtonWidget w = ButtonWidget.builder(Text.of("Cancel"),btn -> {
@@ -2781,14 +2782,13 @@ public class ItemBuilder extends GenericScreen {
                                 BlackMagick.itemToNbt(selItem),path,blankTabEl)));
                     }
                     bannerShield = false;
-                    String bannerItemId = bannerItem.getItem().toString();
-                    if(bannerItemId.equals("shield")) {
+                    if(bannerItem.isOf(Items.SHIELD)) {
                         bannerShield = true;
                         showBannerPreview = true;
                         bannerChangePreview.readNbt(BlackMagick.validCompound(BlackMagick.nbtFromString("{ArmorItems:[{},{},{},{}],HandItems:["
                             +BlackMagick.itemToNbtStorage(bannerItem).asString()+",{}],Invisible:1b,Pose:{RightArm:[-90f,-90f,0f]}}")));
                     }
-                    else if(bannerItemId.contains("_banner")) {
+                    else if(bannerItem.isIn(ItemTags.BANNERS)) {
                         showBannerPreview = true;
                         bannerChangePreview.readNbt(BlackMagick.validCompound(BlackMagick.nbtFromString("{ArmorItems:[{},{},{},"
                             +BlackMagick.itemToNbtStorage(bannerItem).asString()+"],HandItems:[{},{}],Invisible:1b,Pose:{RightArm:[-90f,-90f,0f]}}")));
@@ -2828,7 +2828,25 @@ public class ItemBuilder extends GenericScreen {
             if(args.contains("path",NbtElement.STRING_TYPE) && args.contains("baseJson",NbtElement.STRING_TYPE) && jsonEffectMode>=0 && jsonEffectMode<=2) {
                 String path = args.get("path").asString();
                 String baseJson = args.get("baseJson").asString(); // keep asString
-                jsonEffectPath = path;
+    
+                String[] path2;
+                if(args.contains("path2",NbtElement.LIST_TYPE) && ((NbtList)args.get("path2")).size()>0
+                && ((NbtList)args.get("path2")).get(0).getType()==NbtElement.STRING_TYPE) {
+                    NbtList pathList = (NbtList)args.get("path2");
+                    path2 = new String[pathList.size()];
+                    for(int i=0; i<path2.length; i++)
+                        path2[i] = pathList.get(i).asString();
+                }
+                else
+                    path2 = null;
+
+                String fullPath;
+                if(path2 != null)
+                    fullPath = path+path2[0];
+                else
+                    fullPath = path;
+
+                jsonEffectPath = fullPath;
                 jsonEffectBase = baseJson;
                 valid = true;
                 {
@@ -2872,23 +2890,6 @@ public class ItemBuilder extends GenericScreen {
                 }
 
                 {
-                    String[] path2;
-                    if(args.contains("path2",NbtElement.LIST_TYPE) && ((NbtList)args.get("path2")).size()>0
-                    && ((NbtList)args.get("path2")).get(0).getType()==NbtElement.STRING_TYPE) {
-                        NbtList pathList = (NbtList)args.get("path2");
-                        path2 = new String[pathList.size()];
-                        for(int i=0; i<path2.length; i++)
-                            path2[i] = pathList.get(i).asString();
-                    }
-                    else
-                        path2 = null;
-                        
-                    String fullPath;
-                    if(path2 != null)
-                        fullPath = path+path2[0];
-                    else
-                        fullPath = path;
-
                     TextFieldWidget w = new TextFieldWidget(this.textRenderer,x+5+40+5,y+5,(240-5-40)-(5+40+5)-5,20,Text.of(""));
                     w.setEditable(false);
                     w.setMaxLength(131072);
@@ -2897,7 +2898,7 @@ public class ItemBuilder extends GenericScreen {
                     noScrollWidgets.get(tabNum).add(new PosWidget(w,5+40+5,5));
                 }
 
-                updateJsonPreview(path,baseJson);
+                updateJsonPreview(fullPath,baseJson);
 
                 if(jsonEffectMode == 0) {
                     widgets.get(tabNum).add(new RowWidget("Gradient"));
@@ -3403,7 +3404,7 @@ public class ItemBuilder extends GenericScreen {
             if(!isDye) {
                 for(int i=0; i<vals.length; i++)
                     patternItems[i] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick
-                        .nbtFromString("{id:white_banner,components:{banner_patterns:[{color:red,pattern:"+vals[i]+"}]}}"));
+                        .nbtFromString("{id:white_banner,components:{banner_patterns:[{color:red,pattern:\""+vals[i]+"\"}]}}"));
 
                 if(!bannerShield)
                     for(int i=0; i<vals.length; i++)
@@ -3411,7 +3412,7 @@ public class ItemBuilder extends GenericScreen {
                 else
                     for(int i=0; i<vals.length; i++)
                         this.savedStacks[i] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick
-                            .nbtFromString("{id:shield,components:{base_color:white,banner_patterns:[{color:red,pattern:"+vals[i]+"}]}}"));
+                            .nbtFromString("{id:shield,components:{base_color:white,banner_patterns:[{color:red,pattern:\""+vals[i]+"\"}]}}"));
             }
             else {
                 for(int i=0; i<vals.length; i++)
