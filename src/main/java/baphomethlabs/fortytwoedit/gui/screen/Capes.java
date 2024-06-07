@@ -57,7 +57,7 @@ public class Capes extends GenericScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnDecCustom()).dimensions(x+20+80+5,y+22*4+1,15,20).build())
             .setTooltip(Tooltip.of(Text.of("Cycle custom cape left")));
         this.txtCustom = new TextFieldWidget(this.textRenderer,x+20+1+80+5+15,y+22*4+1,90-2,20,Text.of(""));
-        this.txtCustom.setMaxLength(64);
+        this.txtCustom.setMaxLength(256);
         this.txtCustom.setText(FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].name());
         this.txtCustom.setCursorToStart(false);
         this.txtCustom.setTooltip(buildCapeTooltip());

@@ -704,23 +704,28 @@ public class BlackMagick {
      * @param id the item id (from ItemStack.getItem().toString())
      * @return int array with [rows,columns] or [-1,-1] depending on storage size of blockentity for item
      */
-    public static int[] containerSize(String id) {
+    public static int[] containerSize(Item item) {
         int rows = -1;
         int cols = -1;
 
         // find items by searching net.minecraft.item.Items for DataComponentTypes.CONTAINER
         // manually enter rows/cols based on ingame gui appearance
         // remove ender chest
+
+        String id = item.toString();
         
-        if(id.equals("chest") || id.equals("trapped_chest") || id.contains("shulker") || id.equals("barrel")) {
+        if(id.contains("ender_chest")) {
+
+        }
+        else if(id.contains("chest") || id.contains("trapped_chest") || id.contains("shulker") || id.contains("barrel")) {
             rows = 3;
             cols = 9;
         }
-        else if(id.equals("dispenser") || id.equals("dropper") || id.equals("crafter")) {
+        else if(id.contains("dispenser") || id.contains("dropper") || id.contains("crafter")) {
             rows = 3;
             cols = 3;
         }
-        else if(id.equals("hopper")) {
+        else if(id.contains("hopper")) {
             rows = 1;
             cols = 5;
         }
@@ -728,11 +733,11 @@ public class BlackMagick {
             rows = 1;
             cols = 3;
         }
-        else if(id.equals("brewing_stand")) {
+        else if(id.contains("brewing_stand")) {
             rows = 1;
             cols = 5;
         }
-        else if(id.equals("chiseled_bookshelf")) {
+        else if(id.contains("chiseled_bookshelf")) {
             rows = 2;
             cols = 3;
         }
@@ -862,16 +867,17 @@ public class BlackMagick {
      * @return hex String like #420666 or null
      */
     public static String colorHexFromDec(String dec) {
-        try {
-            int col = Integer.parseInt(dec);
-            if(col>=0 && col <=16777215) {
-                String hex = Integer.toHexString(col);
-                while(hex.length()<6)
-                    hex = "0"+hex;
-                if(hex.length()==6)
-                    return "#"+hex;
-            }
-        } catch(NumberFormatException ex) {}
+        if(dec != null)
+            try {
+                int col = Integer.parseInt(dec);
+                if(col>=0 && col <=16777215) {
+                    String hex = Integer.toHexString(col);
+                    while(hex.length()<6)
+                        hex = "0"+hex;
+                    if(hex.length()==6)
+                        return "#"+hex;
+                }
+            } catch(NumberFormatException ex) {}
         return null;
     }
 

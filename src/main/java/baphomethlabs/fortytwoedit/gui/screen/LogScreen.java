@@ -14,7 +14,7 @@ import net.minecraft.text.Text;
 public class LogScreen extends GenericScreen {
 
     EditBoxWidget box;
-    ButtonWidget btnPause; // todo switch to cycle button
+    ButtonWidget btnPause; //TODO switch to cycle button
     static File logFile;
     static final List<LogMessage> FULL_LOG = new ArrayList<>();
     static boolean paused = false;
@@ -125,9 +125,9 @@ public class LogScreen extends GenericScreen {
         switch(type) {
             case INFO: return "2";
             case WARN: return "6";
-            case ERROR: return "4";//TODO
-            case DEBUG: return "4";//TODO
-            case FATAL: return "4";//TODO
+            case ERROR: return "4";//TODO test all log colors
+            case DEBUG: return "4";
+            case FATAL: return "4";
             case UNKNOWN: break;
         }
         return "f";

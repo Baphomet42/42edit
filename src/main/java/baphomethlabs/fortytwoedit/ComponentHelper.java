@@ -13,6 +13,7 @@ import net.minecraft.item.EntityBucketItem;
 import net.minecraft.item.HangingSignItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.item.MinecartItem;
 import net.minecraft.item.SignItem;
 import net.minecraft.item.ToolMaterials;
@@ -97,8 +98,7 @@ public class ComponentHelper {
         if(stack==null || component == null)
             return false;
         Item item = stack.getItem();
-        String itemId = item.toString();
-        if(itemId.equals("ender_chest") && (component.equals("container") || component.equals("container_loot")))
+        if(stack.isOf(Items.ENDER_CHEST) && (component.equals("minecraft:container") || component.equals("minecraft:container_loot")))
             return false;
         if(hasComponent(item.getComponents(),component) || (recursive && hasComponent(stack.getComponents(),component)))
             return true;
@@ -122,26 +122,26 @@ public class ComponentHelper {
             case "minecraft:suspicious_stew_effects":
             case "minecraft:writable_book_content":
                 return hasComponent(item.getComponents(),component) || (recursive && hasComponent(stack.getComponents(),component));
-            case "minecraft:base_color": return itemId.equals("shield");
-            case "minecraft:block_entity_data": return (BlackMagick.stringEquals(itemId,"beacon","beehive","bee_nest","blast_furnace","brewing_stand","campfire","chiseled_bookshelf","command_block","chain_command_block","repeating_command_block","crafter","furnace","smoker","soul_campfire","spawner","trial_spawner","jukebox","lectern")
+            case "minecraft:base_color": return stack.isOf(Items.SHIELD);
+            case "minecraft:block_entity_data": return (BlackMagick.stringEquals(item.toString(),"minecraft:beacon","minecraft:beehive","minecraft:bee_nest","minecraft:blast_furnace","minecraft:brewing_stand","minecraft:campfire","minecraft:chiseled_bookshelf","minecraft:command_block","minecraft:chain_command_block","minecraft:repeating_command_block","minecraft:crafter","minecraft:furnace","minecraft:smoker","minecraft:soul_campfire","minecraft:spawner","minecraft:trial_spawner","minecraft:jukebox","minecraft:lectern")
                 || item instanceof SignItem || item instanceof HangingSignItem); // see https://minecraft.wiki/w/Chunk_format
             case "minecraft:block_state": return !BlackMagick.getBlockStates(stack.getItem()).isEmpty();
             case "minecraft:bucket_entity_data": return item instanceof EntityBucketItem;
             case "minecraft:dyed_color": return (new ItemStack(item)).isIn(ItemTags.DYEABLE);
-            case "minecraft:entity_data": return (item instanceof DecorationItem || itemId.equals("armor_stand") || item instanceof BoatItem || 
-                item instanceof MinecartItem || itemId.contains("spawn_egg"));
-            case "minecraft:container_loot": return BlackMagick.stringContains(itemId,"chest","barrel","dispenser","dropper","hopper","crafter","shulker_box");
+            case "minecraft:entity_data": return (item instanceof DecorationItem || stack.isOf(Items.ARMOR_STAND) || item instanceof BoatItem || 
+                item instanceof MinecartItem || item.toString().contains("spawn_egg"));
+            case "minecraft:container_loot": return BlackMagick.stringContains(item.toString(),"chest","barrel","dispenser","dropper","hopper","crafter","shulker_box");
             case "minecraft:damage": return componentReadRecursiveLogic(stack,"minecraft:max_damage",true);
-            case "minecraft:firework_explosion": return itemId.equals("firework_star");
-            case "minecraft:instrument": return itemId.equals("goat_horn");
-            case "minecraft:intangible_projectile": return itemId.contains("arrow");
-            case "minecraft:lock": return (itemId.equals("beacon") || (componentReadRecursiveLogic(stack,"minecraft:container",true) && !itemId.contains("campfire") && !itemId.equals("chiseled_bookshelf")));
-            case "minecraft:lodestone_tracker": return itemId.equals("compass");
-            case "minecraft:note_block_sound": return itemId.equals("player_head");
-            case "minecraft:profile": return itemId.equals("player_head");
+            case "minecraft:firework_explosion": return stack.isOf(Items.FIREWORK_STAR);
+            case "minecraft:instrument": return stack.isOf(Items.GOAT_HORN);
+            case "minecraft:intangible_projectile": return item.toString().contains("arrow");
+            case "minecraft:lock": return (stack.isOf(Items.BEACON) || (componentReadRecursiveLogic(stack,"minecraft:container",true) && !item.toString().contains("campfire") && !stack.isOf(Items.CHISELED_BOOKSHELF)));
+            case "minecraft:lodestone_tracker": return stack.isOf(Items.COMPASS);
+            case "minecraft:note_block_sound": return stack.isOf(Items.PLAYER_HEAD);
+            case "minecraft:profile": return stack.isOf(Items.PLAYER_HEAD);
             case "minecraft:trim": return item instanceof ArmorItem;
             case "minecraft:unbreakable": return componentReadRecursiveLogic(stack,"minecraft:max_damage",true);
-            case "minecraft:written_book_content": return itemId.equals("written_book");
+            case "minecraft:written_book_content": return stack.isOf(Items.WRITTEN_BOOK);
             default: return true;
         }
     }

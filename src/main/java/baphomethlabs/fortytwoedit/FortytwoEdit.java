@@ -47,6 +47,7 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -282,9 +283,9 @@ public class FortytwoEdit implements ClientModInitializer {
 
         new CapeTexture(CapeGroup.PRIVATE, "realms_mapmaker", "Realms Mapmaker", "http://textures.minecraft.net/texture/17912790ff164b93196f08ba71d0e62129304776d0f347334f8a6eae509f8a56"),
         new CapeTexture(CapeGroup.PRIVATE, "mojira_moderator", "Mojira Moderator", "http://textures.minecraft.net/texture/ae677f7d98ac70a533713518416df4452fe5700365c09cf45d0d156ea9396551"),
-        //new CapeTexture(CapeGroup.PRIVATE, "translator", "Translator", ""),
-        //new CapeTexture(CapeGroup.PRIVATE, "cobalt", "Cobalt", ""),
-        //new CapeTexture(CapeGroup.PRIVATE, "scrolls", "Scrolls", ""),
+        new CapeTexture(CapeGroup.PRIVATE, "translator", "Translator", "http://textures.minecraft.net/texture/1bf91499701404e21bd46b0191d63239a4ef76ebde88d27e4d430ac211df681e"),
+        new CapeTexture(CapeGroup.PRIVATE, "cobalt", "Cobalt", "http://textures.minecraft.net/texture/ca35c56efe71ed290385f4ab5346a1826b546a54d519e6a3ff01efa01acce81"),
+        new CapeTexture(CapeGroup.PRIVATE, "scrolls", "Scrolls", "http://textures.minecraft.net/texture/3efadf6510961830f9fcc077f19b4daf286d502b5f5aafbd807c7bbffcaca245"),
 
         new CapeTexture(CapeGroup.MOJANG, "mojang_classic", "Mojang (Classic)", "http://textures.minecraft.net/texture/8f120319222a9f4a104e2f5cb97b2cda93199a2ee9e1585cb8d09d6f687cb761"),
         new CapeTexture(CapeGroup.MOJANG, "mojang", "Mojang", "http://textures.minecraft.net/texture/5786fe99be377dfb6858859f926c4dbc995751e91cee373468c5fbf4865e7151"),
@@ -599,8 +600,8 @@ public class FortytwoEdit implements ClientModInitializer {
             //autoFish
             if(autoFishClick && System.currentTimeMillis()>=lastFish + fishWait) {
                 if(autoFish && !autoClicker && client.currentScreen == null && ((!client.player.getMainHandStack().isEmpty()
-                        && client.player.getMainHandStack().getItem().toString().equals("fishing_rod")) || (client.player.getMainHandStack().isEmpty()
-                        && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().getItem().toString().equals("fishing_rod"))) ) {
+                        && client.player.getMainHandStack().isOf(Items.FISHING_ROD)) || (client.player.getMainHandStack().isEmpty()
+                        && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().isOf(Items.FISHING_ROD))) ) {
                     KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
                     didFish = true;
                 }
@@ -609,8 +610,8 @@ public class FortytwoEdit implements ClientModInitializer {
             }
             if(didFish && System.currentTimeMillis()>=lastFish + fishWait) {
                 if(autoFish && !autoClicker && client.currentScreen == null && ((!client.player.getMainHandStack().isEmpty()
-                        && client.player.getMainHandStack().getItem().toString().equals("fishing_rod")) || (client.player.getMainHandStack().isEmpty()
-                        && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().getItem().toString().equals("fishing_rod"))) ) {
+                        && client.player.getMainHandStack().isOf(Items.FISHING_ROD)) || (client.player.getMainHandStack().isEmpty()
+                        && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().isOf(Items.FISHING_ROD))) ) {
                     KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
                 }
                 didFish = false;

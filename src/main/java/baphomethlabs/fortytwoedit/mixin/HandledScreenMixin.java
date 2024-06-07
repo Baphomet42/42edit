@@ -60,7 +60,7 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                 ContainerComponent container = components.get(DataComponentTypes.CONTAINER);
                 int rows = 3;
                 int columns = 9;
-                int[] size = BlackMagick.containerSize(stack.getItem().toString());
+                int[] size = BlackMagick.containerSize(stack.getItem());
                 if(size[0]>0)
                     rows = size[0];
                 if(size[1]>0)

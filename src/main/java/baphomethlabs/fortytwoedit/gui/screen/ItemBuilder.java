@@ -65,7 +65,7 @@ import net.minecraft.util.math.MathHelper;
 
 public class ItemBuilder extends GenericScreen {
 
-    protected boolean unsel = false;//TODO remove unused fields
+    protected boolean unsel = false;
     protected static int tab = 0;
     protected static final int TAB_OFFSET = 5;
     protected static final int TAB_SIZE = 24;
@@ -123,8 +123,8 @@ public class ItemBuilder extends GenericScreen {
     protected final int playerY = -10;
     private static final int RENDER_SIZE = 35;
     private static final Text ERROR_CREATIVE = Text.of("Creative required to edit");
-    private ArrayList<RowWidget> sliders = new ArrayList<>();
-    private ArrayList<RowWidget> sliderBtns = new ArrayList<>();
+    private ArrayList<RowWidgetSlider> sliders = new ArrayList<>();
+    private ArrayList<RowWidgetSlider> sliderBtns = new ArrayList<>();
     private ButtonWidget setPoseButton;
     private boolean editArmorStand = false;
     private float[][] armorPose;
@@ -132,9 +132,13 @@ public class ItemBuilder extends GenericScreen {
     public static final String[] BANNER_CHAR_LIST = new String[BANNER_PRESET_CHARS.replaceAll("\\s","").length()+1];
     private TextSuggestor suggs;
     private Set<TextFieldWidget> currentTxt = Sets.newHashSet();
-    private static int[] rgb = new int[]{66,6,102,0,0,0};
-    private ArrayList<RowWidget> rgbSliders = new ArrayList<>();
-    private boolean rgbChanged[] = {true,true};//used to update txtwids {general rgb dec, general rgb hex}
+    private static int[][] colorSets = {{66,6,102},{0,0,0}};
+    private ArrayList<Set<TextFieldWidget>> colorHexTxts = new ArrayList<>();
+    private ArrayList<Set<TextFieldWidget>> colorDecTxts = new ArrayList<>();
+    private ArrayList<ArrayList<Set<RgbSlider>>> colorRgbSliders = new ArrayList<>();
+    private ArrayList<ArrayList<Set<PosWidget>>> colorItemWids = new ArrayList<>();
+    private boolean colorLocked = false;
+    private Set<ClickableWidget> colorLockedWidget = Sets.newHashSet();
     private static final ItemStack[] rgbItems = new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
     private Map<String,int[]> cacheI = Maps.newHashMap();
     private Text jsonPreview = Text.of("");
@@ -151,7 +155,7 @@ public class ItemBuilder extends GenericScreen {
     private boolean jsonBaseValid = false;
     private boolean jsonEffectValid = false;
     private String jsonEffectFull = "";
-    private static String jsonLastColor = "reset";
+    private static String jsonLastColor = "white";
     private boolean bannerShield = false;
     private static ArmorStandEntity bannerChangePreview = null;
     protected boolean showBannerPreview = false;
@@ -171,6 +175,17 @@ public class ItemBuilder extends GenericScreen {
             firstInit = false;
         }
         pauseSaveScroll = false;
+
+        for(int i=0; i<colorSets.length; i++) {
+            colorHexTxts.add(Sets.newHashSet());
+            colorDecTxts.add(Sets.newHashSet());
+            colorRgbSliders.add(new ArrayList<Set<RgbSlider>>());
+            for(int j=0; j<3; j++)
+                colorRgbSliders.get(colorRgbSliders.size()-1).add(Sets.newHashSet());
+            colorItemWids.add(new ArrayList<Set<PosWidget>>());
+            for(int j=0; j<3; j++)
+                colorItemWids.get(colorItemWids.size()-1).add(Sets.newHashSet());
+        }
         
         if(!tabs[tab].hideTabs) {
 
@@ -698,7 +713,7 @@ public class ItemBuilder extends GenericScreen {
         return pose.copy();
     }
 
-    // private void btnResetPose() {//TODO old pose logic start
+    // private void btnResetPose() {//TODO old pose methods
     //     for(int i=0; i<sliders.size(); i++)
     //         sliders.get(i).setSlider(0f);
 
@@ -844,62 +859,91 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private void updateRgbSliders() {
-        for(int i=0; i<rgbSliders.size(); i++)
-            rgbSliders.get(i).setSlider(rgb[i]);
-        for(int i=0; i<rgbChanged.length; i++)
-            rgbChanged[i] = true;
+        if(!colorLocked) {
+            colorLocked = true;
 
-        if(cacheI.containsKey("jsonEffectBtns") && widgets.get(cacheI.get("jsonEffectBtns")[0]).size()>cacheI.get("jsonEffectBtns")[1]+2+3) {
-            int[] jsonEffectBtnsI = cacheI.get("jsonEffectBtns");
-            if(jsonEffectMode == 0) {
-                for(int rgbNum=0; rgbNum<2; rgbNum++) {
-                    for(int i=0; i<3; i++)
-                        ((RgbSlider)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+2+i).wids[rgbNum].w).setVal(rgb[i+3*rgbNum]);
-
-                    ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+2+3).wids[rgbNum].w).setText(""+getRgbHex(rgbNum));
-                    ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+2+3).wids[rgbNum].w).setEditableColor(getRgbDec(rgbNum));
+            for(int rgbNum=0; rgbNum<colorSets.length; rgbNum++) {
+                for(TextFieldWidget w : colorHexTxts.get(rgbNum)) {
+                    if(jsonEffectMode != 1 || jsonEffects[6]==2) {
+                        if(!colorLockedWidget.contains(w)) {
+                            w.setText(""+getRgbHex(rgbNum));
+                        }
+                        w.setEditableColor(getRgbDec(rgbNum));
+                        w.setTooltip(Tooltip.of(Text.of(getRgbHex(rgbNum))));
+                    }
                 }
+                for(TextFieldWidget w : colorDecTxts.get(rgbNum)) {
+                    if(!colorLockedWidget.contains(w)) {
+                        w.setText(""+getRgbDec(rgbNum));
+                    }
+                    w.setEditableColor(getRgbDec(rgbNum));
+                    w.setTooltip(Tooltip.of(Text.of(""+getRgbDec(rgbNum))));
+                }
+                for(int num=0; num<3; num++) {
+                    for(RgbSlider w : colorRgbSliders.get(rgbNum).get(num)) {
+                        w.setVal(colorSets[rgbNum][num]);
+                    }
+                    for(PosWidget w : colorItemWids.get(rgbNum).get(num)) {
+                        w.s = rgbItems[num];
+                    }
+                }
+            }
+
+            if(jsonEffectMode>=0)
                 updateJsonEffect();
-            }
-            else if(jsonEffectMode == 1) {
-                for(int i=0; i<3; i++)
-                    ((RgbSlider)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+2+i).wids[0].w).setVal(rgb[i]);
 
-                if(jsonEffects[6]==0) {
-                    ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setText(""+getRgbHex(0));
-                    ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setEditableColor(getRgbDec(0));
-                    updateJsonEffect();
-                }
-            }
+            rgbItems[0] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:leather_chestplate,components:{dyed_color:"+getRgbDec(0)+"}}"));
+            rgbItems[1] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:potion,components:{potion_contents:{custom_color:"+getRgbDec(0)+"}}}"));
+            rgbItems[2] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:filled_map,components:{map_color:"+getRgbDec(0)+"}}"));
+            
+            colorLocked = false;
+            colorLockedWidget.clear();
         }
-        
     }
 
-    private void updateRgbItems() {
-        rgbItems[0] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:leather_chestplate,components:{dyed_color:"+getRgbDec()+"}}"));
-        rgbItems[1] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:potion,components:{potion_contents:{custom_color:"+getRgbDec()+"}}}"));
-        rgbItems[2] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:filled_map,components:{map_color:"+getRgbDec()+"}}"));
-    }
-
-    private int getRgbDec() {
-        return getRgbDec(0);
-    }
     private int getRgbDec(int rgbNum) {
-        return rgb[0+3*rgbNum]*256*256+rgb[1+3*rgbNum]*256+rgb[2+3*rgbNum];
+        return colorSets[rgbNum][0]*256*256+colorSets[rgbNum][1]*256+colorSets[rgbNum][2];
     }
 
-    private String getRgbHex() {
-        return getRgbHex(0);
-    }
     private String getRgbHex(int rgbNum) {
         String hex = "#";
         for(int i=0; i<3; i++) {
-            String current = Integer.toHexString(rgb[i+3*rgbNum]).toUpperCase();
+            String current = Integer.toHexString(colorSets[rgbNum][i]).toUpperCase();
             if(current.length()==1)
                 current = "0" + current;
             hex += current;
         }
         return hex;
+    }
+
+    private void trySetColorHex(int rgbNum, String inp, ClickableWidget w) {
+        if(!colorLocked && rgbNum>=0 && rgbNum<colorSets.length && inp!=null && inp.length()>1 && inp.length()<=7 && inp.startsWith("#")) {
+            boolean valid = true;
+            String hex = inp.substring(1);
+            int[] rgb = {0,0,0};
+            while(hex.length()<6)
+                hex = "0"+hex;
+            for(int i=0; i<3; i++) {
+                try {
+                    int c = Integer.parseInt(hex.substring(2*i,2*i+2),16);
+                    if(c<0 || c>255)
+                        valid = false;
+                    rgb[i] = c;
+                } catch(Exception ex) {
+                    valid = false;
+                }
+            }
+            if(valid) {
+                for(int i=0; i<3; i++)
+                    colorSets[rgbNum][i]=rgb[i];
+                colorLockedWidget.add(w);
+                updateRgbSliders();
+            }
+        }
+    }
+
+    private void trySetColorDec(int rgbNum, String inp, ClickableWidget w) {
+        trySetColorHex(rgbNum, BlackMagick.colorHexFromDec(inp), w);
     }
 
     private void drawItem(DrawContext context, ItemStack item, int x, int y) {
@@ -1025,17 +1069,19 @@ public class ItemBuilder extends GenericScreen {
             else if(jsonEffectMode == 1) {
                 ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setEditableColor(0xFFFFFF);
                 ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setEditable(true);
+                ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setTooltip(null);
 
-                if(jsonEffects[6]==0) {
+                if(jsonEffects[6]==2) {
                     widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[0].w.setMessage(Text.of("Color [RGB]"));
-                    ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setText(getRgbHex());
-                    ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setEditableColor(getRgbDec());
+                    ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setText(getRgbHex(0));
+                    ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setEditableColor(getRgbDec(0));
+                    ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setTooltip(Tooltip.of(Text.of(getRgbHex(0))));
                 }
                 else if(jsonEffects[6]==1) {
                     widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[0].w.setMessage(Text.of("Color [Vanilla]"));
                     ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setText(jsonLastColor);
                 }
-                else if(jsonEffects[6]==2) {
+                else if(jsonEffects[6]==0) {
                     widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[0].w.setMessage(Text.of("Color [None]"));
                     ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setText("<None>");
                     ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setEditable(false);
@@ -1058,7 +1104,7 @@ public class ItemBuilder extends GenericScreen {
                 return;
             String value = ((TextFieldWidget)widgets.get(cacheI.get("jsonEffectTxt")[0]).get(cacheI.get("jsonEffectTxt")[1]).wids[0].w).getText();
             String val = "";
-            if(value.length()==1 || (rgb[0]==rgb[3] && rgb[1]==rgb[4] && rgb[2]==rgb[5])) {
+            if(value.length()==1 || (colorSets[0][0]==colorSets[1][0] && colorSets[0][1]==colorSets[1][1] && colorSets[0][2]==colorSets[1][2])) {
                 val+="{\"text\":\"";
                 for(int i=0; i<value.length(); i++) {
                     String thisChar = ""+value.charAt(i);
@@ -1066,7 +1112,7 @@ public class ItemBuilder extends GenericScreen {
                         thisChar = "\\"+thisChar;
                     val+=thisChar;
                 }
-                val+="\",\"color\":\""+getRgbHex()+"\"";
+                val+="\",\"color\":\""+getRgbHex(0)+"\"";
                 if(jsonEffects[0]==1)
                     val+=",\"bold\":true";
                 else if(jsonEffects[0]==2)
@@ -1101,9 +1147,9 @@ public class ItemBuilder extends GenericScreen {
                 for(int c=0; c<3; c++) {
                     int col = 0;
                     if(jsonEffects[5]==1)
-                        col = rgb[c];
+                        col = colorSets[0][c];
                     else {
-                        col = rgb[c+3];
+                        col = colorSets[1][c];
                     }
                     String current = Integer.toHexString(col).toUpperCase();
                     if(current.length()==1)
@@ -1143,19 +1189,19 @@ public class ItemBuilder extends GenericScreen {
                     for(int c=0; c<3; c++) {
                         int col = 0;
                         if(jsonEffects[5]==1)
-                            col = rgb[c] + (int)((rgb[c+3]-rgb[c])*i/((double)(value.length()-1)));
+                            col = colorSets[0][c] + (int)((colorSets[1][c]-colorSets[0][c])*i/((double)(value.length()-1)));
                         else {
                             if(value.length()%2==0) {
                                 if(i<value.length()/2)
-                                    col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*i/((double)(value.length()/2-1)));
+                                    col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*i/((double)(value.length()/2-1)));
                                 else
-                                    col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*(value.length()-i-1)/((double)(value.length()/2-1)));
+                                    col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*(value.length()-i-1)/((double)(value.length()/2-1)));
                             }
                             else {
                                 if(i<=value.length()/2)
-                                    col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*i/((double)(value.length()/2)));
+                                    col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*i/((double)(value.length()/2)));
                                 else
-                                    col = rgb[c+3] + (int)((rgb[c]-rgb[c+3])*(value.length()-i-1)/((double)(value.length()/2)));
+                                    col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*(value.length()-i-1)/((double)(value.length()/2)));
                             }
                         }
                         
@@ -1201,8 +1247,8 @@ public class ItemBuilder extends GenericScreen {
                         && widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+8).txts[0].getText().length()>0)
                     val+=",\"fallback\":\""+widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+8).txts[0].getText()+"\"";
             }
-            if(jsonEffects[6]==0)
-                val+=",\"color\":\""+getRgbHex()+"\"";
+            if(jsonEffects[6]==2)
+                val+=",\"color\":\""+getRgbHex(0)+"\"";
             else if(jsonEffects[6]==1)
                 val+=",\"color\":\""+jsonLastColor+"\"";
             if(jsonEffects[0]==1)
@@ -2074,147 +2120,6 @@ public class ItemBuilder extends GenericScreen {
                 getWebItems();
             setSavedModeTooltip();
         }
-        
-        // //createBlock armor stand pose TODO old pose tab logic
-        // {
-        //     ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2611"), button -> this.btnSetPose()).dimensions(x+15-3, y+35+1,20,20).build();
-        //     newButton.setTooltip(Tooltip.of(Text.of("Set Pose")));
-        //     if(!client.player.getAbilities().creativeMode)
-        //         newButton.active = false;
-        //     setPoseButton = newButton;
-        //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1));
-        // }
-        // {
-        //     ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2227"), button -> this.btnGetPose()).dimensions(x+15-3, y+35+1+22,20,20).build();
-        //     newButton.setTooltip(Tooltip.of(Text.of("Get from item")));
-        //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1+22));
-        // }
-        // {
-        //     ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2612"), button -> this.btnResetPose()).dimensions(x+15-3, y+35+1+22*2,20,20).build();
-        //     newButton.setTooltip(Tooltip.of(Text.of("Clear All")));
-        //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1+22*2));
-        // }
-        // {
-        //     RowWidget newButton = new RowWidget(0,"Head");
-        //     sliderBtns.add(newButton);
-        //     widgets.get(tabNum).add(newButton);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(0,0);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(0,1);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(0,2);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newButton = new RowWidget(1,"Right Arm");
-        //     sliderBtns.add(newButton);
-        //     widgets.get(tabNum).add(newButton);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(1,0);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(1,1);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(1,2);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newButton = new RowWidget(2,"Left Arm");
-        //     sliderBtns.add(newButton);
-        //     widgets.get(tabNum).add(newButton);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(2,0);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(2,1);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(2,2);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newButton = new RowWidget(3,"Right Leg");
-        //     sliderBtns.add(newButton);
-        //     widgets.get(tabNum).add(newButton);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(3,0);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(3,1);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(3,2);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newButton = new RowWidget(4,"Left Leg");
-        //     sliderBtns.add(newButton);
-        //     widgets.get(tabNum).add(newButton);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(4,0);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(4,1);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(4,2);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newButton = new RowWidget(5,"Body");
-        //     sliderBtns.add(newButton);
-        //     widgets.get(tabNum).add(newButton);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(5,0);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(5,1);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // {
-        //     RowWidget newSlider = new RowWidget(5,2);
-        //     sliders.add(newSlider);
-        //     widgets.get(tabNum).add(newSlider);
-        // }
-        // btnResetPose();
 
         resetSuggs();
     }
@@ -2317,7 +2222,7 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<2; i++) {
                 ItemStack current = i==0 ? client.player.getMainHandStack() : client.player.getOffHandStack();
                 if(current != null && !current.isEmpty()) {
-                    int[] size = BlackMagick.containerSize(current.getItem().toString());
+                    int[] size = BlackMagick.containerSize(current.getItem());
 
                     if(current.isOf(Items.BUNDLE)) {
                         {
@@ -2460,6 +2365,16 @@ public class ItemBuilder extends GenericScreen {
                 else
                     path2 = null;
 
+                boolean showCancelEl = false;
+                NbtElement cancelEl = null;
+                if(args.contains("cancelEl",NbtElement.COMPOUND_TYPE)) {
+                    NbtCompound cancelNbt = args.getCompound("cancelEl");
+                    showCancelEl = true;
+                    if(cancelNbt.contains("el")) {
+                        cancelEl = cancelNbt.get("el");
+                    }
+                }
+
                 String fullPath;
                 if(path2 != null)
                     fullPath = path+path2[0];
@@ -2526,6 +2441,14 @@ public class ItemBuilder extends GenericScreen {
                     setEditingElement(path,blankTabEl,saveBtn,fullPath);
                 }
 
+                if(el2 != null && !showCancelEl)
+                    cancelEl = el2.copy();
+                if(elType == PathType.BANNER || elType == PathType.TEXT || elType == PathType.DECIMAL_COLOR || elType == PathType.POSE) {
+                    // when adding a new type here, make sure all buttons on the page handle cancelEl accordingly
+                    showCancelEl = true;
+                }
+                final NbtElement cancelElCopy = cancelEl == null ? null : cancelEl.copy();
+
                 if(path2 == null) {
                     NbtElement selItemComp = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path);
                     ButtonWidget w = ButtonWidget.builder(Text.of("Cancel"),btn -> this.btnTab(CACHE_TAB_MAIN)).dimensions(x+5,y+5,40,20).build();
@@ -2535,41 +2458,39 @@ public class ItemBuilder extends GenericScreen {
                         w.setTooltip(Tooltip.of(Text.of("Keep component as:\n"+BlackMagick.nbtToString(selItemComp))));
                     noScrollWidgets.get(tabNum).add(new PosWidget(w,5,5));
                 }
-                // else { // requires saving temp history in path2 (also use temp history for done button changes?)
-                //     NbtElement pageCreateEl = el2!=null ? el2.copy() : null;
-
-                //     ButtonWidget w = ButtonWidget.builder(Text.of("Cancel"),btn -> {
-                //         setEditingElement(path,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-                //             BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,blankTabEl),fullPath,pageCreateEl),path),saveBtn,
-                //             path2==null ? null : fullPath);
-                //         if(path2.length==1) {
-                //             NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}"));
-                //             if(blankTabEl != null)
-                //                 newArgs.put("overrideEl",blankTabEl);
-                //             createBlankTab(0,newArgs);
-                //         }
-                //         else {
-                //             NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}"));
-                //             if(blankTabEl != null)
-                //                 newArgs.put("overrideEl",blankTabEl);
-                //             NbtList pathList = new NbtList();
-                //             for(int i=1; i<path2.length; i++)
-                //                 pathList.add(NbtString.of(path2[i]));
-                //             newArgs.put("path2",pathList);
-                //             createBlankTab(0,newArgs);
-                //         }
-                //     }).dimensions(x+5,y+5,40,20).build();
-                //     if(pageCreateEl == null)
-                //         w.setTooltip(Tooltip.of(Text.of("Keep element unset")));
-                //     else
-                //         w.setTooltip(Tooltip.of(Text.of("Keep element as:\n"+BlackMagick.nbtToString(pageCreateEl))));
-                //     noScrollWidgets.get(tabNum).add(new PosWidget(w,5,5));
-                // }
+                else if(showCancelEl) {
+                    ButtonWidget w = ButtonWidget.builder(Text.of("Cancel"),btn -> {
+                        setEditingElement(path,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
+                            BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,blankTabEl),fullPath,cancelElCopy),path),saveBtn,
+                            path2==null ? null : fullPath);
+                        if(path2.length==1) {
+                            NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}"));
+                            if(blankTabEl != null)
+                                newArgs.put("overrideEl",blankTabEl);
+                            createBlankTab(0,newArgs);
+                        }
+                        else {
+                            NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}"));
+                            if(blankTabEl != null)
+                                newArgs.put("overrideEl",blankTabEl);
+                            NbtList pathList = new NbtList();
+                            for(int i=1; i<path2.length; i++)
+                                pathList.add(NbtString.of(path2[i]));
+                            newArgs.put("path2",pathList);
+                            createBlankTab(0,newArgs);
+                        }
+                    }).dimensions(x+5,y+5,40,20).build();
+                    if(cancelElCopy == null)
+                        w.setTooltip(Tooltip.of(Text.of("Keep element unset")));
+                    else
+                        w.setTooltip(Tooltip.of(Text.of("Keep element as:\n"+BlackMagick.nbtToString(cancelElCopy))));
+                    noScrollWidgets.get(tabNum).add(new PosWidget(w,5,5));
+                }
 
                 {
                     TextFieldWidget w = new TextFieldWidget(this.textRenderer,x+5+40+5,y+5,(240-5-40)-(5+40+5)-5,20,Text.of(""));
                     w.setEditable(false);
-                    w.setMaxLength(131072);
+                    w.setMaxLength(MAX_TEXT_LENGTH);
                     w.setText(cleanPath(fullPath));
                     w.setTooltip(Tooltip.of(Text.of("Current path:\n"+fullPath)));
                     noScrollWidgets.get(tabNum).add(new PosWidget(w,5+40+5,5));
@@ -2714,8 +2635,13 @@ public class ItemBuilder extends GenericScreen {
                                 newArgs.put("path2",args.get("path2"));
                             if(blankTabEl != null)
                                 newArgs.put("overrideEl",blankTabEl);
-                            createBlankTab(2,newArgs);
 
+                            NbtCompound cancelNbt = new NbtCompound();
+                            if(cancelElCopy != null)
+                                cancelNbt.put("el",cancelElCopy);
+                            newArgs.put("cancelEl",cancelNbt);
+
+                            createBlankTab(2,newArgs);
                             unsel = true;
                         }).dimensions(x+15-3,y+35+22*6+1,60,20).build(),15-3,35+22*6+1));
                     }
@@ -2734,8 +2660,13 @@ public class ItemBuilder extends GenericScreen {
                                 newArgs.put("path2",args.get("path2"));
                             if(blankTabEl != null)
                                 newArgs.put("overrideEl",blankTabEl);
-                            createBlankTab(2,newArgs);
 
+                            NbtCompound cancelNbt = new NbtCompound();
+                            if(cancelElCopy != null)
+                                cancelNbt.put("el",cancelElCopy);
+                            newArgs.put("cancelEl",cancelNbt);
+
+                            createBlankTab(2,newArgs);
                             unsel = true;
                         }).dimensions(x+15-3+60+5,y+35+22*6+1,60,20).build(),15-3+60+5,35+22*6+1));
                     }
@@ -2760,8 +2691,43 @@ public class ItemBuilder extends GenericScreen {
                         }).dimensions(x+15-3+60+5+60+5,y+35+22*6+1,60,20).build(),15-3+60+5+60+5,35+22*6+1));
                     }
                 }
-                else if(elType == PathType.DECIMAL_COLOR) {//TODO dec page
-                    widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn));
+                else if(elType == PathType.DECIMAL_COLOR) {//TODO new dec page
+                    widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn)); //TODO use PosWidget
+                    //TODO buttons to get/set from color editor
+                    widgets.get(tabNum).add(new RowWidget("Color Editor"));
+
+                    int rgbNum = 0;
+                    colorHexTxts.get(rgbNum).clear();
+                    colorDecTxts.get(rgbNum).clear();
+
+                    for(int i=0; i<3; i++) {
+                        colorRgbSliders.get(rgbNum).get(i).clear();
+                        {
+                            RgbSlider w = new RgbSlider(rgbNum,i,false);
+                            PosWidget w2 = new PosWidget(rgbItems[i],180,0);
+                            widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),w2}));
+                            colorRgbSliders.get(rgbNum).get(i).add(w);
+                            colorItemWids.get(rgbNum).get(i).add(w2);
+                        }
+                    }
+
+                    {
+                        TextFieldWidget w = new TextFieldWidget(textRenderer, x+15, 0, 80, 20, Text.of(""));
+                        w.setMaxLength(MAX_TEXT_LENGTH);
+                        w.setChangedListener(value -> {
+                            trySetColorHex(0,value,w);
+                        });
+                        TextFieldWidget w2 = new TextFieldWidget(textRenderer, x+15+100+5, 0, 80, 20, Text.of(""));
+                        w2.setMaxLength(MAX_TEXT_LENGTH);
+                        w2.setChangedListener(value -> {
+                            trySetColorDec(0,value,w2);
+                        });
+                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+                        colorHexTxts.get(rgbNum).add(w);
+                        colorDecTxts.get(rgbNum).add(w2);
+                    }
+
+                    updateRgbSliders();
                 }
                 else if(elType == PathType.BANNER) {
                     if(el2==null || el2.getType()!=NbtElement.COMPOUND_TYPE)
@@ -2811,13 +2777,154 @@ public class ItemBuilder extends GenericScreen {
                         for(int i=0; i<currentVals.length; i++)
                             currentVals[i] = bannerVals.remove(0);
                         widgets.get(tabNum).add(
-                            new RowWidget(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,row<2,currentVals,row<2 ? bannerCol : bannerPat));
+                            new RowWidget(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,row<2,currentVals,row<2 ? bannerCol : bannerPat,cancelEl));
                         row++;
                     }
 
                 }
-                else if(elType == PathType.POSE) {//TODO pose page
+                else if(elType == PathType.POSE) {//TODO new pose page
                     widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn));
+                    
+                    // //createBlock armor stand pose
+                    // {
+                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2611"), button -> this.btnSetPose()).dimensions(x+15-3, y+35+1,20,20).build();
+                    //     newButton.setTooltip(Tooltip.of(Text.of("Set Pose")));
+                    //     if(!client.player.getAbilities().creativeMode)
+                    //         newButton.active = false;
+                    //     setPoseButton = newButton;
+                    //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1));
+                    // }
+                    // {
+                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2227"), button -> this.btnGetPose()).dimensions(x+15-3, y+35+1+22,20,20).build();
+                    //     newButton.setTooltip(Tooltip.of(Text.of("Get from item")));
+                    //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1+22));
+                    // }
+                    // {
+                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2612"), button -> this.btnResetPose()).dimensions(x+15-3, y+35+1+22*2,20,20).build();
+                    //     newButton.setTooltip(Tooltip.of(Text.of("Clear All")));
+                    //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1+22*2));
+                    // }
+                    // {
+                    //     RowWidget newButton = new RowWidget(0,"Head");
+                    //     sliderBtns.add(newButton);
+                    //     widgets.get(tabNum).add(newButton);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(0,0);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(0,1);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(0,2);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newButton = new RowWidget(1,"Right Arm");
+                    //     sliderBtns.add(newButton);
+                    //     widgets.get(tabNum).add(newButton);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(1,0);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(1,1);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(1,2);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newButton = new RowWidget(2,"Left Arm");
+                    //     sliderBtns.add(newButton);
+                    //     widgets.get(tabNum).add(newButton);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(2,0);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(2,1);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(2,2);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newButton = new RowWidget(3,"Right Leg");
+                    //     sliderBtns.add(newButton);
+                    //     widgets.get(tabNum).add(newButton);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(3,0);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(3,1);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(3,2);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newButton = new RowWidget(4,"Left Leg");
+                    //     sliderBtns.add(newButton);
+                    //     widgets.get(tabNum).add(newButton);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(4,0);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(4,1);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(4,2);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newButton = new RowWidget(5,"Body");
+                    //     sliderBtns.add(newButton);
+                    //     widgets.get(tabNum).add(newButton);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(5,0);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(5,1);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // {
+                    //     RowWidget newSlider = new RowWidget(5,2);
+                    //     sliders.add(newSlider);
+                    //     widgets.get(tabNum).add(newSlider);
+                    // }
+                    // btnResetPose();
                 }
                 else {
                     widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn));
@@ -2840,6 +2947,15 @@ public class ItemBuilder extends GenericScreen {
                 else
                     path2 = null;
 
+                NbtElement cancelEl = null;
+                if(args.contains("cancelEl",NbtElement.COMPOUND_TYPE)) {
+                    NbtCompound cancelNbt = args.getCompound("cancelEl");
+                    if(cancelNbt.contains("el")) {
+                        cancelEl = cancelNbt.get("el");
+                    }
+                }
+                final NbtElement cancelElCopy = cancelEl == null ? null : cancelEl.copy();
+
                 String fullPath;
                 if(path2 != null)
                     fullPath = path+path2[0];
@@ -2861,6 +2977,12 @@ public class ItemBuilder extends GenericScreen {
                         newArgs.put("jsonOverride",args.get("baseJson"));
                         if(blankTabEl != null)
                             newArgs.put("overrideEl",blankTabEl);
+
+                        NbtCompound cancelNbt = new NbtCompound();
+                        if(cancelElCopy != null)
+                            cancelNbt.put("el",cancelElCopy);
+                        newArgs.put("cancelEl",cancelNbt);
+
                         createBlankTab(0,newArgs);
                     }).dimensions(x+5,y+5,40,20).build();
                     w.setTooltip(Tooltip.of(Text.of("Keep text as:\n"+baseJson)));
@@ -2882,6 +3004,12 @@ public class ItemBuilder extends GenericScreen {
                                 newArgs.put("path2",args.get("path2"));
                             if(blankTabEl != null)
                                 newArgs.put("overrideEl",blankTabEl);
+
+                            NbtCompound cancelNbt = new NbtCompound();
+                            if(cancelElCopy != null)
+                                cancelNbt.put("el",cancelElCopy);
+                            newArgs.put("cancelEl",cancelNbt);
+
                             createBlankTab(0,newArgs);
                         }
                         unsel = true;
@@ -2892,7 +3020,7 @@ public class ItemBuilder extends GenericScreen {
                 {
                     TextFieldWidget w = new TextFieldWidget(this.textRenderer,x+5+40+5,y+5,(240-5-40)-(5+40+5)-5,20,Text.of(""));
                     w.setEditable(false);
-                    w.setMaxLength(131072);
+                    w.setMaxLength(MAX_TEXT_LENGTH);
                     w.setText(cleanPath(fullPath));
                     w.setTooltip(Tooltip.of(Text.of("Current path:\n"+fullPath)));
                     noScrollWidgets.get(tabNum).add(new PosWidget(w,5+40+5,5));
@@ -2909,7 +3037,7 @@ public class ItemBuilder extends GenericScreen {
                 if(jsonEffectMode == 0 || jsonEffectMode == 1) {
                     cacheI.put("jsonEffectTxt",new int[]{tabNum,widgets.get(tabNum).size()});
                     TextFieldWidget w = new TextFieldWidget(this.textRenderer,x+15-3,y+35,240-36,20,Text.of(""));
-                    w.setMaxLength(131072);
+                    w.setMaxLength(MAX_TEXT_LENGTH);
                     w.setChangedListener(value -> {
                         updateJsonEffect();
                         if(jsonEffectMode == 1) {
@@ -2978,7 +3106,7 @@ public class ItemBuilder extends GenericScreen {
                     }));
                 }
                 else if(jsonEffectMode == 1) {
-                    ButtonWidget w = ButtonWidget.builder(Text.of("Color [RGB]"), btn -> {
+                    ButtonWidget w = ButtonWidget.builder(Text.of("Color [Vanilla]"), btn -> {
                         unsel = true;
                         jsonEffects[6]++;
                         if(jsonEffects[6]>2)
@@ -2986,54 +3114,65 @@ public class ItemBuilder extends GenericScreen {
                         updateJsonEffect();
                         updateJsonEffectBtns();
                     }).dimensions(0,0,80,20).build();
-                    w.setTooltip(Tooltip.of(Text.of("RGB | Vanilla | None")));
+                    w.setTooltip(Tooltip.of(Text.of("Vanilla | RGB | None")));
                     TextFieldWidget w2 = new TextFieldWidget(this.textRenderer,0,0,240-36-80-5,20,Text.of(""));
-                    w2.setMaxLength(131072);
+                    w2.setMaxLength(MAX_TEXT_LENGTH);
                     w2.setChangedListener(value -> {
                         if(jsonEffects[6]==1) {
-                            jsonLastColor = value;
+                            boolean validColor = false;
+                            for(String f : ComponentHelper.FORMAT_COLORS)
+                                if(f.equals(value))
+                                    validColor = true;
+
+                            if(validColor)
+                                jsonLastColor = value;
                             suggsOnChanged(w2,ComponentHelper.FORMAT_COLORS,null);
                             updateJsonEffect();
                         }
                         else
                             resetSuggs();
+                        
+                        if(jsonEffects[6]==2)
+                            trySetColorHex(0,value,w2);
                     });
                     widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0), new PosWidget(w2,15+80+5,0)}));
+                    colorHexTxts.get(0).clear();
+                    colorHexTxts.get(0).add(w2);
                 }
                 if(jsonEffectMode == 0) {
-                    {
-                        RgbSlider w = new RgbSlider(3);
-                        RgbSlider w2 = new RgbSlider(6);
+                    for(int num=0; num<3; num++) {
+                        RgbSlider w = new RgbSlider(0,num,true);
+                        RgbSlider w2 = new RgbSlider(1,num,true);
                         widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
-                    }
-                    {
-                        RgbSlider w = new RgbSlider(4);
-                        RgbSlider w2 = new RgbSlider(7);
-                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
-                    }
-                    {
-                        RgbSlider w = new RgbSlider(5);
-                        RgbSlider w2 = new RgbSlider(8);
-                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+                        colorRgbSliders.get(0).get(num).clear();
+                        colorRgbSliders.get(1).get(num).clear();
+                        colorRgbSliders.get(0).get(num).add(w);
+                        colorRgbSliders.get(1).get(num).add(w2);
                     }
                     {
                         TextFieldWidget w = new TextFieldWidget(textRenderer, x+15, 0, 60, 20, Text.of(""));
+                        w.setMaxLength(MAX_TEXT_LENGTH);
+                        w.setChangedListener(value -> {
+                            trySetColorHex(0,value,w);
+                        });
                         TextFieldWidget w2 = new TextFieldWidget(textRenderer, x+15+100+5, 0, 60, 20, Text.of(""));
+                        w2.setMaxLength(MAX_TEXT_LENGTH);
+                        w2.setChangedListener(value -> {
+                            trySetColorHex(1,value,w2);
+                        });
                         widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
+                        colorHexTxts.get(0).clear();
+                        colorHexTxts.get(1).clear();
+                        colorHexTxts.get(0).add(w);
+                        colorHexTxts.get(1).add(w2);
                     }
                 }
                 else if(jsonEffectMode == 1) {
-                    {
-                        RgbSlider w = new RgbSlider(0);
+                    for(int num=0; num<3; num++) {
+                        RgbSlider w = new RgbSlider(0,num,false);
                         widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
-                    }
-                    {
-                        RgbSlider w = new RgbSlider(1);
-                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
-                    }
-                    {
-                        RgbSlider w = new RgbSlider(2);
-                        widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
+                        colorRgbSliders.get(0).get(num).clear();
+                        colorRgbSliders.get(0).get(num).add(w);
                     }
                     {
                         widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Text]")},
@@ -3137,9 +3276,6 @@ public class ItemBuilder extends GenericScreen {
         protected boolean[] savedStacksWarn;
         protected int savedStacksMode = -1;
         protected int savedRow = -1;
-        protected PoseSlider poseSlider;
-        protected RgbSlider rgbSlider;
-        protected int rgbNum;
         protected ItemStack item = null;
         protected int itemXoff = 0;
         protected PosWidget[] wids;
@@ -3151,7 +3287,7 @@ public class ItemBuilder extends GenericScreen {
             super();
             this.children = Lists.newArrayList();
             setup();
-        }//TODO delete unused rowwidgets
+        }//TODO delete unused rowwidgets (and move fields to subclasses)
 
         /**
          * btn(size) txt
@@ -3182,7 +3318,7 @@ public class ItemBuilder extends GenericScreen {
                 }
                 suggsOnChanged(this.txts[0],suggestions,null);
             });
-            this.txts[0].setMaxLength(131072);
+            this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
             for(int i=0; i<btns.length; i++)
                 this.children.add(this.btns[i]);
             for(int i=0; i<txts.length; i++) {
@@ -3262,7 +3398,7 @@ public class ItemBuilder extends GenericScreen {
                     updateJsonEffect();
                 }
             });
-            this.txts[0].setMaxLength(131072);
+            this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
             for(int i=0; i<txts.length; i++) {
                 this.children.add(this.txts[i]);
                 ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
@@ -3317,7 +3453,7 @@ public class ItemBuilder extends GenericScreen {
                             suggestionsList = suggestions[ii];
                         suggsOnChanged(this.txts[ii],suggestionsList,null);
                     });
-                    this.txts[i].setMaxLength(131072);
+                    this.txts[i].setMaxLength(MAX_TEXT_LENGTH);
 
                     this.children.add(this.txts[i]);
                     ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
@@ -3383,7 +3519,7 @@ public class ItemBuilder extends GenericScreen {
         /**
          * banner row (8 btns)
          */
-        public RowWidget(String blankElPath, NbtList path2, ButtonWidget saveBtn, boolean isDye, String[] vals, String currentVal) {
+        public RowWidget(String blankElPath, NbtList path2, ButtonWidget saveBtn, boolean isDye, String[] vals, String currentVal, NbtElement cancelEl) {
             super();
             this.children = Lists.newArrayList();
             setup();
@@ -3454,6 +3590,12 @@ public class ItemBuilder extends GenericScreen {
                     }
                     if(blankTabEl != null)
                         newArgs.put("overrideEl",blankTabEl);
+
+                    NbtCompound cancelNbt = new NbtCompound();
+                    if(cancelEl != null)
+                        cancelNbt.put("el",cancelEl);
+                    newArgs.put("cancelEl",cancelNbt);
+
                     createBlankTab(0,newArgs);
                 }).dimensions(currentX,5,20,20).build();
                 currentX += 20;
@@ -3467,72 +3609,6 @@ public class ItemBuilder extends GenericScreen {
         }
 
         /**
-         * Pose slider
-         */
-        public RowWidget(int part, int num) {//TODO pose slider row
-            super();
-            this.children = Lists.newArrayList();
-            setup();
-
-            this.poseSlider = new PoseSlider(part,num);
-
-            this.children.add(this.poseSlider);
-        }
-
-        /**
-         * Pose slider btn
-         */
-        public RowWidget(int part, String name) {//TODO pose slider btn row
-            super();
-            this.children = Lists.newArrayList();
-            setup();
-
-            this.btns = new ButtonWidget[]{ButtonWidget.builder(Text.of(name), btn -> {
-                for(int i=0; i<3; i++)
-                    sliders.get(part*3+i).setSlider(0f);
-                if(armorPose != null)
-                    armorPose[part] = null;
-                this.btns[0].setTooltip(Tooltip.of(Text.of("No pose")));
-                this.btns[0].active = false;
-                updatePose();
-                //unsavedPose = true;
-            }).dimensions(ItemBuilder.this.x+15,5,60,20).build()};
-            this.btnX = new int[]{100};
-
-            this.children.add(this.btns[0]);
-        }
-
-        /**
-         * btn? rgbSlider
-         */
-        public RowWidget(int rgbNum, String name, int size, String tooltip, PressAction onPress, boolean survival) {//TODO rgb slider row
-            super();
-            this.children = Lists.newArrayList();
-            setup();
-
-            this.rgbSlider = new RgbSlider(rgbNum);
-            this.rgbNum = rgbNum;
-
-            if(size>0) {
-                this.btns = new ButtonWidget[]{ButtonWidget.builder(Text.of(name), onPress).dimensions(ItemBuilder.this.x+15,5,size,20).build()};
-                this.btnX = new int[]{15};
-                if(tooltip != null)
-                    this.btns[0].setTooltip(Tooltip.of(Text.of(tooltip)));
-                if(!client.player.getAbilities().creativeMode && !survival)
-                    this.btns[0].active = false;
-                this.children.add(this.btns[0]);
-            }
-            if(rgbNum == 1 || rgbNum ==2) {
-                this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer, ItemBuilder.this.x+15, 5, 60, 20, Text.of(""))};
-                this.txtX = new int[]{15};
-                this.txts[0].setMaxLength(16);
-                this.children.add(this.txts[0]);
-            }
-
-            this.children.add(this.rgbSlider);
-        }
-
-        /**
          * PosWidgets
          */
         public RowWidget(PosWidget[] p) {
@@ -3543,7 +3619,12 @@ public class ItemBuilder extends GenericScreen {
             wids = p;
 
             for(int i=0; i<p.length; i++) {
-                this.children.add(p[i].w);
+                if(p[i].w != null) {
+                    this.children.add(p[i].w);
+                    if(p[i].w instanceof TextFieldWidget || p[i].w instanceof EditBoxWidget) {
+                        allTxtWidgets.add(p[i].w);
+                    }
+                }
             }
         }
 
@@ -3616,16 +3697,6 @@ public class ItemBuilder extends GenericScreen {
                 }
         }
 
-        public void setSlider(float val) {
-            if(this.poseSlider != null)
-                this.poseSlider.setVal(val);
-        }
-        //TODO setslider logic
-        public void setSlider(int val) {
-            if(this.rgbSlider != null)
-                this.rgbSlider.setVal(val);
-        }
-
         @Override
         public List<? extends Element> children() {
             return this.children;
@@ -3652,9 +3723,14 @@ public class ItemBuilder extends GenericScreen {
                 this.txts[i].render(context, mouseX, mouseY, tickDelta);
             }
             for(int i=0; i<wids.length; i++) {
-                this.wids[i].w.setX(x+this.wids[i].x);
-                this.wids[i].w.setY(y+this.wids[i].y);
-                this.wids[i].w.render(context, mouseX, mouseY, tickDelta);
+                if(this.wids[i].w != null) {
+                    this.wids[i].w.setX(x+this.wids[i].x);
+                    this.wids[i].w.setY(y+this.wids[i].y);
+                    this.wids[i].w.render(context, mouseX, mouseY, tickDelta);
+                }
+                if(this.wids[i].s != null) {
+                    drawItem(context,this.wids[i].s,x+15+2+this.wids[i].x,y+2+this.wids[i].y);
+                }
             }
             if(lbl != null) {
                 if(lblCentered)
@@ -3664,16 +3740,6 @@ public class ItemBuilder extends GenericScreen {
             }
             if(item != null) {
                 drawItem(context,item,x+15+2+itemXoff,y+2);
-            }
-            if(poseSlider != null) {
-                this.poseSlider.render(context, mouseX, mouseY, tickDelta);
-                this.poseSlider.setX(ItemBuilder.this.x+2+10+20+5);
-                this.poseSlider.setY(y);
-            }
-            if(rgbSlider != null) {
-                this.rgbSlider.render(context, mouseX, mouseY, tickDelta);
-                this.rgbSlider.setX(ItemBuilder.this.x+2+10+20+5+40);
-                this.rgbSlider.setY(y);
             }
             if(savedStacksMode == 1 && this.savedStacks != null && this.savedStacks.length == 9)
                 for(int i=0; i<9; i++) {
@@ -3689,24 +3755,6 @@ public class ItemBuilder extends GenericScreen {
                 for(int i=0; i<this.savedStacks.length; i++)
                     if(this.savedStacks[i] != null && !this.savedStacks[i].isEmpty())
                         drawItem(context,this.savedStacks[i],x+this.btnX[i]+2,y+2);
-            if(rgbNum == 1) {
-                if(rgbChanged[0]) {
-                    this.txts[0].setText(""+getRgbDec());
-                    this.txts[0].setEditableColor(getRgbDec());
-                    updateRgbItems();
-                    rgbChanged[0] = false;
-                }
-            }
-            if(rgbNum == 2) {
-                if(rgbChanged[1]) {
-                    this.txts[0].setText(""+getRgbHex());
-                    this.txts[0].setEditableColor(getRgbDec());
-                    updateRgbItems();
-                    rgbChanged[1] = false;
-                }
-                for(int i=0; i<3; i++)
-                    drawItem(context,rgbItems[i], x+15+2+i*25, y+2+22);
-            }
 
         }
 
@@ -3935,7 +3983,7 @@ public class ItemBuilder extends GenericScreen {
                 this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
                     ItemBuilder.this.x+ROW_LEFT+5+size, 5, 240-41-size, 20, Text.of(""))};
                 this.txtX = new int[]{ROW_LEFT+5+size};
-                this.txts[0].setMaxLength(131072);
+                this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
 
                 this.txts[0].setChangedListener(value -> {
                     setErrorMsg(null);
@@ -4329,7 +4377,7 @@ public class ItemBuilder extends GenericScreen {
                 this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
                     ItemBuilder.this.x+ROW_LEFT+5+size, 5, ROW_RIGHT-ROW_LEFT-size-5, 20, Text.of(""))};
                 this.txtX = new int[]{ROW_LEFT+5+size};
-                this.txts[0].setMaxLength(131072);
+                this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
 
                 this.txts[0].setChangedListener(value -> {
                     setErrorMsg(null);
@@ -4428,7 +4476,7 @@ public class ItemBuilder extends GenericScreen {
                     this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
                         ItemBuilder.this.x+ROW_LEFT, 5, listElWidth, 20, Text.of(""))};
                     this.txtX = new int[]{ROW_LEFT};
-                    this.txts[0].setMaxLength(131072);
+                    this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
 
                     this.txts[0].setChangedListener(value -> {
                         setErrorMsg(null);
@@ -4662,7 +4710,7 @@ public class ItemBuilder extends GenericScreen {
             this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
                 ItemBuilder.this.x+ROW_LEFT, 5, ROW_RIGHT-ROW_LEFT, 20, Text.of(""))};
             this.txtX = new int[]{ROW_LEFT};
-            this.txts[0].setMaxLength(131072);
+            this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
 
             this.txts[0].setChangedListener(value -> {
                 setErrorMsg(null);
@@ -4822,6 +4870,58 @@ public class ItemBuilder extends GenericScreen {
 
     }
 
+    class RowWidgetSlider extends RowWidget { //TODO RowWidgetSlider
+
+        protected PoseSlider poseSlider;
+
+        /**
+         * Pose slider
+         */
+        public RowWidgetSlider(int part, int num) {
+            setup();
+
+            this.poseSlider = new PoseSlider(part,num);
+
+            this.children.add(this.poseSlider);
+        }
+
+        /**
+         * Pose slider btn
+         */
+        public RowWidgetSlider(int part, String name) {
+            setup();
+
+            this.btns = new ButtonWidget[]{ButtonWidget.builder(Text.of(name), btn -> {
+                for(int i=0; i<3; i++)
+                    sliders.get(part*3+i).setSlider(0f);
+                if(armorPose != null)
+                    armorPose[part] = null;
+                this.btns[0].setTooltip(Tooltip.of(Text.of("No pose")));
+                this.btns[0].active = false;
+                updatePose();
+                //unsavedPose = true;
+            }).dimensions(ItemBuilder.this.x+15,5,60,20).build()};
+            this.btnX = new int[]{100};
+
+            this.children.add(this.btns[0]);
+        }
+
+        public void setSlider(float val) {
+            if(this.poseSlider != null)
+                this.poseSlider.setVal(val);
+        }
+
+        @Override
+        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            if(poseSlider != null) {
+                this.poseSlider.render(context, mouseX, mouseY, tickDelta);
+                this.poseSlider.setX(ItemBuilder.this.x+2+10+20+5);
+                this.poseSlider.setY(y);
+            }
+        }
+
+    }
+
     private static abstract class AbstractWidget
     extends ElementListWidget.Entry<AbstractWidget> {
         @Nullable
@@ -4832,8 +4932,7 @@ public class ItemBuilder extends GenericScreen {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    class PoseSlider
-    extends SliderWidget {//TODO pose slider
+    class PoseSlider extends SliderWidget { //TODO PoseSlider widget
         private final double min;
         private final double max;
         public float val;
@@ -4901,29 +5000,26 @@ public class ItemBuilder extends GenericScreen {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    class RgbSlider //TODO rgb slider
-    extends SliderWidget {
+    class RgbSlider extends SliderWidget { //TODO RgbSlider widget
         private final double min;
         private final double max;
+        public int setNum;
         public int num;
 
-        public RgbSlider(int num) {
-            super(0, 0, num<=2 ? 180-40 : 120-15-5, 20, Text.of(""), 0.0);
+        public RgbSlider(int setNum, int num, boolean halfWidth) {
+            super(0, 0, halfWidth ? 120-15-5 : 180-40, 20, Text.of(""), 0.0);
             this.min = 0f;
             this.max = 255f;
+            this.setNum = setNum;
             this.num = num;
-            if(num>2)
-                this.num = num-3;
-            this.value = (rgb[this.num] - min) / (max - min);
+            this.value = (colorSets[this.setNum][this.num] - min) / (max - min);
             this.applyValue();
             this.updateMessage();
         }
 
         @Override
         public void applyValue() {
-            rgb[num] = (int)(this.value*(max-min)+min);
-            for(int i=0; i<rgbChanged.length; i++)
-                rgbChanged[i] = true;
+            colorSets[setNum][num] = (int)(this.value*(max-min)+min);
             updateRgbSliders();
         }
 
@@ -4936,7 +5032,7 @@ public class ItemBuilder extends GenericScreen {
                 color += "2";
             else
                 color += "1";
-            this.setMessage(Text.of(color+rgb[num]));
+            this.setMessage(Text.of(color+colorSets[setNum][num]));
         }
 
         public void setVal(int newVal) {
@@ -4944,7 +5040,7 @@ public class ItemBuilder extends GenericScreen {
                 newVal = 255;
             else if(newVal < 0)
                 newVal = 0;
-            rgb[num] = newVal;
+            colorSets[setNum][num] = newVal;
             this.value = (double)((newVal - min)/(max-min));
             updateMessage();
         }
@@ -4976,7 +5072,8 @@ public class ItemBuilder extends GenericScreen {
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
     private class PosWidget {
-        public ClickableWidget w;
+        public ClickableWidget w = null;
+        public ItemStack s = null;
         public int x;
         public int y;
 
@@ -4985,6 +5082,13 @@ public class ItemBuilder extends GenericScreen {
             this.x = x;
             this.y = y;
         }
+
+        public PosWidget(ItemStack s, int x, int y) {
+            this.s = s;
+            this.x = x;
+            this.y = y;
+        }
+
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
