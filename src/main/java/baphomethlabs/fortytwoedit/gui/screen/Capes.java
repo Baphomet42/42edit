@@ -176,9 +176,9 @@ public class Capes extends GenericScreen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Client Capes & Skins"), this.width / 2, y+11, 0xFFFFFF);
-        context.drawTextWithShadow(this.textRenderer, Text.of("Capes"), x+20,y+7+22*2, 0xFFFFFF);
-        context.drawTextWithShadow(this.textRenderer, Text.of("Skin"), x+20,y+7+22*5, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Client Capes & Skins"), this.width / 2, y+11, TEXT_COLOR);
+        context.drawTextWithShadow(this.textRenderer, Text.of("Capes"), x+20,y+7+22*2, LABEL_COLOR);
+        context.drawTextWithShadow(this.textRenderer, Text.of("Skin"), x+20,y+7+22*5, LABEL_COLOR);
         drawPlayer(context, playerX, playerY, 60, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
     }
 

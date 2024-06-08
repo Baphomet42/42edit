@@ -136,7 +136,7 @@ public class LogScreen extends GenericScreen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Output Log"), this.width / 2, y+11, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Output Log"), this.width / 2, y+11, TEXT_COLOR);
     }
 
     @Override

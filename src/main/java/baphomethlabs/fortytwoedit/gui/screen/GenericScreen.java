@@ -18,11 +18,20 @@ public abstract class GenericScreen extends Screen {
     protected int x;
     protected int y;
     protected static final int LABEL_COLOR = 0xA0A0A0;
+    protected static final int LABEL_COLOR_DIM = 0x404040;
+    protected static final int ERROR_COLOR = 0xFF5555;
+    protected static final int TEXT_COLOR = 0xFFFFFF;
     protected static final int WID_HEIGHT = 20;
     protected static final int ROW_HEIGHT = 22;
     protected static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
     protected static final Duration TOOLTIP_DELAY_SHORT = Duration.ofMillis(100L);
     protected static final int MAX_TEXT_LENGTH = 131072;
+    public static final String UNICODE_SECTION_SIGN = "\u00a7";
+    public static final String UNICODE_UP_ARROW = "\u2227";
+    public static final String UNICODE_DOWN_ARROW = "\u2228";
+    public static final String UNICODE_CHECK = "\u2611";
+    public static final String UNICODE_X = "\u2612";
+    public static final String UNICODE_REFRESH = "\u27F3";
     
     public GenericScreen() {
         super(NarratorManager.EMPTY);

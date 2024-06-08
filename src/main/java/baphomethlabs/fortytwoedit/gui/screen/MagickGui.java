@@ -113,7 +113,7 @@ public class MagickGui extends GenericScreen {
         super.render(context, mouseX, mouseY, delta);
         context.drawItem(new ItemStack(Items.JIGSAW), x+6, y+6);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Black Magick by BaphomethLabs").copy().withColor(0x420666).formatted(Formatting.BOLD),
-            this.width / 2, y+11, 0xFFFFFF);
+            this.width / 2, y+11, TEXT_COLOR);
 		context.drawItem(new ItemStack(Items.SPONGE),x+LEFT_OFFSET+ITEM_OFFSET,y+44+TOP_OFFSET+ITEM_OFFSET);
 		context.drawItem(new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET+ITEM_OFFSET);
 		context.drawItem(new ItemStack(Items.DIAMOND_HELMET),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET+ITEM_OFFSET);

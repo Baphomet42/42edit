@@ -13,6 +13,8 @@ import baphomethlabs.fortytwoedit.FortytwoEdit;
 @Mixin(InGameHud.class)
 public abstract class InGameHudMixin {
 
+    private static final int TEXT_COLOR = 0xFFFFFF;
+
     @Inject(method="render", at=@At("TAIL"))
     private void renderHud(DrawContext context, RenderTickCounter tickCounter, CallbackInfo c) {
         if(FortytwoEdit.autoMove || FortytwoEdit.autoClicker || FortytwoEdit.randoMode || FortytwoEdit.autoFish) {
@@ -20,15 +22,15 @@ public abstract class InGameHudMixin {
             int x = client.getWindow().getScaledWidth()-80;
             int y = client.getWindow().getScaledHeight()-15;
             if (FortytwoEdit.autoMove)
-                context.drawText(client.textRenderer, "[Auto Move]", x, y - 20, 0xffffff, true);
+                context.drawText(client.textRenderer, "[Auto Move]", x, y - 20, TEXT_COLOR, true);
             if (FortytwoEdit.autoClicker)
-                context.drawText(client.textRenderer, "[Auto Click]", x, y - 10, 0xffffff, true);
+                context.drawText(client.textRenderer, "[Auto Click]", x, y - 10, TEXT_COLOR, true);
             else if (FortytwoEdit.autoFish && client.options.getShowSubtitles().getValue())
-                context.drawText(client.textRenderer, "[Auto Fish]", x, y - 10, 0xffffff, true);
+                context.drawText(client.textRenderer, "[Auto Fish]", x, y - 10, TEXT_COLOR, true);
             else if (FortytwoEdit.autoFish && !client.options.getShowSubtitles().getValue())
-                context.drawText(client.textRenderer, "\u00a7cAuto Fish requires Subtitles", x-64, y - 10, 0xffffff, true);
+                context.drawText(client.textRenderer, "\u00a7cAuto Fish requires Subtitles", x-64, y - 10, TEXT_COLOR, true);
             if (FortytwoEdit.randoMode)
-                context.drawText(client.textRenderer, "[Rando Mode]", x, y, 0xffffff, true);
+                context.drawText(client.textRenderer, "[Rando Mode]", x, y, TEXT_COLOR, true);
         }
     }
 

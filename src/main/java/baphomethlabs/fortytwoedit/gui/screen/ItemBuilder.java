@@ -133,11 +133,16 @@ public class ItemBuilder extends GenericScreen {
     private TextSuggestor suggs;
     private Set<TextFieldWidget> currentTxt = Sets.newHashSet();
     private static int[][] colorSets = {{66,6,102},{0,0,0}};
+    private static int[] colorHsv = {0,0,0};
     private ArrayList<Set<TextFieldWidget>> colorHexTxts = new ArrayList<>();
     private ArrayList<Set<TextFieldWidget>> colorDecTxts = new ArrayList<>();
     private ArrayList<ArrayList<Set<RgbSlider>>> colorRgbSliders = new ArrayList<>();
+    private ArrayList<Set<RgbSlider>> colorHsvSliders = new ArrayList<>();
     private ArrayList<ArrayList<Set<PosWidget>>> colorItemWids = new ArrayList<>();
     private boolean colorLocked = false;
+    private boolean hsvLock = false;
+    private Map<WidgetCacheType,ClickableWidget> widgetCache = Maps.newHashMap();
+    private boolean editorOutputLocked = false;
     private Set<ClickableWidget> colorLockedWidget = Sets.newHashSet();
     private static final ItemStack[] rgbItems = new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
     private Map<String,int[]> cacheI = Maps.newHashMap();
@@ -186,6 +191,8 @@ public class ItemBuilder extends GenericScreen {
             for(int j=0; j<3; j++)
                 colorItemWids.get(colorItemWids.size()-1).add(Sets.newHashSet());
         }
+        for(int i=0; i<3; i++)
+            colorHsvSliders.add(Sets.newHashSet());
         
         if(!tabs[tab].hideTabs) {
 
@@ -209,7 +216,7 @@ public class ItemBuilder extends GenericScreen {
             this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
             txtFormat = new TextFieldWidget(this.textRenderer,x+50,y+5+1,15,18,Text.of(""));
             txtFormat.setEditable(false);
-            txtFormat.setText("\u00a7");
+            txtFormat.setText(UNICODE_SECTION_SIGN);
             txtFormat.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
             swapCopyBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("c*"), button -> this.btnSwapOff(true)).dimensions(width/2 - 50,y+5,20,20).build());
             swapBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("c"), button -> this.btnSwapOff(false)).dimensions(width/2 - 30,y+5,15,20).build());
@@ -587,7 +594,7 @@ public class ItemBuilder extends GenericScreen {
         if(viewBlackMarket) {
             noScrollWidgets.get(CACHE_TAB_SAVED).get(0).w.setTooltip(TOOLTIP_BLACK_MARKET);
             noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setTooltip(Tooltip.of(Text.of("Refresh from Web")));
-            noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setMessage(Text.of("\u27F3"));
+            noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setMessage(Text.of(UNICODE_REFRESH));
         }
         else {
             noScrollWidgets.get(CACHE_TAB_SAVED).get(0).w.setTooltip(TOOLTIP_LOCAL_ITEMS);
@@ -858,7 +865,7 @@ public class ItemBuilder extends GenericScreen {
         return null;
     }
 
-    private void updateRgbSliders() {
+    private void updateColorSets() {
         if(!colorLocked) {
             colorLocked = true;
 
@@ -889,12 +896,29 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
 
+            if(!hsvLock) {
+                rgbToHsv(colorSets[0][0],colorSets[0][1],colorSets[0][2]);
+                for(int num=0; num<3; num++) {
+                    for(RgbSlider w : colorHsvSliders.get(num)) {
+                        w.setVal(colorHsv[num]);
+                    }
+                }
+            }
+
             if(jsonEffectMode>=0)
                 updateJsonEffect();
 
             rgbItems[0] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:leather_chestplate,components:{dyed_color:"+getRgbDec(0)+"}}"));
             rgbItems[1] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:potion,components:{potion_contents:{custom_color:"+getRgbDec(0)+"}}}"));
             rgbItems[2] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:filled_map,components:{map_color:"+getRgbDec(0)+"}}"));
+
+            if(!editorOutputLocked) {
+                if(widgetCache.containsKey(WidgetCacheType.TXT_DECIMAL_COLOR) && widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR)!=null) {
+                    TextFieldWidget txt = (TextFieldWidget)widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR);
+                    txt.setText(""+getRgbDec(0));
+                    resetSuggs();
+                }
+            }
             
             colorLocked = false;
             colorLockedWidget.clear();
@@ -936,14 +960,115 @@ public class ItemBuilder extends GenericScreen {
             if(valid) {
                 for(int i=0; i<3; i++)
                     colorSets[rgbNum][i]=rgb[i];
-                colorLockedWidget.add(w);
-                updateRgbSliders();
+                if(w!=null)
+                    colorLockedWidget.add(w);
+                updateColorSets();
             }
         }
     }
 
     private void trySetColorDec(int rgbNum, String inp, ClickableWidget w) {
         trySetColorHex(rgbNum, BlackMagick.colorHexFromDec(inp), w);
+    }
+
+    private void swapColorSets() {
+        int[] temp = colorSets[0];
+        colorSets[0] = colorSets[1];
+        colorSets[1] = temp;
+        updateColorSets();
+    }
+
+    private void setHsv(int num, int val) {
+        if(!colorLocked && !editorOutputLocked) {
+            colorHsv[num] = val;
+            hsvToRgb(0,colorHsv[0],colorHsv[1],colorHsv[2]);
+            hsvLock = true;
+            updateColorSets();
+            hsvLock = false;
+        }
+    }
+
+    private void hsvToRgb(int rgbNum, int h, int s, int v) {
+        float sat = s/100f;
+        float val = v/100f;
+        float c = val*sat;
+        float x = c*(1 - Math.abs((h/60f)%2 - 1));
+        float m = val - c;
+
+        float r0 = 0f;
+        float g0 = 0f;
+        float b0 = 0f;
+
+        if(h==360)
+            h=0;
+
+        if(h<60) {
+            r0 = c;
+            g0 = x;
+            b0 = 0f;
+        }
+        else if(h<120) {
+            r0 = x;
+            g0 = c;
+            b0 = 0f;
+        }
+        else if(h<180) {
+            r0 = 0f;
+            g0 = c;
+            b0 = x;
+        }
+        else if(h<240) {
+            r0 = 0f;
+            g0 = x;
+            b0 = c;
+        }
+        else if(h<300) {
+            r0 = x;
+            g0 = 0f;
+            b0 = c;
+        }
+        else {
+            r0 = c;
+            g0 = 0f;
+            b0 = x;
+        }
+
+        colorSets[rgbNum][0] = (int)((r0+m)*255);
+        colorSets[rgbNum][1] = (int)((g0+m)*255);
+        colorSets[rgbNum][2] = (int)((b0+m)*255);
+    }
+
+    private void rgbToHsv(int r, int g, int b) {
+        float red = r/255f;
+        float green = g/255f;
+        float blue = b/255f;
+
+        float max = Math.max(red, Math.max(green, blue));
+        float min = Math.min(red, Math.min(green, blue));
+        float delta = max - min;
+
+        float h = 0;
+
+        if(delta == 0f) {
+            h = 0;
+        }
+        else if(max == red) {
+            h = 60*(((green-blue)/delta)%6);
+        }
+        else if(max == green) {
+            h = 60*(((blue-red)/delta)+2);
+        }
+        else if(max == blue) {
+            h = 60*(((red-green)/delta)+4);
+        }
+
+        if(h<0)
+            h+=360;
+
+        float s = (max==0) ? 0 : (delta/max)*100;
+        float v = max*100;
+
+        colorHsv = new int[]{(int)h,(int)s,(int)v};
     }
 
     private void drawItem(DrawContext context, ItemStack item, int x, int y) {
@@ -1067,7 +1192,7 @@ public class ItemBuilder extends GenericScreen {
                     widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).btns[0].setMessage(Text.of("[Linear]"));
             }
             else if(jsonEffectMode == 1) {
-                ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setEditableColor(0xFFFFFF);
+                ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setEditableColor(TEXT_COLOR);
                 ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setEditable(true);
                 ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setTooltip(null);
 
@@ -2691,9 +2816,10 @@ public class ItemBuilder extends GenericScreen {
                         }).dimensions(x+15-3+60+5+60+5,y+35+22*6+1,60,20).build(),15-3+60+5+60+5,35+22*6+1));
                     }
                 }
-                else if(elType == PathType.DECIMAL_COLOR) {//TODO new dec page
-                    widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn)); //TODO use PosWidget
-                    //TODO buttons to get/set from color editor
+                else if(elType == PathType.DECIMAL_COLOR) {
+                    editorOutputLocked = true;
+                    widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,WidgetCacheType.TXT_DECIMAL_COLOR));
+                    widgets.get(tabNum).add(new RowWidgetEditor(WidgetCacheType.TXT_DECIMAL_COLOR));
                     widgets.get(tabNum).add(new RowWidget("Color Editor"));
 
                     int rgbNum = 0;
@@ -2703,7 +2829,7 @@ public class ItemBuilder extends GenericScreen {
                     for(int i=0; i<3; i++) {
                         colorRgbSliders.get(rgbNum).get(i).clear();
                         {
-                            RgbSlider w = new RgbSlider(rgbNum,i,false);
+                            RgbSlider w = new RgbSlider(rgbNum,i,false,true);
                             PosWidget w2 = new PosWidget(rgbItems[i],180,0);
                             widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),w2}));
                             colorRgbSliders.get(rgbNum).get(i).add(w);
@@ -2727,7 +2853,17 @@ public class ItemBuilder extends GenericScreen {
                         colorDecTxts.get(rgbNum).add(w2);
                     }
 
-                    updateRgbSliders();
+                    for(int i=0; i<3; i++) {
+                        colorHsvSliders.get(i).clear();
+                        {
+                            RgbSlider w = new RgbSlider(rgbNum,i,false,false);
+                            widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
+                            colorHsvSliders.get(i).add(w);
+                        }
+                    }
+
+                    updateColorSets();
+                    editorOutputLocked = false;
                 }
                 else if(elType == PathType.BANNER) {
                     if(el2==null || el2.getType()!=NbtElement.COMPOUND_TYPE)
@@ -2787,7 +2923,7 @@ public class ItemBuilder extends GenericScreen {
                     
                     // //createBlock armor stand pose
                     // {
-                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2611"), button -> this.btnSetPose()).dimensions(x+15-3, y+35+1,20,20).build();
+                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of(UNICODE_CHECK), button -> this.btnSetPose()).dimensions(x+15-3, y+35+1,20,20).build();
                     //     newButton.setTooltip(Tooltip.of(Text.of("Set Pose")));
                     //     if(!client.player.getAbilities().creativeMode)
                     //         newButton.active = false;
@@ -2795,12 +2931,12 @@ public class ItemBuilder extends GenericScreen {
                     //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1));
                     // }
                     // {
-                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2227"), button -> this.btnGetPose()).dimensions(x+15-3, y+35+1+22,20,20).build();
+                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of(UNICODE_UP_ARROW), button -> this.btnGetPose()).dimensions(x+15-3, y+35+1+22,20,20).build();
                     //     newButton.setTooltip(Tooltip.of(Text.of("Get from item")));
                     //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1+22));
                     // }
                     // {
-                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of("\u2612"), button -> this.btnResetPose()).dimensions(x+15-3, y+35+1+22*2,20,20).build();
+                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of(UNICODE_X), button -> this.btnResetPose()).dimensions(x+15-3, y+35+1+22*2,20,20).build();
                     //     newButton.setTooltip(Tooltip.of(Text.of("Clear All")));
                     //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1+22*2));
                     // }
@@ -2927,6 +3063,7 @@ public class ItemBuilder extends GenericScreen {
                     // btnResetPose();
                 }
                 else {
+                    FortytwoEdit.LOGGER.warn("Fallback page created for path: "+fullPath);
                     widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn));
                 }
             }
@@ -3094,7 +3231,7 @@ public class ItemBuilder extends GenericScreen {
                         updateJsonEffectBtns();
                     }));
                 }
-                if(jsonEffectMode == 0) {
+                if(jsonEffectMode == 0) {//TODO use poswidget row with swap color btn
                     widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Radial]")},
                     new int[]{60},new String[]{"Radial | Linear"},null,true,btn -> {
                         unsel = true;
@@ -3141,8 +3278,8 @@ public class ItemBuilder extends GenericScreen {
                 }
                 if(jsonEffectMode == 0) {
                     for(int num=0; num<3; num++) {
-                        RgbSlider w = new RgbSlider(0,num,true);
-                        RgbSlider w2 = new RgbSlider(1,num,true);
+                        RgbSlider w = new RgbSlider(0,num,true,true);
+                        RgbSlider w2 = new RgbSlider(1,num,true,true);
                         widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0),new PosWidget(w2,15+100+5,0)}));
                         colorRgbSliders.get(0).get(num).clear();
                         colorRgbSliders.get(1).get(num).clear();
@@ -3169,7 +3306,7 @@ public class ItemBuilder extends GenericScreen {
                 }
                 else if(jsonEffectMode == 1) {
                     for(int num=0; num<3; num++) {
-                        RgbSlider w = new RgbSlider(0,num,false);
+                        RgbSlider w = new RgbSlider(0,num,false,true);
                         widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
                         colorRgbSliders.get(0).get(num).clear();
                         colorRgbSliders.get(0).get(num).add(w);
@@ -3220,7 +3357,7 @@ public class ItemBuilder extends GenericScreen {
                     widgets.get(tabNum).add(new RowWidget());
                 }
                 updateJsonEffectBtns();
-                updateRgbSliders();
+                updateColorSets();
             }
         }
 
@@ -3309,7 +3446,7 @@ public class ItemBuilder extends GenericScreen {
             this.txtX = new int[]{15+5+size};
             this.txts[0].setChangedListener(value -> {
                 if(value != null && !value.equals("")) {
-                    this.txts[0].setEditableColor(0xFFFFFF);
+                    this.txts[0].setEditableColor(TEXT_COLOR);
                     //ItemBuilder.this.markUnsaved(this.txts[0]);
                 }
                 else {
@@ -3354,7 +3491,7 @@ public class ItemBuilder extends GenericScreen {
             this.txtX = new int[]{15+5+size};
             this.txts[0].setChangedListener(value -> {
                 if(value != null && !value.equals("")) {
-                    this.txts[0].setEditableColor(0xFFFFFF);
+                    this.txts[0].setEditableColor(TEXT_COLOR);
                     //ItemBuilder.this.markUnsaved(this.txts[0]);
                 }
                 else {
@@ -3440,7 +3577,7 @@ public class ItemBuilder extends GenericScreen {
                     final int ii = i;
                     this.txts[i].setChangedListener(value -> {
                         if(value != null && !value.equals("")) {
-                            this.txts[ii].setEditableColor(0xFFFFFF);
+                            this.txts[ii].setEditableColor(TEXT_COLOR);
                             //ItemBuilder.this.markUnsaved(this.txts[ii]);
                         }
                         else {
@@ -4007,7 +4144,7 @@ public class ItemBuilder extends GenericScreen {
                     }
 
                     if((value != null && !value.equals(startVal)) || removeItem) {
-                        this.txts[0].setEditableColor(0xFFFFFF);
+                        this.txts[0].setEditableColor(TEXT_COLOR);
                         if(!noUnsaved)
                             ItemBuilder.this.markUnsaved(this.txts[0]);
                         else
@@ -4067,7 +4204,7 @@ public class ItemBuilder extends GenericScreen {
                         }
 
                         if(inpError != null) {
-                            this.txts[0].setEditableColor(0xFF5555);
+                            this.txts[0].setEditableColor(ERROR_COLOR);
                         }
                         else {
                             if(client.player.getAbilities().creativeMode) {
@@ -4387,14 +4524,14 @@ public class ItemBuilder extends GenericScreen {
                         el = null;
 
                     if((value != null && !value.equals(startVal))) {
-                        this.txts[0].setEditableColor(0xFFFFFF);
+                        this.txts[0].setEditableColor(TEXT_COLOR);
                         
                         if(value.length()>0 && el==null) {
                             setErrorMsg("Invalid element");
                         }
 
                         if(inpError != null) {
-                            this.txts[0].setEditableColor(0xFF5555);
+                            this.txts[0].setEditableColor(ERROR_COLOR);
                         }
                     }
                     else {
@@ -4484,14 +4621,14 @@ public class ItemBuilder extends GenericScreen {
                         NbtElement el = isString ? NbtString.of(value) : BlackMagick.nbtFromString(value);
 
                         if((value != null && !value.equals(startVal)))
-                            this.txts[0].setEditableColor(0xFFFFFF);
+                            this.txts[0].setEditableColor(TEXT_COLOR);
                         else
                             this.txts[0].setEditableColor(LABEL_COLOR);
  
                         if(el==null)
                             setErrorMsg("Invalid element");
                         if(inpError != null) {
-                            this.txts[0].setEditableColor(0xFF5555);
+                            this.txts[0].setEditableColor(ERROR_COLOR);
                         }
                         
                         if(el != null)
@@ -4581,7 +4718,7 @@ public class ItemBuilder extends GenericScreen {
 
                 //up btn
                 currentBtn++;
-                this.btns[currentBtn] = ButtonWidget.builder(Text.of("\u2227"), btn -> {
+                this.btns[currentBtn] = ButtonWidget.builder(Text.of(UNICODE_UP_ARROW), btn -> {
                     setEditingElement(blankElPath,BlackMagick.getNbtPath(BlackMagick.moveListElement(
                         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),pagePath,index,true),blankElPath),saveBtn,
                         path2==null ? null : pagePath);
@@ -4600,7 +4737,7 @@ public class ItemBuilder extends GenericScreen {
 
                 //down btn
                 currentBtn++;
-                this.btns[currentBtn] = ButtonWidget.builder(Text.of("\u2228"), btn -> {
+                this.btns[currentBtn] = ButtonWidget.builder(Text.of(UNICODE_DOWN_ARROW), btn -> {
                     setEditingElement(blankElPath,BlackMagick.getNbtPath(BlackMagick.moveListElement(
                         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),pagePath,index,false),blankElPath),saveBtn,
                         path2==null ? null : pagePath);
@@ -4686,6 +4823,13 @@ public class ItemBuilder extends GenericScreen {
          * Used for editPath fallback (only one textfieldwidget).
          */
         public RowWidgetElement(String blankElPath, NbtList path2, ButtonWidget saveBtn) {
+            this(blankElPath, path2, saveBtn, WidgetCacheType.NONE);
+        }
+
+        /**
+         * Used for elements with specialized editors.
+         */
+        public RowWidgetElement(String blankElPath, NbtList path2, ButtonWidget saveBtn, WidgetCacheType cacheType) {
             super();
 
             String currentPath2;
@@ -4694,8 +4838,6 @@ public class ItemBuilder extends GenericScreen {
             else
                 currentPath2 = path2.get(0).asString();
             String fullPath = blankElPath+currentPath2;
-
-            FortytwoEdit.LOGGER.warn("Fallback page created for path: "+fullPath);
 
             PathInfo pi = ComponentHelper.getPathInfo(fullPath);
             boolean isString = ComponentHelper.pathTypeToNbtType(pi.type())==NbtElement.STRING_TYPE;
@@ -4724,7 +4866,7 @@ public class ItemBuilder extends GenericScreen {
                     setErrorMsg("Invalid element");
 
                 if((value != null && !value.equals(startVal))) {
-                    this.txts[0].setEditableColor(0xFFFFFF);
+                    this.txts[0].setEditableColor(TEXT_COLOR);
                     if(inpError == null)
                         setErrorMsg(BlackMagick.getItemCompoundErrors(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl).asString(),inpError));
                 }
@@ -4733,12 +4875,16 @@ public class ItemBuilder extends GenericScreen {
                 }
 
                 if(inpError != null)
-                    this.txts[0].setEditableColor(0xFF5555);
+                    this.txts[0].setEditableColor(ERROR_COLOR);
 
                 suggsOnChanged(this.txts[0],baseSuggestions,startVal);
             });
 
             this.txts[0].setText(currentVal);
+
+            if(cacheType != WidgetCacheType.NONE) {
+                widgetCache.put(cacheType, this.txts[0]);
+            }
 
             for(int i=0; i<btns.length; i++)
                 this.children.add(this.btns[i]);
@@ -4866,6 +5012,87 @@ public class ItemBuilder extends GenericScreen {
                 int sel = client.player.getInventory().selectedSlot;
                 context.drawGuiTexture(SEL_SLOT, x+(sel*20)+40-2, y-20-2, 24, 23);
             }
+        }
+
+    }
+
+    class RowWidgetEditor extends RowWidget {
+
+        private WidgetCacheType cacheType = WidgetCacheType.NONE;
+
+        /**
+         * For screens with an editor and separate txt for the element.
+         * Contains get/set buttons and lbl to warn unset.
+         * 
+         * @param cacheType
+         */
+        public RowWidgetEditor(WidgetCacheType cacheType) {
+            super();
+
+            this.cacheType = cacheType;
+
+            this.btns = new ButtonWidget[]{
+            ButtonWidget.builder(Text.of(UNICODE_DOWN_ARROW), btn -> {
+
+                if(cacheType == WidgetCacheType.TXT_DECIMAL_COLOR) {
+                    if(widgetCache.containsKey(WidgetCacheType.TXT_DECIMAL_COLOR) && widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR)!=null) {
+                        TextFieldWidget txt = (TextFieldWidget)widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR);
+                        if(txt.getText().length()>0) {
+                            trySetColorDec(0,txt.getText(),null);
+                        }
+                        else {
+                            trySetColorDec(0,"0",null);
+                        }
+                    }
+                }
+
+                unsel = true;
+            }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,20,20).build(),
+            ButtonWidget.builder(Text.of(UNICODE_UP_ARROW), btn -> {
+
+                if(cacheType == WidgetCacheType.TXT_DECIMAL_COLOR) {
+                    if(widgetCache.containsKey(WidgetCacheType.TXT_DECIMAL_COLOR) && widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR)!=null) {
+                        TextFieldWidget txt = (TextFieldWidget)widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR);
+                        txt.setText(""+getRgbDec(0));
+                        resetSuggs();
+                    }
+                }
+
+                unsel = true;
+            }).dimensions(ItemBuilder.this.x+ROW_LEFT+20+5,5,20,20).build()};
+            this.btnX = new int[]{ROW_LEFT,ROW_LEFT+20+5};
+
+            this.btns[0].setTooltip(Tooltip.of(Text.of("Copy to editor")));
+            this.btns[1].setTooltip(Tooltip.of(Text.of("Set from editor")));
+
+            for(int i=0; i<btns.length; i++)
+                this.children.add(this.btns[i]); 
+        }
+
+        @Override
+        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            super.render(context, index, y, x, entryWidth, entryHeight, mouseX, mouseY, hovered, tickDelta);
+
+            boolean editorEqual = false;
+            if(this.cacheType==WidgetCacheType.TXT_DECIMAL_COLOR) {
+                if(widgetCache.containsKey(WidgetCacheType.TXT_DECIMAL_COLOR) && widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR)!=null) {
+                    TextFieldWidget txt = (TextFieldWidget)widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR);
+                    if(txt.getText().equals(""+getRgbDec(0)))
+                        editorEqual = true;
+                }
+            }
+
+            if(!editorEqual) {
+                context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.of("Color unlinked from editor"), ItemBuilder.this.x+15+20+5+20+5, y+6, ERROR_COLOR);
+                this.btns[0].active = true;
+                this.btns[1].active = true;
+            }
+            else {
+                context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.of("Color linked to editor"), ItemBuilder.this.x+15+20+5+20+5, y+6, LABEL_COLOR_DIM);
+                this.btns[0].active = false;
+                this.btns[1].active = false;
+            }
+
         }
 
     }
@@ -5005,42 +5232,71 @@ public class ItemBuilder extends GenericScreen {
         private final double max;
         public int setNum;
         public int num;
+        private final boolean rgb;
 
-        public RgbSlider(int setNum, int num, boolean halfWidth) {
+        public RgbSlider(int setNum, int num, boolean halfWidth, boolean rgb) {
             super(0, 0, halfWidth ? 120-15-5 : 180-40, 20, Text.of(""), 0.0);
             this.min = 0f;
-            this.max = 255f;
+            this.rgb = rgb;
             this.setNum = setNum;
             this.num = num;
-            this.value = (colorSets[this.setNum][this.num] - min) / (max - min);
+            if(rgb) {
+                this.max = 255f;
+                this.value = (colorSets[this.setNum][this.num] - min) / (max - min);
+            }
+            else {
+                if(num==0)
+                    this.max = 360f;
+                else
+                    this.max = 100f;
+                this.value = (colorHsv[num] - min) / (max - min);
+            }
             this.applyValue();
             this.updateMessage();
         }
 
         @Override
         public void applyValue() {
-            colorSets[setNum][num] = (int)(this.value*(max-min)+min);
-            updateRgbSliders();
+            if(rgb) {
+                colorSets[setNum][num] = (int)(this.value*(max-min)+min);
+                updateColorSets();
+            }
+            else {
+                setHsv(num,(int)(this.value*(max-min)+min));
+            }
         }
 
         @Override
         protected void updateMessage() {
-            String color = "\u00a7";
-            if(num == 0 || num == 3)
-                color += "4";
-            else if(num == 1 || num == 4)
-                color += "2";
-            else
-                color += "1";
-            this.setMessage(Text.of(color+colorSets[setNum][num]));
+            if(rgb) {
+                String color = UNICODE_SECTION_SIGN;
+                if(num == 0 || num == 3)
+                    color += "4";
+                else if(num == 1 || num == 4)
+                    color += "2";
+                else
+                    color += "1";
+                this.setMessage(Text.of(color+colorSets[setNum][num]));
+            }
+            else {
+                String color = UNICODE_SECTION_SIGN+"7";
+                if(num == 0)
+                    color += "H";
+                else if(num == 1)
+                    color += "S";
+                else
+                    color += "B";
+                color += UNICODE_SECTION_SIGN+"r ";
+                this.setMessage(Text.of(color+colorHsv[num]));
+            }
         }
 
         public void setVal(int newVal) {
-            if(newVal > 255)
-                newVal = 255;
-            else if(newVal < 0)
-                newVal = 0;
-            colorSets[setNum][num] = newVal;
+            if(newVal > max)
+                newVal = (int)max;
+            else if(newVal < min)
+                newVal = (int)min;
+
             this.value = (double)((newVal - min)/(max-min));
             updateMessage();
         }
@@ -5091,6 +5347,11 @@ public class ItemBuilder extends GenericScreen {
 
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
+    private enum WidgetCacheType {
+        NONE,                   // do not cache (used for fallback page)
+        TXT_DECIMAL_COLOR       // TextFieldWidget for PathType.DECIMAL_COLOR
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
     @Override
@@ -5126,9 +5387,9 @@ public class ItemBuilder extends GenericScreen {
             txtFormat.setX(x+50);
             txtFormat.render(context, mouseX, mouseY, delta);
             if(!this.unsavedTxtWidgets.isEmpty())
-                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, TEXT_COLOR);
             if(savedError)
-                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, 0xFF5555);
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, ERROR_COLOR);
         }
         else {
             if(jsonPreview != null) {
@@ -5151,14 +5412,14 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }
                 else
-                    context.drawCenteredTextWithShadow(this.textRenderer, jsonPreview, this.width / 2, y-14, 0xFFFFFF);
+                    context.drawCenteredTextWithShadow(this.textRenderer, jsonPreview, this.width / 2, y-14, TEXT_COLOR);
     
                 if(tab != CACHE_TAB_BLANK) {
                     jsonPreview = null;
                 }
             }
             else if(blankTabUnsaved && tab == CACHE_TAB_BLANK)
-                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, 0xFFFFFF);
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, TEXT_COLOR);
 
             if(showBannerPreview && bannerChangePreview != null) {
                 if(!bannerShield)
@@ -5168,7 +5429,7 @@ public class ItemBuilder extends GenericScreen {
             }
         }
         if(inpErrorTrim != null)
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.of(inpErrorTrim), this.width / 2, y+this.backgroundHeight+3, 0xFF5555);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.of(inpErrorTrim), this.width / 2, y+this.backgroundHeight+3, ERROR_COLOR);
 
         if(suggs != null)
             suggs.render(context, mouseX, mouseY);
