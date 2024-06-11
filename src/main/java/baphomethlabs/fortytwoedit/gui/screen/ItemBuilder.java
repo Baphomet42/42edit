@@ -99,6 +99,7 @@ public class ItemBuilder extends GenericScreen {
     private final List<List<RowWidget>> widgets = new ArrayList<>();
     private final Set<ClickableWidget> unsavedTxtWidgets = Sets.newHashSet();
     private final Set<ClickableWidget> allTxtWidgets = Sets.newHashSet();
+    private final Set<ClickableWidget> allSliderWidgets = Sets.newHashSet();
     public static boolean savedModeSet = false;
     private NbtList savedItems = null;
     private boolean savedError = false;
@@ -488,6 +489,13 @@ public class ItemBuilder extends GenericScreen {
 
     protected boolean activeTxt() {
         for(ClickableWidget w : allTxtWidgets)
+            if(w.isFocused())
+                return true;
+        return false;
+    }
+
+    protected boolean activeSlider() {
+        for(ClickableWidget w : allSliderWidgets)
             if(w.isFocused())
                 return true;
         return false;
@@ -1033,9 +1041,9 @@ public class ItemBuilder extends GenericScreen {
             b0 = x;
         }
 
-        colorSets[rgbNum][0] = (int)((r0+m)*255);
-        colorSets[rgbNum][1] = (int)((g0+m)*255);
-        colorSets[rgbNum][2] = (int)((b0+m)*255);
+        colorSets[rgbNum][0] = Math.round((r0+m)*255);
+        colorSets[rgbNum][1] = Math.round((g0+m)*255);
+        colorSets[rgbNum][2] = Math.round((b0+m)*255);
     }
 
     private void rgbToHsv(int r, int g, int b) {
@@ -1068,7 +1076,7 @@ public class ItemBuilder extends GenericScreen {
         float s = (max==0) ? 0 : (delta/max)*100;
         float v = max*100;
 
-        colorHsv = new int[]{(int)h,(int)s,(int)v};
+        colorHsv = new int[]{Math.round(h),Math.round(s),Math.round(v)};
     }
 
     private void drawItem(DrawContext context, ItemStack item, int x, int y) {
@@ -1719,6 +1727,7 @@ public class ItemBuilder extends GenericScreen {
         noScrollWidgets.clear();
         unsavedTxtWidgets.clear();
         allTxtWidgets.clear();
+        allSliderWidgets.clear();
         for(int i=0; i<tabs.length; i++) {
             widgets.add(new ArrayList<RowWidget>());
             noScrollWidgets.add(new ArrayList<PosWidget>());
@@ -2266,6 +2275,13 @@ public class ItemBuilder extends GenericScreen {
                 this.unsavedTxtWidgets.remove(t);
                 this.allTxtWidgets.remove(t);
             }
+            for(PosWidget p : r.wids) {
+                if(p.w != null) {
+                    this.unsavedTxtWidgets.remove(p.w);
+                    this.allTxtWidgets.remove(p.w);
+                    this.allSliderWidgets.remove(p.w);
+                }
+            }
         }
         for(PosWidget r : noScrollWidgets.get(tabNum)) {
             this.unsavedTxtWidgets.remove(r.w);
@@ -2465,6 +2481,13 @@ public class ItemBuilder extends GenericScreen {
             for(TextFieldWidget t : r.txts) {
                 this.unsavedTxtWidgets.remove(t);
                 this.allTxtWidgets.remove(t);
+            }
+            for(PosWidget p : r.wids) {
+                if(p.w != null) {
+                    this.unsavedTxtWidgets.remove(p.w);
+                    this.allTxtWidgets.remove(p.w);
+                    this.allSliderWidgets.remove(p.w);
+                }
             }
         }
         for(PosWidget r : noScrollWidgets.get(tabNum)) {
@@ -3760,6 +3783,9 @@ public class ItemBuilder extends GenericScreen {
                     this.children.add(p[i].w);
                     if(p[i].w instanceof TextFieldWidget || p[i].w instanceof EditBoxWidget) {
                         allTxtWidgets.add(p[i].w);
+                    }
+                    else if(p[i].w instanceof SliderWidget) {
+                        allSliderWidgets.add(p[i].w);
                     }
                 }
             }
@@ -5472,7 +5498,7 @@ public class ItemBuilder extends GenericScreen {
             }
         }
         if(keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN) {
-            if(!activeTxt()) {
+            if(!activeTxt() && !activeSlider()) {
                 if(this.unsavedTxtWidgets.isEmpty() && !tabs[tab].hideTabs && hotbarLeftBtn.active) {
                     btnChangeSlot(keyCode == GLFW.GLFW_KEY_LEFT);
                 }
