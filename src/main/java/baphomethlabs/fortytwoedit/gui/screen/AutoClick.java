@@ -117,6 +117,8 @@ public class AutoClick extends GenericScreen {
     public void tick() {
         if(!txtAttackCooldown.isActive())
             setTxtAttackCooldown();
+
+        super.tick();
     }
 
 }

@@ -32,6 +32,7 @@ public abstract class GenericScreen extends Screen {
     public static final String UNICODE_CHECK = "\u2611";
     public static final String UNICODE_X = "\u2612";
     public static final String UNICODE_REFRESH = "\u27F3";
+    private boolean unsel = false;
     
     public GenericScreen() {
         super(NarratorManager.EMPTY);
@@ -67,8 +68,31 @@ public abstract class GenericScreen extends Screen {
     }
 
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        boolean superReturn = super.mouseClicked(mouseX, mouseY, button);
+        if(superReturn)
+            return true;
+        unsel();
+        return false;
+    }
+
+    @Override
     public boolean shouldPause() {
         return false;
+    }
+
+    protected void unsel() {
+        unsel = true;
+    }
+
+    @Override
+    public void tick() {
+        if(unsel) {
+            unfocus();
+            unsel = false;
+        }
+
+        super.tick();
     }
 
 }

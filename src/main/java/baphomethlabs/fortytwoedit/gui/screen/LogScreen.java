@@ -21,7 +21,6 @@ public class LogScreen extends GenericScreen {
     long lastCheck = 0;
     long lastUpdate = 0;
     final int UPDATE_WAIT_MS = 1000;
-    private boolean unsel = false;
     static final String ss = "\u00a7";
     
     public LogScreen() {}
@@ -49,7 +48,7 @@ public class LogScreen extends GenericScreen {
             btnPause.setMessage(Text.of("Resume"));
         else
             btnPause.setMessage(Text.of("Pause"));
-        unsel = true;
+        unsel();
     }
 
     protected void updateBox() {
@@ -181,10 +180,8 @@ public class LogScreen extends GenericScreen {
                 }
             }
         }
-        if(unsel) {
-            unfocus();
-            unsel = false;
-        }
+
+        super.tick();
     }
 
 }

@@ -335,6 +335,8 @@ public class Hacks extends GenericScreen {
     public void tick() {
         if(!txtRando.isActive())
             setTxtRando();
+
+        super.tick();
     }
 
 }

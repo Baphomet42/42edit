@@ -65,7 +65,6 @@ import net.minecraft.util.math.MathHelper;
 
 public class ItemBuilder extends GenericScreen {
 
-    protected boolean unsel = false;
     protected static int tab = 0;
     protected static final int TAB_OFFSET = 5;
     protected static final int TAB_SIZE = 24;
@@ -124,9 +123,6 @@ public class ItemBuilder extends GenericScreen {
     protected final int playerY = -10;
     private static final int RENDER_SIZE = 35;
     private static final Text ERROR_CREATIVE = Text.of("Creative required to edit");
-    private ArrayList<RowWidgetSlider> sliders = new ArrayList<>();
-    private ArrayList<RowWidgetSlider> sliderBtns = new ArrayList<>();
-    private ButtonWidget setPoseButton;
     private boolean editArmorStand = false;
     private float[][] armorPose;
     public static final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
@@ -176,7 +172,7 @@ public class ItemBuilder extends GenericScreen {
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.ITEM_BUILDER;
 
         if(firstInit) {
-            if(tabs[tab].hideTabs)
+            if(tabs[tab].hideTabs())
                 tab = CACHE_TAB_MAIN;
             firstInit = false;
         }
@@ -195,19 +191,25 @@ public class ItemBuilder extends GenericScreen {
         for(int i=0; i<3; i++)
             colorHsvSliders.add(Sets.newHashSet());
         
-        if(!tabs[tab].hideTabs) {
+        if(!tabs[tab].hideTabs()) {
 
             //tabs
             for(int posNum = 0; posNum<tabs.length; posNum++)
                 for(int i = 0; i<tabs.length; i++)
-                    if(tabs[i].pos==posNum) {
+                    if(tabs[i].pos()==posNum) {
                         int tabNum = i;
-                        ButtonWidget w;
-                        if(tabs[i].pos<LEFT_TABS)
-                            w = ButtonWidget.builder(Text.of(""), button -> this.btnTab(tabNum)).dimensions(x-TAB_SIZE,y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*tabs[i].pos,TAB_SIZE,TAB_SIZE).build();
-                        else
-                            w = ButtonWidget.builder(Text.of(""), button -> this.btnTab(tabNum)).dimensions(x+240,y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(tabs[i].pos-LEFT_TABS),TAB_SIZE,TAB_SIZE).build();
-                        w.setTooltip(Tooltip.of(Text.of(tabs[i].lbl)));
+                        int tabX;
+                        int tabY;
+                        if(posNum<LEFT_TABS) {
+                            tabX = x-TAB_SIZE;
+                            tabY = y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(posNum);
+                        }
+                        else {
+                            tabX = x+240;
+                            tabY = y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(posNum-LEFT_TABS);
+                        }
+                        ButtonWidget w = ButtonWidget.builder(Text.of(""), button -> this.btnTab(tabNum)).dimensions(tabX,tabY,TAB_SIZE,TAB_SIZE).build();
+                        w.setTooltip(Tooltip.of(Text.of(tabs[i].lbl())));
                         if(tab==i)
                             w.active = false;
                         this.addDrawableChild(w);
@@ -337,7 +339,7 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
         }
-        unsel = true;
+        unsel();
     }
 
     protected void btnChangeSlot(boolean left) {
@@ -353,7 +355,7 @@ public class ItemBuilder extends GenericScreen {
                 slot = 0;
             client.player.getInventory().selectedSlot = slot;
         }
-        unsel = true;
+        unsel();
     }
 
     protected void btnThrow(boolean copy) {
@@ -369,7 +371,7 @@ public class ItemBuilder extends GenericScreen {
                 BlackMagick.setItemMain(item);
             }
         }
-        unsel = true;
+        unsel();
     }
 
     protected void btnTab(int i) {
@@ -382,7 +384,7 @@ public class ItemBuilder extends GenericScreen {
         tab = i;
         this.resize(this.client,this.width,this.height);
         resetSuggs();
-        unsel = true;
+        unsel();
     }
 
     protected void btnCopyNbt() {
@@ -391,7 +393,7 @@ public class ItemBuilder extends GenericScreen {
             client.player.sendMessage(Text.of(itemData),false);
             client.keyboard.setClipboard(itemData);
         }
-        unsel = true;
+        unsel();
     }
 
     private void updateItem() {
@@ -722,8 +724,8 @@ public class ItemBuilder extends GenericScreen {
         nbt.put("Pose",pose.copy());
         renderArmorPose.readNbt(nbt.copy());
 
-        if(setPoseButton != null)
-            setPoseButton.setTooltip(Tooltip.of(Text.of("Set Pose\n\nPose:"+pose.asString())));
+        // if(setPoseButton != null)
+        //     setPoseButton.setTooltip(Tooltip.of(Text.of("Set Pose\n\nPose:"+pose.asString())));
 
         return pose.copy();
     }
@@ -740,7 +742,7 @@ public class ItemBuilder extends GenericScreen {
     //     armorPose = null;
     //     updatePose();
     //     unsavedPose = false;
-    //     unsel = true;
+    //     unsel();
     // }
 
     // private void btnGetPose() {
@@ -814,7 +816,7 @@ public class ItemBuilder extends GenericScreen {
     //     }
     //     updatePose();
     //     unsavedPose = false;
-    //     unsel = true;
+    //     unsel();
 
     //     for(int i=0; i<armorPose.length; i++) {
     //         if(armorPose[i] == null) {
@@ -840,13 +842,13 @@ public class ItemBuilder extends GenericScreen {
     //     //     if(!empty) {
     //     //         BlackMagick.setNbt(item,"EntityTag/Pose",updatePose());
     //     //         unsavedPose = false;
-    //     //         unsel = true;
+    //     //         unsel();
     //     //         return;
     //     //     }
     //     // }
     //     // BlackMagick.removeNbt(item,"EntityTag/Pose");
     //     // unsavedPose = false;
-    //     unsel = true;
+    //     unsel();
     // }
 
     public static String[] getStatesArr() {
@@ -1195,9 +1197,13 @@ public class ItemBuilder extends GenericScreen {
                 col = "\u00a7c";
             widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]).btns[num].setMessage(Text.of(col+"\u00a7kk"));
             if(jsonEffectMode == 0) {
-                widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).btns[0].setMessage(Text.of("[Radial]"));
-                if(jsonEffects[5]==1)
-                    widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).btns[0].setMessage(Text.of("[Linear]"));
+                if(widgetCache.containsKey(WidgetCacheType.JSON_RADIAL) && widgetCache.get(WidgetCacheType.JSON_RADIAL)!=null) {
+                    ButtonWidget w = (ButtonWidget)widgetCache.get(WidgetCacheType.JSON_RADIAL);
+                    if(jsonEffects[5]==0)
+                        w.setMessage(Text.of("[Radial]"));
+                    else
+                        w.setMessage(Text.of("[Linear]"));
+                }
             }
             else if(jsonEffectMode == 1) {
                 ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setEditableColor(TEXT_COLOR);
@@ -1781,7 +1787,7 @@ public class ItemBuilder extends GenericScreen {
                                 BlackMagick.setItemMain(newStack);
                         }
                     }
-                    unsel = true;
+                    unsel();
                 }, btn -> {
                     if(!selItem.isEmpty()) {
                         boolean removed = false;
@@ -1822,7 +1828,7 @@ public class ItemBuilder extends GenericScreen {
                                 BlackMagick.setItemMain(newStack);
                         }
                     }
-                    unsel = true;
+                    unsel();
                 }, btn -> {
                     if(!selItem.isEmpty()) {
                         if(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),"components.minecraft:custom_data.\"\u00a76\u00a7oBaphomethLabs\u00a7r\"")!=null) {
@@ -1842,7 +1848,7 @@ public class ItemBuilder extends GenericScreen {
                                 BlackMagick.setItemMain(newStack);
                         }
                     }
-                    unsel = true;
+                    unsel();
                 }));
             }
             {
@@ -2118,7 +2124,7 @@ public class ItemBuilder extends GenericScreen {
                     if(!client.player.getMainHandStack().isEmpty()) {
                         ((EditBoxWidget)noScrollWidgets.get(i).get(j-1).w).setText(BlackMagick.itemToGive(client.player.getMainHandStack()));
                     }
-                    ItemBuilder.this.unsel = true;
+                    ItemBuilder.this.unsel();
                 }).dimensions(x+15-3,y+35+22*6+1,60,20).build(),15-3,35+22*6+1));
             }
             {
@@ -2126,7 +2132,7 @@ public class ItemBuilder extends GenericScreen {
                 ButtonWidget w = ButtonWidget.builder(Text.of("Give"), btn -> {
                     String inp = ((EditBoxWidget)noScrollWidgets.get(i).get(j-2).w).getText();
                     ItemBuilder.this.markSaved((EditBoxWidget)noScrollWidgets.get(i).get(j-2).w);
-                    ItemBuilder.this.unsel = true;
+                    ItemBuilder.this.unsel();
 
                     if(client.player.getAbilities().creativeMode) {
                         ItemStack item = ItemStack.EMPTY;
@@ -2178,7 +2184,7 @@ public class ItemBuilder extends GenericScreen {
                 noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of("Merge"), button -> {
                     String inp = ((EditBoxWidget)noScrollWidgets.get(i).get(j-3).w).getText();
                     ItemBuilder.this.markSaved((EditBoxWidget)noScrollWidgets.get(i).get(j-3).w);
-                    ItemBuilder.this.unsel = true;
+                    ItemBuilder.this.unsel();
 
                     if(client.player.getAbilities().creativeMode && !selItem.isEmpty()) {
                         NbtCompound nbt = null;
@@ -2222,7 +2228,7 @@ public class ItemBuilder extends GenericScreen {
                     viewBlackMarket = !viewBlackMarket;
                     setSavedModeTooltip();
                     updateSavedTab();
-                    ItemBuilder.this.unsel = true;
+                    ItemBuilder.this.unsel();
                 }).dimensions(x+15-3, y+35+1,20,20).build(),15-3,35+1));
             }
             {
@@ -2241,7 +2247,7 @@ public class ItemBuilder extends GenericScreen {
                         setSavedModeTooltip();
                         updateSavedTab();
                     }
-                    ItemBuilder.this.unsel = true;
+                    ItemBuilder.this.unsel();
                 }).dimensions(x+15-3, y+35+1+22,20,20).build(),15-3,35+1+22));
             }
             for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
@@ -2326,7 +2332,7 @@ public class ItemBuilder extends GenericScreen {
                         {
                             ButtonWidget w = ButtonWidget.builder(Text.of("Show Unused"), btn -> {
                                 showUnusedComponents = !showUnusedComponents;
-                                unsel = true;
+                                unsel();
                                 createTab(CACHE_TAB_MAIN);
                             }).dimensions((width/2)-40,5,80,20).build();
                             w.setTooltip(Tooltip.of(Text.of("Show all vanilla components")));
@@ -2337,7 +2343,7 @@ public class ItemBuilder extends GenericScreen {
                         {
                             ButtonWidget w = ButtonWidget.builder(Text.of("Hide Unused"), btn -> {
                                 showUnusedComponents = !showUnusedComponents;
-                                unsel = true;
+                                unsel();
                                 createTab(CACHE_TAB_MAIN);
                             }).dimensions((width/2)-40,5,80,20).build();
                             w.setTooltip(Tooltip.of(Text.of("Only show relevant components")));
@@ -2563,7 +2569,7 @@ public class ItemBuilder extends GenericScreen {
                                 createBlankTab(0,newArgs);
                             }
                         }
-                        unsel = true;
+                        unsel();
                     }).dimensions(x+240-5-40,y+5,40,20).build();
                     if(path2 == null && !client.player.getAbilities().creativeMode) {
                         saveBtn.active = false;
@@ -2790,7 +2796,7 @@ public class ItemBuilder extends GenericScreen {
                             newArgs.put("cancelEl",cancelNbt);
 
                             createBlankTab(2,newArgs);
-                            unsel = true;
+                            unsel();
                         }).dimensions(x+15-3,y+35+22*6+1,60,20).build(),15-3,35+22*6+1));
                     }
                     {
@@ -2815,7 +2821,7 @@ public class ItemBuilder extends GenericScreen {
                             newArgs.put("cancelEl",cancelNbt);
 
                             createBlankTab(2,newArgs);
-                            unsel = true;
+                            unsel();
                         }).dimensions(x+15-3+60+5,y+35+22*6+1,60,20).build(),15-3+60+5,35+22*6+1));
                     }
                     if(path.contains("written_book_content")) {
@@ -2835,7 +2841,7 @@ public class ItemBuilder extends GenericScreen {
                                 newArgs.put("overrideEl",blankTabEl);
                             createBlankTab(2,newArgs);
 
-                            unsel = true;
+                            unsel();
                         }).dimensions(x+15-3+60+5+60+5,y+35+22*6+1,60,20).build(),15-3+60+5+60+5,35+22*6+1));
                     }
                 }
@@ -3172,7 +3178,7 @@ public class ItemBuilder extends GenericScreen {
 
                             createBlankTab(0,newArgs);
                         }
-                        unsel = true;
+                        unsel();
                     }).dimensions(x+240-5-40,y+5,40,20).build();
                     noScrollWidgets.get(tabNum).add(new PosWidget(saveBtn,240-5-40,5));
                 }
@@ -3218,35 +3224,35 @@ public class ItemBuilder extends GenericScreen {
                     Text.of("\u00a7kk")},new int[]{20,20,20,20,20},new String[]{"none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r",
                     "none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r","none | \u00a7atrue\u00a7r | \u00a7cfalse\u00a7r"},
                     null,true,btn -> {
-                        unsel = true;
+                        unsel();
                         jsonEffects[0]++;
                         if(jsonEffects[0]>2)
                             jsonEffects[0]=0;
                         updateJsonEffect();
                         updateJsonEffectBtns();
                     },btn -> {
-                        unsel = true;
+                        unsel();
                         jsonEffects[1]++;
                         if(jsonEffects[1]>2)
                             jsonEffects[1]=0;
                         updateJsonEffect();
                         updateJsonEffectBtns();
                     },btn -> {
-                        unsel = true;
+                        unsel();
                         jsonEffects[2]++;
                         if(jsonEffects[2]>2)
                             jsonEffects[2]=0;
                         updateJsonEffect();
                         updateJsonEffectBtns();
                     },btn -> {
-                        unsel = true;
+                        unsel();
                         jsonEffects[3]++;
                         if(jsonEffects[3]>2)
                             jsonEffects[3]=0;
                         updateJsonEffect();
                         updateJsonEffectBtns();
                     },btn -> {
-                        unsel = true;
+                        unsel();
                         jsonEffects[4]++;
                         if(jsonEffects[4]>2)
                             jsonEffects[4]=0;
@@ -3254,20 +3260,29 @@ public class ItemBuilder extends GenericScreen {
                         updateJsonEffectBtns();
                     }));
                 }
-                if(jsonEffectMode == 0) {//TODO use poswidget row with swap color btn
-                    widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Radial]")},
-                    new int[]{60},new String[]{"Radial | Linear"},null,true,btn -> {
-                        unsel = true;
+                if(jsonEffectMode == 0) {
+                    ButtonWidget w = ButtonWidget.builder(Text.of("[Radial]"), btn -> {
+                        unsel();
                         jsonEffects[5]++;
                         if(jsonEffects[5]>1)
                             jsonEffects[5]=0;
                         updateJsonEffect();
                         updateJsonEffectBtns();
-                    }));
+                    }).dimensions(0,0,60,20).build();
+                    w.setTooltip(Tooltip.of(Text.of("Radial | Linear")));
+                    widgetCache.put(WidgetCacheType.JSON_RADIAL,w);
+
+                    ButtonWidget w2 = ButtonWidget.builder(Text.of("Swap"), btn -> {
+                        unsel();
+                        swapColorSets();
+                    }).dimensions(0,0,40,20).build();
+                    w2.setTooltip(Tooltip.of(Text.of("Swap colors")));
+
+                    widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0), new PosWidget(w2,15+60+5,0)}));
                 }
                 else if(jsonEffectMode == 1) {
                     ButtonWidget w = ButtonWidget.builder(Text.of("Color [Vanilla]"), btn -> {
-                        unsel = true;
+                        unsel();
                         jsonEffects[6]++;
                         if(jsonEffects[6]>2)
                             jsonEffects[6]=0;
@@ -3337,7 +3352,7 @@ public class ItemBuilder extends GenericScreen {
                     {
                         widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Text]")},
                         new int[]{80},new String[]{"Text | Keybind | Translate"},null,true,btn -> {
-                            unsel = true;
+                            unsel();
                             jsonEffects[7]++;
                             if(jsonEffects[7]>2)
                                 jsonEffects[7]=0;
@@ -3640,7 +3655,7 @@ public class ItemBuilder extends GenericScreen {
                 this.btnX[i] = currentX;
                 final int index = row*9+i;
                 this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
-                    ItemBuilder.this.unsel = true;
+                    ItemBuilder.this.unsel();
                     if(!viewBlackMarket) {
                         if(savedModeSet) {
                             ItemBuilder.this.savedError = false;
@@ -3822,7 +3837,7 @@ public class ItemBuilder extends GenericScreen {
                 ItemBuilder.this.markSaved(this.txts[i]);
                 texts[i] = this.txts[i].getText();
             }
-            ItemBuilder.this.unsel = true;
+            ItemBuilder.this.unsel();
             return texts;
         }
 
@@ -3960,7 +3975,7 @@ public class ItemBuilder extends GenericScreen {
                 keyBtn,
                 ButtonWidget.builder(getButtonText(path,startEl), btn -> {
                     createBlankTab(0,BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}")));
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_LEFT+size+5,5,ROW_RIGHT-ROW_LEFT-20-size-5,20).build(),
                 ButtonWidget.builder(Text.of(startVal.equals("") ? "+" : "X"), btn -> {
                     if(startVal.equals("")) {
@@ -3971,7 +3986,7 @@ public class ItemBuilder extends GenericScreen {
                         BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
                             BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
                     }
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-20,5,20,20).build()};
                 this.btnX = new int[]{ROW_LEFT,ROW_LEFT+size+5,ROW_RIGHT-20};
                 if(!startVal.equals("")) {
@@ -4006,11 +4021,11 @@ public class ItemBuilder extends GenericScreen {
                     String comp = path.replaceFirst("components.","");
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
                         BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(2*btnSize+btnSpacing),5,btnSize,20).build(),
                 ButtonWidget.builder(Text.of("True"), btn -> {
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,new NbtCompound())));
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
                 this.btnX = new int[]{ROW_LEFT,ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
     
@@ -4046,15 +4061,15 @@ public class ItemBuilder extends GenericScreen {
                     String comp = path.replaceFirst("components.","");
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
                         BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(3*btnSize+2*btnSpacing),5,btnSize,20).build(),
                 ButtonWidget.builder(Text.of("False"), btn -> {
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,NbtByte.ZERO)));
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(2*btnSize+btnSpacing),5,btnSize,20).build(),
                 ButtonWidget.builder(Text.of("True"), btn -> {
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,NbtByte.ONE)));
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
                 this.btnX = new int[]{ROW_LEFT,ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
     
@@ -4090,16 +4105,16 @@ public class ItemBuilder extends GenericScreen {
                     String comp = path.replaceFirst("components.","");
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
                         BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(3*btnSize+2*btnSpacing),5,btnSize,20).build(),
                 ButtonWidget.builder(Text.of("Hide"), btn -> {
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,
                         BlackMagick.validCompound(BlackMagick.nbtFromString("{show_in_tooltip:0b}")))));
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-(2*btnSize+btnSpacing),5,btnSize,20).build(),
                 ButtonWidget.builder(Text.of("Show"), btn -> {
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,new NbtCompound())));
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
                 this.btnX = new int[]{ROW_LEFT,ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
     
@@ -4139,7 +4154,7 @@ public class ItemBuilder extends GenericScreen {
                         BlackMagick.setItemMain(newItem);
                         createTab(CACHE_TAB_MAIN); // required certain components
                     }
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,size,20).build()};
                 this.btnX = new int[]{ROW_LEFT};
 
@@ -4320,7 +4335,7 @@ public class ItemBuilder extends GenericScreen {
                     if(blankTabEl != null)
                         newArgs.put("overrideEl",blankTabEl);
                     createBlankTab(0,newArgs);
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_LEFT+size+5,5,ROW_RIGHT-ROW_LEFT-20-size-5,20).build(),
                 ButtonWidget.builder(Text.of(currentVal.equals("") ? "+" : "X"), btn -> {
                     if(currentVal.equals("")) {
@@ -4348,7 +4363,7 @@ public class ItemBuilder extends GenericScreen {
                             newArgs.put("overrideEl",blankTabEl);
                         createBlankTab(0,newArgs);
                     }
-                    unsel = true;
+                    unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-20,5,20,20).build()};
                 this.btnX = new int[]{ROW_LEFT,ROW_LEFT+size+5,ROW_RIGHT-20};
                 if(!currentVal.equals("")) {
@@ -4692,7 +4707,7 @@ public class ItemBuilder extends GenericScreen {
                         if(blankTabEl != null)
                             newArgs.put("overrideEl",blankTabEl);
                         createBlankTab(0,newArgs);
-                        unsel = true;
+                        unsel();
                     }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,listElWidth,20).build();
                     this.btnX[0] = ROW_LEFT;
                     this.btns[0].setTooltip(Tooltip.of(Text.of("Edit element:\n"+currentVal)));
@@ -4966,7 +4981,7 @@ public class ItemBuilder extends GenericScreen {
                 final int index = row*9+i;
                 this.savedStacks[i] = cacheInv[index];
                 this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
-                    ItemBuilder.this.unsel = true;
+                    ItemBuilder.this.unsel();
                 }).dimensions(currentX,5,20,20).build();
                 if(cacheInv[index] != null && !cacheInv[index].isEmpty())
                     this.btns[i].setTooltip(makeItemTooltip(cacheInv[index]));
@@ -5013,7 +5028,7 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<this.savedStacks.length; i++) {
                 this.btnX[i] = currentX;
                 this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
-                    ItemBuilder.this.unsel = true;
+                    ItemBuilder.this.unsel();
                 }).dimensions(currentX,5,20,20).build();
                 if(this.savedStacks[i] != null && !this.savedStacks[i].isEmpty())
                     this.btns[i].setTooltip(makeItemTooltip(this.savedStacks[i]));
@@ -5072,7 +5087,7 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }
 
-                unsel = true;
+                unsel();
             }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,20,20).build(),
             ButtonWidget.builder(Text.of(UNICODE_UP_ARROW), btn -> {
 
@@ -5084,7 +5099,7 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }
 
-                unsel = true;
+                unsel();
             }).dimensions(ItemBuilder.this.x+ROW_LEFT+20+5,5,20,20).build()};
             this.btnX = new int[]{ROW_LEFT,ROW_LEFT+20+5};
 
@@ -5119,58 +5134,6 @@ public class ItemBuilder extends GenericScreen {
                 this.btns[1].active = false;
             }
 
-        }
-
-    }
-
-    class RowWidgetSlider extends RowWidget { //TODO RowWidgetSlider
-
-        protected PoseSlider poseSlider;
-
-        /**
-         * Pose slider
-         */
-        public RowWidgetSlider(int part, int num) {
-            setup();
-
-            this.poseSlider = new PoseSlider(part,num);
-
-            this.children.add(this.poseSlider);
-        }
-
-        /**
-         * Pose slider btn
-         */
-        public RowWidgetSlider(int part, String name) {
-            setup();
-
-            this.btns = new ButtonWidget[]{ButtonWidget.builder(Text.of(name), btn -> {
-                for(int i=0; i<3; i++)
-                    sliders.get(part*3+i).setSlider(0f);
-                if(armorPose != null)
-                    armorPose[part] = null;
-                this.btns[0].setTooltip(Tooltip.of(Text.of("No pose")));
-                this.btns[0].active = false;
-                updatePose();
-                //unsavedPose = true;
-            }).dimensions(ItemBuilder.this.x+15,5,60,20).build()};
-            this.btnX = new int[]{100};
-
-            this.children.add(this.btns[0]);
-        }
-
-        public void setSlider(float val) {
-            if(this.poseSlider != null)
-                this.poseSlider.setVal(val);
-        }
-
-        @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            if(poseSlider != null) {
-                this.poseSlider.render(context, mouseX, mouseY, tickDelta);
-                this.poseSlider.setX(ItemBuilder.this.x+2+10+20+5);
-                this.poseSlider.setY(y);
-            }
         }
 
     }
@@ -5217,11 +5180,11 @@ public class ItemBuilder extends GenericScreen {
             updatePose();
             //ItemBuilder.this.unsavedPose = true;
 
-            if(sliderBtns.size() > part) {
-                sliderBtns.get(part).btns[0].setTooltip(Tooltip.of(Text.of("Remove Pose")));
-                if(client.player.getAbilities().creativeMode)
-                    sliderBtns.get(part).btns[0].active = true;
-            }
+            // if(sliderBtns.size() > part) {
+            //     sliderBtns.get(part).btns[0].setTooltip(Tooltip.of(Text.of("Remove Pose")));
+            //     if(client.player.getAbilities().creativeMode)
+            //         sliderBtns.get(part).btns[0].active = true;
+            // }
         }
 
         @Override
@@ -5253,7 +5216,7 @@ public class ItemBuilder extends GenericScreen {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    class RgbSlider extends SliderWidget { //TODO RgbSlider widget
+    class RgbSlider extends SliderWidget {
         private final double min;
         private final double max;
         public int setNum;
@@ -5328,28 +5291,14 @@ public class ItemBuilder extends GenericScreen {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    private static class Tab {
-        public int pos;
-        public String lbl;
-        public ItemStack display;
-        public boolean hideTabs;
+    private record Tab(int pos, String lbl, ItemStack display, boolean hideTabs) {
 
         public Tab(int pos, String lbl, ItemStack display) {
-            this.pos = pos;
-            this.lbl = lbl;
-            this.display = display;
-
-            if(lbl == null)
-                this.lbl = "";
-            if(display == null)
-                this.display = new ItemStack(Items.BARRIER);
+            this(pos,lbl,display,false);
         }
 
         public Tab() {
-            this.pos = -1;
-            this.lbl = "";
-            this.display = new ItemStack(Items.AIR);
-            this.hideTabs = true;
+            this(-1,"",ItemStack.EMPTY,true);
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -5375,7 +5324,8 @@ public class ItemBuilder extends GenericScreen {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     private enum WidgetCacheType {
         NONE,                   // do not cache (used for fallback page)
-        TXT_DECIMAL_COLOR       // TextFieldWidget for PathType.DECIMAL_COLOR
+        TXT_DECIMAL_COLOR,      // TextFieldWidget for PathType.DECIMAL_COLOR
+        JSON_RADIAL,            // ButtonWidget for Radial | Linear (in json page)
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -5384,7 +5334,7 @@ public class ItemBuilder extends GenericScreen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
-        if(!tabs[tab].hideTabs) {
+        if(!tabs[tab].hideTabs()) {
             for(Tab t: tabs) {
                 if(t.pos>=0) {
                     if(t.pos<LEFT_TABS)
@@ -5484,7 +5434,7 @@ public class ItemBuilder extends GenericScreen {
             return true;
         }
         if(FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
-            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !tabs[tab].hideTabs) {
+            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !tabs[tab].hideTabs()) {
                 if(!pauseSaveScroll && tabWidget != null) {
                     tabScroll[tab] = tabWidget.getScrollAmount();
                 }
@@ -5499,7 +5449,7 @@ public class ItemBuilder extends GenericScreen {
         }
         if(keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN) {
             if(!activeTxt() && !activeSlider()) {
-                if(this.unsavedTxtWidgets.isEmpty() && !tabs[tab].hideTabs && hotbarLeftBtn.active) {
+                if((keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT) && this.unsavedTxtWidgets.isEmpty() && !tabs[tab].hideTabs() && hotbarLeftBtn.active) {
                     btnChangeSlot(keyCode == GLFW.GLFW_KEY_LEFT);
                 }
                 return true;
@@ -5538,10 +5488,7 @@ public class ItemBuilder extends GenericScreen {
         else if(tab == CACHE_TAB_MAIN && widgets.get(tab).isEmpty())
             createTab(tab);
 
-        if(unsel) {
-            unfocus();
-            unsel = false;
-        }
+        super.tick();
     }
 
 }
