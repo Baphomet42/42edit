@@ -123,24 +123,27 @@ public class ItemBuilder extends GenericScreen {
     protected final int playerY = -10;
     private static final int RENDER_SIZE = 35;
     private static final Text ERROR_CREATIVE = Text.of("Creative required to edit");
-    private boolean editArmorStand = false;
-    private float[][] armorPose;
+    private boolean prevArmorStand = false;
+    private ArrayList<ArrayList<Set<PoseSlider>>> poseSliders = new ArrayList<>();
+    private ArrayList<Set<ButtonWidget>> poseSliderBtns = new ArrayList<>();
+    private static NbtCompound poseCompound = new NbtCompound();
+    private static final String[] poseTypes = new String[]{"Head","Body","RightArm","LeftArm","RightLeg","LeftLeg"};
     public static final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
     public static final String[] BANNER_CHAR_LIST = new String[BANNER_PRESET_CHARS.replaceAll("\\s","").length()+1];
     private TextSuggestor suggs;
     private Set<TextFieldWidget> currentTxt = Sets.newHashSet();
     private static int[][] colorSets = {{66,6,102},{0,0,0}};
-    private static int[] colorHsv = {0,0,0};
+    private static float[] colorHsv = {0f,0f,0f};
     private ArrayList<Set<TextFieldWidget>> colorHexTxts = new ArrayList<>();
     private ArrayList<Set<TextFieldWidget>> colorDecTxts = new ArrayList<>();
     private ArrayList<ArrayList<Set<RgbSlider>>> colorRgbSliders = new ArrayList<>();
     private ArrayList<Set<RgbSlider>> colorHsvSliders = new ArrayList<>();
     private ArrayList<ArrayList<Set<PosWidget>>> colorItemWids = new ArrayList<>();
-    private boolean colorLocked = false;
+    private boolean editorLocked = false;
     private boolean hsvLock = false;
     private Map<WidgetCacheType,ClickableWidget> widgetCache = Maps.newHashMap();
     private boolean editorOutputLocked = false;
-    private Set<ClickableWidget> colorLockedWidget = Sets.newHashSet();
+    private Set<ClickableWidget> editorLockedWidget = Sets.newHashSet();
     private static final ItemStack[] rgbItems = new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
     private Map<String,int[]> cacheI = Maps.newHashMap();
     private Text jsonPreview = Text.of("");
@@ -161,6 +164,7 @@ public class ItemBuilder extends GenericScreen {
     private boolean bannerShield = false;
     private static ArmorStandEntity bannerChangePreview = null;
     protected boolean showBannerPreview = false;
+    protected boolean showPosePreview = false;
     private ItemStack[] cacheInv = new ItemStack[41];
     private int cacheInvSlot = -1;
     
@@ -174,22 +178,31 @@ public class ItemBuilder extends GenericScreen {
         if(firstInit) {
             if(tabs[tab].hideTabs())
                 tab = CACHE_TAB_MAIN;
+
+            updateArmorStand(null);
+
+            for(int i=0; i<colorSets.length; i++) {
+                colorHexTxts.add(Sets.newHashSet());
+                colorDecTxts.add(Sets.newHashSet());
+                colorRgbSliders.add(new ArrayList<Set<RgbSlider>>());
+                for(int j=0; j<3; j++)
+                    colorRgbSliders.get(colorRgbSliders.size()-1).add(Sets.newHashSet());
+                colorItemWids.add(new ArrayList<Set<PosWidget>>());
+                for(int j=0; j<3; j++)
+                    colorItemWids.get(colorItemWids.size()-1).add(Sets.newHashSet());
+            }
+            for(int i=0; i<3; i++)
+                colorHsvSliders.add(Sets.newHashSet());
+            for(int i=0; i<6; i++) {
+                poseSliderBtns.add(Sets.newHashSet());
+                poseSliders.add(new ArrayList<Set<PoseSlider>>());
+                for(int j=0; j<3; j++)
+                    poseSliders.get(poseSliders.size()-1).add(Sets.newHashSet());
+            }
+
             firstInit = false;
         }
         pauseSaveScroll = false;
-
-        for(int i=0; i<colorSets.length; i++) {
-            colorHexTxts.add(Sets.newHashSet());
-            colorDecTxts.add(Sets.newHashSet());
-            colorRgbSliders.add(new ArrayList<Set<RgbSlider>>());
-            for(int j=0; j<3; j++)
-                colorRgbSliders.get(colorRgbSliders.size()-1).add(Sets.newHashSet());
-            colorItemWids.add(new ArrayList<Set<PosWidget>>());
-            for(int j=0; j<3; j++)
-                colorItemWids.get(colorItemWids.size()-1).add(Sets.newHashSet());
-        }
-        for(int i=0; i<3; i++)
-            colorHsvSliders.add(Sets.newHashSet());
         
         if(!tabs[tab].hideTabs()) {
 
@@ -282,18 +295,6 @@ public class ItemBuilder extends GenericScreen {
             this.addDrawableChild(this.tabWidget);
         }
 
-        //armor stand
-        renderArmorStand = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
-        renderArmorStand.bodyYaw = 210.0f;
-        renderArmorStand.setPitch(25.0f);
-        renderArmorStand.headYaw = renderArmorStand.getYaw();
-        renderArmorStand.prevHeadYaw = renderArmorStand.getYaw();
-        //pose
-        renderArmorPose = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
-        renderArmorPose.bodyYaw = 210.0f;
-        renderArmorPose.setPitch(25.0f);
-        renderArmorPose.headYaw = renderArmorPose.getYaw();
-        renderArmorPose.prevHeadYaw = renderArmorPose.getYaw();
         //banner prev
         if(bannerChangePreview == null) {
             bannerChangePreview = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
@@ -430,11 +431,11 @@ public class ItemBuilder extends GenericScreen {
 
             if(selItem.isOf(Items.ARMOR_STAND)) {
                 updateArmorStand(selItem.copy());
-                editArmorStand = true;
+                prevArmorStand = true;
             }
-            else if(editArmorStand) {
-                resetArmorStand();
-                updatePose();
+            else if(prevArmorStand) {
+                updateArmorStand(null);
+                prevArmorStand = false;
             }
 
             if(cacheI.containsKey("giveBox")) {
@@ -626,8 +627,13 @@ public class ItemBuilder extends GenericScreen {
             setErrorMsg(null);
     }
 
-    private NbtCompound updateArmorStand(ItemStack stand) {
-        resetArmorStand();
+    private void updateArmorStand(ItemStack stand) {
+        renderArmorStand = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
+        renderArmorStand.bodyYaw = 210.0f;
+        renderArmorStand.setPitch(25.0f);
+        renderArmorStand.headYaw = renderArmorStand.getYaw();
+        renderArmorStand.prevHeadYaw = renderArmorStand.getYaw();
+
         if(stand != null && !stand.isEmpty() && BlackMagick.getNbtPath(BlackMagick.itemToNbt(stand),"components.minecraft:entity_data",NbtElement.COMPOUND_TYPE) != null) {
             NbtCompound entity = (NbtCompound)BlackMagick.getNbtPath(BlackMagick.itemToNbt(stand),"components.minecraft:entity_data");
             entity.putString("id","armor_stand");
@@ -635,221 +641,85 @@ public class ItemBuilder extends GenericScreen {
             entity.put("Motion",BlackMagick.nbtFromString("[0d,0d,0d]"));
             entity.put("Rotation",BlackMagick.nbtFromString("[0f,0f]"));
             renderArmorStand.readNbt(entity.copy());
+        }
+
+        updatePose();
+    }
+
+    protected void updatePose() {
+        if(!editorLocked) {
+            editorLocked = true;
+
+            renderArmorPose = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
+            renderArmorPose.bodyYaw = 210f;
+            renderArmorPose.setPitch(25f);
+            renderArmorPose.headYaw = renderArmorPose.getYaw();
+            renderArmorPose.prevHeadYaw = renderArmorPose.getYaw();
+            NbtCompound nbt = new NbtCompound();
+            if(renderArmorStand != null)
+                nbt = renderArmorStand.writeNbt(new NbtCompound());
+
+            for(int i=0; i<poseSliders.size(); i++) {
+                NbtList poseList = null;
+                if(poseCompound.contains(poseTypes[i],NbtElement.LIST_TYPE)) {
+                    NbtList l = poseCompound.getList(poseTypes[i],NbtElement.FLOAT_TYPE);
+                    if(l.size()==3)
+                        poseList = l.copy();
+                }
+                for(int j=0; j<3; j++) {
+                    float val = 0f;
+                    if(poseList != null)
+                        val = poseList.getFloat(j);
+                    for(PoseSlider p : poseSliders.get(i).get(j))
+                        p.setVal(val);
+                }
+                for(ButtonWidget w : poseSliderBtns.get(i)) {
+                    if(poseCompound.contains(poseTypes[i])) {
+                        w.setTooltip(Tooltip.of(Text.of("Remove pose")));
+                        w.active = true;
+                    }
+                    else {
+                        w.setTooltip(Tooltip.of(Text.of("No pose")));
+                        w.active = false;
+                    }
+                }
+            }
+
+            nbt.put("Pose",poseCompound.copy());
+            renderArmorPose.readNbt(nbt.copy());
+
+            if(!editorOutputLocked) {
+                if(widgetCache.containsKey(WidgetCacheType.TXT_POSE) && widgetCache.get(WidgetCacheType.TXT_POSE)!=null) {
+                    TextFieldWidget txt = (TextFieldWidget)widgetCache.get(WidgetCacheType.TXT_POSE);
+                    if(poseCompound.isEmpty())
+                        txt.setText("");
+                    else
+                        txt.setText(poseCompound.asString());
+                    resetSuggs();
+                }
+            }
+            
+            editorLocked = false;
+            editorLockedWidget.clear();
+        }
+    }
+
+    private void setPoseVal(String partKey, int axis, float val) {
+        if(!editorLocked && !editorOutputLocked) {
+            if(!poseCompound.contains(partKey)) {
+                NbtList newPart = new NbtList();
+                for(int i=0; i<3; i++)
+                    newPart.add(NbtFloat.of(0f));
+                poseCompound.put(partKey,newPart);
+            }
+
+            NbtList partList = poseCompound.getList(partKey,NbtElement.FLOAT_TYPE);
+            partList.set(axis,NbtFloat.of(val));
+            poseCompound.put(partKey,partList);
+
             updatePose();
-            if(entity.contains("Pose",NbtElement.COMPOUND_TYPE))
-                return (NbtCompound)entity.get("Pose").copy();
         }
-        return null;
     }
-
-    private void resetArmorStand() {
-        renderArmorStand = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
-        renderArmorStand.bodyYaw = 210.0f;
-        renderArmorStand.setPitch(25.0f);
-        renderArmorStand.headYaw = renderArmorStand.getYaw();
-        renderArmorStand.prevHeadYaw = renderArmorStand.getYaw();
-        editArmorStand = false;
-    }
-
-    protected NbtCompound updatePose() {
-        renderArmorPose = new ArmorStandEntity(this.client.world, 0.0, 0.0, 0.0);
-        renderArmorPose.bodyYaw = 210f;
-        renderArmorPose.setPitch(25f);
-        renderArmorPose.headYaw = renderArmorPose.getYaw();
-        renderArmorPose.prevHeadYaw = renderArmorPose.getYaw();
-        NbtCompound nbt = new NbtCompound();
-        if(renderArmorStand != null)
-            nbt = renderArmorStand.writeNbt(new NbtCompound());
-        NbtCompound pose = new NbtCompound();
-        if(nbt.contains("Pose",NbtElement.COMPOUND_TYPE))
-            pose = (NbtCompound)nbt.get("Pose");
-
-        if(armorPose == null)
-            armorPose = new float[6][];
-
-        if(armorPose[0] != null) {
-            NbtList l = new NbtList();
-            for(int i=0; i<3; i++)
-                l.add(NbtFloat.of(armorPose[0][i]));
-            pose.put("Head",l);
-        }
-        else if(pose.contains("Head"))
-            pose.remove("Head");
-
-        if(armorPose[1] != null) {
-            NbtList l = new NbtList();
-            for(int i=0; i<3; i++)
-                l.add(NbtFloat.of(armorPose[1][i]));
-            pose.put("RightArm",l);
-        }
-        else if(pose.contains("RightArm"))
-            pose.remove("RightArm");
-
-        if(armorPose[2] != null) {
-            NbtList l = new NbtList();
-            for(int i=0; i<3; i++)
-                l.add(NbtFloat.of(armorPose[2][i]));
-            pose.put("LeftArm",l);
-        }
-        else if(pose.contains("LeftArm"))
-            pose.remove("LeftArm");
-
-        if(armorPose[3] != null) {
-            NbtList l = new NbtList();
-            for(int i=0; i<3; i++)
-                l.add(NbtFloat.of(armorPose[3][i]));
-            pose.put("RightLeg",l);
-        }
-        else if(pose.contains("RightLeg"))
-            pose.remove("RightLeg");
-
-        if(armorPose[4] != null) {
-            NbtList l = new NbtList();
-            for(int i=0; i<3; i++)
-                l.add(NbtFloat.of(armorPose[4][i]));
-            pose.put("LeftLeg",l);
-        }
-        else if(pose.contains("LeftLeg"))
-            pose.remove("LeftLeg");
-
-        if(armorPose[5] != null) {
-            NbtList l = new NbtList();
-            for(int i=0; i<3; i++)
-                l.add(NbtFloat.of(armorPose[5][i]));
-            pose.put("Body",l);
-        }
-        else if(pose.contains("Body"))
-            pose.remove("Body");
-
-        nbt.put("Pose",pose.copy());
-        renderArmorPose.readNbt(nbt.copy());
-
-        // if(setPoseButton != null)
-        //     setPoseButton.setTooltip(Tooltip.of(Text.of("Set Pose\n\nPose:"+pose.asString())));
-
-        return pose.copy();
-    }
-
-    // private void btnResetPose() {//TODO old pose methods
-    //     for(int i=0; i<sliders.size(); i++)
-    //         sliders.get(i).setSlider(0f);
-
-    //     for(int i=0; i<sliderBtns.size(); i++) {
-    //         sliderBtns.get(i).btns[0].setTooltip(Tooltip.of(Text.of("No pose")));
-    //         sliderBtns.get(i).btns[0].active = false;
-    //     }
-
-    //     armorPose = null;
-    //     updatePose();
-    //     unsavedPose = false;
-    //     unsel();
-    // }
-
-    // private void btnGetPose() {
-    //     btnResetPose();
-    //     if(client.player.getMainHandStack().getItem().toString().equals("armor_stand") && sliders.size()==6*3) {
-    //         NbtCompound pose = updateArmorStand(client.player.getMainHandStack().copy());
-    //         if(pose != null) {
-    //             armorPose = new float[6][];
-
-    //             String part = "Head";
-    //             int partNum = 0;
-    //             if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
-    //                     && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
-    //                 NbtList list = (NbtList)pose.get(part);
-    //                 armorPose[partNum] = new float[3];
-    //                 for(int i=0; i<3; i++)
-    //                     sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
-    //             }
-                
-    //             part = "RightArm";
-    //             partNum = 1;
-    //             if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
-    //                     && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
-    //                 NbtList list = (NbtList)pose.get(part);
-    //                 armorPose[partNum] = new float[3];
-    //                 for(int i=0; i<3; i++)
-    //                     sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
-    //             }
-                
-    //             part = "LeftArm";
-    //             partNum = 2;
-    //             if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
-    //                     && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
-    //                 NbtList list = (NbtList)pose.get(part);
-    //                 armorPose[partNum] = new float[3];
-    //                 for(int i=0; i<3; i++)
-    //                     sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
-    //             }
-                
-    //             part = "RightLeg";
-    //             partNum = 3;
-    //             if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
-    //                     && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
-    //                 NbtList list = (NbtList)pose.get(part);
-    //                 armorPose[partNum] = new float[3];
-    //                 for(int i=0; i<3; i++)
-    //                     sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
-    //             }
-                
-    //             part = "LeftLeg";
-    //             partNum = 4;
-    //             if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
-    //                     && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
-    //                 NbtList list = (NbtList)pose.get(part);
-    //                 armorPose[partNum] = new float[3];
-    //                 for(int i=0; i<3; i++)
-    //                     sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
-    //             }
-                
-    //             part = "Body";
-    //             partNum = 5;
-    //             if(pose.contains(part,NbtElement.LIST_TYPE) && ((NbtList)pose.get(part)).size() == 3
-    //                     && ((NbtList)pose.get(part)).get(0).getType() == NbtElement.FLOAT_TYPE) {
-    //                 NbtList list = (NbtList)pose.get(part);
-    //                 armorPose[partNum] = new float[3];
-    //                 for(int i=0; i<3; i++)
-    //                     sliders.get(partNum*3+i).setSlider(((NbtFloat)list.get(i)).floatValue());
-    //             }
-
-    //         }
-    //     }
-    //     updatePose();
-    //     unsavedPose = false;
-    //     unsel();
-
-    //     for(int i=0; i<armorPose.length; i++) {
-    //         if(armorPose[i] == null) {
-    //             sliderBtns.get(i).btns[0].setTooltip(Tooltip.of(Text.of("No pose")));
-    //             sliderBtns.get(i).btns[0].active = false;
-    //         }
-    //         else {
-    //             sliderBtns.get(i).btns[0].setTooltip(Tooltip.of(Text.of("Remove Pose")));
-    //             if(client.player.getAbilities().creativeMode)
-    //                 sliderBtns.get(i).btns[0].active = true;
-    //         }
-    //     }
-    // }
-
-    // private void btnSetPose() {
-    //     // ItemStack item = BlackMagick.setId("armor_stand");
-    //     // if(armorPose != null) {
-    //     //     boolean empty = true;
-    //     //     for(int i=0; i<armorPose.length; i++)
-    //     //         if(armorPose[i] != null)
-    //     //             empty = false;
-
-    //     //     if(!empty) {
-    //     //         BlackMagick.setNbt(item,"EntityTag/Pose",updatePose());
-    //     //         unsavedPose = false;
-    //     //         unsel();
-    //     //         return;
-    //     //     }
-    //     // }
-    //     // BlackMagick.removeNbt(item,"EntityTag/Pose");
-    //     // unsavedPose = false;
-    //     unsel();
-    // }
 
     public static String[] getStatesArr() {
         if(cacheStates.size()>0) {
@@ -876,13 +746,17 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private void updateColorSets() {
-        if(!colorLocked) {
-            colorLocked = true;
+        if(!editorLocked) {
+            editorLocked = true;
+
+            rgbItems[0] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:leather_chestplate,components:{dyed_color:"+getRgbDec(0)+"}}"));
+            rgbItems[1] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:potion,components:{potion_contents:{custom_color:"+getRgbDec(0)+"}}}"));
+            rgbItems[2] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:filled_map,components:{map_color:"+getRgbDec(0)+"}}"));
 
             for(int rgbNum=0; rgbNum<colorSets.length; rgbNum++) {
                 for(TextFieldWidget w : colorHexTxts.get(rgbNum)) {
                     if(jsonEffectMode != 1 || jsonEffects[6]==2) {
-                        if(!colorLockedWidget.contains(w)) {
+                        if(!editorLockedWidget.contains(w)) {
                             w.setText(""+getRgbHex(rgbNum));
                         }
                         w.setEditableColor(getRgbDec(rgbNum));
@@ -890,7 +764,7 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }
                 for(TextFieldWidget w : colorDecTxts.get(rgbNum)) {
-                    if(!colorLockedWidget.contains(w)) {
+                    if(!editorLockedWidget.contains(w)) {
                         w.setText(""+getRgbDec(rgbNum));
                     }
                     w.setEditableColor(getRgbDec(rgbNum));
@@ -918,10 +792,6 @@ public class ItemBuilder extends GenericScreen {
             if(jsonEffectMode>=0)
                 updateJsonEffect();
 
-            rgbItems[0] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:leather_chestplate,components:{dyed_color:"+getRgbDec(0)+"}}"));
-            rgbItems[1] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:potion,components:{potion_contents:{custom_color:"+getRgbDec(0)+"}}}"));
-            rgbItems[2] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:filled_map,components:{map_color:"+getRgbDec(0)+"}}"));
-
             if(!editorOutputLocked) {
                 if(widgetCache.containsKey(WidgetCacheType.TXT_DECIMAL_COLOR) && widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR)!=null) {
                     TextFieldWidget txt = (TextFieldWidget)widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR);
@@ -930,8 +800,8 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
             
-            colorLocked = false;
-            colorLockedWidget.clear();
+            editorLocked = false;
+            editorLockedWidget.clear();
         }
     }
 
@@ -951,7 +821,7 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private void trySetColorHex(int rgbNum, String inp, ClickableWidget w) {
-        if(!colorLocked && rgbNum>=0 && rgbNum<colorSets.length && inp!=null && inp.length()>1 && inp.length()<=7 && inp.startsWith("#")) {
+        if(!editorLocked && rgbNum>=0 && rgbNum<colorSets.length && inp!=null && inp.length()>1 && inp.length()<=7 && inp.startsWith("#")) {
             boolean valid = true;
             String hex = inp.substring(1);
             int[] rgb = {0,0,0};
@@ -971,7 +841,7 @@ public class ItemBuilder extends GenericScreen {
                 for(int i=0; i<3; i++)
                     colorSets[rgbNum][i]=rgb[i];
                 if(w!=null)
-                    colorLockedWidget.add(w);
+                    editorLockedWidget.add(w);
                 updateColorSets();
             }
         }
@@ -988,8 +858,8 @@ public class ItemBuilder extends GenericScreen {
         updateColorSets();
     }
 
-    private void setHsv(int num, int val) {
-        if(!colorLocked && !editorOutputLocked) {
+    private void setHsv(int num, float val) {
+        if(!editorLocked && !editorOutputLocked) {
             colorHsv[num] = val;
             hsvToRgb(0,colorHsv[0],colorHsv[1],colorHsv[2]);
             hsvLock = true;
@@ -998,7 +868,7 @@ public class ItemBuilder extends GenericScreen {
         }
     }
 
-    private void hsvToRgb(int rgbNum, int h, int s, int v) {
+    private void hsvToRgb(int rgbNum, float h, float s, float v) {
         float sat = s/100f;
         float val = v/100f;
         float c = val*sat;
@@ -1078,7 +948,7 @@ public class ItemBuilder extends GenericScreen {
         float s = (max==0) ? 0 : (delta/max)*100;
         float v = max*100;
 
-        colorHsv = new int[]{Math.round(h),Math.round(s),Math.round(v)};
+        colorHsv = new float[]{h,s,v};
     }
 
     private void drawItem(DrawContext context, ItemStack item, int x, int y) {
@@ -2476,6 +2346,7 @@ public class ItemBuilder extends GenericScreen {
         int tabNum = CACHE_TAB_BLANK;
         jsonPreview = null;
         showBannerPreview = false;
+        showPosePreview = false;
         tabScroll[tabNum] = 0d;
         setErrorMsg(null);
 
@@ -2648,6 +2519,17 @@ public class ItemBuilder extends GenericScreen {
                     w.setText(cleanPath(fullPath));
                     w.setTooltip(Tooltip.of(Text.of("Current path:\n"+fullPath)));
                     noScrollWidgets.get(tabNum).add(new PosWidget(w,5+40+5,5));
+                }
+
+                ItemStack editItem = ItemStack.EMPTY;
+                if(fullPath.contains("components.")) {
+                    String itemPath = fullPath.substring(0,fullPath.lastIndexOf("components."));
+                    if(itemPath.length()>0)
+                        editItem = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.setNbtPath(
+                            BlackMagick.itemToNbt(selItem),path,blankTabEl),itemPath)));
+                    else
+                        editItem = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
+                            BlackMagick.itemToNbt(selItem),path,blankTabEl)));
                 }
 
                 if(elType == PathType.COMPOUND) {
@@ -2857,6 +2739,7 @@ public class ItemBuilder extends GenericScreen {
 
                     for(int i=0; i<3; i++) {
                         colorRgbSliders.get(rgbNum).get(i).clear();
+                        colorItemWids.get(rgbNum).get(i).clear();
                         {
                             RgbSlider w = new RgbSlider(rgbNum,i,false,true);
                             PosWidget w2 = new PosWidget(rgbItems[i],180,0);
@@ -2901,28 +2784,17 @@ public class ItemBuilder extends GenericScreen {
                     NbtCompound bannerNbt = (NbtCompound)el2;
                     String bannerCol = null;
                     String bannerPat = null;
-                    ItemStack bannerItem = ItemStack.EMPTY;
-
-                    if(fullPath.contains("components.")) {
-                        String itemPath = fullPath.substring(0,fullPath.lastIndexOf("components."));
-                        if(itemPath.length()>0)
-                            bannerItem = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-                                BlackMagick.itemToNbt(selItem),path,blankTabEl),itemPath)));
-                        else
-                            bannerItem = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
-                                BlackMagick.itemToNbt(selItem),path,blankTabEl)));
-                    }
                     bannerShield = false;
-                    if(bannerItem.isOf(Items.SHIELD)) {
+                    if(editItem.isOf(Items.SHIELD)) {
                         bannerShield = true;
                         showBannerPreview = true;
                         bannerChangePreview.readNbt(BlackMagick.validCompound(BlackMagick.nbtFromString("{ArmorItems:[{},{},{},{}],HandItems:["
-                            +BlackMagick.itemToNbtStorage(bannerItem).asString()+",{}],Invisible:1b,Pose:{RightArm:[-90f,-90f,0f]}}")));
+                            +BlackMagick.itemToNbtStorage(editItem).asString()+",{}],Invisible:1b,Pose:{RightArm:[-90f,-90f,0f]}}")));
                     }
-                    else if(bannerItem.isIn(ItemTags.BANNERS)) {
+                    else if(editItem.isIn(ItemTags.BANNERS)) {
                         showBannerPreview = true;
                         bannerChangePreview.readNbt(BlackMagick.validCompound(BlackMagick.nbtFromString("{ArmorItems:[{},{},{},"
-                            +BlackMagick.itemToNbtStorage(bannerItem).asString()+"],HandItems:[{},{}],Invisible:1b,Pose:{RightArm:[-90f,-90f,0f]}}")));
+                            +BlackMagick.itemToNbtStorage(editItem).asString()+"],HandItems:[{},{}],Invisible:1b,Pose:{RightArm:[-90f,-90f,0f]}}")));
                     }
 
                     if(bannerNbt.contains("color",NbtElement.STRING_TYPE))
@@ -2947,149 +2819,39 @@ public class ItemBuilder extends GenericScreen {
                     }
 
                 }
-                else if(elType == PathType.POSE) {//TODO new pose page
-                    widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn));
-                    
-                    // //createBlock armor stand pose
-                    // {
-                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of(UNICODE_CHECK), button -> this.btnSetPose()).dimensions(x+15-3, y+35+1,20,20).build();
-                    //     newButton.setTooltip(Tooltip.of(Text.of("Set Pose")));
-                    //     if(!client.player.getAbilities().creativeMode)
-                    //         newButton.active = false;
-                    //     setPoseButton = newButton;
-                    //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1));
-                    // }
-                    // {
-                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of(UNICODE_UP_ARROW), button -> this.btnGetPose()).dimensions(x+15-3, y+35+1+22,20,20).build();
-                    //     newButton.setTooltip(Tooltip.of(Text.of("Get from item")));
-                    //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1+22));
-                    // }
-                    // {
-                    //     ButtonWidget newButton = ButtonWidget.builder(Text.of(UNICODE_X), button -> this.btnResetPose()).dimensions(x+15-3, y+35+1+22*2,20,20).build();
-                    //     newButton.setTooltip(Tooltip.of(Text.of("Clear All")));
-                    //     noScrollWidgets.get(tabNum).add(new PosWidget(newButton,15-3,35+1+22*2));
-                    // }
-                    // {
-                    //     RowWidget newButton = new RowWidget(0,"Head");
-                    //     sliderBtns.add(newButton);
-                    //     widgets.get(tabNum).add(newButton);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(0,0);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(0,1);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(0,2);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newButton = new RowWidget(1,"Right Arm");
-                    //     sliderBtns.add(newButton);
-                    //     widgets.get(tabNum).add(newButton);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(1,0);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(1,1);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(1,2);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newButton = new RowWidget(2,"Left Arm");
-                    //     sliderBtns.add(newButton);
-                    //     widgets.get(tabNum).add(newButton);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(2,0);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(2,1);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(2,2);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newButton = new RowWidget(3,"Right Leg");
-                    //     sliderBtns.add(newButton);
-                    //     widgets.get(tabNum).add(newButton);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(3,0);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(3,1);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(3,2);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newButton = new RowWidget(4,"Left Leg");
-                    //     sliderBtns.add(newButton);
-                    //     widgets.get(tabNum).add(newButton);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(4,0);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(4,1);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(4,2);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newButton = new RowWidget(5,"Body");
-                    //     sliderBtns.add(newButton);
-                    //     widgets.get(tabNum).add(newButton);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(5,0);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(5,1);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // {
-                    //     RowWidget newSlider = new RowWidget(5,2);
-                    //     sliders.add(newSlider);
-                    //     widgets.get(tabNum).add(newSlider);
-                    // }
-                    // btnResetPose();
+                else if(elType == PathType.POSE) {
+                    editorOutputLocked = true;
+
+                    widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,WidgetCacheType.TXT_POSE));
+                    widgets.get(tabNum).add(new RowWidgetEditor(WidgetCacheType.TXT_POSE));
+                    widgets.get(tabNum).add(new RowWidget("Pose Editor"));
+
+                    String[] poseParts = new String[]{"Head","Body","Right Arm","Left Arm","Right Leg","Left Leg"};
+                    for(int partNum=0; partNum<poseParts.length; partNum++) {
+                        {
+                            poseSliderBtns.get(partNum).clear();
+                            String partKey = poseParts[partNum].replace(" ","");
+                            ButtonWidget w2 = ButtonWidget.builder(Text.of(partKey), btn -> {
+                                poseCompound.remove(partKey);
+                                updatePose();
+                                unsel();
+                            }).dimensions(0,0,60,20).build();
+                            widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w2,15,0)}));
+                            poseSliderBtns.get(partNum).add(w2);
+
+                            for(int partAxis=0; partAxis<3; partAxis++) {
+                                poseSliders.get(partNum).get(partAxis).clear();
+                                PoseSlider w = new PoseSlider(partKey,partAxis);
+                                widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
+                                poseSliders.get(partNum).get(partAxis).add(w);
+                            }
+                        }
+                    }
+
+                    updateArmorStand(editItem);
+                    showPosePreview = true;
+
+                    editorOutputLocked = false;
                 }
                 else {
                     FortytwoEdit.LOGGER.warn("Fallback page created for path: "+fullPath);
@@ -3462,7 +3224,7 @@ public class ItemBuilder extends GenericScreen {
             super();
             this.children = Lists.newArrayList();
             setup();
-        }//TODO delete unused rowwidgets (and move fields to subclasses)
+        }
 
         /**
          * btn(size) txt
@@ -4899,7 +4661,7 @@ public class ItemBuilder extends GenericScreen {
                 setErrorMsg(null);
                 NbtElement el = isString ? NbtString.of(value) : BlackMagick.nbtFromString(value);
 
-                if(el != null)
+                if(el != null || value.length()==0)
                     setEditingElement(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
                         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,el),blankElPath),saveBtn,
                         path2==null ? null : fullPath);
@@ -5072,36 +4834,99 @@ public class ItemBuilder extends GenericScreen {
 
             this.cacheType = cacheType;
 
-            this.btns = new ButtonWidget[]{
-            ButtonWidget.builder(Text.of(UNICODE_DOWN_ARROW), btn -> {
+            if(cacheType == WidgetCacheType.TXT_POSE) {
+                this.btns = new ButtonWidget[3];
+                this.btnX = new int[]{ROW_LEFT,ROW_LEFT+20+5,ROW_LEFT+20+5+20+5};
 
-                if(cacheType == WidgetCacheType.TXT_DECIMAL_COLOR) {
-                    if(widgetCache.containsKey(WidgetCacheType.TXT_DECIMAL_COLOR) && widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR)!=null) {
-                        TextFieldWidget txt = (TextFieldWidget)widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR);
-                        if(txt.getText().length()>0) {
-                            trySetColorDec(0,txt.getText(),null);
-                        }
-                        else {
-                            trySetColorDec(0,"0",null);
-                        }
-                    }
-                }
-
-                unsel();
-            }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,20,20).build(),
-            ButtonWidget.builder(Text.of(UNICODE_UP_ARROW), btn -> {
-
-                if(cacheType == WidgetCacheType.TXT_DECIMAL_COLOR) {
-                    if(widgetCache.containsKey(WidgetCacheType.TXT_DECIMAL_COLOR) && widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR)!=null) {
-                        TextFieldWidget txt = (TextFieldWidget)widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR);
-                        txt.setText(""+getRgbDec(0));
+                this.btns[2] = ButtonWidget.builder(Text.of(UNICODE_X), btn -> {
+                    if(widgetCache.containsKey(cacheType) && widgetCache.get(cacheType)!=null) {
+                        TextFieldWidget txt = (TextFieldWidget)widgetCache.get(cacheType);
+                        poseCompound = new NbtCompound();
+                        txt.setText("");
                         resetSuggs();
+                        updatePose();
                     }
-                }
+                    unsel();
+                }).dimensions(ItemBuilder.this.x+ROW_LEFT+20+5+20+5,5,20,20).build();
 
+                this.btns[2].setTooltip(Tooltip.of(Text.of("Clear pose")));
+            }
+            else {
+                this.btns = new ButtonWidget[2];
+                this.btnX = new int[]{ROW_LEFT,ROW_LEFT+20+5};
+            }
+
+            this.btns[0] = ButtonWidget.builder(Text.of(UNICODE_DOWN_ARROW), btn -> {
+                switch(cacheType) {
+                    case TXT_DECIMAL_COLOR: {
+                        if(widgetCache.containsKey(cacheType) && widgetCache.get(cacheType)!=null) {
+                            TextFieldWidget txt = (TextFieldWidget)widgetCache.get(cacheType);
+                            if(txt.getText().length()>0) {
+                                trySetColorDec(0,txt.getText(),null);
+                            }
+                            else {
+                                trySetColorDec(0,"0",null);
+                            }
+                        }
+                        break;
+                    }
+                    case TXT_POSE: {
+                        if(widgetCache.containsKey(cacheType) && widgetCache.get(cacheType)!=null) {
+                            TextFieldWidget txt = (TextFieldWidget)widgetCache.get(cacheType);
+                            if(txt.getText().length()>0) {
+                                NbtElement el = BlackMagick.nbtFromString(txt.getText());
+                                if(el!=null && el.getType()==NbtElement.COMPOUND_TYPE) {
+                                    poseCompound = new NbtCompound();
+                                    NbtCompound copyFrom = (NbtCompound)el;
+                                    for(String k : poseTypes) {
+                                        if(copyFrom.contains(k,NbtElement.LIST_TYPE)) {
+                                            NbtList l = copyFrom.getList(k,NbtElement.FLOAT_TYPE);
+                                            if(l.size()==3)
+                                                poseCompound.put(k,l.copy());
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                poseCompound = new NbtCompound();
+                            }
+                            updatePose();
+                        }
+                        break;
+                    }
+                    case JSON_RADIAL:
+                    case NONE:
+                }
                 unsel();
-            }).dimensions(ItemBuilder.this.x+ROW_LEFT+20+5,5,20,20).build()};
-            this.btnX = new int[]{ROW_LEFT,ROW_LEFT+20+5};
+            }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,20,20).build();
+
+            this.btns[1] = ButtonWidget.builder(Text.of(UNICODE_UP_ARROW), btn -> {
+                switch(cacheType) {
+                    case TXT_DECIMAL_COLOR: {
+                        if(widgetCache.containsKey(cacheType) && widgetCache.get(cacheType)!=null) {
+                            TextFieldWidget txt = (TextFieldWidget)widgetCache.get(cacheType);
+                            txt.setText(""+getRgbDec(0));
+                            resetSuggs();
+                        }
+                        break;
+                    }
+                    case TXT_POSE: {
+                        if(widgetCache.containsKey(cacheType) && widgetCache.get(cacheType)!=null) {
+                            TextFieldWidget txt = (TextFieldWidget)widgetCache.get(cacheType);
+                            if(poseCompound.isEmpty())
+                                txt.setText("");
+                            else
+                                txt.setText(poseCompound.asString());
+                            resetSuggs();
+                            updatePose();
+                        }
+                        break;
+                    }
+                    case JSON_RADIAL:
+                    case NONE:
+                }
+                unsel();
+            }).dimensions(ItemBuilder.this.x+ROW_LEFT+20+5,5,20,20).build();
 
             this.btns[0].setTooltip(Tooltip.of(Text.of("Copy to editor")));
             this.btns[1].setTooltip(Tooltip.of(Text.of("Set from editor")));
@@ -5115,23 +4940,61 @@ public class ItemBuilder extends GenericScreen {
             super.render(context, index, y, x, entryWidth, entryHeight, mouseX, mouseY, hovered, tickDelta);
 
             boolean editorEqual = false;
-            if(this.cacheType==WidgetCacheType.TXT_DECIMAL_COLOR) {
-                if(widgetCache.containsKey(WidgetCacheType.TXT_DECIMAL_COLOR) && widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR)!=null) {
-                    TextFieldWidget txt = (TextFieldWidget)widgetCache.get(WidgetCacheType.TXT_DECIMAL_COLOR);
-                    if(txt.getText().equals(""+getRgbDec(0)))
-                        editorEqual = true;
+            switch(this.cacheType) {
+                case TXT_DECIMAL_COLOR: {
+                    if(widgetCache.containsKey(cacheType) && widgetCache.get(cacheType)!=null) {
+                        TextFieldWidget txt = (TextFieldWidget)widgetCache.get(cacheType);
+                        if(txt.getText().equals(""+getRgbDec(0)))
+                            editorEqual = true;
+                    }
+                    break;
                 }
+                case TXT_POSE: {
+                    if(widgetCache.containsKey(cacheType) && widgetCache.get(cacheType)!=null) {
+                        TextFieldWidget txt = (TextFieldWidget)widgetCache.get(cacheType);
+                        if(txt.getText().equals(""+poseCompound.asString()))
+                            editorEqual = true;
+                        else if(txt.getText().length()==0 && poseCompound.isEmpty())
+                            editorEqual = true;
+                    }
+                    break;
+                }
+                case JSON_RADIAL:
+                case NONE:
             }
 
             if(!editorEqual) {
-                context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.of("Color unlinked from editor"), ItemBuilder.this.x+15+20+5+20+5, y+6, ERROR_COLOR);
+                context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.of("Unlinked from editor"), x+this.btnX[this.btnX.length-1]+20+5, y+6, ERROR_COLOR);
                 this.btns[0].active = true;
                 this.btns[1].active = true;
             }
             else {
-                context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.of("Color linked to editor"), ItemBuilder.this.x+15+20+5+20+5, y+6, LABEL_COLOR_DIM);
+                context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.of("Linked to editor"), x+this.btnX[this.btnX.length-1]+20+5, y+6, LABEL_COLOR_DIM);
                 this.btns[0].active = false;
                 this.btns[1].active = false;
+            }
+            if(this.btnX.length>=3) {
+                boolean cleared = false;
+                switch(this.cacheType) {
+                    case TXT_POSE: {
+                        if(widgetCache.containsKey(cacheType) && widgetCache.get(cacheType)!=null) {
+                            TextFieldWidget txt = (TextFieldWidget)widgetCache.get(cacheType);
+                            if((txt.getText().equals("{}") || txt.getText().length()==0) && (poseCompound.isEmpty()))
+                                cleared = true;
+                        }
+                        break;
+                    }
+                    case TXT_DECIMAL_COLOR:
+                    case JSON_RADIAL:
+                    case NONE:
+                }
+
+                if(cleared) {
+                    this.btns[2].active = false;
+                }
+                else {
+                    this.btns[2].active = true;
+                }
             }
 
         }
@@ -5148,14 +5011,14 @@ public class ItemBuilder extends GenericScreen {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    class PoseSlider extends SliderWidget { //TODO PoseSlider widget
+    class PoseSlider extends SliderWidget {
         private final double min;
         private final double max;
         public float val;
-        private final int part;
+        private final String part;
         private final int num;
 
-        public PoseSlider(int part, int num) {
+        public PoseSlider(String part, int num) {
             super(0, 0, 180, 20, Text.of(""), 0.0);
             this.min = -180f;
             this.max = 180f;
@@ -5168,23 +5031,8 @@ public class ItemBuilder extends GenericScreen {
 
         @Override
         public void applyValue() {
-            val = (float)((int)(this.value*(max-min)+min));
-
-            if(ItemBuilder.this.armorPose == null)
-                ItemBuilder.this.armorPose = new float[6][];
-
-            if(ItemBuilder.this.armorPose[part] == null)
-                ItemBuilder.this.armorPose[part] = new float[3];
-
-            ItemBuilder.this.armorPose[part][num] = (float)val;
-            updatePose();
-            //ItemBuilder.this.unsavedPose = true;
-
-            // if(sliderBtns.size() > part) {
-            //     sliderBtns.get(part).btns[0].setTooltip(Tooltip.of(Text.of("Remove Pose")));
-            //     if(client.player.getAbilities().creativeMode)
-            //         sliderBtns.get(part).btns[0].active = true;
-            // }
+            val = (float)Math.round(this.value*(max-min)+min);
+            setPoseVal(part,num,val);
         }
 
         @Override
@@ -5202,17 +5050,7 @@ public class ItemBuilder extends GenericScreen {
                 newVal += 360;
             this.value = (double)((newVal - min)/(max-min));
             val = newVal;
-
-            if(ItemBuilder.this.armorPose == null)
-                ItemBuilder.this.armorPose = new float[6][];
-
-            if(ItemBuilder.this.armorPose[part] == null)
-                ItemBuilder.this.armorPose[part] = new float[3];
-
-            ItemBuilder.this.armorPose[part][num] = val;
-            updatePose();
             updateMessage();
-            //ItemBuilder.this.unsavedPose = true;
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -5247,11 +5085,12 @@ public class ItemBuilder extends GenericScreen {
         @Override
         public void applyValue() {
             if(rgb) {
-                colorSets[setNum][num] = (int)(this.value*(max-min)+min);
+                colorSets[setNum][num] = (int)Math.round(this.value*(max-min)+min);
                 updateColorSets();
             }
             else {
-                setHsv(num,(int)(this.value*(max-min)+min));
+                float valMult = Math.round((this.value*(max-min)+min)*1000);
+                setHsv(num,valMult/1000f);
             }
         }
 
@@ -5274,13 +5113,27 @@ public class ItemBuilder extends GenericScreen {
                 else if(num == 1)
                     color += "S";
                 else
-                    color += "B";
+                    color += "V";
                 color += UNICODE_SECTION_SIGN+"r ";
-                this.setMessage(Text.of(color+colorHsv[num]));
+
+                float valMult = Math.round((colorHsv[num])*1000);
+                float val = valMult/1000f;
+
+                this.setMessage(Text.of(color+val));
             }
         }
 
         public void setVal(int newVal) {
+            if(newVal > max)
+                newVal = (int)max;
+            else if(newVal < min)
+                newVal = (int)min;
+
+            this.value = (double)((newVal - min)/(max-min));
+            updateMessage();
+        }
+
+        public void setVal(float newVal) {
             if(newVal > max)
                 newVal = (int)max;
             else if(newVal < min)
@@ -5326,6 +5179,7 @@ public class ItemBuilder extends GenericScreen {
         NONE,                   // do not cache (used for fallback page)
         TXT_DECIMAL_COLOR,      // TextFieldWidget for PathType.DECIMAL_COLOR
         JSON_RADIAL,            // ButtonWidget for Radial | Linear (in json page)
+        TXT_POSE,               // TextFieldWidget for PathType.POSE
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -5351,11 +5205,8 @@ public class ItemBuilder extends GenericScreen {
                     drawItem(context,savedModeItems[0], x+14, y+38);
             }
             
-            if(tab == 5 && editArmorStand) //TODO render armorstand
+            if(prevArmorStand)
                 InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)renderArmorStand);
-            else if(tab == 6) {
-                InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)renderArmorPose);
-            }
             else
                 InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)this.client.player);
 
@@ -5402,6 +5253,10 @@ public class ItemBuilder extends GenericScreen {
                     InventoryScreen.drawEntity(context,x+240,y,x+240+100,y+400,2*RENDER_SIZE,0f,x+240+50,y+200,(LivingEntity)bannerChangePreview);
                 else
                     InventoryScreen.drawEntity(context,x+240,y,x+240+100,y+200,2*RENDER_SIZE,0f,x+240+50,y+100,(LivingEntity)bannerChangePreview);
+            }
+
+            if(showPosePreview) {
+                InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f, mouseX, mouseY, (LivingEntity)renderArmorPose);
             }
         }
         if(inpErrorTrim != null)

@@ -7,14 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.EditBoxWidget;
 import net.minecraft.text.Text;
 
 public class LogScreen extends GenericScreen {
 
     EditBoxWidget box;
-    ButtonWidget btnPause; //TODO switch to cycle button
     static File logFile;
     static final List<LogMessage> FULL_LOG = new ArrayList<>();
     static boolean paused = false;
@@ -33,22 +34,16 @@ public class LogScreen extends GenericScreen {
         logFile = new File(client.runDirectory.getAbsolutePath()+"\\logs\\latest.log");
 
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
-        btnPause = this.addDrawableChild(ButtonWidget.builder(Text.of(paused ? "Resume" : "Pause"), button -> this.togglePause()).dimensions(x+5+40+5,y+5,40,20).build());
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Resume"), Text.literal("Pause")).initially(paused).omitKeyText().build(x+5+40+5,y+5,40,20, Text.of(""), (button, trackOutput) -> {
+            paused = (boolean)trackOutput;
+            unsel();
+        })).setTooltip(Tooltip.of(Text.of("Temporarily freeze new messages from appearing")));
         box = this.addDrawableChild(new EditBoxWidget(this.client.textRenderer, x+15-3, y+35, 240-24, 22*6, Text.of(""), Text.of("")));
         updateBox();
     }
 
     protected void btnBack() {
         client.setScreen(new SecretScreen());
-    }
-
-    protected void togglePause() {
-        paused = !paused;
-        if(paused)
-            btnPause.setMessage(Text.of("Resume"));
-        else
-            btnPause.setMessage(Text.of("Pause"));
-        unsel();
     }
 
     protected void updateBox() {
@@ -124,8 +119,8 @@ public class LogScreen extends GenericScreen {
         switch(type) {
             case INFO: return "2";
             case WARN: return "6";
-            case ERROR: return "4";//TODO test all log colors
-            case DEBUG: return "4";
+            case ERROR: return "c";
+            case DEBUG: return "a";
             case FATAL: return "4";
             case UNKNOWN: break;
         }
