@@ -272,14 +272,14 @@ public class FortytwoEdit implements ClientModInitializer {
         new CapeTexture(CapeGroup.PUBLIC, "cherry_blossom", "Cherry Blossom", "http://textures.minecraft.net/texture/afd553b39358a24edfe3b8a9a939fa5fa4faa4d9a9c3d6af8eafb377fa05c2bb"),
         new CapeTexture(CapeGroup.PUBLIC, "15th_anniversary", "15th Anniversary", "http://textures.minecraft.net/texture/cd9d82ab17fd92022dbd4a86cde4c382a7540e117fae7b9a2853658505a80625"),
         new CapeTexture(CapeGroup.PUBLIC, "purple_heart", "Purple Heart", "http://textures.minecraft.net/texture/cb40a92e32b57fd732a00fc325e7afb00a7ca74936ad50d8e860152e482cfbde"),
-        new CapeTexture(CapeGroup.PUBLIC, "followers", "Follower's Cape", "http://textures.minecraft.net/texture/569b7f2a1d00d26f30efe3f9ab9ac817b1e6d35f4f3cfb0324ef2d328223d350"),
+        new CapeTexture(CapeGroup.PUBLIC, "followers", "Follower's", "http://textures.minecraft.net/texture/569b7f2a1d00d26f30efe3f9ab9ac817b1e6d35f4f3cfb0324ef2d328223d350"),
 
         new CapeTexture(CapeGroup.MINECON, "minecon_2011", "MineCon 2011", "http://textures.minecraft.net/texture/953cac8b779fe41383e675ee2b86071a71658f2180f56fbce8aa315ea70e2ed6"),
         new CapeTexture(CapeGroup.MINECON, "minecon_2012", "MineCon 2012", "http://textures.minecraft.net/texture/a2e8d97ec79100e90a75d369d1b3ba81273c4f82bc1b737e934eed4a854be1b6"),
         new CapeTexture(CapeGroup.MINECON, "minecon_2013", "MineCon 2013", "http://textures.minecraft.net/texture/153b1a0dfcbae953cdeb6f2c2bf6bf79943239b1372780da44bcbb29273131da"),
         new CapeTexture(CapeGroup.MINECON, "minecon_2015", "MineCon 2015", "http://textures.minecraft.net/texture/b0cc08840700447322d953a02b965f1d65a13a603bf64b17c803c21446fe1635"),
         new CapeTexture(CapeGroup.MINECON, "minecon_2016", "MineCon 2016", "http://textures.minecraft.net/texture/e7dfea16dc83c97df01a12fabbd1216359c0cd0ea42f9999b6e97c584963e980"),
-        new CapeTexture(CapeGroup.OTHER, "founders", "Founder's Cape"),
+        new CapeTexture(CapeGroup.OTHER, "founders", "Founder's"),
 
         new CapeTexture(CapeGroup.PRIVATE, "realms_mapmaker", "Realms Mapmaker", "http://textures.minecraft.net/texture/17912790ff164b93196f08ba71d0e62129304776d0f347334f8a6eae509f8a56"),
         new CapeTexture(CapeGroup.PRIVATE, "mojira_moderator", "Mojira Moderator", "http://textures.minecraft.net/texture/ae677f7d98ac70a533713518416df4452fe5700365c09cf45d0d156ea9396551"),
