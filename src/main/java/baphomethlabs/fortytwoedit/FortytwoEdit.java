@@ -99,6 +99,7 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     //options
+    private static final int OPTIONS_FORMAT = 1;
     private static NbtCompound optionsExtra;
 
     // zoom
@@ -273,6 +274,7 @@ public class FortytwoEdit implements ClientModInitializer {
         new CapeTexture(CapeGroup.PUBLIC, "15th_anniversary", "15th Anniversary", "http://textures.minecraft.net/texture/cd9d82ab17fd92022dbd4a86cde4c382a7540e117fae7b9a2853658505a80625"),
         new CapeTexture(CapeGroup.PUBLIC, "purple_heart", "Purple Heart", "http://textures.minecraft.net/texture/cb40a92e32b57fd732a00fc325e7afb00a7ca74936ad50d8e860152e482cfbde"),
         new CapeTexture(CapeGroup.PUBLIC, "followers", "Follower's", "http://textures.minecraft.net/texture/569b7f2a1d00d26f30efe3f9ab9ac817b1e6d35f4f3cfb0324ef2d328223d350"),
+        new CapeTexture(CapeGroup.PUBLIC, "mcc_15th_year", "MCC 15th Year", "http://textures.minecraft.net/texture/56c35628fe1c4d59dd52561a3d03bfa4e1a76d397c8b9c476c2f77cb6aebb1df"),
 
         new CapeTexture(CapeGroup.MINECON, "minecon_2011", "MineCon 2011", "http://textures.minecraft.net/texture/953cac8b779fe41383e675ee2b86071a71658f2180f56fbce8aa315ea70e2ed6"),
         new CapeTexture(CapeGroup.MINECON, "minecon_2012", "MineCon 2012", "http://textures.minecraft.net/texture/a2e8d97ec79100e90a75d369d1b3ba81273c4f82bc1b737e934eed4a854be1b6"),
@@ -936,26 +938,27 @@ public class FortytwoEdit implements ClientModInitializer {
         if(BlackMagick.nbtFromString(optionsString) != null && BlackMagick.nbtFromString(optionsString).getType()==NbtElement.COMPOUND_TYPE) {
             NbtCompound json = (NbtCompound)BlackMagick.nbtFromString(optionsString);
 
-            if(json.contains("CustomCapeToggle",NbtElement.BYTE_TYPE))
-                showClientCape = ((NbtByte)json.get("CustomCapeToggle")).byteValue() == 1;
-            if(json.contains("CustomCape",NbtElement.STRING_TYPE)) {
+            if(json.contains("custom_cape_toggle",NbtElement.BYTE_TYPE))
+                showClientCape = ((NbtByte)json.get("custom_cape_toggle")).byteValue() == 1;
+            if(json.contains("custom_cape",NbtElement.STRING_TYPE)) {
                 clientCape = 0;
-                String capeName = ((NbtString)json.get("CustomCape")).asString();
+                String capeName = ((NbtString)json.get("custom_cape")).asString();
                 for(int i=0; i<CLIENT_CAPES.length; i++)
                     if(capeName.equals(CLIENT_CAPES[i].id()))
                         clientCape = i;
             }
-            if(json.contains("OptiCapeToggle",NbtElement.BYTE_TYPE))
-                opticapesOn = ((NbtByte)json.get("OptiCapeToggle")).byteValue() == 1;
-            if(json.contains("WebItems",NbtElement.BYTE_TYPE))
-                webItemsAuto = ((NbtByte)json.get("WebItems")).byteValue() == 1;
+            if(json.contains("opticapes",NbtElement.BYTE_TYPE))
+                opticapesOn = ((NbtByte)json.get("opticapes")).byteValue() == 1;
+            if(json.contains("web_items",NbtElement.BYTE_TYPE))
+                webItemsAuto = ((NbtByte)json.get("web_items")).byteValue() == 1;
 
-            json.remove("CustomCapeToggle");
-            json.remove("CustomCape");
-            json.remove("OptiCapeToggle");
-            json.remove("WebItems");
+            json.remove("options_format");
+            json.remove("custom_cape_toggle");
+            json.remove("custom_cape");
+            json.remove("opticapes");
+            json.remove("web_items");
 
-            if(json.asString().length()>2) {
+            if(!json.isEmpty()) {
                 LOGGER.warn("Config file contains unknown keys: "+json.asString());
                 optionsExtra = json;
             }
@@ -975,18 +978,20 @@ public class FortytwoEdit implements ClientModInitializer {
             if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).exists())
                 (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).createNewFile();
 
-            String options = "{CustomCapeToggle:"+ (showClientCape ? "1b" : "0b")
-                +",CustomCape:\""+ CLIENT_CAPES[clientCape].id()+"\""
-                +",OptiCapeToggle:"+ (opticapesOn ? "1b" : "0b")
-                +",WebItems:"+ (webItemsAuto ? "1b" : "0b");
+            NbtCompound options = new NbtCompound();
             
-            if(optionsExtra != null && optionsExtra.asString().length()>2)
-                options += "," + optionsExtra.asString().substring(1,optionsExtra.asString().length()-1);
+            if(optionsExtra != null)
+                for(String k : optionsExtra.getKeys())
+                    options.put(k,optionsExtra.get(k));
 
-            options += "}";
+            options.putInt("options_format",OPTIONS_FORMAT);
+            options.putBoolean("custom_cape_toggle",showClientCape);
+            options.putString("custom_cape",CLIENT_CAPES[clientCape].id());
+            options.putBoolean("opticapes",opticapesOn);
+            options.putBoolean("web_items",webItemsAuto);
 
             FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt", StandardCharsets.UTF_8, false);
-            writer.write(options);
+            writer.write(options.asString());
             writer.close();
 
         } catch (Exception e) {
