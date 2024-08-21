@@ -54,7 +54,7 @@ public class MagickGui extends GenericScreen {
             BlackMagick.setItem(hand,5);
             BlackMagick.setItemMain(head);
         }
-        this.resize(this.client,this.width,this.height);
+        unsel();
     }
 
     protected void btnSuperSecretSettings() {
@@ -63,7 +63,7 @@ public class MagickGui extends GenericScreen {
         }
         else {
             FortytwoEdit.cycleSuperSecretSetting();
-            this.resize(this.client,this.width,this.height);
+            unsel();
         }
     }
 

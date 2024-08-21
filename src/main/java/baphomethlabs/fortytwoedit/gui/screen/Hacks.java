@@ -46,7 +46,7 @@ public class Hacks extends GenericScreen {
                 FortytwoEdit.randoMode = false;
             else if((boolean)trackOutput && FortytwoEdit.randoSlots != null)
                 FortytwoEdit.randoMode = true;
-            this.resize(this.client,this.width,this.height);
+            unsel();
         })).setTooltip(Tooltip.of(Text.of("Toggle mix mode\n\nWhen on: after placing a block, change to a random hotbar slot\n\n"
             +"If numbers are specified, the random slot will be selected from those.\nExample: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)")));
         this.txtRando = new TextFieldWidget(this.textRenderer,x+105+1,y+44+1,100-2,20,Text.of(""));
@@ -68,7 +68,7 @@ public class Hacks extends GenericScreen {
             client.worldRenderer.reload();
             FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
             FortytwoEdit.xrayEntity = FortytwoEdit.seeInvis;
-            this.resize(this.client,this.width,this.height);
+            unsel();
         })).setTooltip(Tooltip.of(Text.of("Toggle xray mode\n\nWhen on: barriers, light blocks, and other invisible blocks will appear as solid blocks")));
         btnWgtFindInvis = this.addDrawableChild(ButtonWidget.builder(Text.of("Find Invis Entities"), button -> this.btnFindInvis()).dimensions(x+20+100+5,y+22*4+1,100,20).build());
         if(!client.player.getAbilities().creativeMode)
@@ -79,7 +79,7 @@ public class Hacks extends GenericScreen {
             .setTooltip(Tooltip.of(Text.of("Print your last position of death (only you can see this)")));
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("   Auto Fish [On]"), Text.literal("   Auto Fish [Off]")).initially(FortytwoEdit.autoFish).omitKeyText().build(x+20+100+5,y+22*5+1,100,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.autoFish = !FortytwoEdit.autoFish;
-            this.resize(this.client,this.width,this.height);
+            unsel();
         })).setTooltip(Tooltip.of(Text.of("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on")));
         this.addDrawableChild(ButtonWidget.builder(Text.of("Look N"), button -> this.btnLookN()).dimensions(x+20,y+22*7+1,40,20).build())
             .setTooltip(Tooltip.of(Text.of("Set your rotation to straight north")));
@@ -201,7 +201,7 @@ public class Hacks extends GenericScreen {
                 BlackMagick.setItemMain(item);
             }
         }
-        this.resize(this.client,this.width,this.height);
+        unsel();
     }
 
     protected void btnFindInvis() {
@@ -234,7 +234,7 @@ public class Hacks extends GenericScreen {
                 }
             }
         }
-        this.resize(this.client,this.width,this.height);
+        unsel();
     }
 
     private void reportInvis(Entity entity) {
@@ -257,12 +257,12 @@ public class Hacks extends GenericScreen {
         else {
             client.player.sendMessage(Text.of("No death pos recorded"),false);
         }
-        this.resize(this.client,this.width,this.height);
+        unsel();
     }
 
     protected void btnLookN() {
         client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),180f,0f);
-        this.resize(this.client,this.width,this.height);
+        unsel();
     }
 
     protected void btnLookR() {
@@ -270,20 +270,20 @@ public class Hacks extends GenericScreen {
         if(yaw>=360)
             yaw=yaw-360;
         client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),yaw,client.player.getPitch());
-        this.resize(this.client,this.width,this.height);
+        unsel();
     }
 
     protected void btnPano() {
         File location = new File(client.runDirectory.getAbsolutePath());
         client.takePanorama(location,1024,1024);
-        this.resize(this.client,this.width,this.height);
+        unsel();
     }
 
     protected void btnScreenshots() {
         File screenshots = new File(client.runDirectory.getAbsolutePath()+"\\screenshots");
         if(screenshots.exists() && screenshots.isDirectory())
             try{ Util.getOperatingSystem().open(screenshots); } catch(Exception e) {}
-        this.resize(this.client,this.width,this.height);
+        unsel();
     }
 
     protected void saveAll() {
