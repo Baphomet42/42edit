@@ -181,7 +181,7 @@ public class Hacks extends GenericScreen {
                 items.add(nbt);
             }
         }
-        if(items.size()>0) {
+        if(!items.isEmpty()) {
             NbtCompound nbt = new NbtCompound();
             nbt.putString("id","bundle");
             NbtCompound components = new NbtCompound();

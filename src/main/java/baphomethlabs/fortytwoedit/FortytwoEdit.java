@@ -73,6 +73,7 @@ import net.minecraft.util.math.BlockPos;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.SharedConstants;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 
@@ -80,9 +81,6 @@ public class FortytwoEdit implements ClientModInitializer {
 
     //log
 	public static final Logger LOGGER = LoggerFactory.getLogger("42edit");
-
-    //black market item key
-    public static String blackMarketKey = "items_45"; // replace with new data number after major item format change
 
     //gui
     public static KeyBinding magickGuiKey;
@@ -235,7 +233,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     public static boolean tryLoadCape(String name) {
         final MinecraftClient client = MinecraftClient.getInstance();
-        if(capeNames.size() == 0 && !name.equals(client.getSession().getUsername()))
+        if(capeNames.isEmpty() && !name.equals(client.getSession().getUsername()))
             tryLoadCape(client.getSession().getUsername());
         capeNames.add(name);
         try {
@@ -424,7 +422,7 @@ public class FortytwoEdit implements ClientModInitializer {
         +"ZDM2ZTYyMmI4NTU0YTU2MzhlZDM4NTkzIg0KICAgIH0NCiAgfQ0KfQ==\"}]}}}"));
 
     //saved items
-    public static final int SAVED_ROWS = 9;
+    public static final int SAVED_ROWS = 12;
 
     //registry suggestions
     public static final String[] ATTRIBUTES = getCacheAttributes();
@@ -489,7 +487,7 @@ public class FortytwoEdit implements ClientModInitializer {
             for(int i=0; i<startVals.length; i++)
                 list.add(0,startVals[startVals.length-1-i]);
 
-        if(list.size()>0)
+        if(!list.isEmpty())
             return list.toArray(new String[0]);
         return null;
     }
@@ -1020,18 +1018,16 @@ public class FortytwoEdit implements ClientModInitializer {
 
         if(BlackMagick.nbtFromString(savedString) != null && BlackMagick.nbtFromString(savedString).getType()==NbtElement.LIST_TYPE) {
             NbtList nbt = (NbtList)BlackMagick.nbtFromString(savedString);
-            if(nbt.size()>0 && nbt.get(0).getType()!=NbtElement.COMPOUND_TYPE) {
+            if(!nbt.isEmpty() && nbt.get(0).getType()!=NbtElement.COMPOUND_TYPE) {
                 LOGGER.warn("Failed to read saved items");
                 return null;
             }
-            while(nbt.size()<9*SAVED_ROWS) {
-                NbtCompound air = new NbtCompound();
-                air.putString("id","air");
-                air.putInt("Count",0);
-                nbt.add(air);
-            }
+
+            while(nbt.size()<9*SAVED_ROWS)
+                nbt.add(new NbtCompound());
             if(nbt.size()>9*SAVED_ROWS)
-                LOGGER.warn("Saved items file outdated");
+                LOGGER.warn("Saved items file contains too many items");
+
             return nbt;
         }
 
@@ -1065,7 +1061,7 @@ public class FortytwoEdit implements ClientModInitializer {
         return null;
     }
 
-    public static void refreshWebItems(boolean overwriteCache) {
+    public static void refreshWebItems(boolean forceWeb) {
         webItems = null;
         final MinecraftClient client = MinecraftClient.getInstance();
         String cacheString = "";
@@ -1087,18 +1083,10 @@ public class FortytwoEdit implements ClientModInitializer {
 
         NbtCompound newItems = null;
 
-        if(!overwriteCache) {
-            if(BlackMagick.nbtFromString(cacheString) != null && BlackMagick.nbtFromString(cacheString).getType()==NbtElement.COMPOUND_TYPE) {
-                NbtCompound cache = (NbtCompound)BlackMagick.nbtFromString(cacheString);
-                if(cache.contains(blackMarketKey,NbtElement.LIST_TYPE) && ((NbtList)cache.get(blackMarketKey)).size()>0
-                        && ((NbtList)cache.get(blackMarketKey)).get(0).getType()==NbtElement.COMPOUND_TYPE)
-                    newItems = cache.copy();
-            }
-            else
-                LOGGER.warn("Failed to read web cache");
-        }
+        if(BlackMagick.nbtFromString(cacheString) != null && BlackMagick.nbtFromString(cacheString).getType()==NbtElement.COMPOUND_TYPE)
+            newItems = (NbtCompound)BlackMagick.nbtFromString(cacheString);
 
-        if(webItemsAuto || overwriteCache) {
+        if(webItemsAuto || forceWeb) {
             String webJson = "";
             try {
                 HttpURLConnection con = (HttpURLConnection)(new URI("https://baphomet42.github.io/blackmarket/items.json")).toURL().openConnection();
@@ -1116,52 +1104,61 @@ public class FortytwoEdit implements ClientModInitializer {
 
             if(BlackMagick.nbtFromString(webJson) != null && BlackMagick.nbtFromString(webJson).getType()==NbtElement.COMPOUND_TYPE) {
                 NbtCompound cache = (NbtCompound)BlackMagick.nbtFromString(webJson);
-                if(cache.contains(blackMarketKey,NbtElement.LIST_TYPE) && ((NbtList)cache.get(blackMarketKey)).size()>0
-                        && ((NbtList)cache.get(blackMarketKey)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
+                newItems = cache.copy();
+                String items = newItems.asString();
 
-                    newItems = cache.copy();
-                    String items = newItems.asString();
+                if(items.equals(cacheString)) {
+                    LOGGER.info("Black Market items are up to date");
+                }
+                else {
+                    LOGGER.info("Updating Black Market items");
 
-                    if(items.equals(cacheString)) {
-                        LOGGER.info("Black Market items are up to date ["+blackMarketKey+"]");
+                    try {
+                        FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt", StandardCharsets.UTF_8, false);
+                        writer.write(items);
+                        writer.close();
+                    } catch(IOException e) {
+                        LOGGER.warn("Failed to save Black Market cache");
                     }
-                    else {
-                        LOGGER.info("Updating Black Market items ["+blackMarketKey+"]");
-
-                        try {
-                            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt", StandardCharsets.UTF_8, false);
-                            writer.write(items);
-                            writer.close();
-                        } catch(IOException e) {
-                            LOGGER.warn("Failed to save web cache");
-                        }
-                    }
-
                 }
             }
             else
-                LOGGER.warn("Failed connection to BaphomethLabs");
+                LOGGER.warn("Failed connection to BaphomethLabs Black Market");
         }
 
-        if(newItems != null && newItems.contains(blackMarketKey,NbtElement.LIST_TYPE) && ((NbtList)newItems.get(blackMarketKey)).size()>0
-        && ((NbtList)newItems.get(blackMarketKey)).get(0).getType()==NbtElement.COMPOUND_TYPE) {
-            NbtList items = (NbtList)newItems.get(blackMarketKey);
-            NbtList itemList = new NbtList();
+        if(newItems != null && newItems.contains("versions",NbtElement.LIST_TYPE) && !((NbtList)newItems.get("versions")).isEmpty()
+                && ((NbtList)newItems.get("versions")).get(0).getType()==NbtElement.COMPOUND_TYPE) {
 
-            for(int i=0; i<items.size(); i++) {
-                if(((NbtCompound)items.get(i)).contains("item",NbtElement.STRING_TYPE)) {
-                    NbtCompound stack = BlackMagick.validCompound(BlackMagick.nbtFromString(((NbtCompound)items.get(i)).getString("item")));
-                    if(!stack.isEmpty())
-                        itemList.add(stack);
+            NbtList versionsList = (NbtList)newItems.get("versions");
+            int itemsVer = -1;
+            NbtList jsonItems = null;
+
+            for(int i=0; i<versionsList.size(); i++) {
+                NbtCompound versionData = (NbtCompound)versionsList.get(i);
+                if(versionData.contains("version",NbtElement.INT_TYPE) && versionData.contains("items",NbtElement.LIST_TYPE)) {
+                    int versionNum = versionData.getInt("version");
+                    
+                    if(itemsVer == -1 || (versionNum > itemsVer && versionNum <= SharedConstants.getGameVersion().getResourceVersion(ResourceType.SERVER_DATA))) {
+                        itemsVer = versionNum;
+                        jsonItems = versionData.getList("items",NbtElement.COMPOUND_TYPE);
+                    }
                 }
             }
 
-            webItems = itemList;
+            if(jsonItems != null && !jsonItems.isEmpty()) {
+                webItems = new NbtList();
+                for(int i=0; i<jsonItems.size(); i++) {
+                    if(((NbtCompound)jsonItems.get(i)).contains("item",NbtElement.STRING_TYPE)) {
+                        NbtCompound stack = BlackMagick.validCompound(BlackMagick.nbtFromString(((NbtCompound)jsonItems.get(i)).getString("item")));
+                        if(!stack.isEmpty())
+                            webItems.add(stack);
+                    }
+                }
+            }
         }
-        else if(webItemsAuto && !overwriteCache)
-            LOGGER.warn("No source of web items available");
-        else if(overwriteCache)
-            refreshWebItems(false);
+
+        if(webItems == null || webItems.isEmpty())
+            LOGGER.warn("No source of Black Market items available");
     }
 
 }

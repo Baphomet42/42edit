@@ -280,7 +280,7 @@ public class ItemBuilder extends GenericScreen {
         updateItem();
 
         //tabs
-        if(widgets.size() == 0)
+        if(widgets.isEmpty())
             createStaticTabs();
         this.tabWidget = null;
         for(int i=0; i<noScrollWidgets.get(tab).size(); i++) {
@@ -424,7 +424,7 @@ public class ItemBuilder extends GenericScreen {
             if(tab==CACHE_TAB_MAIN)
                 setErrorMsg(null);
 
-            if(cacheStates.size()>0)
+            if(!cacheStates.isEmpty())
                 cacheStates.clear();
             if(selItem!=null && !selItem.isEmpty())
                 cacheStates = BlackMagick.getBlockStates(selItem.getItem());
@@ -575,10 +575,8 @@ public class ItemBuilder extends GenericScreen {
         if(savedItems == null) {
             savedError = true;
             NbtList nbt = new NbtList();
-            while(nbt.size()<9*FortytwoEdit.SAVED_ROWS) {
-                NbtCompound air = new NbtCompound();
-                nbt.add(air);
-            }
+            while(nbt.size()<9*FortytwoEdit.SAVED_ROWS)
+                nbt.add(new NbtCompound());
             savedItems = nbt;
         }
         updateSavedTab();
@@ -722,7 +720,7 @@ public class ItemBuilder extends GenericScreen {
     }
 
     public static String[] getStatesArr() {
-        if(cacheStates.size()>0) {
+        if(!cacheStates.isEmpty()) {
             String[] temp = new String[cacheStates.size()];
             for(int i=0; i<temp.length; i++)
                 temp[i]=cacheStates.get(i).get(0);
@@ -732,7 +730,7 @@ public class ItemBuilder extends GenericScreen {
     }
 
     public static String[] getStateVals(String key) {
-        if(cacheStates.size()>0) {
+        if(!cacheStates.isEmpty()) {
             for(int i=0; i<cacheStates.size(); i++) {
                 if(cacheStates.get(i).get(0).equals(key) && cacheStates.get(i).size()>1) {
                     String[] temp = new String[cacheStates.get(i).size()-1];
@@ -1595,7 +1593,7 @@ public class ItemBuilder extends GenericScreen {
     }
 
     /**
-     * Resets all tabs. Only use on first init when widgets.size()==0.
+     * Resets all tabs. Only use on first init when widgets.size().isEmpty().
      * Creates widgets for static pages.
      */
     private void createStaticTabs() {
@@ -1623,19 +1621,19 @@ public class ItemBuilder extends GenericScreen {
                         NbtElement loreEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),"components.minecraft:lore",NbtElement.LIST_TYPE);
                         if(loreEl != null) {
                             NbtList lore = (NbtList)loreEl;
-                            if(lore.size()>0 && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'{\"color\":\"gold\",\"text\":\"BaphomethLabs\"}'")) {
+                            if(!lore.isEmpty() && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'{\"color\":\"gold\",\"text\":\"BaphomethLabs\"}'")) {
                                 removed = true;
                                 lore.remove(lore.size()-1);
-                                if(lore.size()>0 && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'\"\"'"))
+                                if(!lore.isEmpty() && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'\"\"'"))
                                     lore.remove(lore.size()-1);
                                 ItemStack newStack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
                                     BlackMagick.itemToNbt(selItem),"components.minecraft:lore",lore)));
                                 if(!newStack.isEmpty())
                                     BlackMagick.setItemMain(newStack);
                             }
-                            if(!removed && lore.size()>0 && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'{\"color\":\"gold\",\"text\":\"Bottled by BaphomethLabs\"}'")) {
+                            if(!removed && !lore.isEmpty() && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'{\"color\":\"gold\",\"text\":\"Bottled by BaphomethLabs\"}'")) {
                                 lore.remove(lore.size()-1);
-                                if(lore.size()>0 && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'\"\"'"))
+                                if(!lore.isEmpty() && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'\"\"'"))
                                     lore.remove(lore.size()-1);
                                 ItemStack newStack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
                                     BlackMagick.itemToNbt(selItem),"components.minecraft:lore",lore)));
@@ -1664,19 +1662,19 @@ public class ItemBuilder extends GenericScreen {
                         NbtElement loreEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),"components.minecraft:lore",NbtElement.LIST_TYPE);
                         if(loreEl != null) {
                             NbtList lore = (NbtList)loreEl;
-                            if(lore.size()>0 && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'{\"color\":\"gold\",\"text\":\"Bottled by BaphomethLabs\"}'")) {
+                            if(!lore.isEmpty() && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'{\"color\":\"gold\",\"text\":\"Bottled by BaphomethLabs\"}'")) {
                                 removed = true;
                                 lore.remove(lore.size()-1);
-                                if(lore.size()>0 && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'\"\"'"))
+                                if(!lore.isEmpty() && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'\"\"'"))
                                     lore.remove(lore.size()-1);
                                 ItemStack newStack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
                                     BlackMagick.itemToNbt(selItem),"components.minecraft:lore",lore)));
                                 if(!newStack.isEmpty())
                                     BlackMagick.setItemMain(newStack);
                             }
-                            if(!removed && lore.size()>0 && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'{\"color\":\"gold\",\"text\":\"BaphomethLabs\"}'")) {
+                            if(!removed && !lore.isEmpty() && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'{\"color\":\"gold\",\"text\":\"BaphomethLabs\"}'")) {
                                 lore.remove(lore.size()-1);
-                                if(lore.size()>0 && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'\"\"'"))
+                                if(!lore.isEmpty() && BlackMagick.nbtToString(lore.get(lore.size()-1)).equals("'\"\"'"))
                                     lore.remove(lore.size()-1);
                                 ItemStack newStack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
                                     BlackMagick.itemToNbt(selItem),"components.minecraft:lore",lore)));
@@ -1850,7 +1848,7 @@ public class ItemBuilder extends GenericScreen {
                                 else
                                     chars = chars.substring(1);
                             }
-                            if(items.size()>0)
+                            if(!items.isEmpty())
                                 bannerStack = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:bundle,components:{bundle_contents:"+items.asString()+"}}"));
                         }
 
@@ -2380,7 +2378,7 @@ public class ItemBuilder extends GenericScreen {
             if(args.contains("path",NbtElement.STRING_TYPE)) {
                 String path = args.get("path").asString();
                 String[] path2;
-                if(args.contains("path2",NbtElement.LIST_TYPE) && ((NbtList)args.get("path2")).size()>0
+                if(args.contains("path2",NbtElement.LIST_TYPE) && !((NbtList)args.get("path2")).isEmpty()
                 && ((NbtList)args.get("path2")).get(0).getType()==NbtElement.STRING_TYPE) {
                     NbtList pathList = (NbtList)args.get("path2");
                     path2 = new String[pathList.size()];
@@ -2809,7 +2807,7 @@ public class ItemBuilder extends GenericScreen {
                         bannerVals.add(ComponentHelper.BANNER_PATTERNS[i]);
 
                     int row=0;
-                    while(bannerVals.size()>0) {
+                    while(!bannerVals.isEmpty()) {
                         String[] currentVals = new String[Math.min(8,bannerVals.size())];
                         for(int i=0; i<currentVals.length; i++)
                             currentVals[i] = bannerVals.remove(0);
@@ -2865,7 +2863,7 @@ public class ItemBuilder extends GenericScreen {
                 String baseJson = args.get("baseJson").asString(); // keep asString
     
                 String[] path2;
-                if(args.contains("path2",NbtElement.LIST_TYPE) && ((NbtList)args.get("path2")).size()>0
+                if(args.contains("path2",NbtElement.LIST_TYPE) && !((NbtList)args.get("path2")).isEmpty()
                 && ((NbtList)args.get("path2")).get(0).getType()==NbtElement.STRING_TYPE) {
                     NbtList pathList = (NbtList)args.get("path2");
                     path2 = new String[pathList.size()];
@@ -4579,7 +4577,7 @@ public class ItemBuilder extends GenericScreen {
                     else
                         list = new NbtList();
                     
-                    if(list.size()>0) {
+                    if(!list.isEmpty()) {
                         NbtElement newEl = BlackMagick.getDefaultNbt(list.get(0).getType());
                         if(newEl.getType() == NbtElement.STRING_TYPE && pie.type()==PathType.TEXT)
                             newEl = NbtString.of("\"\"");
@@ -4599,7 +4597,7 @@ public class ItemBuilder extends GenericScreen {
                         }
                     }
 
-                    if(list.size()>0) {
+                    if(!list.isEmpty()) {
                         setEditingElement(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
                             BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),pagePath,list),blankElPath),saveBtn,
                             path2==null ? null : pagePath);
