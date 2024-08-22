@@ -383,7 +383,7 @@ public class ItemBuilder extends GenericScreen {
         if(tab != i && (i == CACHE_TAB_NBT))
             setErrorMsg(null);
         tab = i;
-        this.resize(this.client,this.width,this.height);
+        reloadScreen();
         resetSuggs();
         unsel();
     }

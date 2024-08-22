@@ -91,7 +91,7 @@ public class AutoClick extends GenericScreen {
     @Override
     public void resize(MinecraftClient client, int width, int height) {
         saveAll();
-        this.init(client, width, height);
+        super.resize(client, width, height);
     }
 
     @Override

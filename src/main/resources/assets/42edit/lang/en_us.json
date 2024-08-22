@@ -1,10 +1,25 @@
 {
-    "ftedit.key.categories.ftedit":"42edit",
-    "ftedit.key.openMagickGui":"Black Magick",
-    "ftedit.key.zoom":"Zoom",
-    "ftedit.key.afkMove":"Auto Move",
-    "ftedit.key.afkClick":"Auto Click",
-    "ftedit.key.freeLook":"Free Look",
-    "ftedit.key.spamClick":"Spam Click",
-    "ftedit.key.modKey":"Mod Key"
+    "ftedit.gui.magickScreen.title": "Black Magick by BaphomethLabs",
+    "ftedit.gui.magickScreen.itemBuilder": "42edit...",
+    "ftedit.gui.magickScreen.hacks": "Hacks...",
+    "ftedit.gui.magickScreen.hat": "Hat",
+    "ftedit.gui.magickScreen.hat.tooltip": "Swap current item with helmet slot",
+    "ftedit.gui.magickScreen.superSecret": "Super Secret Settings...",
+    "ftedit.gui.magickScreen.capes": "Capes...",
+    "ftedit.gui.magickScreen.autoClick": "AutoClick...",
+    "ftedit.gui.magickScreen.autoClick.use": "[Use]",
+    "ftedit.gui.magickScreen.autoClick.mine": "[Mine]",
+    "ftedit.gui.magickScreen.autoClick.attackSlow": "[Attack 1.5]",
+    "ftedit.gui.magickScreen.autoClick.attackFast": "[Attack .65]",
+    "ftedit.gui.magickScreen.autoClick.custom": "[Custom]",
+    "ftedit.gui.magickScreen.autoClick.cycleTooltip": "Cycle auto click mode",
+
+    "ftedit.key.categories.ftedit": "42edit",
+    "ftedit.key.afkClick": "Auto Click",
+    "ftedit.key.afkMove": "Auto Move",
+    "ftedit.key.openMagickGui": "Black Magick",
+    "ftedit.key.freeLook": "Free Look",
+    "ftedit.key.modKey": "Mod Key",
+    "ftedit.key.spamClick": "Spam Click",
+    "ftedit.key.zoom": "Zoom"
 }

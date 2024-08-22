@@ -114,7 +114,7 @@ public class Capes extends GenericScreen {
         if(FortytwoEdit.clientCape<0)
             FortytwoEdit.clientCape=FortytwoEdit.CLIENT_CAPES.length-1;
         FortytwoEdit.updateOptions();
-        this.resize(this.client,this.width,this.height);
+        reloadScreen();
     }
 
     protected void btnIncCustom() {
@@ -122,7 +122,7 @@ public class Capes extends GenericScreen {
         if(FortytwoEdit.clientCape>=FortytwoEdit.CLIENT_CAPES.length)
             FortytwoEdit.clientCape=0;
         FortytwoEdit.updateOptions();
-        this.resize(this.client,this.width,this.height);
+        reloadScreen();
     }
 
     private Tooltip buildCapeTooltip() {
@@ -142,7 +142,7 @@ public class Capes extends GenericScreen {
                     if(FortytwoEdit.setCustomSkin(file)) {
                         FortytwoEdit.showClientSkin = true;
                         SystemToast.add(client.getToastManager(), SystemToast.Type.PACK_COPY_FAILURE, Text.of("Custom skin loaded"), Text.of(file.getName()));
-                        this.resize(this.client,this.width,this.height);
+                        reloadScreen();
                     }
                 }
             }

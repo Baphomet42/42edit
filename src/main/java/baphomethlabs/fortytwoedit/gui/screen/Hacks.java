@@ -119,7 +119,7 @@ public class Hacks extends GenericScreen {
 
             FortytwoEdit.randoMode = (FortytwoEdit.randoSlots!=null);
             unsaved = false;
-            this.resize(this.client,this.width,this.height);
+            reloadScreen();
         }
     }
 

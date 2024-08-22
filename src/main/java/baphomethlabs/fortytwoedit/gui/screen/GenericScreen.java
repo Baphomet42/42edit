@@ -85,6 +85,10 @@ public abstract class GenericScreen extends Screen {
         unsel = true;
     }
 
+    protected void reloadScreen() {
+        this.resize(this.client,this.width,this.height);
+    }
+
     @Override
     public void tick() {
         if(unsel) {
