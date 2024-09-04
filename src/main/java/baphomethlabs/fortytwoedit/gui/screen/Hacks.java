@@ -40,7 +40,9 @@ public class Hacks extends GenericScreen {
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.HACKS;
 
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Mix [On]"), Text.literal("Mix [Off]")).initially(FortytwoEdit.randoMode).omitKeyText().build(x+20,y+22*2+1,80,20, Text.of(""), (button, trackOutput) -> {
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Mix [On]"),
+                Text.literal("Mix [Off]")).initially(FortytwoEdit.randoMode).omitKeyText().build(x+20,y+22*2+1,80,20,
+                Text.of(""), (button, trackOutput) -> {
             setTxtRando();
             if(!(boolean)trackOutput)
                 FortytwoEdit.randoMode = false;
@@ -64,20 +66,25 @@ public class Hacks extends GenericScreen {
             .setTooltip(Tooltip.of(Text.of("Copy entity data within 2.5 blocks and get a spawn egg for the entities")));
         this.addDrawableChild(ButtonWidget.builder(Text.of("Full Data"), button -> this.btnGetEntity(0)).dimensions(x+20+80+5,y+22*3+1,60,20).build())
             .setTooltip(Tooltip.of(Text.of("Get Entity without removing position, uuid, etc.")));
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Xray [On]"), Text.literal("Xray [Off]")).initially(FortytwoEdit.seeInvis).omitKeyText().build(x+20,y+22*4+1,100,20, Text.of(""), (button, trackOutput) -> {
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Xray [On]"),
+                Text.literal("Xray [Off]")).initially(FortytwoEdit.seeInvis).omitKeyText().build(x+20,y+22*4+1,100,20,
+                Text.of(""), (button, trackOutput) -> {
             client.worldRenderer.reload();
             FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
             FortytwoEdit.xrayEntity = FortytwoEdit.seeInvis;
             unsel();
         })).setTooltip(Tooltip.of(Text.of("Toggle xray mode\n\nWhen on: barriers, light blocks, and other invisible blocks will appear as solid blocks")));
-        btnWgtFindInvis = this.addDrawableChild(ButtonWidget.builder(Text.of("Find Invis Entities"), button -> this.btnFindInvis()).dimensions(x+20+100+5,y+22*4+1,100,20).build());
+        btnWgtFindInvis = this.addDrawableChild(ButtonWidget.builder(Text.of("Find Invis Entities"),
+            button -> this.btnFindInvis()).dimensions(x+20+100+5,y+22*4+1,100,20).build());
         if(!client.player.getAbilities().creativeMode)
             btnWgtFindInvis.active = false;
         else
             btnWgtFindInvis.setTooltip(Tooltip.of(Text.of("Print positions of invisible entities (only you can see this)")));
         this.addDrawableChild(ButtonWidget.builder(Text.of("Death Pos"), button -> this.btnDeathPos()).dimensions(x+20,y+22*5+1,100,20).build())
             .setTooltip(Tooltip.of(Text.of("Print your last position of death (only you can see this)")));
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("   Auto Fish [On]"), Text.literal("   Auto Fish [Off]")).initially(FortytwoEdit.autoFish).omitKeyText().build(x+20+100+5,y+22*5+1,100,20, Text.of(""), (button, trackOutput) -> {
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("   Auto Fish [On]"),
+                Text.literal("   Auto Fish [Off]")).initially(FortytwoEdit.autoFish).omitKeyText().build(x+20+100+5,y+22*5+1,100,20,
+                Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.autoFish = !FortytwoEdit.autoFish;
             unsel();
         })).setTooltip(Tooltip.of(Text.of("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on")));
@@ -215,9 +222,12 @@ public class Hacks extends GenericScreen {
                         nbt = (new EntityDataObject(current)).getNbt();
                     if(nbt.contains("Invisible",NbtElement.BYTE_TYPE) && nbt.get("Invisible").asString().equals("1b") 
                     && !(nbt.contains("CustomNameVisible",NbtElement.BYTE_TYPE) && nbt.get("CustomNameVisible").asString().equals("1b"))) {
-                        if(((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(0))).isEmpty() && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(1))).isEmpty()
-                        && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(2))).isEmpty() && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(3))).isEmpty()
-                        && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(0))).isEmpty() && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(1))).isEmpty())
+                        if(((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(0))).isEmpty()
+                                && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(1))).isEmpty()
+                                && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(2))).isEmpty()
+                                && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(3))).isEmpty()
+                                && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(0))).isEmpty()
+                                && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(1))).isEmpty())
                             reportInvis(current);
                     }
                 }
@@ -239,9 +249,10 @@ public class Hacks extends GenericScreen {
 
     private void reportInvis(Entity entity) {
         String json = "[{\"text\":\""+entity.getName().getString()+"\",\"hoverEvent\":{\"action\":\"show_entity\",\"contents\":"
-            +"{\"type\":\""+entity.getType().toString().replaceFirst("entity.","").replaceFirst("minecraft.","")+"\",\"id\":\""+entity.getUuidAsString()+"\"}},\"clickEvent\":"
-            +"{\"action\":\"suggest_command\",\"value\":\"/tp "+entity.getBlockX()+" "+entity.getBlockY()+" "+entity.getBlockZ()+"\"}},{\"text\":\" \"},"
-            +"{\"text\":\"["+entity.getBlockX()+", "+entity.getBlockY()+", "+entity.getBlockZ()+"]\"}]";
+            + "{\"type\":\""+entity.getType().toString().replaceFirst("entity.","").replaceFirst("minecraft.","")
+            + "\",\"id\":\""+entity.getUuidAsString()+"\"}},\"clickEvent\":"
+            + "{\"action\":\"suggest_command\",\"value\":\"/tp "+entity.getBlockX() + " " + entity.getBlockY() + " " + entity.getBlockZ() + "\"}},{\"text\":\" \"},"
+            + "{\"text\":\"["+entity.getBlockX() + ", " + entity.getBlockY() + ", " + entity.getBlockZ() + "]\"}]";
         if(BlackMagick.jsonFromString(json).isValid())
             client.player.sendMessage(BlackMagick.jsonFromString(json).text(),false);
         else

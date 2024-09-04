@@ -34,7 +34,8 @@ public class LogScreen extends GenericScreen {
         logFile = new File(client.runDirectory.getAbsolutePath()+"\\logs\\latest.log");
 
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Resume"), Text.literal("Pause")).initially(paused).omitKeyText().build(x+5+40+5,y+5,40,20, Text.of(""), (button, trackOutput) -> {
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Resume"),
+                Text.literal("Pause")).initially(paused).omitKeyText().build(x+5+40+5,y+5,40,20, Text.of(""), (button, trackOutput) -> {
             paused = (boolean)trackOutput;
             unsel();
         })).setTooltip(Tooltip.of(Text.of("Temporarily freeze new messages from appearing")));

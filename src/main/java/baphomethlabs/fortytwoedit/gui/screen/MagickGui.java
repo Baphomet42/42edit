@@ -25,17 +25,24 @@ public class MagickGui extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.NONE;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.itemBuilder","42edit..."), button -> this.btnItem()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.hacks","Hacks..."), button -> this.btnHacks()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
-        btnWgtHat = this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.hat","Hat"), button -> this.btnHat()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET,60,WID_HEIGHT).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.itemBuilder","42edit..."),
+            button -> this.btnItem()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.hacks","Hacks..."),
+            button -> this.btnHacks()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
+        btnWgtHat = this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.hat","Hat"),
+            button -> this.btnHat()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET,60,WID_HEIGHT).build());
         if(!client.player.getAbilities().creativeMode)
             btnWgtHat.active = false;
         else
             btnWgtHat.setTooltip(Tooltip.of(Text.translatableWithFallback("ftedit.gui.magickScreen.hat.tooltip","Swap current item with helmet slot")));
-        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.superSecret","Super Secret Settings..."), button -> this.btnSuperSecretSettings()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET,165,WID_HEIGHT).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.capes","Capes..."), button -> this.btnCapes()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick","AutoClick..."), button -> this.btnAutoClickSettings()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET,90,WID_HEIGHT).build());
-        btnWgtAutoClick = this.addDrawableChild(ButtonWidget.builder(Text.empty(), button -> this.btnAutoClick()).dimensions(x+LEFT_OFFSET+90+5,y+ROW_HEIGHT*7+TOP_OFFSET,70,WID_HEIGHT).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.superSecret","Super Secret Settings..."),
+            button -> this.btnSuperSecretSettings()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET,165,WID_HEIGHT).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.capes","Capes..."),
+            button -> this.btnCapes()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick","AutoClick..."),
+            button -> this.btnAutoClickSettings()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET,90,WID_HEIGHT).build());
+        btnWgtAutoClick = this.addDrawableChild(ButtonWidget.builder(Text.empty(),
+            button -> this.btnAutoClick()).dimensions(x+LEFT_OFFSET+90+5,y+ROW_HEIGHT*7+TOP_OFFSET,70,WID_HEIGHT).build());
         setAutoClickMessage();
     }
 
@@ -112,7 +119,9 @@ public class MagickGui extends GenericScreen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         context.drawItem(new ItemStack(Items.JIGSAW), x+6, y+6);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatableWithFallback("ftedit.gui.magickScreen.title","Black Magick by BaphomethLabs").copy().withColor(0x420666).formatted(Formatting.BOLD),
+        context.drawCenteredTextWithShadow(this.textRenderer,
+            Text.translatableWithFallback("ftedit.gui.magickScreen.title",
+            "Black Magick by BaphomethLabs").copy().withColor(0x420666).formatted(Formatting.BOLD),
             this.width / 2, y+11, TEXT_COLOR);
 		context.drawItem(new ItemStack(Items.SPONGE),x+LEFT_OFFSET+ITEM_OFFSET,y+44+TOP_OFFSET+ITEM_OFFSET);
 		context.drawItem(new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET+ITEM_OFFSET);

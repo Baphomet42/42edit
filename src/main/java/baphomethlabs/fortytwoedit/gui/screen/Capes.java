@@ -39,7 +39,9 @@ public class Capes extends GenericScreen {
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.CAPES;
 
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("OptiFine [On]"), Text.literal("OptiFine [Off]")).initially(FortytwoEdit.opticapesOn).omitKeyText().build(x+20,y+22*3+1,80,20, Text.of(""), (button, trackOutput) -> {
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("OptiFine [On]"),
+                Text.literal("OptiFine [Off]")).initially(FortytwoEdit.opticapesOn).omitKeyText().build(x+20,y+22*3+1,80,20,
+                Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.opticapesOn = (boolean)trackOutput;
             FortytwoEdit.updateOptions();
             FortytwoEdit.clearCapes();
@@ -49,7 +51,9 @@ public class Capes extends GenericScreen {
             .setTooltip(Tooltip.of(Text.of("Refresh all OptiFine capes")));
         this.addDrawableChild(ButtonWidget.builder(Text.of("Edit"), button -> this.btnEditCape()).dimensions(x+20+80+5+60+5,y+22*3+1,40,20).build())
             .setTooltip(Tooltip.of(Text.of("Edit your OptiFine cape (requires donation to OptiFine)")));
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Custom [On]"), Text.literal("Custom [Off]")).initially(FortytwoEdit.showClientCape).omitKeyText().build(x+20,y+22*4+1,80,20, Text.of(""), (button, trackOutput) -> {
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Custom [On]"),
+                Text.literal("Custom [Off]")).initially(FortytwoEdit.showClientCape).omitKeyText().build(x+20,y+22*4+1,80,20,
+                Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.showClientCape = (boolean)trackOutput;
             FortytwoEdit.updateOptions();
             unsel();
@@ -66,11 +70,15 @@ public class Capes extends GenericScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnIncCustom()).dimensions(x+20+80+5+15+90,y+22*4+1,15,20).build())
             .setTooltip(Tooltip.of(Text.of("Cycle custom cape right")));
 
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Custom [On]"), Text.literal("Custom [Off]")).initially(FortytwoEdit.showClientSkin).omitKeyText().build(x+20,y+22*6+1,80,20, Text.of(""), (button, trackOutput) -> {
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Custom [On]"),
+                Text.literal("Custom [Off]")).initially(FortytwoEdit.showClientSkin).omitKeyText().build(x+20,y+22*6+1,80,20,
+                Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.showClientSkin = (boolean)trackOutput;
             unsel();
         })).setTooltip(Tooltip.of(Text.of("Toggle custom skin mode\n\nWhen on: change your skin (only you can see this)")));
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("3px"), Text.literal("4px")).initially(FortytwoEdit.clientSkinSlim).omitKeyText().build(x+20+80+5,y+22*6+1,30,20, Text.of(""), (button, trackOutput) -> {
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("3px"),
+                Text.literal("4px")).initially(FortytwoEdit.clientSkinSlim).omitKeyText().build(x+20+80+5,y+22*6+1,30,20,
+                Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.clientSkinSlim = (boolean)trackOutput;
             unsel();
         })).setTooltip(Tooltip.of(Text.of("Toggle skin model between wide/slim (requires custom skin mode)")));
@@ -103,7 +111,8 @@ public class Capes extends GenericScreen {
             BigInteger random2Bi = new BigInteger(128, new Random(System.identityHashCode(new Object())));
             String serverId = random1Bi.xor(random2Bi).toString(16);
             client.getSessionService().joinServer(client.getSession().getUuidOrNull(),client.getSession().getAccessToken(),serverId);
-            String url = "https://optifine.net/capeChange?u="+client.getSession().getUuidOrNull().toString().replaceAll("-","")+"&n="+client.getSession().getUsername()+"&s="+serverId;
+            String url = "https://optifine.net/capeChange?u=" +
+                client.getSession().getUuidOrNull().toString().replaceAll("-","") + "&n=" + client.getSession().getUsername() + "&s=" + serverId;
             Util.getOperatingSystem().open(url);
         } catch (Exception ex) {}
         unsel();
