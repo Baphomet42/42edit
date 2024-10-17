@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.6-SNAPSHOT'
+	id 'fabric-loom' version '1.7-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -34,8 +34,8 @@ dependencies {
 	//		./gradlew genSources --refresh-dependencies
 	//		.\gradlew vscode
 	//	.vscode/launch.json "args": "--quickPlaySingleplayer \"Continue Testing\"",
-	//	./gradlew build
 	//	java project clean workspace
+	//	./gradlew build
 	
 	//	UPDATE LAUNCHER
 	//	use fabric installer to get new launcher profile
@@ -87,7 +87,8 @@ jar {
 // configure the maven publication
 publishing {
 	publications {
-		mavenJava(MavenPublication) {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
 			from components.java
 		}
 	}

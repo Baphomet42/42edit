@@ -6,6 +6,7 @@ import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.NarratorManager;
 import net.minecraft.util.Identifier;
 
@@ -59,12 +60,10 @@ public abstract class GenericScreen extends Screen {
     }
     
     protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY, int gui) {
-        int i = this.x;
-        int j = (this.height - this.backgroundHeight) / 2;
         if(gui==0)
-            context.drawTexture(TEXTURE, i, j, 0, 0, this.backgroundWidth, this.backgroundHeight);
+		    context.drawTexture(RenderLayer::getGuiTextured, TEXTURE, this.x, this.y, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
         else if(gui==1)
-            context.drawTexture(TEXTURE1, i, j, 0, 0, this.backgroundWidth, this.backgroundHeight);
+            context.drawTexture(RenderLayer::getGuiTextured, TEXTURE1, this.x, this.y, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
     }
 
     @Override
@@ -86,7 +85,7 @@ public abstract class GenericScreen extends Screen {
     }
 
     protected void reloadScreen() {
-        this.resize(this.client,this.width,this.height);
+        this.clearAndInit();
     }
 
     @Override

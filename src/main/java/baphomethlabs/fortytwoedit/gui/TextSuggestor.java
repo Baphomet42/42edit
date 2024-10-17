@@ -19,10 +19,12 @@ import net.minecraft.client.util.math.Rect2i;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 
+/**
+ * modified from {@link net.minecraft.client.gui.screen.ChatInputSuggestor}
+ */
 public class TextSuggestor {
     final MinecraftClient client;
     final TextFieldWidget textField;
@@ -42,7 +44,7 @@ public class TextSuggestor {
         this.textRenderer = textRenderer;
         this.inWindowIndexOffset = 0;
         this.maxSuggestionSize = 5;
-        this.color = ColorHelper.Argb.getArgb(224,32,16,48);
+        this.color = 0;
         suggestions = new Suggestions(StringRange.at(0),new ArrayList<>());
         windowActive = true;
     }

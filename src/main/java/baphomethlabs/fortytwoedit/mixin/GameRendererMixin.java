@@ -10,10 +10,10 @@ import net.minecraft.client.render.GameRenderer;
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
 
-    @Inject(method = "getFov(Lnet/minecraft/client/render/Camera;FZ)D", at = @At("RETURN"), cancellable = true)
-    public void getZoomLevel(CallbackInfoReturnable<Double> cir) {
+    @Inject(method = "getFov(Lnet/minecraft/client/render/Camera;FZ)F", at = @At("RETURN"), cancellable = true)
+    public void getZoomLevel(CallbackInfoReturnable<Float> cir) {
         if(FortytwoEdit.zoomed) {
-            cir.setReturnValue(17.5);
+            cir.setReturnValue(17.5f);
         }
     }
     

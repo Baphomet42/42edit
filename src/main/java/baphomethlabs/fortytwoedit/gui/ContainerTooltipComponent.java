@@ -3,6 +3,7 @@ package baphomethlabs.fortytwoedit.gui;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
@@ -20,7 +21,7 @@ public class ContainerTooltipComponent implements TooltipComponent {
     }
 
     @Override
-    public int getHeight() {
+    public int getHeight(TextRenderer textRenderer) {
         return this.getRowsHeight() + 4;
     }
 
@@ -38,11 +39,11 @@ public class ContainerTooltipComponent implements TooltipComponent {
     }
 
     @Override
-    public void drawItems(TextRenderer textRenderer, int x, int y, DrawContext context) {
+    public void drawItems(TextRenderer textRenderer, int x, int y, int width, int height, DrawContext context) {
         int i = columnCount;
         int j = rowCount;
-        context.drawGuiTexture(BACKGROUND_TEXTURE, x, y, this.getColumnsWidth(), this.getRowsHeight());
-        context.drawGuiTexture(BACKGROUND_TEXTURE, x, y+this.getRowsHeight()-1, this.getColumnsWidth(), 1);
+        context.drawGuiTexture(RenderLayer::getGuiTextured,BACKGROUND_TEXTURE, x, y, this.getColumnsWidth(), this.getRowsHeight());
+        context.drawGuiTexture(RenderLayer::getGuiTextured,BACKGROUND_TEXTURE, x, y+this.getRowsHeight()-1, this.getColumnsWidth(), 1);
         int k = 0;
         for (int l = 0; l < j; ++l) {
             for (int m = 0; m < i; ++m) {
@@ -57,11 +58,11 @@ public class ContainerTooltipComponent implements TooltipComponent {
         ItemStack itemStack = this.inventory.get(index);
         this.draw(context, x, y, Sprite.SLOT);
         context.drawItem(itemStack, x + 1, y + 1, index);
-        context.drawItemInSlot(textRenderer, itemStack, x + 1, y + 1);
+        context.drawStackOverlay(textRenderer, itemStack, x + 1, y + 1);
     }
 
     private void draw(DrawContext context, int x, int y, Sprite sprite) {
-        context.drawGuiTexture(sprite.texture, x, y, 0, sprite.width, sprite.height);
+        context.drawGuiTexture(RenderLayer::getGuiTextured, sprite.texture, x, y, sprite.width, sprite.height);
     }
 
     static enum Sprite {

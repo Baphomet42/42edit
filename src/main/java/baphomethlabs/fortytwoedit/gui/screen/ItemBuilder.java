@@ -34,6 +34,7 @@ import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.ButtonWidget.PressAction;
 import net.minecraft.client.option.HotbarStorage;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.command.argument.ItemStackArgumentType;
 import net.minecraft.component.DataComponentTypes;
@@ -50,6 +51,7 @@ import net.minecraft.nbt.NbtFloat;
 import net.minecraft.nbt.NbtInt;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.sound.SoundCategory;
@@ -60,7 +62,10 @@ import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 
 public class ItemBuilder extends GenericScreen {
@@ -254,7 +259,6 @@ public class ItemBuilder extends GenericScreen {
             if(!client.player.getAbilities().creativeMode) {
                 swapCopyBtn.active = false;
                 throwCopyBtn.active = false;
-                swapBtn.active = false;
             }
             if(client.player.isSpectator()) {
                 swapCopyBtn.active = false;
@@ -287,7 +291,6 @@ public class ItemBuilder extends GenericScreen {
                 itemBtn.setTooltip(makeItemTooltip(selItem));
             }
         }
-        updateItem();
 
         //tabs
         if(widgets.isEmpty())
@@ -323,6 +326,8 @@ public class ItemBuilder extends GenericScreen {
             i++;
         }
 
+        // this should always be the last thing in init()
+        updateItem();
     }
 
     protected void btnBack() {
@@ -332,21 +337,15 @@ public class ItemBuilder extends GenericScreen {
     protected void btnSwapOff(boolean copy) {
         if(!client.player.isSpectator()) {
             if(!copy) {
-                if(client.player.getAbilities().creativeMode) {
-                    ItemStack mainhand = client.player.getMainHandStack().copy();
-                    ItemStack offhand = client.player.getOffHandStack().copy();
-                    BlackMagick.setItemMain(offhand);
-                    BlackMagick.setItemOff(mainhand);
-                }
+                // from MinecraftClient (search `this.options.swapHandsKey.wasPressed()`)
+                client.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ORIGIN, Direction.DOWN));
             }
-            else {
-                if(client.player.getAbilities().creativeMode) {
-                    if(!client.player.getMainHandStack().isEmpty()) {
-                        BlackMagick.setItemOff(client.player.getMainHandStack());
-                    }
-                    else if(!client.player.getOffHandStack().isEmpty()) {
-                        BlackMagick.setItemMain(client.player.getOffHandStack());
-                    }
+            else if(client.player.getAbilities().creativeMode) {
+                if(!client.player.getMainHandStack().isEmpty()) {
+                    BlackMagick.setItemOff(client.player.getMainHandStack());
+                }
+                else if(!client.player.getOffHandStack().isEmpty()) {
+                    BlackMagick.setItemMain(client.player.getOffHandStack());
                 }
             }
         }
@@ -372,12 +371,14 @@ public class ItemBuilder extends GenericScreen {
     protected void btnThrow(boolean copy) {
         if(!client.player.isSpectator()) {
             if(!copy) {
-                client.player.dropSelectedItem(true);
+                if(client.player.dropSelectedItem(true))
+                    client.player.swingHand(Hand.MAIN_HAND);
                 client.player.playerScreenHandler.sendContentUpdates();
             }
             else if(client.player.getAbilities().creativeMode) {
                 ItemStack item = client.player.getMainHandStack().copy();
-                client.player.dropSelectedItem(true);
+                if(client.player.dropSelectedItem(true))
+                    client.player.swingHand(Hand.MAIN_HAND);
                 client.player.playerScreenHandler.sendContentUpdates();
                 BlackMagick.setItemMain(item);
             }
@@ -458,8 +459,9 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
 
-            if(!widgets.isEmpty())
+            if(!widgets.isEmpty()) {
                 createTab(CACHE_TAB_MAIN);
+            }
         }
         if(changedOff) {
             selItemOff = client.player.getOffHandStack().copy();
@@ -961,7 +963,7 @@ public class ItemBuilder extends GenericScreen {
 
     private void drawItem(DrawContext context, ItemStack item, int x, int y) {
         context.drawItem(item,x,y);
-        context.drawItemInSlot(this.textRenderer,item,x,y);
+        context.drawStackOverlay(this.textRenderer,item,x,y);
     }
 
     private void updateJsonPreview(String path, String jsonBase) {
@@ -1537,7 +1539,7 @@ public class ItemBuilder extends GenericScreen {
             String[][] joinSuggs = null;
             if(suggestions != null)
                 joinSuggs = new String[][]{suggestions};
-            String[] suggsArr = FortytwoEdit.joinCommandSuggs(joinSuggs, null, startVals);
+            String[] suggsArr = FortytwoEdit.joinCommandSuggs(joinSuggs, startVals);
             if(suggsArr != null && suggsArr.length>0)
                 suggs.setSuggestions(suggsArr);
         }
@@ -2207,10 +2209,12 @@ public class ItemBuilder extends GenericScreen {
                 if(!unset.isEmpty()) {
                     widgets.get(tabNum).add(new RowWidget("unset"));
                     for(String c : unset) {
-                        if(ComponentHelper.componentRead(selItem,c))
-                            widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
-                        else
-                            unused.add(c);
+                        //TODO rework unused system
+                        widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
+                        // if(ComponentHelper.componentRead(selItem,c))
+                        //     widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
+                        // else
+                        //     unused.add(c);
                     }
                 }
                 if(!unused.isEmpty()) {
@@ -2346,8 +2350,9 @@ public class ItemBuilder extends GenericScreen {
             }
         }
 
-        if(tab == tabNum)
+        if(tab == tabNum) {
             btnTab(tab);
+        }
         resetSuggs();
     }
 
@@ -3937,7 +3942,7 @@ public class ItemBuilder extends GenericScreen {
                         else
                             newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,el));
                         BlackMagick.setItemMain(newItem);
-                        createTab(CACHE_TAB_MAIN); // required certain components
+                        btnTab(CACHE_TAB_MAIN); //careful removing, may be required for some components
                     }
                     unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,size,20).build()};
@@ -4833,11 +4838,11 @@ public class ItemBuilder extends GenericScreen {
             && this.savedStacks.length == this.btnX.length && this.slotSprites.length == this.savedStacks.length) {
                 for(int i=0; i<this.savedStacks.length; i++)
                     if((this.savedStacks[i] == null || this.savedStacks[i].isEmpty()) && this.slotSprites[i]>0 && this.slotSprites[i]<=this.SPRITES.length)
-                        context.drawSprite(x+this.btnX[i]+2,y+2,0,16,16,this.SPRITES[this.slotSprites[i]-1]);
+                        context.drawSpriteStretched(RenderLayer::getGuiTextured, this.SPRITES[this.slotSprites[i]-1], x+this.btnX[i]+2, y+2, 16, 16);
             }
             if(this.isHotbarRow) {
                 int sel = client.player.getInventory().selectedSlot;
-                context.drawGuiTexture(SEL_SLOT, x+(sel*20)+40-2, y-20-2, 24, 23);
+                context.drawGuiTexture(RenderLayer::getGuiTextured, SEL_SLOT, x+(sel*20)+40-2, y-20-2, 24, 23);
             }
         }
 

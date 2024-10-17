@@ -18,15 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.ParseResults;
-import com.mojang.brigadier.suggestion.Suggestion;
-import com.mojang.brigadier.suggestion.Suggestions;
-import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.screen.AutoClick;
 import baphomethlabs.fortytwoedit.gui.screen.Capes;
 import baphomethlabs.fortytwoedit.gui.screen.Hacks;
@@ -43,7 +37,6 @@ import net.minecraft.client.resource.language.TranslationStorage;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -80,7 +73,9 @@ import net.minecraft.client.MinecraftClient;
 public class FortytwoEdit implements ClientModInitializer {
 
     //log
-	public static final Logger LOGGER = LoggerFactory.getLogger("42edit");
+    public static final String MOD_ID_JAVA = "ftedit";
+    public static final String MOD_ID_MC = "42edit";
+	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID_MC);
 
     //gui
     public static KeyBinding magickGuiKey;
@@ -241,7 +236,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
             for (int x = 0; x < capeInp.getWidth(); x++)
                 for (int y = 0; y < capeInp.getHeight(); y++)
-                    cape.setColor(x, y, capeInp.getColor(x, y));
+                    cape.setColorArgb(x, y, capeInp.getColorArgb(x, y));
 
             capeInp.close();
             client.getTextureManager().registerTexture(Identifier.of("42edit","cache/capes/"+name.toLowerCase()), new NativeImageBackedTexture(cape));
@@ -330,7 +325,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
                 for (int x = 0; x < skinFile.getWidth(); x++)
                     for (int y = 0; y < skinFile.getHeight(); y++)
-                        skin.setColor(x, y, skinFile.getColor(x, y));
+                        skin.setColorArgb(x, y, skinFile.getColorArgb(x, y));
 
                 skinFile.close();
                 final MinecraftClient client = MinecraftClient.getInstance();
@@ -349,7 +344,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static float[] cameraRotation = {0f,0f};
 
     //see feature items
-    public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.BUNDLE);
+    public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.WINTER_DROP);
 
     //format codes
     public static final Text formatTooltip = BlackMagick.jsonFromString("[{\"text\":\"Formatting\n"+
@@ -362,7 +357,7 @@ public class FortytwoEdit implements ClientModInitializer {
         "{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\",\"font\":\"illageralt\"}]").text();
 
     //supersecretsettings
-    public static final Identifier[] SUPER_SECRET_SETTING_PROGRAMS = new Identifier[]{/*Identifier.of("42edit","shaders/post/notch.json"), Identifier.of("42edit","shaders/post/fxaa.json"), Identifier.of("42edit","shaders/post/art.json"), Identifier.of("42edit","shaders/post/bumpy.json"), Identifier.of("42edit","shaders/post/blobs2.json"), Identifier.of("42edit","shaders/post/pencil.json"),*/ Identifier.of("42edit","shaders/post/color_convolve.json"),/* Identifier.of("42edit","shaders/post/deconverge.json"), Identifier.of("42edit","shaders/post/flip.json"),*/ Identifier.of("shaders/post/invert.json"),/* Identifier.of("42edit","shaders/post/ntsc.json"), Identifier.of("42edit","shaders/post/outline.json"), Identifier.of("42edit","shaders/post/phosphor.json"), Identifier.of("42edit","shaders/post/scan_pincushion.json"), Identifier.of("42edit","shaders/post/sobel.json"),*/ Identifier.of("42edit","shaders/post/bits.json"), Identifier.of("42edit","shaders/post/desaturate.json"),/* Identifier.of("42edit","shaders/post/green.json"), Identifier.of("42edit","shaders/post/blur.json"), Identifier.of("42edit","shaders/post/wobble.json"), Identifier.of("42edit","shaders/post/blobs.json"), Identifier.of("42edit","shaders/post/antialias.json"),*/ Identifier.of("shaders/post/creeper.json"), Identifier.of("shaders/post/spider.json")};
+    public static final Identifier[] SUPER_SECRET_SETTING_PROGRAMS = new Identifier[]{/*Identifier.of("42edit","shaders/post/notch.json"), Identifier.of("42edit","shaders/post/fxaa.json"), Identifier.of("42edit","shaders/post/art.json"), Identifier.of("42edit","shaders/post/bumpy.json"), Identifier.of("42edit","shaders/post/blobs2.json"), Identifier.of("42edit","shaders/post/pencil.json"), Identifier.of("42edit","shaders/post/color_convolve.json"), Identifier.of("42edit","shaders/post/deconverge.json"), Identifier.of("42edit","shaders/post/flip.json"),*/ Identifier.ofVanilla("invert"),/* Identifier.of("42edit","shaders/post/ntsc.json"), Identifier.of("42edit","shaders/post/outline.json"), Identifier.of("42edit","shaders/post/phosphor.json"), Identifier.of("42edit","shaders/post/scan_pincushion.json"), Identifier.of("42edit","shaders/post/sobel.json"), Identifier.of("42edit","shaders/post/bits.json"), Identifier.of("42edit","shaders/post/desaturate.json"), Identifier.of("42edit","shaders/post/green.json"), Identifier.of("42edit","shaders/post/blur.json"), Identifier.of("42edit","shaders/post/wobble.json"), Identifier.of("42edit","shaders/post/blobs.json"), Identifier.of("42edit","shaders/post/antialias.json"),*/ Identifier.ofVanilla("creeper"), Identifier.ofVanilla("spider")};
     private static int superSecretSettingIndex = SUPER_SECRET_SETTING_PROGRAMS.length;
     private static final Identifier[] SECRETSOUNDS = getSecretSounds();
     private static Identifier[] getSecretSounds() {
@@ -385,14 +380,14 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void cycleSuperSecretSetting() {
         final MinecraftClient client = MinecraftClient.getInstance();
         if(client.getCameraEntity() instanceof PlayerEntity) {
-            if(client.gameRenderer.getPostProcessor() != null) {
-                client.gameRenderer.getPostProcessor().close();
+            if(client.gameRenderer.getPostProcessorId() != null) {
+                client.gameRenderer.clearPostProcessor();
             }
             superSecretSettingIndex = (superSecretSettingIndex + 1) % (SUPER_SECRET_SETTING_PROGRAMS.length + 1);
             if(superSecretSettingIndex == SUPER_SECRET_SETTING_PROGRAMS.length) {
-                client.gameRenderer.disablePostProcessor();
+                ((GameRendererInvoker)client.gameRenderer).setPostProcessorEnabled(false);
             } else {
-                ((GameRendererInvoker)client.gameRenderer).invokeLoadPostProcessor(SUPER_SECRET_SETTING_PROGRAMS[superSecretSettingIndex]);
+                ((GameRendererInvoker)client.gameRenderer).invokeSetPostProcessor(SUPER_SECRET_SETTING_PROGRAMS[superSecretSettingIndex]);
             }
         }
         secretSound();
@@ -423,6 +418,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final String[] BLOCKTAGS = getCacheBlockTags();
     public static final String[] COMPONENTS = getCacheComponents();
     public static final String[] ITEMS = getCacheItems();
+    public static final String[] ITEMTAGS = getCacheItemTags();
     public static final String[] EFFECTS = getCacheEffects();
     public static final String[] ENTITIES = getCacheEntities();
     private static String[] KEYBINDS = null;
@@ -432,34 +428,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final String[] STRUCTURES = getCacheStructures();
     private static String[] TRANSLATIONS = null;
 
-    //live command suggestions
-    public static void setCommandSuggs(String cmd, TextSuggestor suggs, String[] suggsList) {
-        if(cmd != null && suggs != null) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            CommandDispatcher<CommandSource> commandDispatcher = client.player.networkHandler.getCommandDispatcher();
-            ParseResults<CommandSource> cmdSuggsParse = commandDispatcher.parse(cmd, (CommandSource)client.player.networkHandler.getCommandSource());
-            CompletableFuture<Suggestions> cmdSuggsPendingSuggestions = commandDispatcher.getCompletionSuggestions(cmdSuggsParse, cmd.length());
-
-            suggs.setSuggestions(new String[]{""});
-
-            cmdSuggsPendingSuggestions.thenRun(() -> {
-
-                List<Suggestion> cmdSuggs = null;
-                if(cmdSuggsPendingSuggestions != null && cmdSuggsPendingSuggestions.isDone()) { 
-                    Suggestions suggestions = cmdSuggsPendingSuggestions.join();
-                    if(!suggestions.isEmpty())
-                        cmdSuggs = suggestions.getList();
-                }
-
-                String[] suggsArr = joinCommandSuggs(new String[][]{suggsList}, cmdSuggs, null);
-
-                if(suggsArr.length>0)
-                    suggs.setSuggestions(suggsArr);
-            });
-        }
-    }
-
-    public static String[] joinCommandSuggs(String[][] joinLists, List<Suggestion> cmdSuggs, String[] startVals) {
+    public static String[] joinCommandSuggs(String[][] joinLists, String[] startVals) {
         List<String> list = new ArrayList<>();
 
         if(joinLists != null)
@@ -467,11 +436,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 if(joinLists[i] != null)
                     for(int j=0; j<joinLists[i].length; j++)
                         list.add(joinLists[i][j]);
-            }
-
-        if(cmdSuggs != null)
-            for(Suggestion suggestion : cmdSuggs)
-                list.add(suggestion.getText().replaceFirst("minecraft:",""));     
+            }  
 
         list = new ArrayList<String>((new HashSet<String>(list)));
         Collections.sort(list);
@@ -797,6 +762,19 @@ public class FortytwoEdit implements ClientModInitializer {
         return list.toArray(new String[0]);
     }
 
+    private static String[] getCacheItemTags() {
+        List<String> list = new ArrayList<>();
+
+        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/item", map::putIfAbsent);
+        map.keySet().forEach(t -> {
+            list.add("#"+t.toString().replaceFirst("tags/item/","").replaceFirst(".json",""));
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
     private static String[] getCacheEffects() {
         List<String> list = new ArrayList<>();
 
@@ -1067,7 +1045,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 writer.write("{}");
                 writer.close();
             }
-                
+
             Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt"), StandardCharsets.UTF_8);
             if(scan.hasNextLine())
                 cacheString = scan.nextLine();
@@ -1082,7 +1060,7 @@ public class FortytwoEdit implements ClientModInitializer {
         if(webItemsAuto || forceWeb) {
             String webJson = "";
             try {
-                HttpURLConnection con = (HttpURLConnection)(new URI("https://baphomet42.github.io/blackmarket/items.json")).toURL().openConnection();
+                HttpURLConnection con = (HttpURLConnection)(new URI("https://baphomet42.github.io/mc/blackmarket/items.json")).toURL().openConnection();
                 con.setConnectTimeout(2000);
                 con.setReadTimeout(500);
                 con.setUseCaches(false);
@@ -1093,7 +1071,9 @@ public class FortytwoEdit implements ClientModInitializer {
                     scan.close();
                 }
                 con.disconnect();
-            } catch(Exception e) {}
+            } catch(Exception e) {
+                LOGGER.warn("Failed connection to BaphomethLabs Black Market");
+            }
 
             if(BlackMagick.nbtFromString(webJson) != null && BlackMagick.nbtFromString(webJson).getType()==NbtElement.COMPOUND_TYPE) {
                 NbtCompound cache = (NbtCompound)BlackMagick.nbtFromString(webJson);
@@ -1116,7 +1096,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 }
             }
             else
-                LOGGER.warn("Failed connection to BaphomethLabs Black Market");
+                LOGGER.warn("Failed to parse BaphomethLabs Black Market: "+webJson);
         }
 
         if(newItems != null && newItems.contains("versions",NbtElement.LIST_TYPE) && !((NbtList)newItems.get("versions")).isEmpty()

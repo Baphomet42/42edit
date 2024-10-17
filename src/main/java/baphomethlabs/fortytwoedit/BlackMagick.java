@@ -20,6 +20,7 @@ import net.minecraft.command.argument.NbtPathArgumentType.NbtPath;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.component.ComponentType;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtByte;
@@ -61,7 +62,7 @@ public class BlackMagick {
      */
     public static void setItemMain(ItemStack item) {
         final MinecraftClient client = MinecraftClient.getInstance();
-        setItem(item,36+client.player.getInventory().selectedSlot);
+        setItem(item,client.player.getInventory().selectedSlot,36+client.player.getInventory().selectedSlot);
     }
 
     /**
@@ -70,7 +71,7 @@ public class BlackMagick {
      * @param item
      */
     public static void setItemOff(ItemStack item) {
-        setItem(item,45);
+        setItem(item,PlayerInventory.OFF_HAND_SLOT,45);
     }
 
     /**
@@ -79,9 +80,11 @@ public class BlackMagick {
      * @param item
      * @param slot
      */
-    public static void setItem(ItemStack item, int slot) {
+    public static void setItem(ItemStack itemInput, int invSlot, int creativeSlot) {
         final MinecraftClient client = MinecraftClient.getInstance();
         if(client.player.getAbilities().creativeMode) {
+
+            ItemStack item = itemInput == null ? ItemStack.EMPTY : itemInput.copy();
 
             // If item is not enabled, sets the slot to a bundle containing the item.
             // Removing the bundle item in an inventory may result in a ghost item.
@@ -94,7 +97,8 @@ public class BlackMagick {
             }
 
             FortytwoEdit.addItemHist(item);
-            client.interactionManager.clickCreativeStack(item.copy(), slot);
+            client.player.getInventory().setStack(invSlot, item);
+            client.interactionManager.clickCreativeStack(item, creativeSlot);
             client.player.playerScreenHandler.sendContentUpdates();
         }
     }
@@ -229,7 +233,7 @@ public class BlackMagick {
         NbtCompound nbt = new NbtCompound();
         final MinecraftClient client = MinecraftClient.getInstance();
         if(client.world != null && item != null && !item.isEmpty()) {
-            nbt = (NbtCompound)item.encodeAllowEmpty(client.world.getRegistryManager());
+            nbt = (NbtCompound)item.toNbtAllowEmpty(client.world.getRegistryManager());
         }
         return nbt;
     }
@@ -586,7 +590,7 @@ public class BlackMagick {
         try {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(client.world != null)
-                for(Identifier i : client.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getIds())
+                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT).get().getIds())
                     list.add(i.toString());
         } catch(Exception e) {}
 
@@ -600,7 +604,7 @@ public class BlackMagick {
         try {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(client.world != null) {
-                Enchantment ench = client.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).get(Identifier.of(key));
+                Enchantment ench = client.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT).get().get(Identifier.of(key));
                 if(ench != null)
                     max = ench.getMaxLevel();
             }
@@ -615,7 +619,7 @@ public class BlackMagick {
         try {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(client.world != null)
-                for(Identifier i : client.world.getRegistryManager().get(RegistryKeys.JUKEBOX_SONG).getIds())
+                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.JUKEBOX_SONG).get().getIds())
                     list.add(i.toString());
         } catch(Exception e) {}
 
@@ -629,7 +633,7 @@ public class BlackMagick {
         try {
             final MinecraftClient client = MinecraftClient.getInstance();
             if(client.world != null)
-                for(Identifier i : client.world.getRegistryManager().get(RegistryKeys.PAINTING_VARIANT).getIds())
+                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.PAINTING_VARIANT).get().getIds())
                     list.add(i.toString());
         } catch(Exception e) {}
 
