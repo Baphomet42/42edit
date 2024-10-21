@@ -756,7 +756,7 @@ public class ComponentHelper {
             if(path.endsWith("components.lock.items"))
                 return PathInfos.getItemPredicateItems();
             if(path.endsWith("components.lock.predicates"))
-                return PathInfos.INLINE_COMPOUND.withDesc(Text.of("Item subpredicates to match"));//TODO add PathInfo for all subpredicates
+                return PathInfos.INLINE_COMPOUND.withDesc(Text.of("Item subpredicates to match")); // to_do all subpredicate paths
         }
 
         if(path.contains("components.lodestone_tracker")) {

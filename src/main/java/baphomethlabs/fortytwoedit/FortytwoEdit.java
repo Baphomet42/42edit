@@ -71,12 +71,18 @@ import net.minecraft.client.MinecraftClient;
 
 public class FortytwoEdit implements ClientModInitializer {
 
-    //log
+    // log
     public static final String MOD_ID_JAVA = "ftedit";
     public static final String MOD_ID_MC = "42edit";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID_MC);
 
-    //gui
+    // files
+    private static final String FILE_DIRECTORY = ".42edit";
+    private static final String FILE_OPTIONS = "options.snbt";
+    private static final String FILE_SAVED_ITEMS = "saved_items.snbt";
+    private static final String FILE_WEB_CACHE = "web_cache.snbt";
+
+    // gui
     public static KeyBinding magickGuiKey;
     public static QuickScreen quickScreen = QuickScreen.NONE;
     public enum QuickScreen {
@@ -90,8 +96,8 @@ public class FortytwoEdit implements ClientModInitializer {
         SECRET_SCREEN
     }
 
-    //options
-    private static final int OPTIONS_FORMAT = 1;
+    // options
+    private static final int OPTIONS_FORMAT = 2;
     private static NbtCompound optionsExtra;
 
     // zoom
@@ -912,14 +918,14 @@ public class FortytwoEdit implements ClientModInitializer {
         final MinecraftClient client = MinecraftClient.getInstance();
         String optionsString = "";
         try {
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).createNewFile();
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).mkdir();
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS)).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS)).createNewFile();
                 
-            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt"), StandardCharsets.UTF_8);
-            if(scan.hasNextLine())
-                optionsString = scan.nextLine(); // to_do readability compound
+            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS), StandardCharsets.UTF_8);
+            while(scan.hasNextLine())
+                optionsString += scan.nextLine().trim();
             scan.close();
         } catch (Exception e) {}
 
@@ -966,10 +972,10 @@ public class FortytwoEdit implements ClientModInitializer {
         try {
 
             final MinecraftClient client = MinecraftClient.getInstance();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt")).createNewFile();
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).mkdir();
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS)).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS)).createNewFile();
 
             NbtCompound options = new NbtCompound();
             
@@ -985,8 +991,8 @@ public class FortytwoEdit implements ClientModInitializer {
             options.putBoolean("web_items",webItemsAuto);
             options.putString("web_items_url",webItemsUrlOverride);
 
-            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt", StandardCharsets.UTF_8, false);
-            writer.write(options.asString()); // to_do readability compound
+            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS, StandardCharsets.UTF_8, false);
+            writer.write(options.asString());
             writer.close();
 
         } catch (Exception e) {
@@ -998,18 +1004,18 @@ public class FortytwoEdit implements ClientModInitializer {
         final MinecraftClient client = MinecraftClient.getInstance();
         String savedString = "";
         try {
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).exists()) {
-                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).createNewFile();
-                FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", StandardCharsets.UTF_8, false);
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).mkdir();
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS)).exists()) {
+                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS)).createNewFile();
+                FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS, StandardCharsets.UTF_8, false);
                 writer.write("[]");
                 writer.close();
             }
                 
-            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt"), StandardCharsets.UTF_8);
-            if(scan.hasNextLine())
-                savedString = scan.nextLine(); // to_do readability compound
+            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS), StandardCharsets.UTF_8);
+            while(scan.hasNextLine())
+                savedString += scan.nextLine().trim();
             scan.close();
         } catch (Exception e) {}
 
@@ -1038,16 +1044,25 @@ public class FortytwoEdit implements ClientModInitializer {
         try {
 
             final MinecraftClient client = MinecraftClient.getInstance();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt")).createNewFile();
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).mkdir();
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS)).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS)).createNewFile();
 
             String items = "[]";
-            if(nbt != null)
-                items = nbt.asString(); // to_do readability compound
+            String tab_indent = "\t";
+            if(nbt != null && !nbt.isEmpty() && nbt.getHeldType() == NbtElement.COMPOUND_TYPE) {
+                items = "[\n";
+                for(int i=0; i<nbt.size(); i++) {
+                    items += tab_indent + nbt.get(i).asString();
+                    if(i<nbt.size()-1)
+                        items += ",";
+                    items += "\n";
+                }
+                items += "]";
+            }
 
-            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", StandardCharsets.UTF_8, false);
+            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS, StandardCharsets.UTF_8, false);
             writer.write(items);
             writer.close();
             return getSavedItems();
@@ -1063,18 +1078,18 @@ public class FortytwoEdit implements ClientModInitializer {
         final MinecraftClient client = MinecraftClient.getInstance();
         String cacheString = "";
         try {
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit")).mkdir();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt")).exists()) {
-                (new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt")).createNewFile();
-                FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt", StandardCharsets.UTF_8, false);
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).exists())
+                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).mkdir();
+            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_WEB_CACHE)).exists()) {
+                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_WEB_CACHE)).createNewFile();
+                FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_WEB_CACHE, StandardCharsets.UTF_8, false);
                 writer.write("{}");
                 writer.close();
             }
 
-            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt"), StandardCharsets.UTF_8);
-            if(scan.hasNextLine())
-                cacheString = scan.nextLine();
+            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_WEB_CACHE), StandardCharsets.UTF_8);
+            while(scan.hasNextLine())
+                cacheString += scan.nextLine().trim();
             scan.close();
         } catch (Exception e) {}
 
@@ -1094,7 +1109,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 if(con.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     Scanner scan = new Scanner(con.getInputStream(), StandardCharsets.UTF_8);
                     while(scan.hasNextLine())
-                        webJson += scan.nextLine(); // to_do readability compound
+                        webJson += scan.nextLine().trim();
                     scan.close();
                 }
                 con.disconnect();
@@ -1105,7 +1120,7 @@ public class FortytwoEdit implements ClientModInitializer {
             if(BlackMagick.nbtFromString(webJson) != null && BlackMagick.nbtFromString(webJson).getType()==NbtElement.COMPOUND_TYPE) {
                 NbtCompound cache = (NbtCompound)BlackMagick.nbtFromString(webJson);
                 newItems = cache.copy();
-                String items = newItems.asString(); // to_do readability compound
+                String items = newItems.asString();
 
                 if(items.equals(cacheString)) {
                     LOGGER.info("Black Market items are up to date");
@@ -1114,7 +1129,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     LOGGER.info("Updating Black Market items");
 
                     try {
-                        FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\web_cache.txt", StandardCharsets.UTF_8, false);
+                        FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_WEB_CACHE, StandardCharsets.UTF_8, false);
                         writer.write(items);
                         writer.close();
                     } catch(IOException e) {
