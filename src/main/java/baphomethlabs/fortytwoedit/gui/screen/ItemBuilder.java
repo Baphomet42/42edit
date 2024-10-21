@@ -2209,7 +2209,6 @@ public class ItemBuilder extends GenericScreen {
                 if(!unset.isEmpty()) {
                     widgets.get(tabNum).add(new RowWidget("unset"));
                     for(String c : unset) {
-                        //TODO rework unused system
                         widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
                         // if(ComponentHelper.componentRead(selItem,c))
                         //     widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
@@ -3730,6 +3729,8 @@ public class ItemBuilder extends GenericScreen {
     class RowWidgetComponent extends RowWidget {
 
         private static final Tooltip TT_SET = Tooltip.of(Text.of("Set component"));
+        private static final ItemStack DEFAULT_COMPONENT_ICON = FortytwoEdit.ITEM_QUESTION;
+        private static final int ROW_LEFT_ICON = 10;
 
         /**
          * For use in components screen only.
@@ -3751,9 +3752,12 @@ public class ItemBuilder extends GenericScreen {
             if((size>80) && (pi.type() == PathType.TRINARY || pi.type() == PathType.TOOLTIP_UNIT))
                 size = 80;
             ButtonWidget keyBtn = ButtonWidget.builder(Text.of(keyBtnTxt), btn -> {})
-                .dimensions(ItemBuilder.this.x+ROW_LEFT,5,size,20).build();
+                .dimensions(ItemBuilder.this.x+(ROW_LEFT+ROW_LEFT_ICON),5,size,20).build();
             keyBtn.active = false;
             keyBtn.setTooltip(Tooltip.of(btnTt));
+
+            item = pi.icon() == null ? DEFAULT_COMPONENT_ICON : pi.icon();
+            itemXoff = -9;
 
             if(ComponentHelper.isComplex(pi.type())) {
 
@@ -3765,7 +3769,7 @@ public class ItemBuilder extends GenericScreen {
                 ButtonWidget.builder(getButtonText(path,startEl), btn -> {
                     createBlankTab(0,BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}")));
                     unsel();
-                }).dimensions(ItemBuilder.this.x+ROW_LEFT+size+5,5,ROW_RIGHT-ROW_LEFT-20-size-5,20).build(),
+                }).dimensions(ItemBuilder.this.x+(ROW_LEFT+ROW_LEFT_ICON)+size+5,5,ROW_RIGHT-(ROW_LEFT+ROW_LEFT_ICON)-20-size-5,20).build(),
                 ButtonWidget.builder(Text.of(startVal.equals("") ? "+" : "X"), btn -> {
                     if(startVal.equals("")) {
                         createBlankTab(0,BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}")));
@@ -3777,7 +3781,7 @@ public class ItemBuilder extends GenericScreen {
                     }
                     unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-20,5,20,20).build()};
-                this.btnX = new int[]{ROW_LEFT,ROW_LEFT+size+5,ROW_RIGHT-20};
+                this.btnX = new int[]{(ROW_LEFT+ROW_LEFT_ICON),(ROW_LEFT+ROW_LEFT_ICON)+size+5,ROW_RIGHT-20};
                 if(!startVal.equals("")) {
                     this.btns[1].setTooltip(Tooltip.of(Text.of("Edit component:\n"+startVal)));
                     this.btns[1].setTooltipDelay(TOOLTIP_DELAY);
@@ -3816,7 +3820,7 @@ public class ItemBuilder extends GenericScreen {
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,new NbtCompound())));
                     unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
-                this.btnX = new int[]{ROW_LEFT,ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
+                this.btnX = new int[]{(ROW_LEFT+ROW_LEFT_ICON),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
     
                 this.btns[startVal+1].active=false;
     
@@ -3860,7 +3864,7 @@ public class ItemBuilder extends GenericScreen {
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,NbtByte.ONE)));
                     unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
-                this.btnX = new int[]{ROW_LEFT,ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
+                this.btnX = new int[]{(ROW_LEFT+ROW_LEFT_ICON),ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
     
                 this.btns[startVal+1].active=false;
     
@@ -3905,7 +3909,7 @@ public class ItemBuilder extends GenericScreen {
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,new NbtCompound())));
                     unsel();
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
-                this.btnX = new int[]{ROW_LEFT,ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
+                this.btnX = new int[]{(ROW_LEFT+ROW_LEFT_ICON),ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
     
                 this.btns[startVal+1].active=false;
     
@@ -3945,12 +3949,12 @@ public class ItemBuilder extends GenericScreen {
                         btnTab(CACHE_TAB_MAIN); //careful removing, may be required for some components
                     }
                     unsel();
-                }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,size,20).build()};
-                this.btnX = new int[]{ROW_LEFT};
+                }).dimensions(ItemBuilder.this.x+(ROW_LEFT+ROW_LEFT_ICON),5,size,20).build()};
+                this.btnX = new int[]{(ROW_LEFT+ROW_LEFT_ICON)};
 
                 this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
-                    ItemBuilder.this.x+ROW_LEFT+5+size, 5, 240-41-size, 20, Text.of(""))};
-                this.txtX = new int[]{ROW_LEFT+5+size};
+                    ItemBuilder.this.x+(ROW_LEFT+ROW_LEFT_ICON)+5+size, 5, ROW_RIGHT-(ROW_LEFT+ROW_LEFT_ICON)-size-5, 20, Text.of(""))};
+                this.txtX = new int[]{(ROW_LEFT+ROW_LEFT_ICON)+5+size};
                 this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
 
                 this.txts[0].setChangedListener(value -> {

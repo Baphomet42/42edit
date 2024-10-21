@@ -41,7 +41,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtHelper;
@@ -408,6 +407,10 @@ public class FortytwoEdit implements ClientModInitializer {
         +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcy"
         +"IgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hZTE4MjM2NzExOTYzMTMxNzY5MjM0Mzc4OGNkNWM4NTRjMTNiNDQ5"
         +"ZDM2ZTYyMmI4NTU0YTU2MzhlZDM4NTkzIg0KICAgIH0NCiAgfQ0KfQ==\"}]}}}"));
+    public static final ItemStack ITEM_QUESTION = BlackMagick.itemFromNbtStatic((NbtCompound)BlackMagick.nbtFromString("{components:{\"minecraft:profile\":"
+        +"{id:[I;1617833968,-310949822,-1653808685,840726584],name:\"MHF_Question\",properties:[{name:\"textures\",value:\"ewogICJzaWduYXR1cmVSZXF1aXJlZCIg"
+        +"OiBmYWxzZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2QzNGUwNjNjYWZiNDY3Y"
+        +"TVjOGRlNDNlYzc4NjE5Mzk5ZjM2OWY0YTUyNDM0ZGE4MDE3YTk4M2NkZDkyNTE2YTAiCiAgICB9CiAgfQp9\"}]}},count:1,id:\"minecraft:player_head\"}"));
 
     //saved items
     public static final int SAVED_ROWS = 12;
@@ -421,6 +424,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final String[] ITEMTAGS = getCacheItemTags();
     public static final String[] EFFECTS = getCacheEffects();
     public static final String[] ENTITIES = getCacheEntities();
+    public static final String[] ENTITYTAGS = getCacheEntityTags();
     private static String[] KEYBINDS = null;
     public static final String[] LOOT = getCacheLootTables();
     public static final String[] PARTICLES = getCacheParticles();
@@ -453,6 +457,8 @@ public class FortytwoEdit implements ClientModInitializer {
     //web items
     public static boolean webItemsAuto = true;
     public static NbtList webItems = null;
+    private static String webItemsUrlDefault = "https://baphomet42.github.io/mc/blackmarket/items.json";
+    private static String webItemsUrlOverride = "";
 
 
     @Override
@@ -797,6 +803,19 @@ public class FortytwoEdit implements ClientModInitializer {
         return list.toArray(new String[0]);
     }
 
+    private static String[] getCacheEntityTags() {
+        List<String> list = new ArrayList<>();
+
+        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/entity", map::putIfAbsent);
+        map.keySet().forEach(t -> {
+            list.add("#"+t.toString().replaceFirst("tags/entity/","").replaceFirst(".json",""));
+        });
+
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
     public static String[] getCacheKeybinds() {
         if(KEYBINDS == null) {
             List<String> list = new ArrayList<>();
@@ -900,32 +919,37 @@ public class FortytwoEdit implements ClientModInitializer {
                 
             Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt"), StandardCharsets.UTF_8);
             if(scan.hasNextLine())
-                optionsString = scan.nextLine();
+                optionsString = scan.nextLine(); // to_do readability compound
             scan.close();
         } catch (Exception e) {}
 
         if(BlackMagick.nbtFromString(optionsString) != null && BlackMagick.nbtFromString(optionsString).getType()==NbtElement.COMPOUND_TYPE) {
             NbtCompound json = (NbtCompound)BlackMagick.nbtFromString(optionsString);
 
+            // keep options consistent
             if(json.contains("custom_cape_toggle",NbtElement.BYTE_TYPE))
-                showClientCape = ((NbtByte)json.get("custom_cape_toggle")).byteValue() == 1;
+                showClientCape = json.getByte("custom_cape_toggle") == 1;
             if(json.contains("custom_cape",NbtElement.STRING_TYPE)) {
                 clientCape = 0;
-                String capeName = ((NbtString)json.get("custom_cape")).asString();
+                String capeName = json.getString("custom_cape");
                 for(int i=0; i<CLIENT_CAPES.length; i++)
                     if(capeName.equals(CLIENT_CAPES[i].id()))
                         clientCape = i;
             }
             if(json.contains("opticapes",NbtElement.BYTE_TYPE))
-                opticapesOn = ((NbtByte)json.get("opticapes")).byteValue() == 1;
+                opticapesOn = json.getByte("opticapes") == 1;
             if(json.contains("web_items",NbtElement.BYTE_TYPE))
-                webItemsAuto = ((NbtByte)json.get("web_items")).byteValue() == 1;
+                webItemsAuto = json.getByte("web_items") == 1;
+            if(json.contains("web_items_url",NbtElement.STRING_TYPE))
+                webItemsUrlOverride = json.getString("web_items_url");
 
+            // keep options consistent
             json.remove("options_format");
             json.remove("custom_cape_toggle");
             json.remove("custom_cape");
             json.remove("opticapes");
             json.remove("web_items");
+            json.remove("web_items_url");
 
             if(!json.isEmpty()) {
                 LOGGER.warn("Config file contains unknown keys: "+json.asString());
@@ -953,14 +977,16 @@ public class FortytwoEdit implements ClientModInitializer {
                 for(String k : optionsExtra.getKeys())
                     options.put(k,optionsExtra.get(k));
 
+            // keep options consistent
             options.putInt("options_format",OPTIONS_FORMAT);
             options.putBoolean("custom_cape_toggle",showClientCape);
             options.putString("custom_cape",CLIENT_CAPES[clientCape].id());
             options.putBoolean("opticapes",opticapesOn);
             options.putBoolean("web_items",webItemsAuto);
+            options.putString("web_items_url",webItemsUrlOverride);
 
             FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\options.txt", StandardCharsets.UTF_8, false);
-            writer.write(options.asString());
+            writer.write(options.asString()); // to_do readability compound
             writer.close();
 
         } catch (Exception e) {
@@ -983,7 +1009,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 
             Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt"), StandardCharsets.UTF_8);
             if(scan.hasNextLine())
-                savedString = scan.nextLine();
+                savedString = scan.nextLine(); // to_do readability compound
             scan.close();
         } catch (Exception e) {}
 
@@ -1019,7 +1045,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
             String items = "[]";
             if(nbt != null)
-                items = nbt.asString();
+                items = nbt.asString(); // to_do readability compound
 
             FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\.42edit\\saved_items.txt", StandardCharsets.UTF_8, false);
             writer.write(items);
@@ -1058,16 +1084,17 @@ public class FortytwoEdit implements ClientModInitializer {
             newItems = (NbtCompound)BlackMagick.nbtFromString(cacheString);
 
         if(webItemsAuto || forceWeb) {
+            String webItemsUrlActive = webItemsUrlOverride.equals("") ? webItemsUrlDefault : webItemsUrlOverride;
             String webJson = "";
             try {
-                HttpURLConnection con = (HttpURLConnection)(new URI("https://baphomet42.github.io/mc/blackmarket/items.json")).toURL().openConnection();
+                HttpURLConnection con = (HttpURLConnection)(new URI(webItemsUrlActive)).toURL().openConnection();
                 con.setConnectTimeout(2000);
                 con.setReadTimeout(500);
                 con.setUseCaches(false);
                 if(con.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     Scanner scan = new Scanner(con.getInputStream(), StandardCharsets.UTF_8);
                     while(scan.hasNextLine())
-                        webJson += scan.nextLine();
+                        webJson += scan.nextLine(); // to_do readability compound
                     scan.close();
                 }
                 con.disconnect();
@@ -1078,7 +1105,7 @@ public class FortytwoEdit implements ClientModInitializer {
             if(BlackMagick.nbtFromString(webJson) != null && BlackMagick.nbtFromString(webJson).getType()==NbtElement.COMPOUND_TYPE) {
                 NbtCompound cache = (NbtCompound)BlackMagick.nbtFromString(webJson);
                 newItems = cache.copy();
-                String items = newItems.asString();
+                String items = newItems.asString(); // to_do readability compound
 
                 if(items.equals(cacheString)) {
                     LOGGER.info("Black Market items are up to date");
@@ -1096,7 +1123,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 }
             }
             else
-                LOGGER.warn("Failed to parse BaphomethLabs Black Market: "+webJson);
+                LOGGER.warn("Failed to parse BaphomethLabs Black Market ("+webItemsUrlActive+"): "+webJson);
         }
 
         if(newItems != null && newItems.contains("versions",NbtElement.LIST_TYPE) && !((NbtList)newItems.get("versions")).isEmpty()

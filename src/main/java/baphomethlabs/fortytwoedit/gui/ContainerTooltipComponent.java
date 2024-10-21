@@ -9,7 +9,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
 
 public class ContainerTooltipComponent implements TooltipComponent {
-    private static final Identifier BACKGROUND_TEXTURE = Identifier.of("container/bundle/background");
     private final DefaultedList<ItemStack> inventory;
     private final int rowCount;
     private final int columnCount;
@@ -42,8 +41,6 @@ public class ContainerTooltipComponent implements TooltipComponent {
     public void drawItems(TextRenderer textRenderer, int x, int y, int width, int height, DrawContext context) {
         int i = columnCount;
         int j = rowCount;
-        context.drawGuiTexture(RenderLayer::getGuiTextured,BACKGROUND_TEXTURE, x, y, this.getColumnsWidth(), this.getRowsHeight());
-        context.drawGuiTexture(RenderLayer::getGuiTextured,BACKGROUND_TEXTURE, x, y+this.getRowsHeight()-1, this.getColumnsWidth(), 1);
         int k = 0;
         for (int l = 0; l < j; ++l) {
             for (int m = 0; m < i; ++m) {

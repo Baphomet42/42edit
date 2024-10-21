@@ -927,20 +927,22 @@ public class BlackMagick {
 
                 boolean first = true;
                 for(String k : allKeys) {
+                    String k2 = k.contains(":") ? ("\""+k+"\"") : k;
+
                     if(!first)
                         output.append(Text.of(","));
                     else
                         first = false;
 
                     if(leftCmp.contains(k) && rightCmp.contains(k)) {
-                        output.append(Text.of(k+":"));
+                        output.append(Text.of(k2+":"));
                         output.append(getElementDifferences(leftCmp.get(k),rightCmp.get(k)));
                     }
                     else if(leftCmp.contains(k)) {
-                        output.append((Text.of(k+":").copy().append(Text.of(BlackMagick.nbtToString(leftCmp.get(k))))).formatted(Formatting.RED));
+                        output.append((Text.of(k2+":").copy().append(Text.of(BlackMagick.nbtToString(leftCmp.get(k))))).formatted(Formatting.RED));
                     }
                     else {
-                        output.append((Text.of(k+":").copy().append(Text.of(BlackMagick.nbtToString(rightCmp.get(k))))).formatted(Formatting.GREEN));
+                        output.append((Text.of(k2+":").copy().append(Text.of(BlackMagick.nbtToString(rightCmp.get(k))))).formatted(Formatting.GREEN));
                     }
                 }
 
