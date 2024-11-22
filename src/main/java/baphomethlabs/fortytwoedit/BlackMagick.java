@@ -268,6 +268,39 @@ public class BlackMagick {
     }
 
     /**
+     * Get compound representation of an item, or an empty compound if invalid.
+     * All components are kept, even if they are the default values.
+     * All components that are not on the item are added as negations.
+     * 
+     * @param item
+     * @return compound with id/count/components (or empty compound)
+     */
+    public static NbtCompound itemToNbtExclusive(ItemStack item) {
+        NbtCompound nbt = new NbtCompound();
+        if(item != null && !item.isEmpty()) {
+            NbtCompound comps = new NbtCompound();
+            String compsString = componentsAsString(item.getComponents());
+            if(compsString != null && compsString.length()>0)
+                comps = BlackMagick.validCompound(BlackMagick.nbtFromString("{"+compsString+"}"));
+
+            Set<String> unusedComps = Sets.newHashSet();
+            for(String comp : FortytwoEdit.COMPONENTS)
+                unusedComps.add(comp);
+            for(String comp : comps.getKeys()) {
+                unusedComps.remove(comp);
+            }
+            for(String comp : unusedComps)
+                comps.put("!"+comp,new NbtCompound());
+
+            if(!comps.isEmpty())
+                nbt.put("components",comps);
+            nbt.putInt("count",item.getCount());
+            nbt.putString("id",BlackMagick.getItemId(item,true));
+        }
+        return nbt;
+    }
+
+    /**
      * Represent ItemStack as used in give command
      * 
      * @param item

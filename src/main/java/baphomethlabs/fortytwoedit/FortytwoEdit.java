@@ -349,7 +349,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static float[] cameraRotation = {0f,0f};
 
     //see feature items
-    public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA,FeatureFlags.WINTER_DROP);
+    public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA);
 
     //format codes
     public static final Text formatTooltip = BlackMagick.jsonFromString("[{\"text\":\"Formatting\n"+
@@ -465,6 +465,10 @@ public class FortytwoEdit implements ClientModInitializer {
     public static NbtList webItems = null;
     private static String webItemsUrlDefault = "https://baphomet42.github.io/mc/blackmarket/items.json";
     private static String webItemsUrlOverride = "";
+
+    // itemstack warning
+    public static final String[] ITEM_WARNING_MODES = {"vanilla","hide","smart"};
+    public static String itemWarningMode = ITEM_WARNING_MODES[0];
 
 
     @Override
@@ -942,6 +946,15 @@ public class FortytwoEdit implements ClientModInitializer {
                     if(capeName.equals(CLIENT_CAPES[i].id()))
                         clientCape = i;
             }
+            if(json.contains("item_warning_override",NbtElement.STRING_TYPE)) {
+                itemWarningMode = json.getString("item_warning_override");
+                boolean valid = false;
+                for(int i=0; i<ITEM_WARNING_MODES.length; i++)
+                    if(ITEM_WARNING_MODES[i].equals(itemWarningMode))
+                        valid = true;
+                if(!valid)
+                    itemWarningMode = ITEM_WARNING_MODES[0];
+            }
             if(json.contains("opticapes",NbtElement.BYTE_TYPE))
                 opticapesOn = json.getByte("opticapes") == 1;
             if(json.contains("web_items",NbtElement.BYTE_TYPE))
@@ -953,6 +966,7 @@ public class FortytwoEdit implements ClientModInitializer {
             json.remove("options_format");
             json.remove("custom_cape_toggle");
             json.remove("custom_cape");
+            json.remove("item_warning_override");
             json.remove("opticapes");
             json.remove("web_items");
             json.remove("web_items_url");
@@ -987,6 +1001,7 @@ public class FortytwoEdit implements ClientModInitializer {
             options.putInt("options_format",OPTIONS_FORMAT);
             options.putBoolean("custom_cape_toggle",showClientCape);
             options.putString("custom_cape",CLIENT_CAPES[clientCape].id());
+            options.putString("item_warning_override",itemWarningMode);
             options.putBoolean("opticapes",opticapesOn);
             options.putBoolean("web_items",webItemsAuto);
             options.putString("web_items_url",webItemsUrlOverride);

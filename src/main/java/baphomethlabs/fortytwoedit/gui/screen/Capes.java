@@ -142,7 +142,7 @@ public class Capes extends GenericScreen {
     }
 
     @Override
-    public void filesDragged(List<Path> paths) {
+    public void onFilesDropped(List<Path> paths) {
         try {
             File file = paths.get(0).toFile();
             if(file.isFile() && file.getName().endsWith(".png")) {

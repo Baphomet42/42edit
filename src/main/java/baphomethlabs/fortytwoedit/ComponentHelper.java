@@ -397,8 +397,18 @@ public class ComponentHelper {
         if(path.endsWith("components.custom_data"))
             return PathInfos.INLINE_COMPOUND.withDesc(Text.of("Contains unstructured NBT unused ingame")).withIcon(Items.COMMAND_BLOCK);
 
-        if(path.endsWith("components.custom_model_data"))
-            return PathInfos.INT.withIcon(Items.COMMAND_BLOCK);
+        if(path.contains("components.custom_model_data")) {
+            if(path.endsWith("components.custom_model_data"))
+                return (new PathInfo(List.of("floats","flags","strings","colors"))).withIcon(Items.COMMAND_BLOCK);
+            if(path.endsWith("components.custom_model_data.floats"))
+                return PathInfos.LIST_FLOAT;
+            if(path.endsWith("components.custom_model_data.flags"))
+                return PathInfos.BYTE_ARRAY.withDesc(Text.of("Array of booleans"));
+            if(path.endsWith("components.custom_model_data.strings"))
+                return PathInfos.LIST_STRING;
+            if(path.endsWith("components.custom_model_data.colors"))
+                return (new PathInfo(PathType.DEFAULT,new String[]{"[I;]","[[1.0,1.0,1.0]]"})).withDesc(Text.of("Can be either:\na) NbtIntArray with separate decimal colors\nb) NbtList of NbtLists, where each child list contains 3 numbers for RGB"));
+        }
 
         if(path.endsWith("components.custom_name"))
             return PathInfos.TEXT.withDesc(Text.of("This is for renamed items and will appear in italics. See item_name to completely override the vanilla name.")).withIcon(Items.NAME_TAG);
@@ -644,12 +654,12 @@ public class ComponentHelper {
 
         if(path.contains("components.equippable")) {
             if(path.endsWith("components.equippable"))
-                return (new PathInfo(List.of("slot","equip_sound","model","allowed_entities","dispensable","swappable","damage_on_hurt","camera_overlay"))).withIcon(Items.DIAMOND_CHESTPLATE);
+                return (new PathInfo(List.of("slot","equip_sound","asset_id","allowed_entities","dispensable","swappable","damage_on_hurt","camera_overlay"))).withIcon(Items.DIAMOND_CHESTPLATE);
             if(path.endsWith("components.equippable.slot"))
                 return (new PathInfo(PathType.STRING,new String[]{"mainhand","offhand","head","chest","legs","feet"})).asRequired();
             if(path.endsWith("components.equippable.equip_sound"))
                 return (new PathInfo(PathType.STRING,FortytwoEdit.SOUNDS)).withDesc(Text.of("Defaults to \"item.armor.equip_generic\""));
-            if(path.endsWith("components.equippable.model"))
+            if(path.endsWith("components.equippable.asset_id"))
                 return (new PathInfo(PathType.STRING)).withDesc(Text.of("An equipment model at \"assets/<namespace>/models/equipment/<id>\"")); // to_do add suggs
             if(path.endsWith("components.equippable.allowed_entities"))
                 return (new PathInfo(PathType.DEFAULT,FortytwoEdit.joinCommandSuggs(new String[][]{
@@ -986,13 +996,13 @@ public class ComponentHelper {
                 return PathInfos.TRINARY.withDesc(Text.of("Whether or not JSON is resolved (for selectors/scores/etc)"));
         }
 
-        if(path.endsWith("id"))
+        if(path.equals("id") || path.endsWith(".id"))
             return (new PathInfo(PathType.STRING,FortytwoEdit.ITEMS)).asRequired().withIcon(Items.STONE);
 
-        if(path.endsWith("count"))
+        if(path.equals("count") || path.endsWith(".count"))
             return PathInfos.ITEM_COUNT.withIcon(Items.STONE);
 
-        if(path.endsWith("components"))
+        if(path.equals("components") || path.endsWith(".components"))
             return (new PathInfo(List.of(FortytwoEdit.COMPONENTS)));
 
         FortytwoEdit.LOGGER.warn("No PathInfo found for path: "+path);
@@ -1304,7 +1314,9 @@ public class ComponentHelper {
         private static final PathInfo DOUBLE = (new PathInfo(PathType.DOUBLE,new String[]{"0.0d"}));
         private static final PathInfo FLOAT = (new PathInfo(PathType.FLOAT,new String[]{"0.0f"}));
         private static final PathInfo STRING = (new PathInfo(PathType.STRING));
+        private static final PathInfo BYTE_ARRAY = (new PathInfo(PathType.BYTE_ARRAY,new String[]{"[B;]"}));
         private static final PathInfo LIST_COMPOUND = (new PathInfo(NbtElement.COMPOUND_TYPE));
+        private static final PathInfo LIST_FLOAT = (new PathInfo(NbtElement.FLOAT_TYPE));
         private static final PathInfo LIST_STRING = (new PathInfo(NbtElement.STRING_TYPE));
         private static final PathInfo INLINE_COMPOUND = (new PathInfo(PathType.INLINE_COMPOUND,new String[]{"{}"}));
 

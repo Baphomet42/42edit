@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "AbstractClientPlayerEntityMixin",
+    "BlockItemMixin",
     "CameraMixin",
     "CreativeInventoryScreenMixin",
     "GameRendererInvoker",
@@ -16,6 +17,7 @@
     "MinecraftClientMixin",
     "MouseMixin",
     "ScrollableWidgetMixin",
+    "SpawnEggItemMixin",
     "StringHelperMixin",
     "StructureBlockScreenMixin",
     "SubtitlesHudMixin",

@@ -35,7 +35,6 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.ButtonWidget.PressAction;
 import net.minecraft.client.option.HotbarStorage;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.texture.Sprite;
 import net.minecraft.command.argument.ItemStackArgumentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.LivingEntity;
@@ -161,6 +160,7 @@ public class ItemBuilder extends GenericScreen {
     private String jsonEffectPath = null;
     private String jsonEffectBase = null;
     private static int[] jsonEffects = new int[8];//bold,italic,underlined,strikethrough,obfuscated,radgrad,colmode,elmode
+    private static String shadowColor = "";
     private static double[] tabScroll = new double[tabs.length];
     private boolean pauseSaveScroll = false;
     protected NbtElement blankTabEl = null;
@@ -304,7 +304,7 @@ public class ItemBuilder extends GenericScreen {
         }
         if(widgets.get(tab).size()!=0) {
             this.tabWidget = new TabWidget(tab);
-            this.tabWidget.setScrollAmount(tabScroll[tab]);
+            this.tabWidget.setScrollY(tabScroll[tab]);
             this.addDrawableChild(this.tabWidget);
         }
 
@@ -388,7 +388,7 @@ public class ItemBuilder extends GenericScreen {
 
     protected void btnTab(int i) {
         if(!pauseSaveScroll && tabWidget != null) {
-            tabScroll[tab] = tabWidget.getScrollAmount();
+            tabScroll[tab] = tabWidget.getScrollY();
             pauseSaveScroll = true;
         }
         if(tab != i && (i == CACHE_TAB_NBT))
@@ -861,10 +861,10 @@ public class ItemBuilder extends GenericScreen {
         trySetColorHex(rgbNum, BlackMagick.colorHexFromDec(inp), w);
     }
 
-    private void swapColorSets() {
-        int[] temp = colorSets[0];
-        colorSets[0] = colorSets[1];
-        colorSets[1] = temp;
+    private void swapColorSets(int left, int right) {
+        int[] temp = colorSets[left];
+        colorSets[left] = colorSets[right];
+        colorSets[right] = temp;
         updateColorSets();
     }
 
@@ -1107,11 +1107,14 @@ public class ItemBuilder extends GenericScreen {
                     ((TextFieldWidget)widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+1).wids[1].w).setEditable(false);
                 }
 
-                widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+5).btns[0].setMessage(Text.of("[Text]"));
-                if(jsonEffects[7]==1)
-                    widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+5).btns[0].setMessage(Text.of("[Keybind]"));
-                else if(jsonEffects[7]==2)
-                    widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+5).btns[0].setMessage(Text.of("[Translate]"));
+                if(cacheI.containsKey("jsonEffectTextMode")) {
+                    int[] jsonEffectTextModeI = cacheI.get("jsonEffectTextMode");
+                    widgets.get(jsonEffectTextModeI[0]).get(jsonEffectTextModeI[1]).btns[0].setMessage(Text.of("[Text]"));
+                    if(jsonEffects[7]==1)
+                        widgets.get(jsonEffectTextModeI[0]).get(jsonEffectTextModeI[1]).btns[0].setMessage(Text.of("[Keybind]"));
+                    else if(jsonEffects[7]==2)
+                        widgets.get(jsonEffectTextModeI[0]).get(jsonEffectTextModeI[1]).btns[0].setMessage(Text.of("[Translate]"));
+                }
             }
         }
     }
@@ -1133,6 +1136,8 @@ public class ItemBuilder extends GenericScreen {
                     val+=thisChar;
                 }
                 val+="\",\"color\":\""+getRgbHex(0)+"\"";
+                if(shadowColor.length()>0)
+                    val+=",\"shadow_color\":"+shadowColor;
                 if(jsonEffects[0]==1)
                     val+=",\"bold\":true";
                 else if(jsonEffects[0]==2)
@@ -1177,6 +1182,8 @@ public class ItemBuilder extends GenericScreen {
                     val += current;
                 }
                 val+="\"";
+                if(shadowColor.length()>0)
+                    val+=",\"shadow_color\":"+shadowColor;
                 if(jsonEffects[0]==1)
                     val+=",\"bold\":true";
                 else if(jsonEffects[0]==2)
@@ -1258,19 +1265,23 @@ public class ItemBuilder extends GenericScreen {
                 val+="\"keybind\":\""+value+"\"";
             }
             else if(jsonEffects[7] == 2) {
-                int[] jsonEffectBtnsI = cacheI.get("jsonEffectBtns");
-                val+="\"translate\":\""+value+"\"";
-                if(widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+7).txts[0].getText() != null
-                        && widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+7).txts[0].getText().length()>0)
-                    val+=",\"with\":"+widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+7).txts[0].getText();
-                if(widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+8).txts[0].getText() != null
-                        && widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+8).txts[0].getText().length()>0)
-                    val+=",\"fallback\":\""+widgets.get(jsonEffectBtnsI[0]).get(jsonEffectBtnsI[1]+8).txts[0].getText()+"\"";
+                if(cacheI.containsKey("jsonEffectTranslations")) {
+                    int[] jsonEffectTranslationsI = cacheI.get("jsonEffectTranslations");
+                    val+="\"translate\":\""+value+"\"";
+                    if(widgets.get(jsonEffectTranslationsI[0]).get(jsonEffectTranslationsI[1]+1).txts[0].getText() != null
+                            && widgets.get(jsonEffectTranslationsI[0]).get(jsonEffectTranslationsI[1]+1).txts[0].getText().length()>0)
+                        val+=",\"with\":"+widgets.get(jsonEffectTranslationsI[0]).get(jsonEffectTranslationsI[1]+1).txts[0].getText();
+                    if(widgets.get(jsonEffectTranslationsI[0]).get(jsonEffectTranslationsI[1]+2).txts[0].getText() != null
+                            && widgets.get(jsonEffectTranslationsI[0]).get(jsonEffectTranslationsI[1]+2).txts[0].getText().length()>0)
+                        val+=",\"fallback\":\""+widgets.get(jsonEffectTranslationsI[0]).get(jsonEffectTranslationsI[1]+2).txts[0].getText()+"\"";
+                }
             }
             if(jsonEffects[6]==2)
                 val+=",\"color\":\""+getRgbHex(0)+"\"";
             else if(jsonEffects[6]==1)
                 val+=",\"color\":\""+jsonLastColor+"\"";
+            if(shadowColor.length()>0)
+                val+=",\"shadow_color\":"+shadowColor;
             if(jsonEffects[0]==1)
                 val+=",\"bold\":true";
             else if(jsonEffects[0]==2)
@@ -2162,7 +2173,7 @@ public class ItemBuilder extends GenericScreen {
      */
     public void createTab(int tabNum) {
         if(!pauseSaveScroll && tabWidget != null) {
-            tabScroll[tab] = tabWidget.getScrollAmount();
+            tabScroll[tab] = tabWidget.getScrollY();
             pauseSaveScroll = true;
         }
         for(RowWidget r : widgets.get(tabNum)) {
@@ -2370,9 +2381,10 @@ public class ItemBuilder extends GenericScreen {
         showPosePreview = false;
         tabScroll[tabNum] = 0d;
         setErrorMsg(null);
+        cacheI.clear();
 
         if(!pauseSaveScroll && tabWidget != null) {
-            tabScroll[tab] = tabWidget.getScrollAmount();
+            tabScroll[tab] = tabWidget.getScrollY();
             pauseSaveScroll = true;
         }
         for(RowWidget r : widgets.get(tabNum)) {
@@ -3059,7 +3071,7 @@ public class ItemBuilder extends GenericScreen {
 
                     ButtonWidget w2 = ButtonWidget.builder(Text.of("Swap"), btn -> {
                         unsel();
-                        swapColorSets();
+                        swapColorSets(0,1);
                     }).dimensions(0,0,40,20).build();
                     w2.setTooltip(Tooltip.of(Text.of("Swap colors")));
 
@@ -3126,6 +3138,7 @@ public class ItemBuilder extends GenericScreen {
                         colorHexTxts.get(0).add(w);
                         colorHexTxts.get(1).add(w2);
                     }
+                    widgets.get(tabNum).add(new RowWidget("Shadow:",9));
                 }
                 else if(jsonEffectMode == 1) {
                     for(int num=0; num<3; num++) {
@@ -3134,7 +3147,9 @@ public class ItemBuilder extends GenericScreen {
                         colorRgbSliders.get(0).get(num).clear();
                         colorRgbSliders.get(0).get(num).add(w);
                     }
+                    widgets.get(tabNum).add(new RowWidget("Shadow:",9));
                     {
+                        cacheI.put("jsonEffectTextMode",new int[]{tabNum,widgets.get(tabNum).size()});
                         widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Text]")},
                         new int[]{80},new String[]{"Text | Keybind | Translate"},null,true,btn -> {
                             unsel();
@@ -3146,6 +3161,7 @@ public class ItemBuilder extends GenericScreen {
                         }));
                     }
                     {
+                        cacheI.put("jsonEffectTranslations",new int[]{tabNum,widgets.get(tabNum).size()});
                         widgets.get(tabNum).add(new RowWidget("Translations Only"));
                     }
                     {
@@ -3314,6 +3330,8 @@ public class ItemBuilder extends GenericScreen {
             this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
                 ItemBuilder.this.x+15+5+size, 5, 240-41-size, 20, Text.of(""))};
             this.txtX = new int[]{15+5+size};
+            if(suggsNum==9)
+                this.txts[0].setText(shadowColor);
             this.txts[0].setChangedListener(value -> {
                 if(value != null && !value.equals("")) {
                     this.txts[0].setEditableColor(TEXT_COLOR);
@@ -3356,7 +3374,10 @@ public class ItemBuilder extends GenericScreen {
                         }
                     }
                 }
-                if(suggsNum >= 3 && suggsNum <= 8) {
+                if(suggsNum==9) {
+                    shadowColor = value;
+                }
+                if(suggsNum >= 3 && suggsNum <= 9) {
                     updateJsonEffect();
                 }
             });
@@ -3931,23 +3952,38 @@ public class ItemBuilder extends GenericScreen {
 
                 this.btns = new ButtonWidget[]{ButtonWidget.builder(Text.of(keyBtnTxt), btn -> {
                     String inp = this.txts[0].getText();
-                    if(path.equals("id") && inp.equals("")) {
-                        inp = "stone";
-                        this.txts[0].setText("stone");
-                    }
-                    NbtElement el = (isString && inp.length()>0) ? NbtString.of(inp) : BlackMagick.nbtFromString(inp);
-                    if(inp.equals("") || el != null) {
-                        ItemStack newItem;
+                    if(path.equals("id")) {
                         if(inp.equals("")) {
-                            String comp = path.replaceFirst("components.","");
-                            newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                                BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound()));
+                            BlackMagick.setItemMain(new ItemStack(Items.STONE));
                         }
-                        else
-                            newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,el));
-                        BlackMagick.setItemMain(newItem);
-                        btnTab(CACHE_TAB_MAIN); //careful removing, may be required for some components
+                        else if(inp.equals("air") || inp.equals("minecraft:air")) {
+                            BlackMagick.setItemMain(ItemStack.EMPTY);
+                        }
+                        else {//TODO
+                            NbtElement el = (isString && inp.length()>0) ? NbtString.of(inp) : BlackMagick.nbtFromString(inp);
+                            if(el != null) {
+                                ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtExclusive(selItem),path,el));
+                                if(!newItem.isEmpty())
+                                    BlackMagick.setItemMain(newItem);
+                            }
+                        }
                     }
+                    else {
+                        NbtElement el = (isString && inp.length()>0) ? NbtString.of(inp) : BlackMagick.nbtFromString(inp);
+                        if(inp.equals("") || el != null) {
+                            ItemStack newItem;
+                            if(inp.equals("")) {
+                                String comp = path.replaceFirst("components.","");
+                                newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
+                                    BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound()));
+                            }
+                            else
+                                newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,el));
+                            if(!newItem.isEmpty())
+                                BlackMagick.setItemMain(newItem);
+                        }
+                    }
+                    btnTab(CACHE_TAB_MAIN); //careful removing, may be required for some components
                     unsel();
                 }).dimensions(ItemBuilder.this.x+(ROW_LEFT+ROW_LEFT_ICON),5,size,20).build()};
                 this.btnX = new int[]{(ROW_LEFT+ROW_LEFT_ICON)};
@@ -3969,12 +4005,12 @@ public class ItemBuilder extends GenericScreen {
                         value = "1";
                     else if(path.equals("id")) {
                         if(value.equals("")) {
-                            removeItem = true;
+                            removeItem = true;//TODO
                             value = "stone";
                             if(startVal.equals(""))
                                 noUnsaved = true;
                         }
-                        else if(value.equals("air"))
+                        else if(value.equals("air") || value.equals("minecraft:air"))
                             value = "";
                     }
 
@@ -4734,12 +4770,13 @@ public class ItemBuilder extends GenericScreen {
 
     class RowWidgetInvRow extends RowWidget {
         
-        private final Sprite[] SPRITES = new Sprite[]{
-            client.getSpriteAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE).apply(PlayerScreenHandler.EMPTY_BOOTS_SLOT_TEXTURE),
-            client.getSpriteAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE).apply(PlayerScreenHandler.EMPTY_LEGGINGS_SLOT_TEXTURE),
-            client.getSpriteAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE).apply(PlayerScreenHandler.EMPTY_CHESTPLATE_SLOT_TEXTURE),
-            client.getSpriteAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE).apply(PlayerScreenHandler.EMPTY_HELMET_SLOT_TEXTURE),
-            client.getSpriteAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE).apply(PlayerScreenHandler.EMPTY_OFFHAND_ARMOR_SLOT)};
+        private final Identifier[] SPRITES = new Identifier[]{
+            PlayerScreenHandler.EMPTY_BOOTS_SLOT_TEXTURE,
+            PlayerScreenHandler.EMPTY_LEGGINGS_SLOT_TEXTURE,
+            PlayerScreenHandler.EMPTY_CHESTPLATE_SLOT_TEXTURE,
+            PlayerScreenHandler.EMPTY_HELMET_SLOT_TEXTURE,
+            PlayerScreenHandler.EMPTY_OFF_HAND_SLOT_TEXTURE
+        };
 
         private int slotSprites[] = null;
 
@@ -4842,7 +4879,7 @@ public class ItemBuilder extends GenericScreen {
             && this.savedStacks.length == this.btnX.length && this.slotSprites.length == this.savedStacks.length) {
                 for(int i=0; i<this.savedStacks.length; i++)
                     if((this.savedStacks[i] == null || this.savedStacks[i].isEmpty()) && this.slotSprites[i]>0 && this.slotSprites[i]<=this.SPRITES.length)
-                        context.drawSpriteStretched(RenderLayer::getGuiTextured, this.SPRITES[this.slotSprites[i]-1], x+this.btnX[i]+2, y+2, 16, 16);
+                        context.drawGuiTexture(RenderLayer::getGuiTextured, this.SPRITES[this.slotSprites[i]-1], x+this.btnX[i]+2, y+2, 16, 16);
             }
             if(this.isHotbarRow) {
                 int sel = client.player.getInventory().selectedSlot;
@@ -5311,7 +5348,7 @@ public class ItemBuilder extends GenericScreen {
     @Override
     public void resize(MinecraftClient client, int width, int height) {
         if(!pauseSaveScroll && tabWidget != null) {
-            tabScroll[tab] = tabWidget.getScrollAmount();
+            tabScroll[tab] = tabWidget.getScrollY();
             pauseSaveScroll = true;
         }
         resetSuggs();
@@ -5327,7 +5364,7 @@ public class ItemBuilder extends GenericScreen {
         if(FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
             if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !tabs[tab].hideTabs()) {
                 if(!pauseSaveScroll && tabWidget != null) {
-                    tabScroll[tab] = tabWidget.getScrollAmount();
+                    tabScroll[tab] = tabWidget.getScrollY();
                 }
                 this.client.setScreen(null);
                 return true;
@@ -5335,7 +5372,7 @@ public class ItemBuilder extends GenericScreen {
         }
         if(keyCode == GLFW.GLFW_KEY_ESCAPE) {
             if(!pauseSaveScroll && tabWidget != null) {
-                tabScroll[tab] = tabWidget.getScrollAmount();
+                tabScroll[tab] = tabWidget.getScrollY();
             }
         }
         if(keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN) {
