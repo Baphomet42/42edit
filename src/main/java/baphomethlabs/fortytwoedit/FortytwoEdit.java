@@ -266,6 +266,8 @@ public class FortytwoEdit implements ClientModInitializer {
         new CapeTexture(CapeGroup.PUBLIC, "purple_heart", "Purple Heart", "http://textures.minecraft.net/texture/cb40a92e32b57fd732a00fc325e7afb00a7ca74936ad50d8e860152e482cfbde"),
         new CapeTexture(CapeGroup.PUBLIC, "followers", "Follower's", "http://textures.minecraft.net/texture/569b7f2a1d00d26f30efe3f9ab9ac817b1e6d35f4f3cfb0324ef2d328223d350"),
         new CapeTexture(CapeGroup.PUBLIC, "mcc_15th_year", "MCC 15th Year", "http://textures.minecraft.net/texture/56c35628fe1c4d59dd52561a3d03bfa4e1a76d397c8b9c476c2f77cb6aebb1df"),
+        new CapeTexture(CapeGroup.PUBLIC, "minecraft_experience", "Minecraft Experience", "http://textures.minecraft.net/texture/7658c5025c77cfac7574aab3af94a46a8886e3b7722a895255fbf22ab8652434"),
+        new CapeTexture(CapeGroup.PUBLIC, "mojang_office", "Mojang Office", "http://textures.minecraft.net/texture/5c29410057e32abec02d870ecb52ec25fb45ea81e785a7854ae8429d7236ca26"),
 
         new CapeTexture(CapeGroup.MINECON, "minecon_2011", "MineCon 2011", "http://textures.minecraft.net/texture/953cac8b779fe41383e675ee2b86071a71658f2180f56fbce8aa315ea70e2ed6"),
         new CapeTexture(CapeGroup.MINECON, "minecon_2012", "MineCon 2012", "http://textures.minecraft.net/texture/a2e8d97ec79100e90a75d369d1b3ba81273c4f82bc1b737e934eed4a854be1b6"),
