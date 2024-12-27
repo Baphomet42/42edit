@@ -1031,8 +1031,16 @@ public class FortytwoEdit implements ClientModInitializer {
             }
                 
             Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS), StandardCharsets.UTF_8);
-            while(scan.hasNextLine())
-                savedString += scan.nextLine().trim();
+
+            boolean firstLine = true;
+            while(scan.hasNextLine()) {
+                if(!firstLine)
+                    savedString += "\n";
+                else
+                    firstLine = false;
+                savedString += scan.nextLine();
+            }
+
             scan.close();
         } catch (Exception e) {}
 

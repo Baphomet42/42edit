@@ -105,7 +105,8 @@ public class ItemBuilder extends GenericScreen {
     private final Set<ClickableWidget> allSliderWidgets = Sets.newHashSet();
     public static boolean savedModeSet = false;
     private NbtList savedItems = null;
-    private boolean savedError = false;
+    private boolean savedErrorReading = false;
+    private boolean savedErrorSaving = false;
     private String inpError = null;
     private String inpErrorTrim = null;
     private static boolean showUnusedComponents = false;
@@ -585,7 +586,7 @@ public class ItemBuilder extends GenericScreen {
     private void refreshSaved() {
         savedItems = FortytwoEdit.getSavedItems();
         if(savedItems == null) {
-            savedError = true;
+            savedErrorReading = true;
             NbtList nbt = new NbtList();
             while(nbt.size()<9*FortytwoEdit.SAVED_ROWS)
                 nbt.add(new NbtCompound());
@@ -1832,11 +1833,15 @@ public class ItemBuilder extends GenericScreen {
                         String sound = inp.trim();
                         sound = sound.replaceAll("[^a-zA-Z0-9_.:]","");
                         if(!sound.equals("")) {
+                            String soundDisplay = sound;
+                            if(soundDisplay.startsWith("minecraft:") && !soundDisplay.equals("minecraft:"))
+                                soundDisplay = soundDisplay.replaceFirst("minecraft:","");
                             ItemStack item = BlackMagick.itemFromString(
-                                "{id:player_head,components:{profile:{properties:[{name:\"textures\",value:"+
+                                "{id:player_head,components:{\"minecraft:profile\":{properties:[{name:\"textures\",value:"+
                                 "\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDov"+
                                 "L3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80Y2VlYjc3ZDRkMjU3MjRhOWNhZjJjN2NkZjJkODgzOTliMTQxN2M2YjlmZjUyMTM2NTliNjUzYmU0Mz"+
-                                "c2ZTMiDQogICAgfQ0KICB9DQp9\"}]},note_block_sound:\""+sound+"\",item_name:'[{\"text\":\""+sound+"\"}]'}}");
+                                "c2ZTMiDQogICAgfQ0KICB9DQp9\"}]},\"minecraft:note_block_sound\":\""+sound+"\","+
+                                "\"minecraft:custom_name\":'{\"italic\":false,\"text\":\""+soundDisplay+"\"}'}}");
                             if(!item.isEmpty())
                                 BlackMagick.setItemMain(item);
                         }
@@ -3467,14 +3472,22 @@ public class ItemBuilder extends GenericScreen {
                     ItemBuilder.this.unsel();
                     if(!viewBlackMarket) {
                         if(savedModeSet) {
-                            ItemBuilder.this.savedError = false;
+                            ItemBuilder.this.savedErrorReading = false;
                             NbtCompound nbt = new NbtCompound();
-                            if(!client.player.getMainHandStack().isEmpty()) {
-                                nbt = BlackMagick.itemToNbtStorage(client.player.getMainHandStack());
+                            ItemStack savedItem = client.player.getMainHandStack().copy();
+                            if(!savedItem.isEmpty()) {
+                                nbt = BlackMagick.itemToNbtStorage(savedItem);
                             }
                             savedItems.set(index,nbt);
                             FortytwoEdit.setSavedItems(savedItems);
                             refreshSaved();
+                            ItemStack savedItemNew = BlackMagick.itemFromNbt(savedItems.getCompound(index));
+                            if(!ItemStack.areEqual(savedItem,savedItemNew)) {
+                                savedErrorSaving = true;
+                                FortytwoEdit.LOGGER.error("Failed to save item correctly\n\nOriginal: " +
+                                    BlackMagick.itemToNbtStorage(savedItem).asString() + "\n\nSaved: " + 
+                                    BlackMagick.itemToNbtStorage(savedItemNew).asString());
+                            }
                         }
                         else {
                             if(client.player.getAbilities().creativeMode) {
@@ -3959,7 +3972,7 @@ public class ItemBuilder extends GenericScreen {
                         else if(inp.equals("air") || inp.equals("minecraft:air")) {
                             BlackMagick.setItemMain(ItemStack.EMPTY);
                         }
-                        else {//TODO
+                        else {
                             NbtElement el = (isString && inp.length()>0) ? NbtString.of(inp) : BlackMagick.nbtFromString(inp);
                             if(el != null) {
                                 ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtExclusive(selItem),path,el));
@@ -4005,7 +4018,7 @@ public class ItemBuilder extends GenericScreen {
                         value = "1";
                     else if(path.equals("id")) {
                         if(value.equals("")) {
-                            removeItem = true;//TODO
+                            removeItem = true;
                             value = "stone";
                             if(startVal.equals(""))
                                 noUnsaved = true;
@@ -5287,8 +5300,10 @@ public class ItemBuilder extends GenericScreen {
             txtFormat.render(context, mouseX, mouseY, delta);
             if(!this.unsavedTxtWidgets.isEmpty())
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, TEXT_COLOR);
-            if(savedError)
+            if(savedErrorReading)
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, ERROR_COLOR);
+            else if(savedErrorSaving)
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("A recent saved item does not match original!"), this.width / 2, y-11-10, ERROR_COLOR);
         }
         else {
             if(jsonPreview != null) {
