@@ -1113,8 +1113,16 @@ public class FortytwoEdit implements ClientModInitializer {
             }
 
             Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_WEB_CACHE), StandardCharsets.UTF_8);
-            while(scan.hasNextLine())
-                cacheString += scan.nextLine().trim();
+            
+            boolean firstLine = true;
+            while(scan.hasNextLine()) {
+                if(!firstLine)
+                    cacheString += "\n";
+                else
+                    firstLine = false;
+                cacheString += scan.nextLine();
+            }
+
             scan.close();
         } catch (Exception e) {}
 
@@ -1133,8 +1141,16 @@ public class FortytwoEdit implements ClientModInitializer {
                 con.setUseCaches(false);
                 if(con.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     Scanner scan = new Scanner(con.getInputStream(), StandardCharsets.UTF_8);
-                    while(scan.hasNextLine())
-                        webJson += scan.nextLine().trim();
+
+                    boolean firstLine = true;
+                    while(scan.hasNextLine()) {
+                        if(!firstLine)
+                            webJson += "\n";
+                        else
+                            firstLine = false;
+                        webJson += scan.nextLine();
+                    }
+                    
                     scan.close();
                 }
                 con.disconnect();
