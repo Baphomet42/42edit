@@ -42,10 +42,12 @@ public class Capes extends GenericScreen {
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("OptiFine [On]"),
                 Text.literal("OptiFine [Off]")).initially(FortytwoEdit.opticapesOn).omitKeyText().build(x+20,y+22*3+1,80,20,
                 Text.of(""), (button, trackOutput) -> {
+
+            FortytwoEdit.readOptions();
             FortytwoEdit.opticapesOn = (boolean)trackOutput;
             FortytwoEdit.updateOptions();
             FortytwoEdit.clearCapes();
-            unsel();
+            reloadScreen();
         })).setTooltip(Tooltip.of(Text.of("Toggle OptiFine capes mode\n\nWhen on: you can see players' OptiFine capes")));
         this.addDrawableChild(ButtonWidget.builder(Text.of("Refresh"), button -> this.btnReloadCapes()).dimensions(x+20+80+5,y+22*3+1,60,20).build())
             .setTooltip(Tooltip.of(Text.of("Refresh all OptiFine capes")));
@@ -54,9 +56,11 @@ public class Capes extends GenericScreen {
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Custom [On]"),
                 Text.literal("Custom [Off]")).initially(FortytwoEdit.showClientCape).omitKeyText().build(x+20,y+22*4+1,80,20,
                 Text.of(""), (button, trackOutput) -> {
+
+            FortytwoEdit.readOptions();
             FortytwoEdit.showClientCape = (boolean)trackOutput;
             FortytwoEdit.updateOptions();
-            unsel();
+            reloadScreen();
         })).setTooltip(Tooltip.of(Text.of("Toggle custom capes mode\n\nWhen on: change your cape (only you can see this)")));
         this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnDecCustom()).dimensions(x+20+80+5,y+22*4+1,15,20).build())
             .setTooltip(Tooltip.of(Text.of("Cycle custom cape left")));
@@ -122,6 +126,11 @@ public class Capes extends GenericScreen {
         FortytwoEdit.clientCape--;
         if(FortytwoEdit.clientCape<0)
             FortytwoEdit.clientCape=FortytwoEdit.CLIENT_CAPES.length-1;
+
+        int capeIndex = FortytwoEdit.clientCape;
+
+        FortytwoEdit.readOptions();
+        FortytwoEdit.clientCape = capeIndex;
         FortytwoEdit.updateOptions();
         reloadScreen();
     }
@@ -130,6 +139,11 @@ public class Capes extends GenericScreen {
         FortytwoEdit.clientCape++;
         if(FortytwoEdit.clientCape>=FortytwoEdit.CLIENT_CAPES.length)
             FortytwoEdit.clientCape=0;
+
+        int capeIndex = FortytwoEdit.clientCape;
+
+        FortytwoEdit.readOptions();
+        FortytwoEdit.clientCape = capeIndex;
         FortytwoEdit.updateOptions();
         reloadScreen();
     }

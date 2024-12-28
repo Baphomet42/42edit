@@ -105,7 +105,6 @@ public class ItemBuilder extends GenericScreen {
     private final Set<ClickableWidget> allSliderWidgets = Sets.newHashSet();
     public static boolean savedModeSet = false;
     private NbtList savedItems = null;
-    private boolean savedErrorReading = false;
     private boolean savedErrorSaving = false;
     private String inpError = null;
     private String inpErrorTrim = null;
@@ -585,13 +584,6 @@ public class ItemBuilder extends GenericScreen {
 
     private void refreshSaved() {
         savedItems = FortytwoEdit.getSavedItems();
-        if(savedItems == null) {
-            savedErrorReading = true;
-            NbtList nbt = new NbtList();
-            while(nbt.size()<9*FortytwoEdit.SAVED_ROWS)
-                nbt.add(new NbtCompound());
-            savedItems = nbt;
-        }
         updateSavedTab();
     }
     private void getWebItems() {
@@ -600,10 +592,11 @@ public class ItemBuilder extends GenericScreen {
         if(FortytwoEdit.webItems != null)
             webItems = FortytwoEdit.webItems.copy();
 
-        while(webItems.size()<9*FortytwoEdit.SAVED_ROWS) {
-            NbtCompound air = new NbtCompound();
-            webItems.add(air);
-        }
+        while(webItems.size()<9*FortytwoEdit.SAVED_ROWS)
+            webItems.add(new NbtCompound());
+        if(webItems.size()>9*FortytwoEdit.SAVED_ROWS)
+            FortytwoEdit.LOGGER.warn("Web items list contains more than " + 9*FortytwoEdit.SAVED_ROWS + " items ("+webItems.size()+")");
+
         updateSavedTab();
     }
     private void updateSavedTab() {
@@ -2139,13 +2132,20 @@ public class ItemBuilder extends GenericScreen {
             {
                 noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of(""), btn -> {
                     if(viewBlackMarket) {
+                        // fetch web items
                         FortytwoEdit.refreshWebItems(true);
                         getWebItems();
 
+                        // fetch .42edit/saved_items.snbt
                         refreshSaved();
 
+                        // refresh .minecraft/hotbar.nbt
                         ((HotbarStorageAccessor)client.getCreativeHotbarStorage()).setLoaded(false);
                         client.getCreativeHotbarStorage().getSavedHotbar(0);
+
+                        // refresh .42edit/options.snbt
+                        FortytwoEdit.readOptions();
+                        reloadScreen();
                     }
                     else {
                         savedModeSet = !savedModeSet;
@@ -3472,7 +3472,6 @@ public class ItemBuilder extends GenericScreen {
                     ItemBuilder.this.unsel();
                     if(!viewBlackMarket) {
                         if(savedModeSet) {
-                            ItemBuilder.this.savedErrorReading = false;
                             NbtCompound nbt = new NbtCompound();
                             ItemStack savedItem = client.player.getMainHandStack().copy();
                             if(!savedItem.isEmpty()) {
@@ -5300,9 +5299,7 @@ public class ItemBuilder extends GenericScreen {
             txtFormat.render(context, mouseX, mouseY, delta);
             if(!this.unsavedTxtWidgets.isEmpty())
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, TEXT_COLOR);
-            if(savedErrorReading)
-                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Failed to read saved items!"), this.width / 2, y-11-10, ERROR_COLOR);
-            else if(savedErrorSaving)
+            if(savedErrorSaving)
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.of("A recent saved item does not match original!"), this.width / 2, y-11-10, ERROR_COLOR);
         }
         else {

@@ -2,8 +2,6 @@ package baphomethlabs.fortytwoedit;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -21,6 +19,7 @@ import java.util.Set;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
 import baphomethlabs.fortytwoedit.gui.screen.AutoClick;
 import baphomethlabs.fortytwoedit.gui.screen.Capes;
 import baphomethlabs.fortytwoedit.gui.screen.Hacks;
@@ -76,12 +75,6 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final String MOD_ID_MC = "42edit";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID_MC);
 
-    // files
-    private static final String FILE_DIRECTORY = ".42edit";
-    private static final String FILE_OPTIONS = "options.snbt";
-    private static final String FILE_SAVED_ITEMS = "saved_items.snbt";
-    private static final String FILE_WEB_CACHE = "web_cache.snbt";
-
     // gui
     public static KeyBinding magickGuiKey;
     public static QuickScreen quickScreen = QuickScreen.NONE;
@@ -97,8 +90,7 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     // options
-    private static final int OPTIONS_FORMAT = 2;
-    private static NbtCompound optionsExtra;
+    private static NbtCompound optionsExtra = null;
 
     // zoom
     public static boolean zoomed = false;
@@ -920,216 +912,113 @@ public class FortytwoEdit implements ClientModInitializer {
         return TRANSLATIONS;
     }
 
-    private static void readOptions() {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        String optionsString = "";
-        try {
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).mkdir();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS)).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS)).createNewFile();
-                
-            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS), StandardCharsets.UTF_8);
-            while(scan.hasNextLine())
-                optionsString += scan.nextLine().trim();
-            scan.close();
-        } catch (Exception e) {}
+    public static void readOptions() {
+        NbtCompound options = FileTools.readCompoundFromFile(FileTools.FILE_OPTIONS);
 
-        if(BlackMagick.nbtFromString(optionsString) != null && BlackMagick.nbtFromString(optionsString).getType()==NbtElement.COMPOUND_TYPE) {
-            NbtCompound json = (NbtCompound)BlackMagick.nbtFromString(optionsString);
-
-            // keep options consistent
-            if(json.contains("custom_cape_toggle",NbtElement.BYTE_TYPE))
-                showClientCape = json.getByte("custom_cape_toggle") == 1;
-            if(json.contains("custom_cape",NbtElement.STRING_TYPE)) {
-                clientCape = 0;
-                String capeName = json.getString("custom_cape");
-                for(int i=0; i<CLIENT_CAPES.length; i++)
-                    if(capeName.equals(CLIENT_CAPES[i].id()))
-                        clientCape = i;
-            }
-            if(json.contains("item_warning_override",NbtElement.STRING_TYPE)) {
-                itemWarningMode = json.getString("item_warning_override");
-                boolean valid = false;
-                for(int i=0; i<ITEM_WARNING_MODES.length; i++)
-                    if(ITEM_WARNING_MODES[i].equals(itemWarningMode))
-                        valid = true;
-                if(!valid)
-                    itemWarningMode = ITEM_WARNING_MODES[0];
-            }
-            if(json.contains("opticapes",NbtElement.BYTE_TYPE))
-                opticapesOn = json.getByte("opticapes") == 1;
-            if(json.contains("web_items",NbtElement.BYTE_TYPE))
-                webItemsAuto = json.getByte("web_items") == 1;
-            if(json.contains("web_items_url",NbtElement.STRING_TYPE))
-                webItemsUrlOverride = json.getString("web_items_url");
-
-            // keep options consistent
-            json.remove("options_format");
-            json.remove("custom_cape_toggle");
-            json.remove("custom_cape");
-            json.remove("item_warning_override");
-            json.remove("opticapes");
-            json.remove("web_items");
-            json.remove("web_items_url");
-
-            if(!json.isEmpty()) {
-                LOGGER.warn("Config file contains unknown keys: "+json.asString());
-                optionsExtra = json;
-            }
+        // keep options consistent
+        if(options.contains("custom_cape_toggle",NbtElement.BYTE_TYPE))
+            showClientCape = options.getByte("custom_cape_toggle") == 1;
+        if(options.contains("custom_cape",NbtElement.STRING_TYPE)) {
+            clientCape = 0;
+            String capeName = options.getString("custom_cape");
+            for(int i=0; i<CLIENT_CAPES.length; i++)
+                if(capeName.equals(CLIENT_CAPES[i].id()))
+                    clientCape = i;
         }
-        else
-            LOGGER.info("Creating new config file");
+        if(options.contains("item_warning_override",NbtElement.STRING_TYPE)) {
+            itemWarningMode = options.getString("item_warning_override");
+            boolean valid = false;
+            for(int i=0; i<ITEM_WARNING_MODES.length; i++)
+                if(ITEM_WARNING_MODES[i].equals(itemWarningMode))
+                    valid = true;
+            if(!valid)
+                itemWarningMode = ITEM_WARNING_MODES[0];
+        }
+        if(options.contains("opticapes",NbtElement.BYTE_TYPE))
+            opticapesOn = options.getByte("opticapes") == 1;
+        if(options.contains("web_items",NbtElement.BYTE_TYPE))
+            webItemsAuto = options.getByte("web_items") == 1;
+        if(options.contains("web_items_url",NbtElement.STRING_TYPE))
+            webItemsUrlOverride = options.getString("web_items_url");
+
+        // keep options consistent
+        options.remove("options_format");
+        options.remove("custom_cape_toggle");
+        options.remove("custom_cape");
+        options.remove("item_warning_override");
+        options.remove("opticapes");
+        options.remove("web_items");
+        options.remove("web_items_url");
+
+        optionsExtra = null;
+        if(!options.isEmpty()) {
+            LOGGER.warn("Config file contains unknown keys: "+options.asString());
+            optionsExtra = options.copy();
+        }
 
         updateOptions();
     }
 
     public static void updateOptions() {
-        try {
+        NbtCompound options = new NbtCompound();
+        if(optionsExtra != null)
+            options = optionsExtra.copy();
 
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).mkdir();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS)).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS)).createNewFile();
+        // keep options consistent
+        options.putInt("options_format",FileTools.OPTIONS_FORMAT);
+        options.putBoolean("custom_cape_toggle",showClientCape);
+        options.putString("custom_cape",CLIENT_CAPES[clientCape].id());
+        options.putString("item_warning_override",itemWarningMode);
+        options.putBoolean("opticapes",opticapesOn);
+        options.putBoolean("web_items",webItemsAuto);
+        options.putString("web_items_url",webItemsUrlOverride);
 
-            NbtCompound options = new NbtCompound();
-            
-            if(optionsExtra != null)
-                for(String k : optionsExtra.getKeys())
-                    options.put(k,optionsExtra.get(k));
-
-            // keep options consistent
-            options.putInt("options_format",OPTIONS_FORMAT);
-            options.putBoolean("custom_cape_toggle",showClientCape);
-            options.putString("custom_cape",CLIENT_CAPES[clientCape].id());
-            options.putString("item_warning_override",itemWarningMode);
-            options.putBoolean("opticapes",opticapesOn);
-            options.putBoolean("web_items",webItemsAuto);
-            options.putString("web_items_url",webItemsUrlOverride);
-
-            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_OPTIONS, StandardCharsets.UTF_8, false);
-            writer.write(options.asString());
-            writer.close();
-
-        } catch (Exception e) {
-            LOGGER.warn("Failed to edit config file");
-        }
+        FileTools.writeCompoundToFile(FileTools.FILE_OPTIONS, options, FileDisplayType.TREE_CONDITIONAL_COLLAPSE);
     }
 
     public static NbtList getSavedItems() {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        String savedString = "";
-        try {
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).mkdir();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS)).exists()) {
-                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS)).createNewFile();
-                FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS, StandardCharsets.UTF_8, false);
-                writer.write("[]");
-                writer.close();
-            }
-                
-            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS), StandardCharsets.UTF_8);
+        NbtCompound savedItemsNbt = FileTools.readCompoundFromFile(FileTools.FILE_SAVED_ITEMS);
 
-            boolean firstLine = true;
-            while(scan.hasNextLine()) {
-                if(!firstLine)
-                    savedString += "\n";
-                else
-                    firstLine = false;
-                savedString += scan.nextLine();
-            }
-
-            scan.close();
-        } catch (Exception e) {}
-
-        if(BlackMagick.nbtFromString(savedString) != null && BlackMagick.nbtFromString(savedString).getType()==NbtElement.LIST_TYPE) {
-            NbtList nbt = (NbtList)BlackMagick.nbtFromString(savedString);
-            if(!nbt.isEmpty() && nbt.get(0).getType()!=NbtElement.COMPOUND_TYPE) {
-                LOGGER.warn("Failed to read saved items");
-                return null;
-            }
-
-            while(nbt.size()<9*SAVED_ROWS)
-                nbt.add(new NbtCompound());
-            if(nbt.size()>9*SAVED_ROWS)
-                LOGGER.warn("Saved items file contains too many items");
-
-            return nbt;
+        NbtList itemsList = new NbtList();
+        boolean foundItems = false;
+        if(savedItemsNbt.contains("items",NbtElement.LIST_TYPE)) {
+            itemsList = (NbtList)savedItemsNbt.get("items");
+            if(!itemsList.isEmpty() && itemsList.getHeldType() == NbtElement.COMPOUND_TYPE)
+                foundItems = true;
+            else
+                itemsList = new NbtList();
         }
+        if(!foundItems && !savedItemsNbt.isEmpty()) {
+            FortytwoEdit.LOGGER.error("Failed to read saved items: " + savedItemsNbt.asString());
+        }
+        
+        while(itemsList.size()<9*SAVED_ROWS)
+            itemsList.add(new NbtCompound());
+        if(itemsList.size()>9*SAVED_ROWS)
+            LOGGER.warn("Saved items file contains more than " + 9*SAVED_ROWS + " items ("+itemsList.size()+")");
 
-        LOGGER.warn("Failed to read saved items");
-        return null;
+        return itemsList;
     }
 
-    public static NbtList setSavedItems(NbtList nbt) {
+    public static void setSavedItems(NbtList nbt) {
         if(nbt == null)
-            return null;
-        try {
+            return;
 
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).mkdir();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS)).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS)).createNewFile();
+        NbtCompound savedItemsNbt = new NbtCompound();
+        savedItemsNbt.put("items",nbt);
+        savedItemsNbt.putInt("data_format",SharedConstants.getGameVersion().getResourceVersion(ResourceType.SERVER_DATA));
+        savedItemsNbt.putInt("file_format",FileTools.SAVED_ITEMS_FORMAT);
+        FileTools.writeCompoundToFile(FileTools.FILE_SAVED_ITEMS, savedItemsNbt, FileDisplayType.TREE_CONDITIONAL_COLLAPSE);
 
-            String items = "[]";
-            String tab_indent = "\t";
-            if(nbt != null && !nbt.isEmpty() && nbt.getHeldType() == NbtElement.COMPOUND_TYPE) {
-                items = "[\n";
-                for(int i=0; i<nbt.size(); i++) {
-                    items += tab_indent + nbt.get(i).asString();
-                    if(i<nbt.size()-1)
-                        items += ",";
-                    items += "\n";
-                }
-                items += "]";
-            }
-
-            FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_SAVED_ITEMS, StandardCharsets.UTF_8, false);
-            writer.write(items);
-            writer.close();
-            return getSavedItems();
-
-        } catch (Exception e) {}
-
-        LOGGER.warn("Failed to edit saved items file");
-        return null;
+        // call get method to find errors when reading
+        getSavedItems();
     }
 
     public static void refreshWebItems(boolean forceWeb) {
         webItems = null;
-        final MinecraftClient client = MinecraftClient.getInstance();
-        String cacheString = "";
-        try {
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).exists())
-                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY)).mkdir();
-            if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_WEB_CACHE)).exists()) {
-                (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_WEB_CACHE)).createNewFile();
-                FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_WEB_CACHE, StandardCharsets.UTF_8, false);
-                writer.write("{}");
-                writer.close();
-            }
-
-            Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_WEB_CACHE), StandardCharsets.UTF_8);
-            
-            boolean firstLine = true;
-            while(scan.hasNextLine()) {
-                if(!firstLine)
-                    cacheString += "\n";
-                else
-                    firstLine = false;
-                cacheString += scan.nextLine();
-            }
-
-            scan.close();
-        } catch (Exception e) {}
-
-        NbtCompound newItems = null;
-
-        if(BlackMagick.nbtFromString(cacheString) != null && BlackMagick.nbtFromString(cacheString).getType()==NbtElement.COMPOUND_TYPE)
-            newItems = (NbtCompound)BlackMagick.nbtFromString(cacheString);
+        
+        NbtCompound cacheNbt = FileTools.readCompoundFromFile(FileTools.FILE_WEB_CACHE);
+        NbtCompound newItems = cacheNbt.copy();
 
         if(webItemsAuto || forceWeb) {
             String webItemsUrlActive = webItemsUrlOverride.equals("") ? webItemsUrlDefault : webItemsUrlOverride;
@@ -1140,6 +1029,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 con.setReadTimeout(500);
                 con.setUseCaches(false);
                 if(con.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                    //keep consistent with FileTools.readStringFromFile
                     Scanner scan = new Scanner(con.getInputStream(), StandardCharsets.UTF_8);
 
                     boolean firstLine = true;
@@ -1159,23 +1049,15 @@ public class FortytwoEdit implements ClientModInitializer {
             }
 
             if(BlackMagick.nbtFromString(webJson) != null && BlackMagick.nbtFromString(webJson).getType()==NbtElement.COMPOUND_TYPE) {
-                NbtCompound cache = (NbtCompound)BlackMagick.nbtFromString(webJson);
-                newItems = cache.copy();
-                String items = newItems.asString();
+                NbtCompound webNbt = (NbtCompound)BlackMagick.nbtFromString(webJson);
+                newItems = webNbt.copy();
 
-                if(items.equals(cacheString)) {
+                if(webNbt.asString().equals(cacheNbt.asString())) {
                     LOGGER.info("Black Market items are up to date");
                 }
                 else {
                     LOGGER.info("Updating Black Market items");
-
-                    try {
-                        FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + FILE_WEB_CACHE, StandardCharsets.UTF_8, false);
-                        writer.write(items);
-                        writer.close();
-                    } catch(IOException e) {
-                        LOGGER.warn("Failed to save Black Market cache");
-                    }
+                    FileTools.writeCompoundToFile(FileTools.FILE_WEB_CACHE, newItems, FileDisplayType.TREE_CONDITIONAL_COLLAPSE);
                 }
             }
             else

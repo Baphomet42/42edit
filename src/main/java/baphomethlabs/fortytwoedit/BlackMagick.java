@@ -157,7 +157,7 @@ public class BlackMagick {
                     return parsed;
                 }
             }
-            FortytwoEdit.LOGGER.warn("Failed to stringify NbtString: "+inp.asString());
+            FortytwoEdit.LOGGER.error("Failed to stringify NbtString: "+inp.asString());
             return inp.asString();
         }
         else
@@ -597,6 +597,17 @@ public class BlackMagick {
         return nbt;
     }
 
+    public static String validSnbtKey(String key) {
+        NbtCompound nbt = new NbtCompound();
+        nbt.putInt(key,0);
+        String nbtString = nbt.asString();
+        if(nbtString.startsWith("{") && nbtString.endsWith(":0}")) {
+            return nbtString.substring(1,nbtString.length()-3);
+        }
+        FortytwoEdit.LOGGER.error("Failed to convert key to valid SNBT key: "+key);
+        return nbtToString(NbtString.of(key));
+    }
+
     /**
      * Get list of all possible block states that can be applied to the item
      * 
@@ -960,7 +971,7 @@ public class BlackMagick {
 
                 boolean first = true;
                 for(String k : allKeys) {
-                    String k2 = k.contains(":") ? ("\""+k+"\"") : k;
+                    String k2 = validSnbtKey(k);
 
                     if(!first)
                         output.append(Text.of(","));
