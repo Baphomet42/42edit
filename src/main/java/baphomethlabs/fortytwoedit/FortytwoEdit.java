@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +13,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
@@ -177,13 +175,20 @@ public class FortytwoEdit implements ClientModInitializer {
 
         if(opticapesOn) {
             boolean connect = false;
+
+            HttpURLConnection con = null;
             try {
-                HttpURLConnection con = (HttpURLConnection)(new URI("http://s.optifine.net/capes/42Richtofen42.png")).toURL().openConnection();
+                con = (HttpURLConnection)(new URI("http://s.optifine.net/capes/42Richtofen42.png")).toURL().openConnection();
                 con.setConnectTimeout(2000);
                 if(con.getResponseCode() == HttpURLConnection.HTTP_OK)
                     connect = true;
                 con.disconnect();
             } catch(Exception e) {}
+            if(con != null)
+                try {
+                    con.disconnect();
+                } catch(Exception e) {}
+
             if(!connect) {
                 opticapesWorking = false;
                 LOGGER.warn("Failed connection to OptiFine capes");
@@ -221,15 +226,22 @@ public class FortytwoEdit implements ClientModInitializer {
         if(capeNames.isEmpty() && !name.equals(client.getSession().getUsername()))
             tryLoadCape(client.getSession().getUsername());
         capeNames.add(name);
+
+        HttpURLConnection con = null;
+        InputStream stream = null;
+        NativeImage capeInp = null;
+        NativeImage cape = null;
         try {
             URL link = new URI("http://s.optifine.net/capes/" + name + ".png").toURL();
-            HttpURLConnection con = (HttpURLConnection)link.openConnection();
+            con = (HttpURLConnection)link.openConnection();
             con.setUseCaches(false);
             con.setConnectTimeout(500);
             con.setReadTimeout(500);
-            NativeImage capeInp = NativeImage.read(con.getInputStream());
+            stream = con.getInputStream();
+            capeInp = NativeImage.read(stream);
+            stream.close();
             con.disconnect();
-            NativeImage cape = new NativeImage(128, 64, true);
+            cape = new NativeImage(128, 64, true);
 
             for (int x = 0; x < capeInp.getWidth(); x++)
                 for (int y = 0; y < capeInp.getHeight(); y++)
@@ -240,9 +252,21 @@ public class FortytwoEdit implements ClientModInitializer {
             cape.close();
             capeNames2.add(name);
             return true;
-        } catch (Exception e) {
-            return false;
-        }
+        } catch (Exception e) {}
+        if(con != null)
+            try {
+                con.disconnect();
+            } catch(Exception e) {}
+        if(stream != null)
+            try {
+                stream.close();
+            } catch(Exception e) {}
+        if(capeInp != null)
+            capeInp.close();
+        if(cape != null)
+            cape.close();
+
+        return false;
     }
 
     // custom capes
@@ -315,12 +339,16 @@ public class FortytwoEdit implements ClientModInitializer {
     public static Identifier customSkinID = Identifier.of("42edit","cache/custom_skin");
 
     public static boolean setCustomSkin(File file) {
+
+        FileInputStream inp = null;
+        NativeImage skinFile = null;
+        NativeImage skin = null;
         if(file.isFile() && file.getName().endsWith(".png")) {
             try {
-                FileInputStream inp = new FileInputStream(file);
-                NativeImage skinFile = NativeImage.read(inp);
+                inp = new FileInputStream(file);
+                skinFile = NativeImage.read(inp);
                 inp.close();
-                NativeImage skin = new NativeImage(skinFile.getWidth(),skinFile.getHeight(),true);
+                skin = new NativeImage(skinFile.getWidth(),skinFile.getHeight(),true);
 
                 for (int x = 0; x < skinFile.getWidth(); x++)
                     for (int y = 0; y < skinFile.getHeight(); y++)
@@ -334,6 +362,15 @@ public class FortytwoEdit implements ClientModInitializer {
                 return true;
             } catch(Exception e) {}
         }
+        if(inp != null)
+            try {
+                inp.close();
+            } catch(Exception e) {}
+        if(skinFile != null)
+            skinFile.close();
+        if(skin != null)
+            skin.close();
+
         return false;
     }
 
@@ -942,7 +979,7 @@ public class FortytwoEdit implements ClientModInitializer {
             webItemsUrlOverride = options.getString("web_items_url");
 
         // keep options consistent
-        options.remove("options_format");
+        options.remove("file_format");
         options.remove("custom_cape_toggle");
         options.remove("custom_cape");
         options.remove("item_warning_override");
@@ -965,7 +1002,7 @@ public class FortytwoEdit implements ClientModInitializer {
             options = optionsExtra.copy();
 
         // keep options consistent
-        options.putInt("options_format",FileTools.OPTIONS_FORMAT);
+        options.putInt("file_format",FileTools.FILE_FORMAT);
         options.putBoolean("custom_cape_toggle",showClientCape);
         options.putString("custom_cape",CLIENT_CAPES[clientCape].id());
         options.putString("item_warning_override",itemWarningMode);
@@ -973,7 +1010,7 @@ public class FortytwoEdit implements ClientModInitializer {
         options.putBoolean("web_items",webItemsAuto);
         options.putString("web_items_url",webItemsUrlOverride);
 
-        FileTools.writeCompoundToFile(FileTools.FILE_OPTIONS, options, FileDisplayType.TREE_CONDITIONAL_COLLAPSE);
+        FileTools.writeCompoundToFile(FileTools.FILE_OPTIONS, options, FileDisplayType.TREE);
     }
 
     public static NbtList getSavedItems() {
@@ -1007,7 +1044,7 @@ public class FortytwoEdit implements ClientModInitializer {
         NbtCompound savedItemsNbt = new NbtCompound();
         savedItemsNbt.put("items",nbt);
         savedItemsNbt.putInt("data_format",SharedConstants.getGameVersion().getResourceVersion(ResourceType.SERVER_DATA));
-        savedItemsNbt.putInt("file_format",FileTools.SAVED_ITEMS_FORMAT);
+        savedItemsNbt.putInt("file_format",FileTools.FILE_FORMAT);
         FileTools.writeCompoundToFile(FileTools.FILE_SAVED_ITEMS, savedItemsNbt, FileDisplayType.TREE_CONDITIONAL_COLLAPSE);
 
         // call get method to find errors when reading
@@ -1023,30 +1060,31 @@ public class FortytwoEdit implements ClientModInitializer {
         if(webItemsAuto || forceWeb) {
             String webItemsUrlActive = webItemsUrlOverride.equals("") ? webItemsUrlDefault : webItemsUrlOverride;
             String webJson = "";
+
+            HttpURLConnection con = null;
+            InputStream stream = null;
             try {
-                HttpURLConnection con = (HttpURLConnection)(new URI(webItemsUrlActive)).toURL().openConnection();
+                con = (HttpURLConnection)(new URI(webItemsUrlActive)).toURL().openConnection();
                 con.setConnectTimeout(2000);
                 con.setReadTimeout(500);
                 con.setUseCaches(false);
                 if(con.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                    //keep consistent with FileTools.readStringFromFile
-                    Scanner scan = new Scanner(con.getInputStream(), StandardCharsets.UTF_8);
-
-                    boolean firstLine = true;
-                    while(scan.hasNextLine()) {
-                        if(!firstLine)
-                            webJson += "\n";
-                        else
-                            firstLine = false;
-                        webJson += scan.nextLine();
-                    }
-                    
-                    scan.close();
+                    stream = con.getInputStream();
+                    webJson = new String(stream.readAllBytes(), FileTools.FILE_CHARSET);
+                    stream.close();
+                    con.disconnect();
                 }
-                con.disconnect();
             } catch(Exception e) {
                 LOGGER.warn("Failed connection to BaphomethLabs Black Market");
             }
+            if(con != null)
+                try {
+                    con.disconnect();
+                } catch(Exception e) {}
+            if(stream != null)
+                try {
+                    stream.close();
+                } catch(Exception e) {}
 
             if(BlackMagick.nbtFromString(webJson) != null && BlackMagick.nbtFromString(webJson).getType()==NbtElement.COMPOUND_TYPE) {
                 NbtCompound webNbt = (NbtCompound)BlackMagick.nbtFromString(webJson);

@@ -476,10 +476,10 @@ public class ItemBuilder extends GenericScreen {
         swapBtn.setTooltip(null);
         if(!client.player.getMainHandStack().isEmpty() && !client.player.getOffHandStack().isEmpty()) {
             if(ItemStack.areItemsAndComponentsEqual(client.player.getMainHandStack(),client.player.getOffHandStack())) {
-                swapBtn.setMessage(Text.of("\u00a7ac"));
+                swapBtn.setMessage(Text.empty().append("c").formatted(Formatting.GREEN));
             }
             else {
-                swapBtn.setMessage(Text.of("\u00a7cc"));
+                swapBtn.setMessage(Text.empty().append("c").formatted(Formatting.RED));
                 swapBtn.setTooltip(Tooltip.of(BlackMagick.getElementDifferences(BlackMagick.itemToNbtStorage(client.player.getOffHandStack()),
                     BlackMagick.itemToNbtStorage(client.player.getMainHandStack()))));
             }
@@ -2132,6 +2132,9 @@ public class ItemBuilder extends GenericScreen {
             {
                 noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of(""), btn -> {
                     if(viewBlackMarket) {
+                        // refresh .42edit/options.snbt
+                        FortytwoEdit.readOptions();
+
                         // fetch web items
                         FortytwoEdit.refreshWebItems(true);
                         getWebItems();
@@ -2143,8 +2146,6 @@ public class ItemBuilder extends GenericScreen {
                         ((HotbarStorageAccessor)client.getCreativeHotbarStorage()).setLoaded(false);
                         client.getCreativeHotbarStorage().getSavedHotbar(0);
 
-                        // refresh .42edit/options.snbt
-                        FortytwoEdit.readOptions();
                         reloadScreen();
                     }
                     else {

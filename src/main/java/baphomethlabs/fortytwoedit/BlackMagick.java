@@ -1025,5 +1025,79 @@ public class BlackMagick {
         return Text.empty().append(Text.of(BlackMagick.nbtToString(left)).copy().formatted(Formatting.RED)).append(Text.of(BlackMagick.nbtToString(right)).copy().formatted(Formatting.GREEN));
     }
 
+    /**
+     * Format an nbt element as a tree
+     * 
+     * @param el
+     * @param collapseItems if true, compounds that contain the key `id` will be inlined instead of expanded
+     * @return
+     */
+    public static String formatSnbtAsTree(NbtElement el, boolean collapseItems) {
+        return formatSnbtAsTree(el, collapseItems, 0);
+    }
+
+    /**
+     * Inner logic for method above
+     */
+    private static String formatSnbtAsTree(NbtElement el, boolean collapseItems, int indents) {
+        if(el == null)
+            return "null";
+
+        StringBuilder current = new StringBuilder(128);
+        StringBuilder indentBuilder = new StringBuilder();
+        for(int i=0; i<indents; i++)
+            indentBuilder.append("\t");
+        String indent = indentBuilder.toString();
+        
+        switch(el.getType()) {
+            case NbtElement.COMPOUND_TYPE: {
+                NbtCompound nbt = (NbtCompound)el;
+                if(nbt.isEmpty())
+                    current.append("{}");
+                else if(collapseItems && nbt.contains("id"))
+                    current.append(nbt.asString());
+                else {
+                    current.append("{\n");
+
+                    boolean firstKey = true;
+                    for(String k : nbt.getKeys()) {
+                        if(firstKey)
+                            firstKey = false;
+                        else
+                            current.append(",\n");
+                        
+                        String keyString = BlackMagick.validSnbtKey(k);
+                        current.append(indent + "\t" + keyString + ": " + formatSnbtAsTree(nbt.get(k), collapseItems, indents+1));
+                    }
+
+                    current.append("\n" + indent + "}");
+                }
+                break;
+            }
+            case NbtElement.LIST_TYPE: {
+                NbtList nbt = (NbtList)el;
+                if(nbt.isEmpty())
+                    current.append("[]");
+                else {
+                    current.append("[\n");
+
+                    for(int i=0; i<nbt.size(); i++) {
+                        if(i>0)
+                            current.append(",\n");
+
+                        current.append(indent + "\t" + formatSnbtAsTree(nbt.get(i), collapseItems, indents+1));
+                    }
+
+                    current.append("\n" + indent + "]");
+                }
+                break;
+            }
+            default: {
+                current.append(BlackMagick.nbtToString(el));
+            }
+        }
+        return current.toString();
+    }
+
 
 }

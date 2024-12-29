@@ -32,7 +32,7 @@ public abstract class GenericScreen extends Screen {
     public static final String UNICODE_DOWN_ARROW = "\u2228";
     public static final String UNICODE_CHECK = "\u2611";
     public static final String UNICODE_X = "\u2612";
-    public static final String UNICODE_REFRESH = "\u27F3";
+    public static final String UNICODE_REFRESH = "🗘";
     private boolean unsel = false;
     
     public GenericScreen() {

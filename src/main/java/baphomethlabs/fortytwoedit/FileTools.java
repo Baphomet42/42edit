@@ -2,12 +2,12 @@ package baphomethlabs.fortytwoedit;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
+import java.nio.file.Files;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
 
 /**
  * Class containing static methods used for working with files
@@ -15,12 +15,12 @@ import net.minecraft.nbt.NbtList;
 public class FileTools {
 
     // .42edit files
+    public static final int FILE_FORMAT = 3; // increment for any breaking file format changes
     public static final String FILE_DIRECTORY = ".42edit";
     public static final String FILE_OPTIONS = "options.snbt";
-    public static final int OPTIONS_FORMAT = 3;
     public static final String FILE_SAVED_ITEMS = "saved_items.snbt";
-    public static final int SAVED_ITEMS_FORMAT = 2;
     public static final String FILE_WEB_CACHE = "web_cache.snbt";
+    public static final Charset FILE_CHARSET = StandardCharsets.UTF_8;
 
     /**
      * Saves a compound to .snbt file
@@ -37,11 +37,11 @@ public class FileTools {
         else {
             switch(display) {
                 case TREE : {
-                    fileContents = formatSnbtAsTree(nbt, false);
+                    fileContents = BlackMagick.formatSnbtAsTree(nbt, false);
                     break;
                 }
                 case TREE_CONDITIONAL_COLLAPSE : {
-                    fileContents = formatSnbtAsTree(nbt, true);
+                    fileContents = BlackMagick.formatSnbtAsTree(nbt, true);
                     break;
                 }
                 default : {
@@ -59,80 +59,6 @@ public class FileTools {
         DEFAULT,
         TREE,
         TREE_CONDITIONAL_COLLAPSE
-    }
-
-
-    /**
-     * Format an nbt element as a tree
-     * 
-     * @param el
-     * @param collapseItems if true, compounds that contain the key `id` will be inlined instead of expanded
-     * @return
-     */
-    public static String formatSnbtAsTree(NbtElement el, boolean collapseItems) {
-        return formatSnbtAsTree(el, collapseItems, 0);
-    }
-
-    /**
-     * Inner logic for method above
-     */
-    private static String formatSnbtAsTree(NbtElement el, boolean collapseItems, int indents) {
-        if(el == null)
-            return "null";
-
-        String current = "";
-        String indent = "";
-        for(int i=0; i<indents; i++)
-            indent += "\t";
-        
-        switch(el.getType()) {
-            case NbtElement.COMPOUND_TYPE: {
-                NbtCompound nbt = (NbtCompound)el;
-                if(nbt.isEmpty())
-                    current += "{}";
-                else if(collapseItems && nbt.contains("id"))
-                    current += nbt.asString();
-                else {
-                    current += "{\n";
-
-                    boolean firstKey = true;
-                    for(String k : nbt.getKeys()) {
-                        if(firstKey)
-                            firstKey = false;
-                        else
-                            current += ",\n";
-                        
-                        String keyString = BlackMagick.validSnbtKey(k);
-                        current += indent + "\t" + keyString + ": " + formatSnbtAsTree(nbt.get(k), collapseItems, indents+1);
-                    }
-
-                    current += "\n" + indent + "}";
-                }
-                break;
-            }
-            case NbtElement.LIST_TYPE: {
-                NbtList nbt = (NbtList)el;
-                if(nbt.isEmpty())
-                    current += "[]";
-                else {
-                    current += "[\n";
-
-                    for(int i=0; i<nbt.size(); i++) {
-                        if(i>0)
-                            current += ",\n";
-
-                        current += indent + "\t" + formatSnbtAsTree(nbt.get(i), collapseItems, indents+1);
-                    }
-
-                    current += "\n" + indent + "]";
-                }
-                break;
-            }
-            default: {
-                current += BlackMagick.nbtToString(el);
-            }
-        }
-        return current;
     }
 
     /**
@@ -166,14 +92,23 @@ public class FileTools {
 
         if(verifyTextFileExists(fileName, "")) {
             final MinecraftClient client = MinecraftClient.getInstance();
+
+            FileWriter writer = null;
             try {
-                FileWriter writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FileTools.FILE_DIRECTORY + "\\" + fileName, StandardCharsets.UTF_8, false);
+                writer = new FileWriter(client.runDirectory.getAbsolutePath() + "\\" + FileTools.FILE_DIRECTORY + "\\" + fileName, FILE_CHARSET, false);
                 writer.write(text);
                 writer.close();
-                return true;
-                //TODO verify new file contents `.equals(text)`
+
+                String newText = readStringFromFile(fileName,null);
+                if(newText != null && newText.equals(text))
+                    return true;
             }
             catch(Exception e) {}
+            if(writer != null)
+                try {
+                    writer.close();
+                } catch(Exception e) {}
+
             FortytwoEdit.LOGGER.error("Failed to write to file '" + FILE_DIRECTORY + "/" + fileName + "': "+text);
         }
 
@@ -191,22 +126,7 @@ public class FileTools {
         if(verifyTextFileExists(fileName, defaultText)) {
             final MinecraftClient client = MinecraftClient.getInstance();
             try {
-                //keep consistent with FortytwoEdit.refreshWebItems
-                Scanner scan = new Scanner(new File(client.runDirectory.getAbsolutePath() + "\\" + FileTools.FILE_DIRECTORY + "\\" + fileName), StandardCharsets.UTF_8);
-                
-                String fileContents = "";
-                boolean firstLine = true;
-                while(scan.hasNextLine()) {
-                    if(!firstLine)
-                        fileContents += "\n";
-                    else
-                        firstLine = false;
-                    fileContents += scan.nextLine();
-                }
-
-                scan.close();
-
-                return fileContents;
+                return Files.readString(new File(client.runDirectory.getAbsolutePath() + "\\" + FileTools.FILE_DIRECTORY + "\\" + fileName).toPath(), FILE_CHARSET);
             }
             catch(Exception e) {}
             FortytwoEdit.LOGGER.error("Failed to read from file '" + FILE_DIRECTORY + "/" + fileName + "'");
