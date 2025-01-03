@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.7-SNAPSHOT'
+	id 'fabric-loom' version '1.9-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -33,7 +33,9 @@ dependencies {
 	//	close vscode, end all openjdk tasks, run gradle commands in powershell:
 	//		./gradlew genSources --refresh-dependencies
 	//		.\gradlew vscode
-	//	.vscode/launch.json "args": "--quickPlaySingleplayer \"Continue Testing\"",
+	//	.vscode/launch.json:
+	//		"args": "--quickPlaySingleplayer \"Continue Testing\"",
+	//		remove runDir lines
 	//	java project clean workspace
 	//	./gradlew build
 	
@@ -45,7 +47,9 @@ dependencies {
 	//	./gradlew clean			./gradlew --stop
 	//	delete .gradle .vscode bin build run
 	//	delete .gradle .cache from User
-	//	update example mod files from https://github.com/FabricMC/fabric-example-mod/ (remove splitEnvironments section from build.gradle)
+	//	update example mod files from https://github.com/FabricMC/fabric-example-mod/
+	//		remove splitEnvironments section from build.gradle
+	//		set fabric api dependency to include
 	//	update FortytwoEdit.FEATURES
 	//	update ComponentHelper (search HARDCODED)
 	//	verify ordinals (ScrollableWidgetMixin/StringHelperMixin)
