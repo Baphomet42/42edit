@@ -75,7 +75,7 @@ public class FileTools {
                 return ((NbtCompound)nbt);
             }
 
-            FortytwoEdit.LOGGER.error("Failed to parse file '" + FILE_DIRECTORY + "/" + fileName + "' as compound: " + fileContents);
+            FortytwoEdit.logError("Failed to parse file '" + FILE_DIRECTORY + "/" + fileName + "' as compound: " + fileContents);
         }
 
         return new NbtCompound();
@@ -109,7 +109,7 @@ public class FileTools {
                     writer.close();
                 } catch(Exception e) {}
 
-            FortytwoEdit.LOGGER.error("Failed to write to file '" + FILE_DIRECTORY + "/" + fileName + "': "+text);
+            FortytwoEdit.logError("Failed to write to file '" + FILE_DIRECTORY + "/" + fileName + "': "+text);
         }
 
         return false;
@@ -129,7 +129,7 @@ public class FileTools {
                 return Files.readString(new File(client.runDirectory.getAbsolutePath() + "\\" + FileTools.FILE_DIRECTORY + "\\" + fileName).toPath(), FILE_CHARSET);
             }
             catch(Exception e) {}
-            FortytwoEdit.LOGGER.error("Failed to read from file '" + FILE_DIRECTORY + "/" + fileName + "'");
+            FortytwoEdit.logError("Failed to read from file '" + FILE_DIRECTORY + "/" + fileName + "'");
         }
 
         return null;
@@ -153,7 +153,7 @@ public class FileTools {
             if(!(new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + fileName)).exists()) {
                 (new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + fileName)).createNewFile();
                 writeStringToFile(fileName,(defaultText == null ? "" : defaultText));
-                FortytwoEdit.LOGGER.info("Creating file '" + FILE_DIRECTORY + "/" + fileName + "'");
+                FortytwoEdit.logInfo("Creating file '" + FILE_DIRECTORY + "/" + fileName + "'");
             }
 
             if((new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + fileName)).exists())
@@ -161,7 +161,7 @@ public class FileTools {
 
         } catch (Exception e) {}
 
-        FortytwoEdit.LOGGER.error("Failed to access or create file '" + FILE_DIRECTORY + "/" + fileName + "'");
+        FortytwoEdit.logError("Failed to access or create file '" + FILE_DIRECTORY + "/" + fileName + "'");
         return false;
     }
     

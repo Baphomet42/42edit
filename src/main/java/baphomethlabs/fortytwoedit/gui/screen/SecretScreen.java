@@ -27,7 +27,7 @@ public class SecretScreen extends GenericScreen {
     }
 
     protected void btnOutputHist() {
-        FortytwoEdit.LOGGER.info("Item History: "+FortytwoEdit.getItemHist().asString());
+        FortytwoEdit.logInfo("Item History: "+FortytwoEdit.getItemHist().asString());
     }
     
     @Override

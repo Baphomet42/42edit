@@ -102,8 +102,6 @@ public class Capes extends GenericScreen {
     }
 
     protected void btnReloadCapes() {
-        client.player.sendMessage(Text.of("Cleared "+FortytwoEdit.debugCapeNamesSize()+" cached names."),false);
-        client.player.sendMessage(Text.of("Deleted "+FortytwoEdit.debugCapeNames2Size()+" cached capes."),false);
         FortytwoEdit.clearCapes();
         unsel();
     }

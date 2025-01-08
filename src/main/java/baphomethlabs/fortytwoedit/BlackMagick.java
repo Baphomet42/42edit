@@ -157,7 +157,7 @@ public class BlackMagick {
                     return parsed;
                 }
             }
-            FortytwoEdit.LOGGER.error("Failed to stringify NbtString: "+inp.asString());
+            FortytwoEdit.logError("Failed to stringify NbtString: "+inp.asString());
             return inp.asString();
         }
         else
@@ -514,7 +514,7 @@ public class BlackMagick {
             case NbtElement.STRING_TYPE : return NbtString.of("");
             default: break;
         }
-        FortytwoEdit.LOGGER.error("Failed to create default NbtElement for type: "+type);
+        FortytwoEdit.logError("Failed to create default NbtElement for type: "+type);
         return null;
     }
 
@@ -604,7 +604,7 @@ public class BlackMagick {
         if(nbtString.startsWith("{") && nbtString.endsWith(":0}")) {
             return nbtString.substring(1,nbtString.length()-3);
         }
-        FortytwoEdit.LOGGER.error("Failed to convert key to valid SNBT key: "+key);
+        FortytwoEdit.logError("Failed to convert key to valid SNBT key: "+key);
         return nbtToString(NbtString.of(key));
     }
 

@@ -19,7 +19,6 @@ import baphomethlabs.fortytwoedit.ComponentHelper.PathInfo;
 import baphomethlabs.fortytwoedit.ComponentHelper.PathType;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
-import baphomethlabs.fortytwoedit.mixin.HotbarStorageAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
@@ -402,7 +401,6 @@ public class ItemBuilder extends GenericScreen {
     protected void btnCopyNbt() {
         if(client.player.getMainHandStack() != null && !client.player.getMainHandStack().isEmpty()) {
             String itemData = BlackMagick.itemToNbtStorage(client.player.getMainHandStack()).asString();
-            client.player.sendMessage(Text.of(itemData),false);
             client.keyboard.setClipboard(itemData);
         }
         unsel();
@@ -595,7 +593,7 @@ public class ItemBuilder extends GenericScreen {
         while(webItems.size()<9*FortytwoEdit.SAVED_ROWS)
             webItems.add(new NbtCompound());
         if(webItems.size()>9*FortytwoEdit.SAVED_ROWS)
-            FortytwoEdit.LOGGER.warn("Web items list contains more than " + 9*FortytwoEdit.SAVED_ROWS + " items ("+webItems.size()+")");
+            FortytwoEdit.logWarn("Web items list contains more than " + 9*FortytwoEdit.SAVED_ROWS + " items ("+webItems.size()+")");
 
         updateSavedTab();
     }
@@ -2132,20 +2130,9 @@ public class ItemBuilder extends GenericScreen {
             {
                 noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of(""), btn -> {
                     if(viewBlackMarket) {
-                        // refresh .42edit/options.snbt
-                        FortytwoEdit.readOptions();
-
-                        // fetch web items
-                        FortytwoEdit.refreshWebItems(true);
+                        FortytwoEdit.refreshStuff();
                         getWebItems();
-
-                        // fetch .42edit/saved_items.snbt
                         refreshSaved();
-
-                        // refresh .minecraft/hotbar.nbt
-                        ((HotbarStorageAccessor)client.getCreativeHotbarStorage()).setLoaded(false);
-                        client.getCreativeHotbarStorage().getSavedHotbar(0);
-
                         reloadScreen();
                     }
                     else {
@@ -2894,7 +2881,7 @@ public class ItemBuilder extends GenericScreen {
                     editorOutputLocked = false;
                 }
                 else {
-                    FortytwoEdit.LOGGER.warn("Fallback page created for path: "+fullPath);
+                    FortytwoEdit.logWarn("Fallback page created for path: "+fullPath);
                     widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn));
                 }
             }
@@ -3484,7 +3471,7 @@ public class ItemBuilder extends GenericScreen {
                             ItemStack savedItemNew = BlackMagick.itemFromNbt(savedItems.getCompound(index));
                             if(!ItemStack.areEqual(savedItem,savedItemNew)) {
                                 savedErrorSaving = true;
-                                FortytwoEdit.LOGGER.error("Failed to save item correctly\n\nOriginal: " +
+                                FortytwoEdit.logError("Failed to save item correctly\n\nOriginal: " +
                                     BlackMagick.itemToNbtStorage(savedItem).asString() + "\n\nSaved: " + 
                                     BlackMagick.itemToNbtStorage(savedItemNew).asString());
                             }
@@ -4677,7 +4664,7 @@ public class ItemBuilder extends GenericScreen {
                                 list.add(newEl);
                         }
                         else {
-                            FortytwoEdit.LOGGER.warn("Failed to add element to unknown list at path: "+pagePath);
+                            FortytwoEdit.logWarn("Failed to add element to unknown list at path: "+pagePath);
                         }
                     }
 

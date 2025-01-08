@@ -1005,7 +1005,7 @@ public class ComponentHelper {
         if(path.equals("components") || path.endsWith(".components"))
             return (new PathInfo(List.of(FortytwoEdit.COMPONENTS)));
 
-        FortytwoEdit.LOGGER.warn("No PathInfo found for path: "+path);
+        FortytwoEdit.logWarn("No PathInfo found for path: "+path);
         return PathInfos.UNKNOWN;
     }
 

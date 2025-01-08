@@ -15,14 +15,20 @@ import net.minecraft.text.Text;
 
 public class LogScreen extends GenericScreen {
 
-    EditBoxWidget box;
-    static File logFile;
-    static final List<LogMessage> FULL_LOG = new ArrayList<>();
-    static boolean paused = false;
-    long lastCheck = 0;
-    long lastUpdate = 0;
-    final int UPDATE_WAIT_MS = 1000;
-    static final String ss = "\u00a7";
+    private EditBoxWidget box;
+    private static File logFile;
+    private static final List<LogMessage> FULL_LOG = new ArrayList<>();
+    private static final List<LogMessage> MOD_LOG = new ArrayList<>();
+    private static final List<LogMessage> MOD_LOG_QUEUE = new ArrayList<>();
+
+    private static boolean clearFullLogCache = false;
+    private static boolean paused = false;
+    private static boolean onlyMod = false;
+
+    private long lastCheck = 0;
+    private long lastUpdate = 0;
+    private static final int UPDATE_WAIT_MS = 1000;
+    private static final String ss = "\u00a7";
     
     public LogScreen() {}
 
@@ -37,6 +43,13 @@ public class LogScreen extends GenericScreen {
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Resume"),
                 Text.literal("Pause")).initially(paused).omitKeyText().build(x+5+40+5,y+5,40,20, Text.of(""), (button, trackOutput) -> {
             paused = (boolean)trackOutput;
+            updateBox();
+            unsel();
+        })).setTooltip(Tooltip.of(Text.of("Temporarily freeze new messages from appearing")));
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("[42edit]"),
+                Text.literal("[All]")).initially(onlyMod).omitKeyText().build(x+backgroundWidth-5-60,y+5,60,20, Text.of(""), (button, trackOutput) -> {
+            onlyMod = (boolean)trackOutput;
+            updateBox();
             unsel();
         })).setTooltip(Tooltip.of(Text.of("Temporarily freeze new messages from appearing")));
         box = this.addDrawableChild(new EditBoxWidget(this.client.textRenderer, x+15-3, y+35, 240-24, 22*6, Text.of(""), Text.of("")));
@@ -49,83 +62,91 @@ public class LogScreen extends GenericScreen {
 
     protected void updateBox() {
         StringBuilder sb = new StringBuilder();
-        for(int i=0; i<FULL_LOG.size(); i++) {
-            sb.append(FULL_LOG.get(i).line()).append("\n\n");
+        List<LogMessage> logList = onlyMod ? MOD_LOG : FULL_LOG;
+
+        for(int i=0; i<logList.size(); i++) {
+            if(i>0) {
+                sb.append("\n");
+                if(logList.get(i).timestamp() != null)
+                    sb.append("\n");
+            }
+            sb.append(logList.get(i).formattedLine());
         }
+
         box.setText(sb.toString());
     }
 
-    private record LogMessage(LogType type, String source, String line) {
+    private record LogMessage(String timestamp, LogType type, String message, String formattedLine) {
+
         public static LogMessage build(String inpLine) {
-            StringBuilder fullLine = new StringBuilder();
-            StringBuilder line = new StringBuilder(inpLine);
-            LogType logType = LogType.UNKNOWN;
-            String source = "";
+            String line = inpLine + "";
+            String timestamp = null;
+            LogType logType = null;
 
-            int i = line.indexOf("]");
-            if(i>2 && i<line.length()-1) {
-                String time = line.substring(0,i+1);
-                line.delete(0,i+2);
-                fullLine.append(ss).append("9").append(time).append(ss).append("r ");
+            if(line.matches("^\\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\] .+")) {
+                timestamp = line.substring(0,line.indexOf("]")+1);
+                line = line.replaceFirst("^\\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\] ","");
+
+                if(line.matches("^\\[[^/\\]]+/[A-Z]+\\]:? .+")) {
+                    logType = LogType.build(line.substring(line.indexOf("/")+1,line.indexOf("]")));
+                    line = line.replaceFirst("^\\[[^/\\]]+/[A-Z]+\\]:? ","");
+                }
+            }        
+
+            return build(timestamp, logType, line);
+        }
+        public static LogMessage build(LogType type, String message) {
+            return build(FortytwoEdit.getTimestamp(), type, message);
+        }
+        public static LogMessage build(String timestamp, LogType type, String message) {
+            StringBuilder formattedLine = new StringBuilder();
+
+            if(timestamp != null)
+                formattedLine.append(ss).append("9").append(timestamp).append(ss).append("r ");
+            
+            if(type != null)
+                formattedLine.append(ss).append(type.formatCode()).append(type.text()).append(ss).append("r ");
+
+            String formatMessage = message.replace("\t","  ");
+            if(timestamp != null && type != null && formatMessage.matches("^\\([^)]+\\) .+")) {
+                formattedLine.append(ss).append("3").append(formatMessage.substring(0,formatMessage.indexOf(")")+1)).append(ss).append("r ");
+                formatMessage = formatMessage.replaceFirst("^\\([^)]+\\) ","");
             }
+            formattedLine.append(formatMessage);
 
-            i = line.indexOf("]");
-            if(i>2 && i<line.length()-1) {
-                String type = line.substring(0,i+1);
-                line.delete(0,i+2);
-
-                if(type.endsWith("INFO]"))
-                    logType = LogType.INFO;
-                else if(type.endsWith("WARN]"))
-                    logType = LogType.WARN;
-                else if(type.endsWith("ERROR]"))
-                    logType = LogType.ERROR;
-                else if(type.endsWith("DEBUG]"))
-                    logType = LogType.DEBUG;
-                else if(type.endsWith("FATAL]"))
-                    logType = LogType.FATAL;
-
-                fullLine.append(ss).append(getTypeColor(logType)).append(type).append(ss).append("r ");
-            }
-
-            i = line.indexOf(")");
-            if(i>2 && i<line.length()-1) {
-                String src = line.substring(0,i+1);
-                line.delete(0,i+2);
-
-                if(src.charAt(0)=='(' && src.charAt(src.length()-1)==')')
-                    source = src.substring(1,src.length()-1);
-                else
-                    source = src;
-
-                fullLine.append(ss).append("3").append(src).append(ss).append("r ");
-            }
-
-            fullLine.append(line.toString().replace("\t","  "));            
-
-            return new LogMessage(logType, source, fullLine.toString());
+            return new LogMessage(timestamp, type, message, formattedLine.toString());
         }
     }
 
-    private enum LogType {
-        INFO,
-        WARN,
-        ERROR,
-        DEBUG,
-        FATAL,
+    public record LogType(String text, String formatCode) {
+        public static final LogType INFO = new LogType("[INFO]","2");
+        public static final LogType WARN = new LogType("[WARN]","6");
+        public static final LogType ERROR = new LogType("[ERROR]","c");
+        public static final LogType DEBUG = new LogType("[DEBUG]","a");
+        public static final LogType FATAL = new LogType("[FATAL]","4");
+        public static final LogType UNKNOWN = new LogType("[UNKNOWN]","f");
 
-        UNKNOWN
-    }
-    private static String getTypeColor(LogType type) {
-        switch(type) {
-            case INFO: return "2";
-            case WARN: return "6";
-            case ERROR: return "c";
-            case DEBUG: return "a";
-            case FATAL: return "4";
-            case UNKNOWN: break;
+        public static LogType build(String text) {
+            if(text != null && text.length()>0) {
+                switch(text) {
+                    case "INFO": return LogType.INFO;
+                    case "WARN": return LogType.WARN;
+                    case "ERROR": return LogType.ERROR;
+                    case "DEBUG": return LogType.DEBUG;
+                    case "FATAL": return LogType.FATAL;
+                    default: return new LogType("[" + text + "]", LogType.UNKNOWN.formatCode());
+                }
+            }
+            return LogType.UNKNOWN;
         }
-        return "f";
+    }
+
+    public static void logModLog(LogType type, String message) {
+        MOD_LOG_QUEUE.add(LogMessage.build(type,message));
+    }
+
+    public static void clearLogCache() {
+        clearFullLogCache = true;
     }
     
     @Override
@@ -155,7 +176,24 @@ public class LogScreen extends GenericScreen {
     @Override
     public void tick() {
         if(!paused) {
+
+            if(!MOD_LOG_QUEUE.isEmpty()) {
+                for(int i=0; i<MOD_LOG_QUEUE.size(); i++) {
+                    MOD_LOG.add(MOD_LOG_QUEUE.get(i));
+                }
+                MOD_LOG_QUEUE.clear();
+                if(onlyMod)
+                    updateBox();
+            }
+
             if(System.currentTimeMillis()-lastCheck >= UPDATE_WAIT_MS) {
+                if(clearFullLogCache) {
+                    lastCheck = 0;
+                    lastUpdate = 0;
+                    clearFullLogCache = false;
+                    FULL_LOG.clear();
+                }
+
                 lastCheck = System.currentTimeMillis();
                 if(logFile.lastModified()>lastUpdate) {
                     lastUpdate = logFile.lastModified();
@@ -172,9 +210,11 @@ public class LogScreen extends GenericScreen {
                     }
                     catch(Exception e) {}
 
-                    updateBox();
+                    if(!onlyMod)
+                        updateBox();
                 }
             }
+
         }
 
         super.tick();

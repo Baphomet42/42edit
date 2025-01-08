@@ -7,8 +7,10 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +28,7 @@ import baphomethlabs.fortytwoedit.gui.screen.LogScreen;
 import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
 import baphomethlabs.fortytwoedit.gui.screen.SecretScreen;
 import baphomethlabs.fortytwoedit.mixin.GameRendererInvoker;
+import baphomethlabs.fortytwoedit.mixin.HotbarStorageAccessor;
 import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
 import baphomethlabs.fortytwoedit.mixin.TranslationStorageAccessor;
 import net.minecraft.client.option.KeyBinding;
@@ -71,7 +74,7 @@ public class FortytwoEdit implements ClientModInitializer {
     // log
     public static final String MOD_ID_JAVA = "ftedit";
     public static final String MOD_ID_MC = "42edit";
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID_MC);
+	private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID_MC);
 
     // gui
     public static KeyBinding magickGuiKey;
@@ -191,7 +194,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
             if(!connect) {
                 opticapesWorking = false;
-                LOGGER.warn("Failed connection to OptiFine capes");
+                logWarn("Failed connection to OptiFine capes");
             }
         }
     }
@@ -208,6 +211,7 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     public static void clearCapes() {
+        logInfo("OptiCapes: Cleared "+FortytwoEdit.debugCapeNamesSize()+" cached name(s) and deleted "+FortytwoEdit.debugCapeNames2Size()+" cached cape(s)");
         capeNames.clear();
         capeNames2.clear();
         checkCapesEnabled();
@@ -505,7 +509,7 @@ public class FortytwoEdit implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
 
-        LOGGER.info("Loading 42edit client");
+        logInfo("Loading 42edit client");
 
         final MinecraftClient gameClient = MinecraftClient.getInstance();
 
@@ -664,7 +668,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         ComponentHelper.clearCacheInfo(); // now that registries have been set, clear any caches that may have had empty lists
 
-        LOGGER.info("Client initialized");
+        logInfo("Client initialized");
     }
 
     public static void updateAutoClick(boolean click, boolean mine, boolean attack, int wait) {
@@ -949,6 +953,49 @@ public class FortytwoEdit implements ClientModInitializer {
         return TRANSLATIONS;
     }
 
+    private static final String LOG_PREFIX = "(42edit) ";
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss"); // from CommandBlockExecutor.class
+
+    public static void logInfo(String info) {
+        LOGGER.info(LOG_PREFIX + info);
+        LogScreen.logModLog(LogScreen.LogType.INFO, info);
+    }
+
+    public static void logWarn(String warn) {
+        LOGGER.warn(LOG_PREFIX + warn);
+        LogScreen.logModLog(LogScreen.LogType.WARN, warn);
+    }
+
+    public static void logError(String error) {
+        LOGGER.error(LOG_PREFIX + error);
+        LogScreen.logModLog(LogScreen.LogType.ERROR, error);
+    }
+
+    /**
+     * Refresh a wide variety of features. Can be used for debug reasons, to fetch new web items, etc.
+     */
+    public static void refreshStuff() {
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        readOptions();
+        refreshWebItems(true);
+        clearCapes();
+
+        ((HotbarStorageAccessor)client.getCreativeHotbarStorage()).setLoaded(false);
+        client.getCreativeHotbarStorage().getSavedHotbar(0);
+
+        LogScreen.clearLogCache();
+    }
+
+    /**
+     * Get the current timestamp in the pattern `[HH:mm:ss]`
+     * 
+     * @return
+     */
+    public static String getTimestamp() {
+        return "[" + DATE_FORMAT.format(new Date()) + "]";
+    }
+
     public static void readOptions() {
         NbtCompound options = FileTools.readCompoundFromFile(FileTools.FILE_OPTIONS);
 
@@ -989,7 +1036,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         optionsExtra = null;
         if(!options.isEmpty()) {
-            LOGGER.warn("Config file contains unknown keys: "+options.asString());
+            logWarn("Config file contains unknown keys: "+options.asString());
             optionsExtra = options.copy();
         }
 
@@ -1026,13 +1073,13 @@ public class FortytwoEdit implements ClientModInitializer {
                 itemsList = new NbtList();
         }
         if(!foundItems && !savedItemsNbt.isEmpty()) {
-            FortytwoEdit.LOGGER.error("Failed to read saved items: " + savedItemsNbt.asString());
+            FortytwoEdit.logError("Failed to read saved items: " + savedItemsNbt.asString());
         }
         
         while(itemsList.size()<9*SAVED_ROWS)
             itemsList.add(new NbtCompound());
         if(itemsList.size()>9*SAVED_ROWS)
-            LOGGER.warn("Saved items file contains more than " + 9*SAVED_ROWS + " items ("+itemsList.size()+")");
+            logWarn("Saved items file contains more than " + 9*SAVED_ROWS + " items ("+itemsList.size()+")");
 
         return itemsList;
     }
@@ -1075,7 +1122,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     con.disconnect();
                 }
             } catch(Exception e) {
-                LOGGER.warn("Failed connection to BaphomethLabs Black Market");
+                logWarn("Failed connection to BaphomethLabs Black Market");
             }
             if(con != null)
                 try {
@@ -1091,15 +1138,15 @@ public class FortytwoEdit implements ClientModInitializer {
                 newItems = webNbt.copy();
 
                 if(webNbt.asString().equals(cacheNbt.asString())) {
-                    LOGGER.info("Black Market items are up to date");
+                    logInfo("Black Market items are up to date");
                 }
                 else {
-                    LOGGER.info("Updating Black Market items");
+                    logInfo("Updating Black Market items");
                     FileTools.writeCompoundToFile(FileTools.FILE_WEB_CACHE, newItems, FileDisplayType.TREE_CONDITIONAL_COLLAPSE);
                 }
             }
             else
-                LOGGER.warn("Failed to parse BaphomethLabs Black Market ("+webItemsUrlActive+"): "+webJson);
+                logWarn("Failed to parse BaphomethLabs Black Market ("+webItemsUrlActive+"): "+webJson);
         }
 
         if(newItems != null && newItems.contains("versions",NbtElement.LIST_TYPE) && !((NbtList)newItems.get("versions")).isEmpty()
@@ -1134,7 +1181,7 @@ public class FortytwoEdit implements ClientModInitializer {
         }
 
         if(webItems == null || webItems.isEmpty())
-            LOGGER.warn("No source of Black Market items available");
+            logWarn("No source of Black Market items available");
     }
 
 }
