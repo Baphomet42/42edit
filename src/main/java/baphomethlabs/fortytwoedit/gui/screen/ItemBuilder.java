@@ -129,7 +129,6 @@ public class ItemBuilder extends GenericScreen {
     protected final int playerX = 240+10;
     protected final int playerY = -10;
     private static final int RENDER_SIZE = 35;
-    private static final Text ERROR_CREATIVE = Text.of("Creative required to edit");
     private boolean prevArmorStand = false;
     private ArrayList<ArrayList<Set<PoseSlider>>> poseSliders = new ArrayList<>();
     private ArrayList<Set<ButtonWidget>> poseSliderBtns = new ArrayList<>();
@@ -237,7 +236,7 @@ public class ItemBuilder extends GenericScreen {
                     }
 
             //main
-            this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
+            this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> changeScreen(new MagickGui())).dimensions(x+5,y+5,40,20).build());
             txtFormat = new TextFieldWidget(this.textRenderer,x+50,y+5+1,15,18,Text.of(""));
             txtFormat.setEditable(false);
             txtFormat.setText(UNICODE_SECTION_SIGN);
@@ -327,10 +326,6 @@ public class ItemBuilder extends GenericScreen {
 
         // this should always be the last thing in init()
         updateItem();
-    }
-
-    protected void btnBack() {
-        client.setScreen(new MagickGui());
     }
 
     protected void btnSwapOff(boolean copy) {
@@ -567,7 +562,7 @@ public class ItemBuilder extends GenericScreen {
                     bracketCount++;
                     secondHalf = secondHalf.substring(nextOpenBracket+1);
                 }
-                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1){
+                else if((nextOpenBracket>nextCloseBracket || nextOpenBracket==-1) && nextCloseBracket != -1) {
                     bracketCount--;
                     secondHalf = secondHalf.substring(nextCloseBracket+1);
                 }
@@ -1327,18 +1322,18 @@ public class ItemBuilder extends GenericScreen {
     }
     
     private Style getBookTextStyleAt(List<OrderedText> page, int bookRenderX, int bookRenderY, double x, double y) {
-        if (page.isEmpty()) {
+        if(page.isEmpty()) {
             return null;
         }
         int i = MathHelper.floor(x - (double)bookRenderX - 36.0);
         int j = MathHelper.floor(y - 2.0 - 30.0 - (double)bookRenderY);
-        if (i < 0 || j < 0) {
+        if(i < 0 || j < 0) {
             return null;
         }
         int k = Math.min(128 / this.textRenderer.fontHeight, page.size());
-        if (i <= 114 && j < this.client.textRenderer.fontHeight * k + k) {
+        if(i <= 114 && j < this.client.textRenderer.fontHeight * k + k) {
             int l = j / this.client.textRenderer.fontHeight;
-            if (l >= 0 && l < page.size()) {
+            if(l >= 0 && l < page.size()) {
                 OrderedText orderedText = page.get(l);
                 return this.client.textRenderer.getTextHandler().getStyleAt(orderedText, i);
             }
@@ -1524,7 +1519,7 @@ public class ItemBuilder extends GenericScreen {
             suggs = new TextSuggestor(client, w, textRenderer);
             shouldSetSuggs = true;
         }
-        else{
+        else {
             if(suggs != null)
                 suggs.refresh();
             else {
@@ -2130,7 +2125,16 @@ public class ItemBuilder extends GenericScreen {
             {
                 noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of(""), btn -> {
                     if(viewBlackMarket) {
-                        FortytwoEdit.refreshStuff();
+                        FortytwoEdit.readOptions();
+                        NbtCompound result = FortytwoEdit.refreshWebItems(true);
+
+                        if(result.contains("site_match_catch"))
+                            FortytwoEdit.showToast("Black Market", "Items up to date");
+                        else if(result.contains("site_updated_catch"))
+                            FortytwoEdit.showToast("Black Market", "Items updated");
+                        else
+                            FortytwoEdit.showToast("Black Market", "Failed to connect to website");
+
                         getWebItems();
                         refreshSaved();
                         reloadScreen();
@@ -3214,20 +3218,16 @@ public class ItemBuilder extends GenericScreen {
         public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
             super.renderWidget(context, mouseX, mouseY, delta);
             AbstractWidget abstractRuleWidget = (AbstractWidget)this.getHoveredEntry();
-            if (abstractRuleWidget != null && abstractRuleWidget.description != null) {
+            if(abstractRuleWidget != null && abstractRuleWidget.description != null) {
                 ItemBuilder.this.setTooltip(abstractRuleWidget.description);
             }
         }
 
         @Override
-        protected void drawHeaderAndFooterSeparators(DrawContext context) {
-
-        }
+        protected void drawHeaderAndFooterSeparators(DrawContext context) {}
 
         @Override
-        protected void drawMenuListBackground(DrawContext context) {
-
-        }
+        protected void drawMenuListBackground(DrawContext context) {}
     }
 
     protected class RowWidget extends AbstractWidget {
@@ -3349,7 +3349,7 @@ public class ItemBuilder extends GenericScreen {
                         default: resetSuggs(); break;
                     }
                 }
-                else{
+                else {
                     if(suggs != null)
                         suggs.refresh();
                     else {
@@ -3843,7 +3843,7 @@ public class ItemBuilder extends GenericScreen {
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
                 this.btnX = new int[]{(ROW_LEFT+ROW_LEFT_ICON),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
     
-                this.btns[startVal+1].active=false;
+                this.btns[startVal+1].active = false;
     
                 for(int i=0; i<btns.length; i++) {
                     if(i>0 && this.btns[i].active) {
@@ -3887,7 +3887,7 @@ public class ItemBuilder extends GenericScreen {
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
                 this.btnX = new int[]{(ROW_LEFT+ROW_LEFT_ICON),ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
     
-                this.btns[startVal+1].active=false;
+                this.btns[startVal+1].active = false;
     
                 for(int i=0; i<btns.length; i++) {
                     if(i>0 && this.btns[i].active) {
@@ -3932,7 +3932,7 @@ public class ItemBuilder extends GenericScreen {
                 }).dimensions(ItemBuilder.this.x+ROW_RIGHT-btnSize,5,btnSize,20).build()};
                 this.btnX = new int[]{(ROW_LEFT+ROW_LEFT_ICON),ROW_RIGHT-(3*btnSize+2*btnSpacing),ROW_RIGHT-(2*btnSize+btnSpacing),ROW_RIGHT-btnSize};
     
-                this.btns[startVal+1].active=false;
+                this.btns[startVal+1].active = false;
     
                 for(int i=0; i<btns.length; i++) {
                     if(i>0 && this.btns[i].active) {
@@ -4263,7 +4263,7 @@ public class ItemBuilder extends GenericScreen {
     
                 for(int i=0; i<btns.length; i++) {
                     if(i==selBtn+1)
-                        this.btns[i].active=false;
+                        this.btns[i].active = false;
                     else if(i>0)
                         this.btns[i].setTooltip(TT_SET);
                     this.children.add(this.btns[i]);
@@ -4325,7 +4325,7 @@ public class ItemBuilder extends GenericScreen {
     
                 for(int i=0; i<btns.length; i++) {
                     if(i==selBtn+1)
-                        this.btns[i].active=false;
+                        this.btns[i].active = false;
                     else if(i>0)
                         this.btns[i].setTooltip(TT_SET);
                     this.children.add(this.btns[i]);
@@ -4371,7 +4371,7 @@ public class ItemBuilder extends GenericScreen {
     
                 for(int i=0; i<btns.length; i++) {
                     if(i==selBtn+1)
-                        this.btns[i].active=false;
+                        this.btns[i].active = false;
                     else if(i>0)
                         this.btns[i].setTooltip(TT_SET);
                     this.children.add(this.btns[i]);
@@ -4763,7 +4763,7 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<txts.length; i++) {
                 this.children.add(this.txts[i]);
                 ItemBuilder.this.allTxtWidgets.add(this.txts[i]);
-            }            
+            }
         }
 
     }
@@ -5301,12 +5301,12 @@ public class ItemBuilder extends GenericScreen {
                     StringVisitable stringVisitable = jsonPreview;
                     List<OrderedText> page = this.textRenderer.wrapLines(stringVisitable, 114);
                     int l = Math.min(128 / this.textRenderer.fontHeight, page.size());
-                    for (int m = 0; m < l; ++m) {
+                    for(int m = 0; m < l; ++m) {
                         OrderedText orderedText = page.get(m);
                         context.drawText(this.textRenderer, orderedText, i + 36, j + 32 + m * this.textRenderer.fontHeight, 0, false);
                     }
                     Style style = this.getBookTextStyleAt(page, i, j, mouseX, mouseY);
-                    if (style != null) {
+                    if(style != null) {
                         context.drawHoverEvent(this.textRenderer, style, mouseX, mouseY);
                     }
                 }
@@ -5340,9 +5340,8 @@ public class ItemBuilder extends GenericScreen {
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.renderBackground(context, mouseX, mouseY, delta);
-        drawBackground(context, delta, mouseX, mouseY, 1);
+    protected Identifier getBackgroundTexture() {
+        return TEXTURE_MENU_BAR;
     }
     
     @Override
@@ -5357,23 +5356,22 @@ public class ItemBuilder extends GenericScreen {
     }
 
     @Override
+    public boolean shouldCloseOnKeybind() {
+        return this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !tabs[tab].hideTabs();
+    }
+
+    @Override
+    public void onClose() {
+        if(!pauseSaveScroll && tabWidget != null) {
+            tabScroll[tab] = tabWidget.getScrollY();
+        }
+        super.onClose();
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if(suggs != null && suggs.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
-        }
-        if(FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
-            if(this.unsavedTxtWidgets.isEmpty() && !activeTxt() && !tabs[tab].hideTabs()) {
-                if(!pauseSaveScroll && tabWidget != null) {
-                    tabScroll[tab] = tabWidget.getScrollY();
-                }
-                this.client.setScreen(null);
-                return true;
-            }
-        }
-        if(keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            if(!pauseSaveScroll && tabWidget != null) {
-                tabScroll[tab] = tabWidget.getScrollY();
-            }
         }
         if(keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN) {
             if(!activeTxt() && !activeSlider()) {
@@ -5391,7 +5389,7 @@ public class ItemBuilder extends GenericScreen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        if (suggs != null && suggs.mouseScrolled(verticalAmount)) {
+        if(suggs != null && suggs.mouseScrolled(verticalAmount)) {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
@@ -5399,7 +5397,7 @@ public class ItemBuilder extends GenericScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (suggs != null && suggs.mouseClicked(mouseX, mouseY, button)) {
+        if(suggs != null && suggs.mouseClicked(mouseX, mouseY, button)) {
             return true;
         }
         resetSuggs();

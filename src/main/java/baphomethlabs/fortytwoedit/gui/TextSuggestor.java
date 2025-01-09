@@ -56,13 +56,13 @@ public class TextSuggestor {
 
     public void setWindowActive(boolean windowActive) {
         this.windowActive = windowActive;
-        if (!windowActive) {
+        if(!windowActive) {
             this.window = null;
         }
     }
 
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.window != null && this.window.keyPressed(keyCode, scanCode, modifiers)) {
+        if(this.window != null && this.window.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
         return false;
@@ -77,11 +77,11 @@ public class TextSuggestor {
     }
 
     public void show() {
-        if (!suggestions.isEmpty()) {
+        if(!suggestions.isEmpty()) {
             int i = 0;
             int w = 0;
             w = Math.max(w, this.textRenderer.getWidth(this.textField.getText()));
-            for (Suggestion suggestion : suggestions.getList()) {
+            for(Suggestion suggestion : suggestions.getList()) {
                 w = Math.max(w, this.textRenderer.getWidth(suggestion.getText()));
             }
             int j = MathHelper.clamp(this.textField.getCharacterX(suggestions.getRange().getStart()), 0, this.textField.getCharacterX(0) + this.textField.getInnerWidth() - i);
@@ -99,8 +99,8 @@ public class TextSuggestor {
         ArrayList<Suggestion> list = Lists.newArrayList();
         ArrayList<Suggestion> list2 = Lists.newArrayList();
         list.add(new Suggestion(StringRange.at(0),this.textField.getText()));
-        for (Suggestion suggestion : suggestions.getList()) {
-            if (suggestion.getText().startsWith(string2) || suggestion.getText().startsWith("minecraft:" + string2)) {
+        for(Suggestion suggestion : suggestions.getList()) {
+            if(suggestion.getText().startsWith(string2) || suggestion.getText().startsWith("minecraft:" + string2)) {
                 list.add(suggestion);
                 continue;
             }
@@ -112,14 +112,14 @@ public class TextSuggestor {
 
     public void refresh() {
         String string = this.textField.getText();
-        if (!this.completingSuggestions) {
+        if(!this.completingSuggestions) {
             //this.textField.setSuggestion(null);
             this.window = null;
         }
         StringReader stringReader = new StringReader(string);
         int i = this.textField.getCursor();
         int j = stringReader.getCursor();
-        if (!(i < j || this.window != null && this.completingSuggestions)) {
+        if(!(i < j || this.window != null && this.completingSuggestions)) {
             ArrayList<Suggestion> tempList = new ArrayList<>();
             for(String s : suggestionList) {
                 tempList.add(new Suggestion(StringRange.at(0),s));
@@ -131,13 +131,13 @@ public class TextSuggestor {
 
     private void showCommandSuggestions() {
         this.window = null;
-        if (this.windowActive) {
+        if(this.windowActive) {
             this.show();
         }
     }
 
     static String getSuggestionSuffix(String original, String suggestion) {
-        if (suggestion.startsWith(original)) {
+        if(suggestion.startsWith(original)) {
             return suggestion.substring(original.length());
         }
         return null;
@@ -148,7 +148,7 @@ public class TextSuggestor {
     }
 
     public boolean tryRenderWindow(DrawContext context, int mouseX, int mouseY) {
-        if (this.window != null) {
+        if(this.window != null) {
             this.window.render(context, mouseX, mouseY);
             return true;
         }
@@ -184,22 +184,22 @@ public class TextSuggestor {
             //boolean bl2 = this.suggestions.size() > this.inWindowIndex + i;
             //boolean bl3 = bl || bl2;
             boolean bl4 = this.mouse.x != (float)mouseX || this.mouse.y != (float)mouseY;
-            if (bl4) {
+            if(bl4) {
                 this.mouse = new Vec2f(mouseX, mouseY);
             }
-            // if (bl3) {
+            // if(bl3) {
             //     int k;
             //     //context.fill(this.area.getX(), this.area.getY() - 1, this.area.getX() + this.area.getWidth(), this.area.getY(), 1, TextSuggestor.this.color);
             //     //context.fill(this.area.getX(), this.area.getY() + this.area.getHeight(), this.area.getX() + this.area.getWidth(), this.area.getY() + this.area.getHeight() + 1, 1, TextSuggestor.this.color);
-            //     if (bl) {
-            //         for (k = 0; k < this.area.getWidth(); ++k) {
-            //             if (k % 2 != 0) continue;
+            //     if(bl) {
+            //         for(k = 0; k < this.area.getWidth(); ++k) {
+            //             if(k % 2 != 0) continue;
             //             //context.fill(this.area.getX() + k, this.area.getY() - 1, this.area.getX() + k + 1, this.area.getY(), 1, -1);
             //         }
             //     }
-            //     if (bl2) {
-            //         for (k = 0; k < this.area.getWidth(); ++k) {
-            //             if (k % 2 != 0) continue;
+            //     if(bl2) {
+            //         for(k = 0; k < this.area.getWidth(); ++k) {
+            //             if(k % 2 != 0) continue;
             //             //context.fill(this.area.getX() + k, this.area.getY() + this.area.getHeight(), this.area.getX() + k + 1, this.area.getY() + this.area.getHeight() + 1, 1, -1);
             //         }
             //     }
@@ -207,11 +207,11 @@ public class TextSuggestor {
             boolean bl52 = false;
             List<Text> textList = new ArrayList<>();
             int width = 0;
-            for (int l = 0; l < i; ++l) {
+            for(int l = 0; l < i; ++l) {
                 Suggestion suggestion = this.suggestions.get(l + this.inWindowIndex);
                 //context.fill(this.area.getX(), this.area.getY() + 12 * l, this.area.getX() + this.area.getWidth(), this.area.getY() + 12 * l + 12, 1, TextSuggestor.this.color);
-                if (mouseX > this.area.getX() && mouseX < this.area.getX() + this.area.getWidth() && mouseY > this.area.getY() + 10 * l && mouseY < this.area.getY() + 10 * l + 10) {
-                    if (bl4) {
+                if(mouseX > this.area.getX() && mouseX < this.area.getX() + this.area.getWidth() && mouseY > this.area.getY() + 10 * l && mouseY < this.area.getY() + 10 * l + 10) {
+                    if(bl4) {
                         this.select(l + this.inWindowIndex);
                     }
                     bl52 = true;
@@ -225,17 +225,17 @@ public class TextSuggestor {
             }
             area.setWidth(width+6);
             context.drawTooltip(TextSuggestor.this.textRenderer, textList, this.area.getX() + 1 - 10, this.area.getY() + 12);
-            if (bl52 && (message = this.suggestions.get(this.selection).getTooltip()) != null) {
+            if(bl52 && (message = this.suggestions.get(this.selection).getTooltip()) != null) {
                 context.drawTooltip(TextSuggestor.this.textRenderer, Texts.toText(message), mouseX, mouseY);
             }
         }
 
         public boolean mouseClicked(int x, int y, int button) {
-            if (!this.area.contains(x, y)) {
+            if(!this.area.contains(x, y)) {
                 return false;
             }
             int i = (y - this.area.getY()) / 10 + this.inWindowIndex;
-            if (i >= 0 && i < this.suggestions.size()) {
+            if(i >= 0 && i < this.suggestions.size()) {
                 this.select(i);
                 this.complete();
             }
@@ -244,7 +244,7 @@ public class TextSuggestor {
 
         public boolean mouseScrolled(double amount) {
             int i = (int)(TextSuggestor.this.client.mouse.getX() * (double)TextSuggestor.this.client.getWindow().getScaledWidth() / (double)TextSuggestor.this.client.getWindow().getWidth());
-            if (this.areaMax.contains(i, (int)(TextSuggestor.this.client.mouse.getY() * (double)TextSuggestor.this.client.getWindow().getScaledHeight() / (double)TextSuggestor.this.client.getWindow().getHeight()))) {
+            if(this.areaMax.contains(i, (int)(TextSuggestor.this.client.mouse.getY() * (double)TextSuggestor.this.client.getWindow().getScaledHeight() / (double)TextSuggestor.this.client.getWindow().getHeight()))) {
                 this.inWindowIndex = MathHelper.clamp((int)((double)this.inWindowIndex - amount), 0, Math.max(this.suggestions.size() - TextSuggestor.this.maxSuggestionSize, 0));
                 return true;
             }
@@ -252,29 +252,29 @@ public class TextSuggestor {
         }
 
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (keyCode == 265) {//arrow up
+            if(keyCode == 265) {//arrow up
                 this.scroll(-1);
                 this.completed = false;
                 return true;
             }
-            if (keyCode == 264) {//arrow down
+            if(keyCode == 264) {//arrow down
                 this.scroll(1);
                 this.completed = false;
                 return true;
             }
-            if (keyCode == 258) {//tab
-                if (this.completed) {
+            if(keyCode == 258) {//tab
+                if(this.completed) {
                     this.scroll(Screen.hasShiftDown() ? -1 : 1);
                 }
                 this.complete();
                 return true;
             }
-            if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {//enter
+            if(keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {//enter
                 this.complete();
                 TextSuggestor.this.clearWindow();
                 return true;
             }
-            if (keyCode == 256) {//escape
+            if(keyCode == 256) {//escape
                 TextSuggestor.this.clearWindow();
                 return true;
             }
@@ -285,19 +285,19 @@ public class TextSuggestor {
             this.select(this.selection + offset);
             int i = this.inWindowIndex;
             int j = this.inWindowIndex + TextSuggestor.this.maxSuggestionSize - 1;
-            if (this.selection < i) {
+            if(this.selection < i) {
                 this.inWindowIndex = MathHelper.clamp(this.selection, 0, Math.max(this.suggestions.size() - TextSuggestor.this.maxSuggestionSize, 0));
-            } else if (this.selection > j) {
+            } else if(this.selection > j) {
                 this.inWindowIndex = MathHelper.clamp(this.selection + TextSuggestor.this.inWindowIndexOffset - TextSuggestor.this.maxSuggestionSize, 0, Math.max(this.suggestions.size() - TextSuggestor.this.maxSuggestionSize, 0));
             }
         }
 
         public void select(int index) {
             this.selection = index;
-            if (this.selection < 0) {
+            if(this.selection < 0) {
                 this.selection += this.suggestions.size();
             }
-            if (this.selection >= this.suggestions.size()) {
+            if(this.selection >= this.suggestions.size()) {
                 this.selection -= this.suggestions.size();
             }
             //Suggestion suggestion = this.suggestions.get(this.selection);

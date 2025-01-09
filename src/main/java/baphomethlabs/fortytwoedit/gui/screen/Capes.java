@@ -16,7 +16,6 @@ import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.toast.SystemToast;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -30,6 +29,7 @@ public class Capes extends GenericScreen {
     protected int playerX;
     protected int playerY;
     private static final Vector3f vec = new Vector3f();
+    private static final String CUSTOM_SKIN_ERROR_TITLE = "Failed to load skin";
     
     public Capes() {}
 
@@ -38,7 +38,7 @@ public class Capes extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.CAPES;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> changeScreen(new MagickGui())).dimensions(x+5,y+5,40,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("OptiFine [On]"),
                 Text.literal("OptiFine [Off]")).initially(FortytwoEdit.opticapesOn).omitKeyText().build(x+20,y+22*3+1,80,20,
                 Text.of(""), (button, trackOutput) -> {
@@ -97,11 +97,8 @@ public class Capes extends GenericScreen {
         playerY = this.height/2 + 30;
     }
 
-    protected void btnBack() {
-        client.setScreen(new MagickGui());
-    }
-
     protected void btnReloadCapes() {
+        FortytwoEdit.showToast("OptiCapes cache cleared",FortytwoEdit.debugCapeNamesSize()+" name(s) and "+FortytwoEdit.debugCapeNames2Size()+" cape(s) deleted");
         FortytwoEdit.clearCapes();
         unsel();
     }
@@ -116,7 +113,9 @@ public class Capes extends GenericScreen {
             String url = "https://optifine.net/capeChange?u=" +
                 client.getSession().getUuidOrNull().toString().replaceAll("-","") + "&n=" + client.getSession().getUsername() + "&s=" + serverId;
             Util.getOperatingSystem().open(url);
-        } catch (Exception ex) {}
+        } catch(Exception ex) {
+            FortytwoEdit.showToast("Failed to edit cape","Could not open OptiFine cape editor webpage");
+        }
         unsel();
     }
 
@@ -161,13 +160,23 @@ public class Capes extends GenericScreen {
                 BufferedImage skin = ImageIO.read(file);
                 if((skin.getWidth()==64 && skin.getHeight()==64) || (skin.getWidth()==128 && skin.getHeight()==128)) {
                     if(FortytwoEdit.setCustomSkin(file)) {
-                        FortytwoEdit.showClientSkin = true;
-                        SystemToast.add(client.getToastManager(), SystemToast.Type.PACK_COPY_FAILURE, Text.of("Custom skin loaded"), Text.of(file.getName()));
+                        FortytwoEdit.showToast("Custom skin loaded",file.getName());
                         reloadScreen();
+                        return;
                     }
+                    reloadScreen();
+                }
+                else {
+                    FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE,"File is not a valid 64x64 or 128x128 skin");
+                    return;
                 }
             }
-        } catch (Exception e) {}
+            else {
+                FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE,"File type must be a PNG");
+                return;
+            }
+        } catch(Exception ex) {}
+        FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE,"File could not be read");
     }
 
     private static void drawPlayer(DrawContext context, int x, int y, int size, float mouseX, float mouseY, LivingEntity entity) {
@@ -201,24 +210,6 @@ public class Capes extends GenericScreen {
         context.drawTextWithShadow(this.textRenderer, Text.of("Capes"), x+20,y+7+22*2, LABEL_COLOR);
         context.drawTextWithShadow(this.textRenderer, Text.of("Skin"), x+20,y+7+22*5, LABEL_COLOR);
         drawPlayer(context, playerX, playerY, 60, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.client.player);
-    }
-
-    @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.renderBackground(context, mouseX, mouseY, delta);
-        drawBackground(context, delta, mouseX, mouseY, 0);
-    }
-
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
-            this.client.setScreen(null);
-            return true;
-        }
-        if (super.keyPressed(keyCode, scanCode, modifiers)) {
-            return true;
-        }
-        return false;
     }
 
 }

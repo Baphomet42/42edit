@@ -6,14 +6,16 @@ import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.NarratorManager;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public abstract class GenericScreen extends Screen {
 
-    private static final Identifier TEXTURE = Identifier.of("42edit","textures/generic_gui.png");
-    private static final Identifier TEXTURE1 = Identifier.of("42edit","textures/nbt_gui.png");
+    protected static final Identifier TEXTURE_GENERIC = Identifier.of("42edit","textures/gui/generic.png");
+    protected static final Identifier TEXTURE_MENU_BAR = Identifier.of("42edit","textures/gui/menu_bar.png");
     protected int backgroundWidth = 12*20;
     protected int backgroundHeight = 9*22;
     protected int x;
@@ -33,6 +35,8 @@ public abstract class GenericScreen extends Screen {
     public static final String UNICODE_CHECK = "\u2611";
     public static final String UNICODE_X = "\u2612";
     public static final String UNICODE_REFRESH = "🗘";
+    public static final Text ERROR_CREATIVE = Text.of("Creative required");
+    public static final Tooltip TT_CREATIVE = Tooltip.of(ERROR_CREATIVE);
     private boolean unsel = false;
     
     public GenericScreen() {
@@ -41,9 +45,22 @@ public abstract class GenericScreen extends Screen {
 
     public void unfocus() {
         GuiNavigationPath guiNavigationPath = this.getFocusedPath();
-        if (guiNavigationPath != null) {
+        if(guiNavigationPath != null) {
             guiNavigationPath.setFocused(false);
         }
+    }
+
+    public boolean shouldCloseOnKeybind() {
+        return true;
+    }
+
+    protected Identifier getBackgroundTexture() {
+        return TEXTURE_GENERIC;
+    }
+
+    protected void changeScreen(Screen newScreen) {
+        this.onClose();
+        client.setScreen(newScreen);
     }
 
     @Override
@@ -57,13 +74,10 @@ public abstract class GenericScreen extends Screen {
     @Override
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderInGameBackground(context);
-    }
-    
-    protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY, int gui) {
-        if(gui==0)
-		    context.drawTexture(RenderLayer::getGuiTextured, TEXTURE, this.x, this.y, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
-        else if(gui==1)
-            context.drawTexture(RenderLayer::getGuiTextured, TEXTURE1, this.x, this.y, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
+
+        Identifier backgroundTexture = getBackgroundTexture();
+        if(backgroundTexture != null)
+            context.drawTexture(RenderLayer::getGuiTextured, backgroundTexture, this.x, this.y, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
     }
 
     @Override
@@ -72,6 +86,20 @@ public abstract class GenericScreen extends Screen {
         if(superReturn)
             return true;
         unsel();
+        return false;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if(super.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        if(FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
+            if(shouldCloseOnKeybind()) {
+                this.close();
+                return true;
+            }
+        }
         return false;
     }
 
@@ -86,6 +114,16 @@ public abstract class GenericScreen extends Screen {
 
     protected void reloadScreen() {
         this.clearAndInit();
+    }
+
+    protected void onClose() {
+
+    }
+
+    @Override
+    public void close() {
+        onClose();
+        super.close();
     }
 
     @Override

@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 
 public class MagickGui extends GenericScreen {
 
@@ -17,6 +18,8 @@ public class MagickGui extends GenericScreen {
     private static final int LEFT_OFFSET = 20;
     private static final int TOP_OFFSET = 1;
     private static final int ITEM_OFFSET = 2;
+    private static final Text TITLE_TEXT = Text.translatableWithFallback("ftedit.gui.magickScreen.title",
+        "Black Magick by BaphomethLabs").copy().withColor(0x420666).formatted(Formatting.BOLD);
     
     public MagickGui() {}
 
@@ -26,32 +29,26 @@ public class MagickGui extends GenericScreen {
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.NONE;
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.itemBuilder","42edit..."),
-            button -> this.btnItem()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
+            button -> changeScreen(new ItemBuilder())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
         this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.hacks","Hacks..."),
-            button -> this.btnHacks()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
+            button -> changeScreen(new Hacks())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
         btnWgtHat = this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.hat","Hat"),
             button -> this.btnHat()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET,60,WID_HEIGHT).build());
-        if(!client.player.getAbilities().creativeMode)
+        if(!client.player.getAbilities().creativeMode) {
             btnWgtHat.active = false;
+            btnWgtHat.setTooltip(TT_CREATIVE);
+        }
         else
             btnWgtHat.setTooltip(Tooltip.of(Text.translatableWithFallback("ftedit.gui.magickScreen.hat.tooltip","Swap current item with helmet slot")));
         this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.superSecret","Super Secret Settings..."),
             button -> this.btnSuperSecretSettings()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET,165,WID_HEIGHT).build());
         this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.capes","Capes..."),
-            button -> this.btnCapes()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
+            button -> changeScreen(new Capes())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
         this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick","AutoClick..."),
-            button -> this.btnAutoClickSettings()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET,90,WID_HEIGHT).build());
+            button -> changeScreen(new AutoClick())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET,90,WID_HEIGHT).build());
         btnWgtAutoClick = this.addDrawableChild(ButtonWidget.builder(Text.empty(),
             button -> this.btnAutoClick()).dimensions(x+LEFT_OFFSET+90+5,y+ROW_HEIGHT*7+TOP_OFFSET,70,WID_HEIGHT).build());
         setAutoClickMessage();
-    }
-
-    protected void btnItem() {
-        client.setScreen(new ItemBuilder());
-    }
-
-    protected void btnHacks() {
-        client.setScreen(new Hacks());
     }
 
     protected void btnHat() {
@@ -66,20 +63,12 @@ public class MagickGui extends GenericScreen {
 
     protected void btnSuperSecretSettings() {
         if(hasShiftDown()) {
-            client.setScreen(new SecretScreen());
+            changeScreen(new SecretScreen());
         }
         else {
             FortytwoEdit.cycleSuperSecretSetting();
             unsel();
         }
-    }
-
-    protected void btnCapes() {
-        client.setScreen(new Capes());
-    }
-
-    protected void btnAutoClickSettings() {
-        client.setScreen(new AutoClick());
     }
 
     protected void btnAutoClick() {
@@ -114,33 +103,23 @@ public class MagickGui extends GenericScreen {
             btnWgtAutoClick.setMessage(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick.custom","[Custom]"));
         btnWgtAutoClick.setTooltip(Tooltip.of(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick.cycleTooltip","Cycle auto click mode")));
     }
+
+    @Override
+    protected Identifier getBackgroundTexture() {
+        return null;
+    }
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         context.drawItemWithoutEntity(new ItemStack(Items.JIGSAW), x+6, y+6);
-        context.drawCenteredTextWithShadow(this.textRenderer,
-            Text.translatableWithFallback("ftedit.gui.magickScreen.title",
-            "Black Magick by BaphomethLabs").copy().withColor(0x420666).formatted(Formatting.BOLD),
-            this.width / 2, y+11, TEXT_COLOR);
+        context.drawCenteredTextWithShadow(this.textRenderer, TITLE_TEXT, this.width / 2, y+11, TEXT_COLOR);
 		context.drawItemWithoutEntity(new ItemStack(Items.SPONGE),x+LEFT_OFFSET+ITEM_OFFSET,y+44+TOP_OFFSET+ITEM_OFFSET);
 		context.drawItemWithoutEntity(new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET+ITEM_OFFSET);
 		context.drawItemWithoutEntity(new ItemStack(Items.DIAMOND_HELMET),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET+ITEM_OFFSET);
 		context.drawItemWithoutEntity(new ItemStack(Items.STRUCTURE_BLOCK),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET+ITEM_OFFSET);
 		context.drawItemWithoutEntity(new ItemStack(Items.ELYTRA),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET+ITEM_OFFSET);
 		context.drawItemWithoutEntity(new ItemStack(Items.GOLDEN_SWORD),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET+ITEM_OFFSET);
-    }
-
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if(FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
-            this.client.setScreen(null);
-            return true;
-        }
-        if(super.keyPressed(keyCode, scanCode, modifiers)) {
-            return true;
-        }
-        return false;
     }
 
 }

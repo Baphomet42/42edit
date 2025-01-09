@@ -21,15 +21,15 @@ public abstract class InGameHudMixin {
             final MinecraftClient client = MinecraftClient.getInstance();
             int x = client.getWindow().getScaledWidth()-80;
             int y = client.getWindow().getScaledHeight()-15;
-            if (FortytwoEdit.autoMove)
+            if(FortytwoEdit.autoMove)
                 context.drawText(client.textRenderer, "[Auto Move]", x, y - 20, TEXT_COLOR, true);
-            if (FortytwoEdit.autoClicker)
+            if(FortytwoEdit.autoClicker)
                 context.drawText(client.textRenderer, "[Auto Click]", x, y - 10, TEXT_COLOR, true);
-            else if (FortytwoEdit.autoFish && client.options.getShowSubtitles().getValue())
+            else if(FortytwoEdit.autoFish && client.options.getShowSubtitles().getValue())
                 context.drawText(client.textRenderer, "[Auto Fish]", x, y - 10, TEXT_COLOR, true);
-            else if (FortytwoEdit.autoFish && !client.options.getShowSubtitles().getValue())
+            else if(FortytwoEdit.autoFish && !client.options.getShowSubtitles().getValue())
                 context.drawText(client.textRenderer, "\u00a7cAuto Fish requires Subtitles", x-64, y - 10, TEXT_COLOR, true);
-            if (FortytwoEdit.randoMode)
+            if(FortytwoEdit.randoMode)
                 context.drawText(client.textRenderer, "[Rando Mode]", x, y, TEXT_COLOR, true);
         }
     }

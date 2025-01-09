@@ -39,7 +39,7 @@ public class LogScreen extends GenericScreen {
 
         logFile = new File(client.runDirectory.getAbsolutePath()+"\\logs\\latest.log");
 
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> changeScreen(new DebugScreen())).dimensions(x+5,y+5,40,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Resume"),
                 Text.literal("Pause")).initially(paused).omitKeyText().build(x+5+40+5,y+5,40,20, Text.of(""), (button, trackOutput) -> {
             paused = (boolean)trackOutput;
@@ -54,10 +54,6 @@ public class LogScreen extends GenericScreen {
         })).setTooltip(Tooltip.of(Text.of("Temporarily freeze new messages from appearing")));
         box = this.addDrawableChild(new EditBoxWidget(this.client.textRenderer, x+15-3, y+35, 240-24, 22*6, Text.of(""), Text.of("")));
         updateBox();
-    }
-
-    protected void btnBack() {
-        client.setScreen(new SecretScreen());
     }
 
     protected void updateBox() {
@@ -91,7 +87,7 @@ public class LogScreen extends GenericScreen {
                     logType = LogType.build(line.substring(line.indexOf("/")+1,line.indexOf("]")));
                     line = line.replaceFirst("^\\[[^/\\]]+/[A-Z]+\\]:? ","");
                 }
-            }        
+            }
 
             return build(timestamp, logType, line);
         }
@@ -156,24 +152,6 @@ public class LogScreen extends GenericScreen {
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.renderBackground(context, mouseX, mouseY, delta);
-        drawBackground(context, delta, mouseX, mouseY, 0);
-    }
-
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if(FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
-            this.client.setScreen(null);
-            return true;
-        }
-        if(super.keyPressed(keyCode, scanCode, modifiers)) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
     public void tick() {
         if(!paused) {
 
@@ -208,7 +186,9 @@ public class LogScreen extends GenericScreen {
                             i++;
                         }
                     }
-                    catch(Exception e) {}
+                    catch(Exception ex) {
+                        logModLog(LogType.ERROR, "Failed to read vanilla log file: " + (logFile == null ? "null" : logFile.getPath()));
+                    }
 
                     if(!onlyMod)
                         updateBox();

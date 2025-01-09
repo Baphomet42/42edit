@@ -37,12 +37,12 @@ public abstract class CameraMixin {
 
     @Inject(method="update", at=@At(value="RETURN"), cancellable=true)
     private void setView(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo c) {
-        if (FortytwoEdit.isFreeLooking) {
+        if(FortytwoEdit.isFreeLooking) {
             this.setRotation(FortytwoEdit.cameraRotation[0], FortytwoEdit.cameraRotation[1]);
             this.setPos(MathHelper.lerp((double)tickDelta, focusedEntity.prevX, focusedEntity.getX()), MathHelper.lerp((double)tickDelta, focusedEntity.prevY, focusedEntity.getY()) + (double)MathHelper.lerp(tickDelta, this.lastCameraY, this.cameraY), MathHelper.lerp((double)tickDelta, focusedEntity.prevZ, focusedEntity.getZ()));
 
             float s = 1f;
-            if (focusedEntity instanceof LivingEntity)
+            if(focusedEntity instanceof LivingEntity)
                 s = ((LivingEntity)focusedEntity).getScale();
             this.moveBy(-this.clipToSpace(4.0f * s), 0.0f, 0.0f);
         }

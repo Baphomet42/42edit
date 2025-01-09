@@ -60,7 +60,7 @@ public abstract class StructureBlockScreenMixin extends Screen {
     
     @Inject(method="keyPressed(III)Z", at=@At("HEAD"), cancellable = true)
     private void keyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        if (suggs != null && suggs.keyPressed(keyCode, scanCode, modifiers)) {
+        if(suggs != null && suggs.keyPressed(keyCode, scanCode, modifiers)) {
             cir.setReturnValue(true);
         }
     }
@@ -73,7 +73,7 @@ public abstract class StructureBlockScreenMixin extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        if (suggs != null && suggs.mouseScrolled(verticalAmount)) {
+        if(suggs != null && suggs.mouseScrolled(verticalAmount)) {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
@@ -81,7 +81,7 @@ public abstract class StructureBlockScreenMixin extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (suggs != null && suggs.mouseClicked(mouseX, mouseY, button)) {
+        if(suggs != null && suggs.mouseClicked(mouseX, mouseY, button)) {
             return true;
         }
         suggs = null;

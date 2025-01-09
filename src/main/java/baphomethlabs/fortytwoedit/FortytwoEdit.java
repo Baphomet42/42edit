@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
 import baphomethlabs.fortytwoedit.gui.screen.AutoClick;
 import baphomethlabs.fortytwoedit.gui.screen.Capes;
+import baphomethlabs.fortytwoedit.gui.screen.DebugScreen;
 import baphomethlabs.fortytwoedit.gui.screen.Hacks;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
 import baphomethlabs.fortytwoedit.gui.screen.LogScreen;
@@ -36,6 +37,7 @@ import net.minecraft.client.option.Perspective;
 import net.minecraft.client.resource.language.TranslationStorage;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.client.toast.SystemToast;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -56,7 +58,9 @@ import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Property;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
@@ -84,6 +88,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         AUTO_CLICK,
         CAPES,
+        DEBUG_SCREEN,
         HACKS,
         ITEM_BUILDER,
         LOG_SCREEN,
@@ -186,11 +191,11 @@ public class FortytwoEdit implements ClientModInitializer {
                 if(con.getResponseCode() == HttpURLConnection.HTTP_OK)
                     connect = true;
                 con.disconnect();
-            } catch(Exception e) {}
+            } catch(Exception ex) {}
             if(con != null)
                 try {
                     con.disconnect();
-                } catch(Exception e) {}
+                } catch(Exception ex) {}
 
             if(!connect) {
                 opticapesWorking = false;
@@ -211,8 +216,11 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     public static void clearCapes() {
-        logInfo("OptiCapes: Cleared "+FortytwoEdit.debugCapeNamesSize()+" cached name(s) and deleted "+FortytwoEdit.debugCapeNames2Size()+" cached cape(s)");
         capeNames.clear();
+        final MinecraftClient client = MinecraftClient.getInstance();
+        for(String name : capeNames2) {
+            client.getTextureManager().destroyTexture(getCapeCacheID(name));
+        }
         capeNames2.clear();
         checkCapesEnabled();
     }
@@ -247,30 +255,33 @@ public class FortytwoEdit implements ClientModInitializer {
             con.disconnect();
             cape = new NativeImage(128, 64, true);
 
-            for (int x = 0; x < capeInp.getWidth(); x++)
-                for (int y = 0; y < capeInp.getHeight(); y++)
+            for(int x = 0; x < capeInp.getWidth(); x++)
+                for(int y = 0; y < capeInp.getHeight(); y++)
                     cape.setColorArgb(x, y, capeInp.getColorArgb(x, y));
 
             capeInp.close();
-            client.getTextureManager().registerTexture(Identifier.of("42edit","cache/capes/"+name.toLowerCase()), new NativeImageBackedTexture(cape));
+            client.getTextureManager().registerTexture(getCapeCacheID(name), new NativeImageBackedTexture(cape));
             cape.close();
             capeNames2.add(name);
             return true;
-        } catch (Exception e) {}
+        } catch(Exception ex) {}
         if(con != null)
             try {
                 con.disconnect();
-            } catch(Exception e) {}
+            } catch(Exception ex) {}
         if(stream != null)
             try {
                 stream.close();
-            } catch(Exception e) {}
+            } catch(Exception ex) {}
         if(capeInp != null)
             capeInp.close();
         if(cape != null)
             cape.close();
 
         return false;
+    }
+    private static Identifier getCapeCacheID(String name) {
+        return Identifier.of("42edit","cache/capes/"+name.toLowerCase());
     }
 
     // custom capes
@@ -343,37 +354,45 @@ public class FortytwoEdit implements ClientModInitializer {
     public static Identifier customSkinID = Identifier.of("42edit","cache/custom_skin");
 
     public static boolean setCustomSkin(File file) {
+        final MinecraftClient client = MinecraftClient.getInstance();
+        customSkinName = "";
+        showClientSkin = false;
+        client.getTextureManager().destroyTexture(customSkinID);
 
-        FileInputStream inp = null;
-        NativeImage skinFile = null;
-        NativeImage skin = null;
-        if(file.isFile() && file.getName().endsWith(".png")) {
-            try {
-                inp = new FileInputStream(file);
-                skinFile = NativeImage.read(inp);
-                inp.close();
-                skin = new NativeImage(skinFile.getWidth(),skinFile.getHeight(),true);
+        if(file != null) {
+            FileInputStream inp = null;
+            NativeImage skinFile = null;
+            NativeImage skin = null;
+            if(file.isFile() && file.getName().endsWith(".png")) {
+                try {
+                    inp = new FileInputStream(file);
+                    skinFile = NativeImage.read(inp);
+                    inp.close();
+                    skin = new NativeImage(skinFile.getWidth(),skinFile.getHeight(),true);
 
-                for (int x = 0; x < skinFile.getWidth(); x++)
-                    for (int y = 0; y < skinFile.getHeight(); y++)
-                        skin.setColorArgb(x, y, skinFile.getColorArgb(x, y));
+                    for(int x = 0; x < skinFile.getWidth(); x++)
+                        for(int y = 0; y < skinFile.getHeight(); y++)
+                            skin.setColorArgb(x, y, skinFile.getColorArgb(x, y));
 
+                    skinFile.close();
+                    customSkinName = file.getName();
+                    client.getTextureManager().registerTexture(customSkinID, new NativeImageBackedTexture(skin));
+                    skin.close();
+                    showClientSkin = true;
+                    return true;
+                } catch(Exception ex) {}
+            }
+            if(inp != null)
+                try {
+                    inp.close();
+                } catch(Exception ex) {}
+            if(skinFile != null)
                 skinFile.close();
-                final MinecraftClient client = MinecraftClient.getInstance();
-                customSkinName = file.getName();
-                client.getTextureManager().registerTexture(customSkinID, new NativeImageBackedTexture(skin));
+            if(skin != null)
                 skin.close();
-                return true;
-            } catch(Exception e) {}
+
+            logWarn("Failed to set custom skin file");
         }
-        if(inp != null)
-            try {
-                inp.close();
-            } catch(Exception e) {}
-        if(skinFile != null)
-            skinFile.close();
-        if(skin != null)
-            skin.close();
 
         return false;
     }
@@ -481,7 +500,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 if(joinLists[i] != null)
                     for(int j=0; j<joinLists[i].length; j++)
                         list.add(joinLists[i][j]);
-            }  
+            }
 
         list = new ArrayList<String>((new HashSet<String>(list)));
         Collections.sort(list);
@@ -553,6 +572,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     case AUTO_CLICK: client.setScreen(new AutoClick()); break;
                     case CAPES: client.setScreen(new Capes()); break;
                     case HACKS: client.setScreen(new Hacks()); break;
+                    case DEBUG_SCREEN: client.setScreen(new DebugScreen()); break;
                 }
             }
 
@@ -691,7 +711,7 @@ public class FortytwoEdit implements ClientModInitializer {
     private static boolean testRandoSlot() {
         final MinecraftClient client = MinecraftClient.getInstance();
         int selected = client.player.getInventory().selectedSlot + 1;
-        for (int i = 0; i < randoSlots.length; i++) {
+        for(int i = 0; i < randoSlots.length; i++) {
             if(randoSlots[i] == selected)
                 return true;
         }
@@ -725,7 +745,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 String states = "";
                 states += "{";
                 boolean bl = false;
-                for (Map.Entry<Property<?>,Comparable<?>> entry : blockState.getEntries().entrySet()) {
+                for(Map.Entry<Property<?>,Comparable<?>> entry : blockState.getEntries().entrySet()) {
                     if(bl) {
                         states += ",";
                     }
@@ -955,6 +975,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
     private static final String LOG_PREFIX = "(42edit) ";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss"); // from CommandBlockExecutor.class
+    private static final SystemToast.Type TOAST_TYPE = new SystemToast.Type();
+    private static final MutableText TOAST_PREFIX = Text.empty().append("").append(Text.empty().append("(42edit) ").formatted(Formatting.BLACK));
 
     public static void logInfo(String info) {
         LOGGER.info(LOG_PREFIX + info);
@@ -971,18 +993,29 @@ public class FortytwoEdit implements ClientModInitializer {
         LogScreen.logModLog(LogScreen.LogType.ERROR, error);
     }
 
+    public static void showToast(String title, String desc) {
+        showToast(Text.of(title),Text.of(desc));
+    }
+
+    public static void showToast(Text title, Text desc) {
+        final MinecraftClient client = MinecraftClient.getInstance();
+        client.getToastManager().add(new SystemToast(TOAST_TYPE, TOAST_PREFIX.copy().append(title), desc));
+    }
+
     /**
      * Refresh a wide variety of features. Can be used for debug reasons, to fetch new web items, etc.
      */
-    public static void refreshStuff() {
-        MinecraftClient client = MinecraftClient.getInstance();
+    public static void debugTryRefreshVarious() {
+        final MinecraftClient client = MinecraftClient.getInstance();
 
         readOptions();
         refreshWebItems(true);
-        clearCapes();
 
         ((HotbarStorageAccessor)client.getCreativeHotbarStorage()).setLoaded(false);
         client.getCreativeHotbarStorage().getSavedHotbar(0);
+        
+        clearCapes();
+        setCustomSkin(null);
 
         LogScreen.clearLogCache();
     }
@@ -1098,8 +1131,14 @@ public class FortytwoEdit implements ClientModInitializer {
         getSavedItems();
     }
 
-    public static void refreshWebItems(boolean forceWeb) {
+    /**
+     * 
+     * @param forceWeb when false, only connect to site if .42edit config web items option set to auto
+     * @return compound with keys to mark results (site_match_catch, site_updated_catch)
+     */
+    public static NbtCompound refreshWebItems(boolean forceWeb) {
         webItems = null;
+        NbtCompound result = new NbtCompound();
         
         NbtCompound cacheNbt = FileTools.readCompoundFromFile(FileTools.FILE_WEB_CACHE);
         NbtCompound newItems = cacheNbt.copy();
@@ -1107,6 +1146,7 @@ public class FortytwoEdit implements ClientModInitializer {
         if(webItemsAuto || forceWeb) {
             String webItemsUrlActive = webItemsUrlOverride.equals("") ? webItemsUrlDefault : webItemsUrlOverride;
             String webJson = "";
+            boolean didError = false;
 
             HttpURLConnection con = null;
             InputStream stream = null;
@@ -1121,32 +1161,36 @@ public class FortytwoEdit implements ClientModInitializer {
                     stream.close();
                     con.disconnect();
                 }
-            } catch(Exception e) {
+            } catch(Exception ex) {
                 logWarn("Failed connection to BaphomethLabs Black Market");
+                didError = true;
             }
             if(con != null)
                 try {
                     con.disconnect();
-                } catch(Exception e) {}
+                } catch(Exception ex) {}
             if(stream != null)
                 try {
                     stream.close();
-                } catch(Exception e) {}
+                } catch(Exception ex) {}
 
-            if(BlackMagick.nbtFromString(webJson) != null && BlackMagick.nbtFromString(webJson).getType()==NbtElement.COMPOUND_TYPE) {
-                NbtCompound webNbt = (NbtCompound)BlackMagick.nbtFromString(webJson);
+            NbtElement parseWebJson = BlackMagick.nbtFromString(webJson);
+            if(parseWebJson != null && parseWebJson.getType()==NbtElement.COMPOUND_TYPE) {
+                NbtCompound webNbt = (NbtCompound)parseWebJson;
                 newItems = webNbt.copy();
 
                 if(webNbt.asString().equals(cacheNbt.asString())) {
                     logInfo("Black Market items are up to date");
+                    result.put("site_match_catch",new NbtCompound());
                 }
                 else {
                     logInfo("Updating Black Market items");
+                    result.put("site_updated_catch",new NbtCompound());
                     FileTools.writeCompoundToFile(FileTools.FILE_WEB_CACHE, newItems, FileDisplayType.TREE_CONDITIONAL_COLLAPSE);
                 }
             }
-            else
-                logWarn("Failed to parse BaphomethLabs Black Market ("+webItemsUrlActive+"): "+webJson);
+            else if(!didError)
+                logError("Failed to parse BaphomethLabs Black Market ("+webItemsUrlActive+"): "+webJson);
         }
 
         if(newItems != null && newItems.contains("versions",NbtElement.LIST_TYPE) && !((NbtList)newItems.get("versions")).isEmpty()
@@ -1182,6 +1226,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
         if(webItems == null || webItems.isEmpty())
             logWarn("No source of Black Market items available");
+
+        return result;
     }
 
 }

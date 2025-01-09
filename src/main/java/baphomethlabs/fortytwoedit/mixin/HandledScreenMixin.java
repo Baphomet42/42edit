@@ -53,7 +53,7 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
     @Inject(method="drawMouseoverTooltip(Lnet/minecraft/client/gui/DrawContext;II)V", at=@At("HEAD"), cancellable = true)
     private void drawContainerTooltip(DrawContext context, int x, int y, CallbackInfo c) {
 
-        if (((ScreenHandler)this.handler).getCursorStack().isEmpty() && this.focusedSlot != null && this.focusedSlot.hasStack()) {
+        if(((ScreenHandler)this.handler).getCursorStack().isEmpty() && this.focusedSlot != null && this.focusedSlot.hasStack()) {
             ItemStack stack = this.focusedSlot.getStack().copy();
             ComponentMap components = stack.getComponents();
             if(components.contains(DataComponentTypes.CONTAINER)) {
@@ -94,18 +94,18 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
             double e = client.mouse.getY() * (double)this.client.getWindow().getScaledHeight() / (double)this.client.getWindow().getHeight();
             Slot slot = this.getSlotAt(d, e);
 
-            if (slot != null && ((ScreenHandler)this.handler).canInsertIntoSlot(ItemStack.EMPTY, slot)) {
+            if(slot != null && ((ScreenHandler)this.handler).canInsertIntoSlot(ItemStack.EMPTY, slot)) {
                 
                 if(slot.hasStack()) {
                     ItemStack stack = slot.getStack().copy();
-                    for (Slot slot2 : ((ScreenHandler)this.handler).slots) {
-                        if (slot2 == null || !slot2.canTakeItems(this.client.player) || !slot2.hasStack() || slot2.inventory != slot.inventory || !ScreenHandler.canInsertItemIntoSlot(slot2, stack, true)) continue;
+                    for(Slot slot2 : ((ScreenHandler)this.handler).slots) {
+                        if(slot2 == null || !slot2.canTakeItems(this.client.player) || !slot2.hasStack() || slot2.inventory != slot.inventory || !ScreenHandler.canInsertItemIntoSlot(slot2, stack, true)) continue;
                         this.onMouseClick(slot2, slot2.id, 0, SlotActionType.QUICK_MOVE);
                     }
                 }
                 else {
-                    for (Slot slot2 : ((ScreenHandler)this.handler).slots) {
-                        if (slot2 == null || !slot2.canTakeItems(this.client.player) || !slot2.hasStack() || slot2.inventory != slot.inventory) continue;
+                    for(Slot slot2 : ((ScreenHandler)this.handler).slots) {
+                        if(slot2 == null || !slot2.canTakeItems(this.client.player) || !slot2.hasStack() || slot2.inventory != slot.inventory) continue;
                         this.onMouseClick(slot2, slot2.id, 0, SlotActionType.QUICK_MOVE);
                     }
                 }

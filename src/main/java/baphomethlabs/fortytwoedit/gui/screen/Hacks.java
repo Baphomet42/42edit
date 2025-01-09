@@ -4,8 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.lwjgl.glfw.GLFW;
 import baphomethlabs.fortytwoedit.BlackMagick;
+import baphomethlabs.fortytwoedit.FileTools;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -23,7 +23,6 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
-import net.minecraft.util.Util;
 import net.minecraft.util.math.GlobalPos;
 
 public class Hacks extends GenericScreen {
@@ -39,7 +38,7 @@ public class Hacks extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.HACKS;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> changeScreen(new MagickGui())).dimensions(x+5,y+5,40,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Mix [On]"),
                 Text.literal("Mix [Off]")).initially(FortytwoEdit.randoMode).omitKeyText().build(x+20,y+22*2+1,80,20,
                 Text.of(""), (button, trackOutput) -> {
@@ -76,8 +75,10 @@ public class Hacks extends GenericScreen {
         })).setTooltip(Tooltip.of(Text.of("Toggle xray mode\n\nWhen on: barriers, light blocks, and other invisible blocks will appear as solid blocks")));
         btnWgtFindInvis = this.addDrawableChild(ButtonWidget.builder(Text.of("Find Invis Entities"),
             button -> this.btnFindInvis()).dimensions(x+20+100+5,y+22*4+1,100,20).build());
-        if(!client.player.getAbilities().creativeMode)
+        if(!client.player.getAbilities().creativeMode) {
             btnWgtFindInvis.active = false;
+            btnWgtFindInvis.setTooltip(TT_CREATIVE);
+        }
         else
             btnWgtFindInvis.setTooltip(Tooltip.of(Text.of("Print positions of invisible entities (only you can see this)")));
         this.addDrawableChild(ButtonWidget.builder(Text.of("Death Pos"), button -> this.btnDeathPos()).dimensions(x+20,y+22*5+1,100,20).build())
@@ -98,11 +99,6 @@ public class Hacks extends GenericScreen {
             .setTooltip(Tooltip.of(Text.of("Open screenshots folder to view panorama")));
     }
 
-    protected void btnBack() {
-        saveAll();
-        client.setScreen(new MagickGui());
-    }
-
     protected void editTxtRando(String text) {
         unsaved = true;
     }
@@ -115,10 +111,9 @@ public class Hacks extends GenericScreen {
                 if(inp.length()>0) {
                     int[] slots = new int[inp.length()];
                     for(int i=0; i<slots.length; i++) {
-                        try{
+                        try {
                             slots[i]=Integer.parseInt(""+inp.charAt(i));
-                        }
-                        catch(NumberFormatException ex) {}
+                        } catch(NumberFormatException ex) {}
                     }
                     FortytwoEdit.randoSlots = slots;
                 }
@@ -137,7 +132,7 @@ public class Hacks extends GenericScreen {
         double y = client.player.getY();
         double z = client.player.getZ();
         double range = 2.5;
-        while (entities.hasNext()) {
+        while(entities.hasNext()) {
             Entity current = entities.next();
             if(current.getType() != EntityType.PLAYER
             && current.getX()>x-range && current.getX()<x+range
@@ -203,18 +198,23 @@ public class Hacks extends GenericScreen {
                 item = BlackMagick.itemFromNbt((NbtCompound)bundle.get(0));
 
             client.keyboard.setClipboard(BlackMagick.itemToNbtStorage(item).asString());
+            FortytwoEdit.showToast("Get Entity","Entity data copied");
 
-            if (client.player.getAbilities().creativeMode && !item.isEmpty()) {
+            if(client.player.getAbilities().creativeMode && !item.isEmpty()) {
                 BlackMagick.setItemMain(item);
             }
+        }
+        else {
+            FortytwoEdit.showToast("Get Entity","No entities within range");
         }
         unsel();
     }
 
     protected void btnFindInvis() {
-        if (client.player.getAbilities().creativeMode) {
+        if(client.player.getAbilities().creativeMode) {
+            int found = 0;
             Iterator<Entity> entities = client.world.getEntities().iterator();
-            while (entities.hasNext()) {
+            while(entities.hasNext()) {
                 Entity current = entities.next();
                 if(current.getType() == EntityType.ARMOR_STAND) {
                     NbtCompound nbt = new NbtCompound();
@@ -227,8 +227,10 @@ public class Hacks extends GenericScreen {
                                 && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(2))).isEmpty()
                                 && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(3))).isEmpty()
                                 && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(0))).isEmpty()
-                                && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(1))).isEmpty())
+                                && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(1))).isEmpty()) {
                             reportInvis(current);
+                            found++;
+                        }
                     }
                 }
                 else if(current.getType() == EntityType.ITEM_FRAME || current.getType() == EntityType.GLOW_ITEM_FRAME) {
@@ -239,10 +241,18 @@ public class Hacks extends GenericScreen {
                     && nbt.get("Invisible").asString().equals("1b")) {
                         if(!nbt.contains("Item")) {
                             reportInvis(current);
+                            found++;
                         }
                     }
                 }
             }
+            if(found>0)
+                FortytwoEdit.showToast("Find Invis","Found "+found+" invisible entities");
+            else
+                FortytwoEdit.showToast("Find Invis","No invisible entities detected");
+        }
+        else {
+            FortytwoEdit.showToast("Find Invis", "This requires creative mode");
         }
         unsel();
     }
@@ -264,9 +274,10 @@ public class Hacks extends GenericScreen {
             GlobalPos pos = client.player.getLastDeathPos().get();
             String coords = "Last death [X: "+pos.pos().getX()+", Y: "+pos.pos().getY()+", Z: "+pos.pos().getZ()+"] in "+pos.dimension().getValue().toString();
             client.player.sendMessage(Text.of(coords),false);
+            FortytwoEdit.showToast("Death Pos", "Death coords sent to chat");
         }
         else {
-            client.player.sendMessage(Text.of("No death pos recorded"),false);
+            FortytwoEdit.showToast("Death Pos", "No death pos recorded");
         }
         unsel();
     }
@@ -285,15 +296,12 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnPano() {
-        File location = new File(client.runDirectory.getAbsolutePath());
-        client.takePanorama(location,1024,1024);
+        client.takePanorama(new File(client.runDirectory.getAbsolutePath()),1024,1024);
         unsel();
     }
 
     protected void btnScreenshots() {
-        File screenshots = new File(client.runDirectory.getAbsolutePath()+"\\screenshots");
-        if(screenshots.exists() && screenshots.isDirectory())
-            try{ Util.getOperatingSystem().open(screenshots); } catch(Exception e) {}
+        FileTools.openMinecraftScreenshots();
         unsel();
     }
 
@@ -311,35 +319,22 @@ public class Hacks extends GenericScreen {
 		context.drawItemWithoutEntity(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+22*5+1+2);
 		context.drawItemWithoutEntity(new ItemStack(Items.FISHING_ROD),x+20+2+100+5,y+22*5+1+2);
     }
-
-    @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.renderBackground(context, mouseX, mouseY, delta);
-        drawBackground(context, delta, mouseX, mouseY, 0);
-    }
     
     @Override
     public void resize(MinecraftClient client, int width, int height) {
         saveAll();
-        this.init(client, width, height);
+        super.resize(client, width, height);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            saveAll();
-        }
-        if (FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
-            if(!txtRando.isActive()) {
-                saveAll();
-                this.client.setScreen(null);
-                return true;
-            }
-        }
-        if (super.keyPressed(keyCode, scanCode, modifiers)) {
-            return true;
-        }
-        return false;
+    public boolean shouldCloseOnKeybind() {
+        return !txtRando.isActive();
+    }
+
+    @Override
+    public void onClose() {
+        saveAll();
+        super.onClose();
     }
 
     @Override

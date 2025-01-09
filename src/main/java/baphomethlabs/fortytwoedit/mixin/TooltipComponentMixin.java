@@ -15,7 +15,7 @@ public abstract interface TooltipComponentMixin {
     @Inject(method="of(Lnet/minecraft/item/tooltip/TooltipData;)Lnet/minecraft/client/gui/tooltip/TooltipComponent;", at=@At("HEAD"), cancellable = true)
     private static void ofContainer(TooltipData data, CallbackInfoReturnable<TooltipComponent> cir) {
         
-        if (data instanceof ContainerTooltipData) {
+        if(data instanceof ContainerTooltipData) {
             cir.setReturnValue(new ContainerTooltipComponent((ContainerTooltipData)data));
         }
 

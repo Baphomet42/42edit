@@ -1,6 +1,5 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
-import org.lwjgl.glfw.GLFW;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -24,7 +23,7 @@ public class AutoClick extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.AUTO_CLICK;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> this.btnBack()).dimensions(x+5,y+5,40,20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> changeScreen(new MagickGui())).dimensions(x+5,y+5,40,20).build());
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Use [On]"), Text.literal("Use [Off]")).initially(FortytwoEdit.autoClick).omitKeyText().build(x+20,y+44+1,100,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick((boolean)trackOutput,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
             unsel();
@@ -42,11 +41,6 @@ public class AutoClick extends GenericScreen {
         this.txtAttackCooldown.setText(""+FortytwoEdit.attackWait);
         this.txtAttackCooldown.setChangedListener(this::editTxtAttackCooldown);
         this.addDrawableChild(this.txtAttackCooldown);
-    }
-
-    protected void btnBack() {
-        saveAll();
-        client.setScreen(new MagickGui());
     }
 
     protected void editTxtAttackCooldown(String text) {
@@ -81,12 +75,6 @@ public class AutoClick extends GenericScreen {
 		context.drawItemWithoutEntity(new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+22*4+1+2);
         context.drawTextWithShadow(this.textRenderer, Text.of("Attack Cooldown:"), x+20+3,y+7+22*6, LABEL_COLOR);
     }
-
-    @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.renderBackground(context, mouseX, mouseY, delta);
-        drawBackground(context, delta, mouseX, mouseY, 0);
-    }
     
     @Override
     public void resize(MinecraftClient client, int width, int height) {
@@ -95,21 +83,14 @@ public class AutoClick extends GenericScreen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            saveAll();
-        }
-        if (FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
-            if(!txtAttackCooldown.isActive()) {
-                saveAll();
-                this.client.setScreen(null);
-                return true;
-            }
-        }
-        if (super.keyPressed(keyCode, scanCode, modifiers)) {
-            return true;
-        }
-        return false;
+    public boolean shouldCloseOnKeybind() {
+        return !txtAttackCooldown.isActive();
+    }
+
+    @Override
+    public void onClose() {
+        saveAll();
+        super.onClose();
     }
 
     @Override

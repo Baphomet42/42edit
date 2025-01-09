@@ -89,7 +89,7 @@ public class BlackMagick {
             // If item is not enabled, sets the slot to a bundle containing the item.
             // Removing the bundle item in an inventory may result in a ghost item.
             // Emptying the bundle with the use key ingame will spawn the item, and it will not be a ghost.
-            if (!item.isEmpty() && !client.player.networkHandler.hasFeature(item.getItem().getRequiredFeatures())) {
+            if(!item.isEmpty() && !client.player.networkHandler.hasFeature(item.getItem().getRequiredFeatures())) {
                 ItemStack newStack = BlackMagick.itemFromString("{id:bundle,components:{bundle_contents:["+BlackMagick.itemToNbtStorage(item).asString()+"]}}");
                 if(!newStack.isEmpty()) {
                     item = newStack;
@@ -115,10 +115,9 @@ public class BlackMagick {
         NbtCompound temp;
         try {
             temp = StringNbtReader.parse(nbt);
-        } catch (CommandSyntaxException e) {
-            return null;
-        }
-        return temp.get("temp");
+            return temp.get("temp");
+        } catch(CommandSyntaxException ex) {}
+        return null;
     }
 
     /**
@@ -355,7 +354,7 @@ public class BlackMagick {
                 ComponentType<?> dataComponentType = component.type();
                 Identifier identifier = Registries.DATA_COMPONENT_TYPE.getId(dataComponentType);
                 Optional<NbtElement> optional = component.encode(dynamicOps).result();
-                if (identifier == null || optional.isEmpty()) {
+                if(identifier == null || optional.isEmpty()) {
                     return Stream.empty();
                 }
                 return Stream.of("\""+identifier.toString() + "\":" + optional.get());
@@ -485,9 +484,7 @@ public class BlackMagick {
                 if(!path.contains("!"))
                     nbt = removeComponentLocks(nbt,path);
             }
-        } catch(Exception ex) {
-            return base.copy();
-        }
+        } catch(Exception ex) {}
         
         return nbt;
     }
@@ -617,7 +614,7 @@ public class BlackMagick {
     public static List<List<String>> getBlockStates(Item item) {
         List<List<String>> states = new ArrayList<>();
         BlockState blockState = Block.getBlockFromItem(item).getDefaultState();
-        for (Map.Entry<Property<?>, Comparable<?>> entry : blockState.getEntries().entrySet()) {
+        for(Map.Entry<Property<?>, Comparable<?>> entry : blockState.getEntries().entrySet()) {
             ArrayList<String> list = new ArrayList<>();
             list.add(entry.getKey().getName());
             for(Comparable<?> val : entry.getKey().getValues()) {
@@ -636,7 +633,9 @@ public class BlackMagick {
             if(client.world != null)
                 for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT).get().getIds())
                     list.add(i.toString());
-        } catch(Exception e) {}
+        } catch(Exception ex) {
+            FortytwoEdit.logWarn("Failed to read world enchantments");
+        }
 
         Collections.sort(list);
         return list;
@@ -652,7 +651,9 @@ public class BlackMagick {
                 if(ench != null)
                     max = ench.getMaxLevel();
             }
-        } catch(Exception e) {}
+        } catch(Exception ex) {
+            FortytwoEdit.logWarn("Failed to read world enchantments");
+        }
 
         return max;
     }
@@ -665,7 +666,9 @@ public class BlackMagick {
             if(client.world != null)
                 for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.JUKEBOX_SONG).get().getIds())
                     list.add(i.toString());
-        } catch(Exception e) {}
+        } catch(Exception ex) {
+            FortytwoEdit.logWarn("Failed to read world jukebox songs");
+        }
 
         Collections.sort(list);
         return list;
@@ -679,7 +682,9 @@ public class BlackMagick {
             if(client.world != null)
                 for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.PAINTING_VARIANT).get().getIds())
                     list.add(i.toString());
-        } catch(Exception e) {}
+        } catch(Exception ex) {
+            FortytwoEdit.logWarn("Failed to read world painting variants");
+        }
 
         Collections.sort(list);
         return list;

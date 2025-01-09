@@ -6,8 +6,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.util.Util;
 
 /**
  * Class containing static methods used for working with files
@@ -103,11 +105,11 @@ public class FileTools {
                 if(newText != null && newText.equals(text))
                     return true;
             }
-            catch(Exception e) {}
+            catch(Exception ex) {}
             if(writer != null)
                 try {
                     writer.close();
-                } catch(Exception e) {}
+                } catch(Exception ex) {}
 
             FortytwoEdit.logError("Failed to write to file '" + FILE_DIRECTORY + "/" + fileName + "': "+text);
         }
@@ -128,7 +130,7 @@ public class FileTools {
             try {
                 return Files.readString(new File(client.runDirectory.getAbsolutePath() + "\\" + FileTools.FILE_DIRECTORY + "\\" + fileName).toPath(), FILE_CHARSET);
             }
-            catch(Exception e) {}
+            catch(Exception ex) {}
             FortytwoEdit.logError("Failed to read from file '" + FILE_DIRECTORY + "/" + fileName + "'");
         }
 
@@ -159,9 +161,36 @@ public class FileTools {
             if((new File(client.runDirectory.getAbsolutePath() + "\\" + FILE_DIRECTORY + "\\" + fileName)).exists())
                 return true;
 
-        } catch (Exception e) {}
+        } catch(Exception ex) {}
 
         FortytwoEdit.logError("Failed to access or create file '" + FILE_DIRECTORY + "/" + fileName + "'");
+        return false;
+    }
+
+    public static boolean openModDir() {
+        if(openMinecraftDirEntry(FILE_DIRECTORY))
+            return true;
+        FortytwoEdit.showToast("File Error",".42edit folder could not be opened");
+        return false;
+    }
+
+    public static boolean openMinecraftScreenshots() {
+        if(openMinecraftDirEntry(ScreenshotRecorder.SCREENSHOTS_DIRECTORY))
+            return true;
+        FortytwoEdit.showToast("File Error","Screenshots folder could not be opened");
+        return false;
+    }
+
+    private static boolean openMinecraftDirEntry(String path) {
+        final MinecraftClient client = MinecraftClient.getInstance();
+        File dir = new File(client.runDirectory.getAbsolutePath() + "\\" + path);
+        if(dir.exists() && dir.isDirectory()) {
+            try {
+                Util.getOperatingSystem().open(dir);
+                return true;
+            } catch(Exception ex) {}
+        }
+        FortytwoEdit.logError("Failed to open directory: .minecraft/"+path);
         return false;
     }
     
