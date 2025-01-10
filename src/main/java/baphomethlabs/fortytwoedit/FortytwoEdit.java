@@ -1017,7 +1017,7 @@ public class FortytwoEdit implements ClientModInitializer {
         clearCapes();
         setCustomSkin(null);
 
-        LogScreen.clearLogCache();
+        LogScreen.debugTryRefreshVarious();
     }
 
     /**

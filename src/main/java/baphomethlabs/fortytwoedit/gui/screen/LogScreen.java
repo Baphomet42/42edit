@@ -11,6 +11,7 @@ import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.EditBoxWidget;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 
 public class LogScreen extends GenericScreen {
@@ -24,6 +25,11 @@ public class LogScreen extends GenericScreen {
     private static boolean clearFullLogCache = false;
     private static boolean paused = false;
     private static boolean onlyMod = false;
+    
+    protected TextFieldWidget txtRegex;
+    private static String regexInput = "";
+    private static boolean useRegex = false;
+    private static final String REGEX_STRING_ENDS_DOLLAR = ".*[^\\\\](\\\\\\\\)*\\$$";
 
     private long lastCheck = 0;
     private long lastUpdate = 0;
@@ -51,8 +57,19 @@ public class LogScreen extends GenericScreen {
             onlyMod = (boolean)trackOutput;
             updateBox();
             unsel();
-        })).setTooltip(Tooltip.of(Text.of("Temporarily freeze new messages from appearing")));
+        }));
         box = this.addDrawableChild(new EditBoxWidget(this.client.textRenderer, x+15-3, y+35, 240-24, 22*6, Text.of(""), Text.of("")));
+        txtRegex = new TextFieldWidget(this.textRenderer,x+15-3,y+35+22*6+1,160,20,Text.of(""));
+        txtRegex.setMaxLength(MAX_TEXT_LENGTH);
+        txtRegex.setText(""+regexInput);
+        txtRegex.setChangedListener(this::editTxtRegex);
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("[Regex]"),
+                Text.literal("[Search]")).initially(useRegex).omitKeyText().build(x+backgroundWidth-5-50-7,y+35+22*6+1,50,20, Text.of(""), (button, trackOutput) -> {
+            useRegex = (boolean)trackOutput;
+            updateBox();
+            unsel();
+        }));
+        this.addDrawableChild(txtRegex);
         updateBox();
     }
 
@@ -60,19 +77,71 @@ public class LogScreen extends GenericScreen {
         StringBuilder sb = new StringBuilder();
         List<LogMessage> logList = onlyMod ? MOD_LOG : FULL_LOG;
 
+        boolean hideLastLog = false;
+        boolean firstLog = true;
+        String regexError = null;
         for(int i=0; i<logList.size(); i++) {
-            if(i>0) {
-                sb.append("\n");
-                if(logList.get(i).timestamp() != null)
+            if(logList.get(i).timestamp() != null) {
+                if(regexInput.length()>0) {
+                    boolean matchRegex = false;
+
+                    if(useRegex) {
+                        try {
+                            String regexMod = regexInput + "";
+                            "".matches(regexMod); // used to get errors on original input regex
+
+                            if(!regexMod.startsWith("^"))
+                                regexMod = ".*"+regexMod;
+                            if(!regexMod.matches(REGEX_STRING_ENDS_DOLLAR))
+                                regexMod = regexMod+".*";
+
+                            if(logList.get(i).plainLine().matches(regexMod))
+                                matchRegex = true;
+                        } catch(Exception ex) {
+                            regexError = ex.getMessage();
+                        }
+                    }
+                    else if(logList.get(i).plainLine().toLowerCase().contains(regexInput.toLowerCase()))
+                        matchRegex = true;
+
+                    if(!matchRegex) {
+                        hideLastLog = true;
+                        continue;
+                    }
+                }
+                if(!firstLog)
                     sb.append("\n");
             }
+            else if(hideLastLog)
+                continue;
+
+            hideLastLog = false;
+            if(!firstLog)
+                sb.append("\n");
+            else
+                firstLog = false;
             sb.append(logList.get(i).formattedLine());
+        }
+        if(!firstLog)
+            sb.append("\n");
+
+        if(regexError != null) {
+            if(regexError.length()>1 && regexError.endsWith("^"))
+                regexError = regexError.substring(0,regexError.length()-1).trim();
+            sb = new StringBuilder(ss+"cInvalid Regex\n\n"+regexError.replace("\r",""));
         }
 
         box.setText(sb.toString());
     }
 
-    private record LogMessage(String timestamp, LogType type, String message, String formattedLine) {
+    protected void editTxtRegex(String text) {
+        if(!text.equals(regexInput)) {
+            regexInput = text;
+            updateBox();
+        }
+    }
+
+    private record LogMessage(String timestamp, LogType type, String message, String formattedLine, String plainLine) {
 
         public static LogMessage build(String inpLine) {
             String line = inpLine + "";
@@ -96,21 +165,29 @@ public class LogScreen extends GenericScreen {
         }
         public static LogMessage build(String timestamp, LogType type, String message) {
             StringBuilder formattedLine = new StringBuilder();
+            StringBuilder plainLine = new StringBuilder();
 
-            if(timestamp != null)
+            if(timestamp != null) {
                 formattedLine.append(ss).append("9").append(timestamp).append(ss).append("r ");
+                plainLine.append(timestamp).append(" ");
+            }
             
-            if(type != null)
+            if(type != null) {
                 formattedLine.append(ss).append(type.formatCode()).append(type.text()).append(ss).append("r ");
+                plainLine.append(type.text()).append(" ");
+            }
 
             String formatMessage = message.replace("\t","  ");
             if(timestamp != null && type != null && formatMessage.matches("^\\([^)]+\\) .+")) {
                 formattedLine.append(ss).append("3").append(formatMessage.substring(0,formatMessage.indexOf(")")+1)).append(ss).append("r ");
+                plainLine.append(formatMessage.substring(0,formatMessage.indexOf(")")+1)).append(" ");
+
                 formatMessage = formatMessage.replaceFirst("^\\([^)]+\\) ","");
             }
             formattedLine.append(formatMessage);
+            plainLine.append(formatMessage);
 
-            return new LogMessage(timestamp, type, message, formattedLine.toString());
+            return new LogMessage(timestamp, type, message, formattedLine.toString(), plainLine.toString());
         }
     }
 
@@ -141,14 +218,21 @@ public class LogScreen extends GenericScreen {
         MOD_LOG_QUEUE.add(LogMessage.build(type,message));
     }
 
-    public static void clearLogCache() {
+    public static void debugTryRefreshVarious() {
         clearFullLogCache = true;
+        regexInput = "";
+        useRegex = false;
     }
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Output Log"), this.width / 2, y+11, TEXT_COLOR);
+    }
+
+    @Override
+    public boolean shouldCloseOnKeybind() {
+        return !(txtRegex.isActive() || box.isFocused());
     }
 
     @Override

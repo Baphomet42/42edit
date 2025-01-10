@@ -63,7 +63,7 @@ public class MagickGui extends GenericScreen {
 
     protected void btnSuperSecretSettings() {
         if(hasShiftDown()) {
-            changeScreen(new SecretScreen());
+            changeScreen(new DebugScreen());//to_do return to SecretScreen()
         }
         else {
             FortytwoEdit.cycleSuperSecretSetting();
