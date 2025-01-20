@@ -76,7 +76,7 @@ public abstract class BlockItemMixin {
 
     private boolean warnForText(Set<String> textComponents) {
         for(String s : textComponents) {
-            ParsedText pt = BlackMagick.jsonFromString(s);
+            ParsedText pt = BlackMagick.textFromJson(s);
             if(pt.isValid()) {
                 if(s.contains("clickEvent") && s.contains("run_command"))
                     return true;

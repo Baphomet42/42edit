@@ -21,7 +21,7 @@ public abstract class KeyBindingMixin {
     @Inject(method="onKeyPressed(Lnet/minecraft/client/util/InputUtil$Key;)V", at=@At("TAIL"))
     private static void detectKeyPress(InputUtil.Key key, CallbackInfo c) {
 
-        if(FortytwoEdit.modKey.isPressed() && !FortytwoEdit.spamClick.isPressed()) {
+        if(FortytwoEdit.keyMod.isPressed() && !FortytwoEdit.keySpamClick.isPressed()) {
             final MinecraftClient client = MinecraftClient.getInstance();
 
             if(key.equals(((KeyBindingAccessor)client.options.attackKey).getBoundKey())) {

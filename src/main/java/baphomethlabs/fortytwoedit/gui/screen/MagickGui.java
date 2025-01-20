@@ -18,7 +18,7 @@ public class MagickGui extends GenericScreen {
     private static final int LEFT_OFFSET = 20;
     private static final int TOP_OFFSET = 1;
     private static final int ITEM_OFFSET = 2;
-    private static final Text TITLE_TEXT = Text.translatableWithFallback("ftedit.gui.magickScreen.title",
+    private static final Text TITLE_TEXT = Text.translatableWithFallback("42edit.gui.magickScreen.title",
         "Black Magick by BaphomethLabs").copy().withColor(0x420666).formatted(Formatting.BOLD);
     
     public MagickGui() {}
@@ -28,23 +28,23 @@ public class MagickGui extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.NONE;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.itemBuilder","42edit..."),
+        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("42edit.gui.magickScreen.itemBuilder","42edit..."),
             button -> changeScreen(new ItemBuilder())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.hacks","Hacks..."),
+        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("42edit.gui.magickScreen.hacks","Hacks..."),
             button -> changeScreen(new Hacks())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
-        btnWgtHat = this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.hat","Hat"),
+        btnWgtHat = this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("42edit.gui.magickScreen.hat","Hat"),
             button -> this.btnHat()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET,60,WID_HEIGHT).build());
         if(!client.player.getAbilities().creativeMode) {
             btnWgtHat.active = false;
             btnWgtHat.setTooltip(TT_CREATIVE);
         }
         else
-            btnWgtHat.setTooltip(Tooltip.of(Text.translatableWithFallback("ftedit.gui.magickScreen.hat.tooltip","Swap current item with helmet slot")));
-        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.superSecret","Super Secret Settings..."),
+            btnWgtHat.setTooltip(Tooltip.of(Text.translatableWithFallback("42edit.gui.magickScreen.hat.tooltip","Swap current item with helmet slot")));
+        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("42edit.gui.magickScreen.superSecret","Super Secret Settings..."),
             button -> this.btnSuperSecretSettings()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET,165,WID_HEIGHT).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.capes","Capes..."),
+        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("42edit.gui.magickScreen.capes","Capes..."),
             button -> changeScreen(new Capes())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick","AutoClick..."),
+        this.addDrawableChild(ButtonWidget.builder(Text.translatableWithFallback("42edit.gui.magickScreen.autoClick","AutoClick..."),
             button -> changeScreen(new AutoClick())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET,90,WID_HEIGHT).build());
         btnWgtAutoClick = this.addDrawableChild(ButtonWidget.builder(Text.empty(),
             button -> this.btnAutoClick()).dimensions(x+LEFT_OFFSET+90+5,y+ROW_HEIGHT*7+TOP_OFFSET,70,WID_HEIGHT).build());
@@ -92,16 +92,16 @@ public class MagickGui extends GenericScreen {
 
     private void setAutoClickMessage() {
         if(FortytwoEdit.autoClick && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack)
-            btnWgtAutoClick.setMessage(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick.use","[Use]"));
+            btnWgtAutoClick.setMessage(Text.translatableWithFallback("42edit.gui.magickScreen.autoClick.use","[Use]"));
         else if(!FortytwoEdit.autoClick && FortytwoEdit.autoMine && !FortytwoEdit.autoAttack)
-            btnWgtAutoClick.setMessage(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick.mine","[Mine]"));
+            btnWgtAutoClick.setMessage(Text.translatableWithFallback("42edit.gui.magickScreen.autoClick.mine","[Mine]"));
         else if(!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 1500)
-            btnWgtAutoClick.setMessage(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick.attackSlow","[Attack 1.5]"));
+            btnWgtAutoClick.setMessage(Text.translatableWithFallback("42edit.gui.magickScreen.autoClick.attackSlow","[Attack 1.5]"));
         else if(!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 650)
-            btnWgtAutoClick.setMessage(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick.attackFast","[Attack .65]"));
+            btnWgtAutoClick.setMessage(Text.translatableWithFallback("42edit.gui.magickScreen.autoClick.attackFast","[Attack .65]"));
         else
-            btnWgtAutoClick.setMessage(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick.custom","[Custom]"));
-        btnWgtAutoClick.setTooltip(Tooltip.of(Text.translatableWithFallback("ftedit.gui.magickScreen.autoClick.cycleTooltip","Cycle auto click mode")));
+            btnWgtAutoClick.setMessage(Text.translatableWithFallback("42edit.gui.magickScreen.autoClick.custom","[Custom]"));
+        btnWgtAutoClick.setTooltip(Tooltip.of(Text.translatableWithFallback("42edit.gui.magickScreen.autoClick.cycleTooltip","Cycle auto click mode")));
     }
 
     @Override

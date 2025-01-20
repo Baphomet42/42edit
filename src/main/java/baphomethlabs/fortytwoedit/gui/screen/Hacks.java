@@ -258,13 +258,13 @@ public class Hacks extends GenericScreen {
     }
 
     private void reportInvis(Entity entity) {
-        String json = "[{\"text\":\""+entity.getName().getString()+"\",\"hoverEvent\":{\"action\":\"show_entity\",\"contents\":"
+        String text = "[{\"text\":\""+entity.getName().getString()+"\",\"hoverEvent\":{\"action\":\"show_entity\",\"contents\":"
             + "{\"type\":\""+entity.getType().toString().replaceFirst("entity.","").replaceFirst("minecraft.","")
             + "\",\"id\":\""+entity.getUuidAsString()+"\"}},\"clickEvent\":"
             + "{\"action\":\"suggest_command\",\"value\":\"/tp "+entity.getBlockX() + " " + entity.getBlockY() + " " + entity.getBlockZ() + "\"}},{\"text\":\" \"},"
             + "{\"text\":\"["+entity.getBlockX() + ", " + entity.getBlockY() + ", " + entity.getBlockZ() + "]\"}]";
-        if(BlackMagick.jsonFromString(json).isValid())
-            client.player.sendMessage(BlackMagick.jsonFromString(json).text(),false);
+        if(BlackMagick.textFromJson(text).isValid())
+            client.player.sendMessage(BlackMagick.textFromJson(text).text(),false);
         else
             client.player.sendMessage(Text.of(entity.getName().getString()+" ["+entity.getBlockX()+", "+entity.getBlockY()+", "+entity.getBlockZ()+"]"),false);
     }

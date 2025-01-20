@@ -51,7 +51,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
 /**
- * Class containing static methods used for working with NBT, JSON Text, and more
+ * Class containing static methods used for working with NBT, Text components, and more
  */
 public class BlackMagick {
 
@@ -176,19 +176,19 @@ public class BlackMagick {
     }
 
     /**
-     * Converts json to Text object. Valid forms include {"text":""} [{"text":""}] ""
+     * Converts json string to Text object. Valid forms include {"text":""} [{"text":""}] ""
      * 
-     * @param inp raw json
+     * @param inp raw json string
      * @return parsed Text or error message
      */
-    public static ParsedText jsonFromString(String inp) {
+    public static ParsedText textFromJson(String inp) {
         RegistryWrapper.WrapperLookup reg = DynamicRegistryManager.EMPTY;
         try {
             Text temp = Text.Serialization.fromJson(inp,reg);
             if(temp != null)
                 return new ParsedText(true,temp.copy());
         } catch(Exception ex) {}
-        return new ParsedText(false,Text.of("Invalid JSON").copy().formatted(Formatting.RED));
+        return new ParsedText(false,Text.of("Invalid Text Component").copy().formatted(Formatting.RED));
     }
 
     /**
@@ -283,7 +283,7 @@ public class BlackMagick {
                 comps = BlackMagick.validCompound(BlackMagick.nbtFromString("{"+compsString+"}"));
 
             Set<String> unusedComps = Sets.newHashSet();
-            for(String comp : FortytwoEdit.COMPONENTS)
+            for(String comp : FortytwoEdit.REG_COMPONENTS)
                 unusedComps.add(comp);
             for(String comp : comps.getKeys()) {
                 unusedComps.remove(comp);
@@ -746,7 +746,7 @@ public class BlackMagick {
 
 
     /**
-     * stores parsed json text or an error message if isValid is false
+     * stores parsed text component or an error message if isValid is false
      */
     public record ParsedText(boolean isValid, Text text) {
         

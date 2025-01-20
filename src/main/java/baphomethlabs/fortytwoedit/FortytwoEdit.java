@@ -19,6 +19,7 @@ import java.util.Set;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.common.collect.Sets;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
 import baphomethlabs.fortytwoedit.gui.screen.AutoClick;
 import baphomethlabs.fortytwoedit.gui.screen.Capes;
@@ -66,9 +67,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -81,7 +80,6 @@ public class FortytwoEdit implements ClientModInitializer {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID_MC);
 
     // gui
-    public static KeyBinding magickGuiKey;
     public static QuickScreen quickScreen = QuickScreen.NONE;
     public enum QuickScreen {
         NONE,
@@ -94,6 +92,26 @@ public class FortytwoEdit implements ClientModInitializer {
         LOG_SCREEN,
         SECRET_SCREEN
     }
+
+    // keys
+    public static KeyBinding keyAfkClick = new KeyBinding("42edit.key.afkClick", GLFW.GLFW_KEY_MINUS, "42edit.key.categories.42edit");
+    public static KeyBinding keyAfkMove = new KeyBinding("42edit.key.afkMove", GLFW.GLFW_KEY_EQUAL, "42edit.key.categories.42edit");
+    public static KeyBinding keyFreeLook = new KeyBinding("42edit.key.freeLook", GLFW.GLFW_KEY_LEFT_ALT, "42edit.key.categories.42edit");
+    public static KeyBinding keyMagickGui = new KeyBinding("42edit.key.openMagickGui", GLFW.GLFW_KEY_J, "42edit.key.categories.42edit");
+    public static KeyBinding keyMod = new KeyBinding("42edit.key.modKey", InputUtil.UNKNOWN_KEY.getCode(), "42edit.key.categories.42edit");
+    public static KeyBinding keySpamClick = new KeyBinding("42edit.key.spamClick", InputUtil.UNKNOWN_KEY.getCode(), "42edit.key.categories.42edit");
+    public static KeyBinding keyZoom = new KeyBinding("42edit.key.zoom", GLFW.GLFW_KEY_R, "42edit.key.categories.42edit");
+
+    public static final KeyBinding[] KEYBINDS = new KeyBinding[]{
+        keyAfkClick,
+        keyAfkMove,
+        keyFreeLook,
+        keyMagickGui,
+        keyMod,
+        keySpamClick,
+        keyZoom
+    };
+    private static final String[] KEYBINDS_CONFIG_CACHE = new String[KEYBINDS.length];
 
     // options
     private static NbtCompound optionsExtra = null;
@@ -111,8 +129,6 @@ public class FortytwoEdit implements ClientModInitializer {
     public static int attackWait = 1500;
     private static long lastAttack = 0;
     private static long lastSpam = 0;
-    public static KeyBinding modKey;
-    public static KeyBinding spamClick;
     public static boolean xrayEntity = false;
     public static boolean autoFish = false;
     public static boolean autoFishClick = false;
@@ -406,7 +422,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA);
 
     //format codes
-    public static final Text formatTooltip = BlackMagick.jsonFromString("[{\"text\":\"Formatting\n"+
+    public static final Text formatTooltip = BlackMagick.textFromJson("[{\"text\":\"Formatting\n"+
         "0-black§r 1-§1dark_blue§r 2-§2dark_green§r 3-§3dark_aqua§r 4-§4dark_red§r 5-§5dark_purple§r "+
         "6-§6gold§r 7-§7gray§r 8-§8dark_gray§r 9-§9blue§r a-§agreen§r b-§baqua§r "+
         "c-§cred§r d-§dlight_purple§r e-§eyellow§r f-§fwhite§r #420666-\"},{\"text\":\"0xRRGGBB\",\"color\":\"#420666\"},"+
@@ -476,21 +492,21 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final int SAVED_ROWS = 12;
 
     //registry suggestions
-    public static final String[] ATTRIBUTES = getCacheAttributes();
-    public static final String[] BLOCKS = getCacheBlocks();
-    public static final String[] BLOCKTAGS = getCacheBlockTags();
-    public static final String[] COMPONENTS = getCacheComponents();
-    public static final String[] ITEMS = getCacheItems();
-    public static final String[] ITEMTAGS = getCacheItemTags();
-    public static final String[] EFFECTS = getCacheEffects();
-    public static final String[] ENTITIES = getCacheEntities();
-    public static final String[] ENTITYTAGS = getCacheEntityTags();
-    private static String[] KEYBINDS = null;
-    public static final String[] LOOT = getCacheLootTables();
-    public static final String[] PARTICLES = getCacheParticles();
-    public static final String[] SOUNDS = getCacheSounds();
-    public static final String[] STRUCTURES = getCacheStructures();
-    private static String[] TRANSLATIONS = null;
+    public static final String[] REG_ATTRIBUTES = getCacheAttributes();
+    public static final String[] REG_BLOCKS = getCacheBlocks();
+    public static final String[] REG_BLOCKTAGS = getCacheBlockTags();
+    public static final String[] REG_COMPONENTS = getCacheComponents();
+    public static final String[] REG_ITEMS = getCacheItems();
+    public static final String[] REG_ITEMTAGS = getCacheItemTags();
+    public static final String[] REG_EFFECTS = getCacheEffects();
+    public static final String[] REG_ENTITIES = getCacheEntities();
+    public static final String[] REG_ENTITYTAGS = getCacheEntityTags();
+    private static String[] REG_KEYBINDS = null;
+    public static final String[] REG_LOOT = getCacheLootTables();
+    public static final String[] REG_PARTICLES = getCacheParticles();
+    public static final String[] REG_SOUNDS = getCacheSounds();
+    public static final String[] REG_STRUCTURES = getCacheStructures();
+    private static String[] REG_TRANSLATIONS = null;
 
     public static String[] joinCommandSuggs(String[][] joinLists, String[] startVals) {
         List<String> list = new ArrayList<>();
@@ -527,168 +543,150 @@ public class FortytwoEdit implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-
         logInfo("Loading 42edit client");
 
-        final MinecraftClient gameClient = MinecraftClient.getInstance();
-
-        //keybinds
-        magickGuiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.openMagickGui",
-                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_J, "ftedit.key.categories.ftedit"));
-        KeyBinding zoom = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.zoom",
-                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "ftedit.key.categories.ftedit"));
-        KeyBinding freeLook = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.freeLook",
-                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "ftedit.key.categories.ftedit"));
-        spamClick = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.spamClick",
-                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F13, "ftedit.key.categories.ftedit"));
-        modKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.modKey",
-                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F14, "ftedit.key.categories.ftedit"));
-        KeyBinding afkMove = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.afkMove",
-                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_EQUAL, "ftedit.key.categories.ftedit"));
-        KeyBinding afkClick = KeyBindingHelper.registerKeyBinding(new KeyBinding("ftedit.key.afkClick",
-                InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_MINUS, "ftedit.key.categories.ftedit"));
+        final MinecraftClient client = MinecraftClient.getInstance();
 
         //options
         readOptions();
 
         // custom capes
-        USERNAME = gameClient.getSession().getUsername();
-        if(gameClient.getSession().getUuidOrNull() != null)
-            UUID = NbtHelper.fromUuid(gameClient.getSession().getUuidOrNull());
+        USERNAME = client.getSession().getUsername();
+        if(client.getSession().getUuidOrNull() != null)
+            UUID = NbtHelper.fromUuid(client.getSession().getUuidOrNull());
         clearCapes();
 
         getSavedItems();
         refreshWebItems(false);
 
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-
-            // magickgui
-            if(magickGuiKey.wasPressed()) {
-                switch(quickScreen) {
-                    case NONE: client.setScreen(new MagickGui()); break;
-                    case ITEM_BUILDER: client.setScreen(new ItemBuilder()); break;
-                    case SECRET_SCREEN: client.setScreen(new SecretScreen()); break;
-                    case LOG_SCREEN: client.setScreen(new LogScreen()); break;
-                    case AUTO_CLICK: client.setScreen(new AutoClick()); break;
-                    case CAPES: client.setScreen(new Capes()); break;
-                    case HACKS: client.setScreen(new Hacks()); break;
-                    case DEBUG_SCREEN: client.setScreen(new DebugScreen()); break;
-                }
-            }
-
-            // zoom
-            if(zoom.isPressed() && !zoomed) {
-                smooth = client.options.smoothCameraEnabled;
-                client.options.smoothCameraEnabled = true;
-                zoomed = true;
-            }
-            else if(!zoom.isPressed() && zoomed) {
-                client.options.smoothCameraEnabled = smooth;
-                zoomed = false;
-            }
-
-            // afkMove
-            if(afkMove.wasPressed()) {
-                autoMove = !autoMove;
-                client.options.forwardKey.setPressed(false);
-                while(client.options.forwardKey.wasPressed()) {}
-            }
-            if(autoMove && client.player != null) {
-                if(client.options.forwardKey.wasPressed()) {
-                    autoMove = false;
-                    client.options.forwardKey.setPressed(false);
-                    while(client.options.forwardKey.wasPressed()) {}
-                }
-                else
-                    client.options.forwardKey.setPressed(true);
-            }
-
-            //afkClick
-            if(afkClick.wasPressed()) {
-                autoClicker = !autoClicker;
-                client.options.useKey.setPressed(false);
-                client.options.attackKey.setPressed(false);
-                while(client.options.useKey.wasPressed()) {}
-                while(client.options.attackKey.wasPressed()) {}
-            }
-            if(autoClicker && client.player != null) {
-                if(autoClick) {
-                    client.options.useKey.setPressed(true);
-                }
-                if(autoAttack && System.currentTimeMillis()>=lastAttack + attackWait && client.crosshairTarget instanceof EntityHitResult) {
-                    lastAttack = System.currentTimeMillis();
-                    suppressKeybind = true;
-                    KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey());
-                    suppressKeybind = false;
-                }
-                if(autoMine) {
-                    client.options.attackKey.setPressed(true);
-                }
-            }
-
-            //autoFish
-            if(autoFishClick && System.currentTimeMillis()>=lastFish + fishWait) {
-                if(autoFish && !autoClicker && client.currentScreen == null && ((!client.player.getMainHandStack().isEmpty()
-                        && client.player.getMainHandStack().isOf(Items.FISHING_ROD)) || (client.player.getMainHandStack().isEmpty()
-                        && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().isOf(Items.FISHING_ROD))) ) {
-                    KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
-                    didFish = true;
-                }
-                autoFishClick = false;
-                lastFish = System.currentTimeMillis();
-            }
-            if(didFish && System.currentTimeMillis()>=lastFish + fishWait) {
-                if(autoFish && !autoClicker && client.currentScreen == null && ((!client.player.getMainHandStack().isEmpty()
-                        && client.player.getMainHandStack().isOf(Items.FISHING_ROD)) || (client.player.getMainHandStack().isEmpty()
-                        && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().isOf(Items.FISHING_ROD))) ) {
-                    KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
-                }
-                didFish = false;
-                lastFish = System.currentTimeMillis();
-            }
-
-            //freelook
-            if(freeLook.isPressed()) {
-                if(!isFreeLooking) {
-                    lastPerspective = client.options.getPerspective();
-                    Entity view = client.getCameraEntity() == null ? client.player : client.getCameraEntity();
-                    cameraRotation[0] = view.getYaw();
-                    cameraRotation[1] = view.getPitch();
-
-                    if(lastPerspective == Perspective.FIRST_PERSON)
-                        client.options.setPerspective(Perspective.THIRD_PERSON_BACK);
-
-                    isFreeLooking = true;
-                }
-            }
-            else if(isFreeLooking) {
-                isFreeLooking = false;
-                client.options.setPerspective(lastPerspective);
-            }
-
-            //spam
-            if(spamClick.isPressed() && System.currentTimeMillis()>=lastSpam + 20) {
-                if(modKey.isPressed())
-                    KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey());
-                else {
-                    KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
-                    if(randoMode)
-                        changeRandoSlot();
-                }
-                lastSpam = System.currentTimeMillis();
-            }
-
-            // rando
-            if(randoMode) {
-                if(client.options.useKey.isPressed())
-                    changeRandoSlot();
-            }
-
-        });
-
         ComponentHelper.clearCacheInfo(); // now that registries have been set, clear any caches that may have had empty lists
 
         logInfo("Client initialized");
+    }
+
+    public static void clientTick(MinecraftClient client) {
+
+        // magickgui
+        if(keyMagickGui.wasPressed()) {
+            switch(quickScreen) {
+                case NONE: client.setScreen(new MagickGui()); break;
+                case ITEM_BUILDER: client.setScreen(new ItemBuilder()); break;
+                case SECRET_SCREEN: client.setScreen(new SecretScreen()); break;
+                case LOG_SCREEN: client.setScreen(new LogScreen()); break;
+                case AUTO_CLICK: client.setScreen(new AutoClick()); break;
+                case CAPES: client.setScreen(new Capes()); break;
+                case HACKS: client.setScreen(new Hacks()); break;
+                case DEBUG_SCREEN: client.setScreen(new DebugScreen()); break;
+            }
+        }
+
+        // zoom
+        if(keyZoom.isPressed() && !zoomed) {
+            smooth = client.options.smoothCameraEnabled;
+            client.options.smoothCameraEnabled = true;
+            zoomed = true;
+        }
+        else if(!keyZoom.isPressed() && zoomed) {
+            client.options.smoothCameraEnabled = smooth;
+            zoomed = false;
+        }
+
+        // afkMove
+        if(keyAfkMove.wasPressed()) {
+            autoMove = !autoMove;
+            client.options.forwardKey.setPressed(false);
+            while(client.options.forwardKey.wasPressed()) {}
+        }
+        if(autoMove && client.player != null) {
+            if(client.options.forwardKey.wasPressed()) {
+                autoMove = false;
+                client.options.forwardKey.setPressed(false);
+                while(client.options.forwardKey.wasPressed()) {}
+            }
+            else
+                client.options.forwardKey.setPressed(true);
+        }
+
+        //afkClick
+        if(keyAfkClick.wasPressed()) {
+            autoClicker = !autoClicker;
+            client.options.useKey.setPressed(false);
+            client.options.attackKey.setPressed(false);
+            while(client.options.useKey.wasPressed()) {}
+            while(client.options.attackKey.wasPressed()) {}
+        }
+        if(autoClicker && client.player != null) {
+            if(autoClick) {
+                client.options.useKey.setPressed(true);
+            }
+            if(autoAttack && System.currentTimeMillis()>=lastAttack + attackWait && client.crosshairTarget instanceof EntityHitResult) {
+                lastAttack = System.currentTimeMillis();
+                suppressKeybind = true;
+                KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey());
+                suppressKeybind = false;
+            }
+            if(autoMine) {
+                client.options.attackKey.setPressed(true);
+            }
+        }
+
+        //autoFish
+        if(autoFishClick && System.currentTimeMillis()>=lastFish + fishWait) {
+            if(autoFish && !autoClicker && client.currentScreen == null && ((!client.player.getMainHandStack().isEmpty()
+                    && client.player.getMainHandStack().isOf(Items.FISHING_ROD)) || (client.player.getMainHandStack().isEmpty()
+                    && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().isOf(Items.FISHING_ROD))) ) {
+                KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
+                didFish = true;
+            }
+            autoFishClick = false;
+            lastFish = System.currentTimeMillis();
+        }
+        if(didFish && System.currentTimeMillis()>=lastFish + fishWait) {
+            if(autoFish && !autoClicker && client.currentScreen == null && ((!client.player.getMainHandStack().isEmpty()
+                    && client.player.getMainHandStack().isOf(Items.FISHING_ROD)) || (client.player.getMainHandStack().isEmpty()
+                    && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().isOf(Items.FISHING_ROD))) ) {
+                KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
+            }
+            didFish = false;
+            lastFish = System.currentTimeMillis();
+        }
+
+        //freelook
+        if(keyFreeLook.isPressed()) {
+            if(!isFreeLooking) {
+                lastPerspective = client.options.getPerspective();
+                Entity view = client.getCameraEntity() == null ? client.player : client.getCameraEntity();
+                cameraRotation[0] = view.getYaw();
+                cameraRotation[1] = view.getPitch();
+
+                if(lastPerspective == Perspective.FIRST_PERSON)
+                    client.options.setPerspective(Perspective.THIRD_PERSON_BACK);
+
+                isFreeLooking = true;
+            }
+        }
+        else if(isFreeLooking) {
+            isFreeLooking = false;
+            client.options.setPerspective(lastPerspective);
+        }
+
+        //spam
+        if(keySpamClick.isPressed() && System.currentTimeMillis()>=lastSpam + 20) {
+            if(keyMod.isPressed())
+                KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.attackKey).getBoundKey());
+            else {
+                KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
+                if(randoMode)
+                    changeRandoSlot();
+            }
+            lastSpam = System.currentTimeMillis();
+        }
+
+        // rando
+        if(randoMode) {
+            if(client.options.useKey.isPressed())
+                changeRandoSlot();
+        }
     }
 
     public static void updateAutoClick(boolean click, boolean mine, boolean attack, int wait) {
@@ -882,12 +880,12 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     public static String[] getCacheKeybinds() {
-        if(KEYBINDS == null) {
+        if(REG_KEYBINDS == null) {
             List<String> list = new ArrayList<>();
             List<String> list2 = new ArrayList<>();
 
             for(String k: KeyBindingAccessor.getKeysList().keySet()) {
-                if(k.contains("ftedit.")) {
+                if(k.startsWith("42edit.")) {
                     list2.add(k);
                 }
                 else
@@ -900,9 +898,9 @@ public class FortytwoEdit implements ClientModInitializer {
             for(String k: list2)
                 list.add(k);
 
-            KEYBINDS = list.toArray(new String[0]);
+            REG_KEYBINDS = list.toArray(new String[0]);
         }
-        return KEYBINDS;
+        return REG_KEYBINDS;
     }
 
     private static String[] getCacheLootTables() {
@@ -954,8 +952,9 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     public static String[] getCacheTranslations() {
-        if(TRANSLATIONS == null) {
+        if(REG_TRANSLATIONS == null) {
             List<String> list = new ArrayList<>();
+            List<String> list2 = new ArrayList<>();
 
             final MinecraftClient client = MinecraftClient.getInstance();
             if(client.getResourceManager() != null) {
@@ -963,14 +962,23 @@ public class FortytwoEdit implements ClientModInitializer {
                 l.add("en_us");
                 TranslationStorage s = TranslationStorage.load(client.getResourceManager(),l,false);
                 for(String t: ((TranslationStorageAccessor)s).getTranslations().keySet()) {
-                    list.add(t);
+                    if(t.startsWith("42edit.")) {
+                        list2.add(t);
+                    }
+                    else
+                        list.add(t);
                 }
             }
 
             Collections.sort(list);
-            TRANSLATIONS = list.toArray(new String[0]);
+            Collections.sort(list2);
+
+            for(String k: list2)
+                list.add(k);
+
+            REG_TRANSLATIONS = list.toArray(new String[0]);
         }
-        return TRANSLATIONS;
+        return REG_TRANSLATIONS;
     }
 
     private static final String LOG_PREFIX = "(42edit) ";
@@ -1013,6 +1021,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
         ((HotbarStorageAccessor)client.getCreativeHotbarStorage()).setLoaded(false);
         client.getCreativeHotbarStorage().getSavedHotbar(0);
+
+        ComponentHelper.clearCacheInfo();
         
         clearCapes();
         setCustomSkin(null);
@@ -1027,6 +1037,18 @@ public class FortytwoEdit implements ClientModInitializer {
      */
     public static String getTimestamp() {
         return "[" + DATE_FORMAT.format(new Date()) + "]";
+    }
+
+    public static void saveKeybindOptions() {
+        boolean diff = false;
+        for(int i=0; i<KEYBINDS.length; i++) {
+            if(!KEYBINDS[i].getBoundKeyTranslationKey().equals(KEYBINDS_CONFIG_CACHE[i])) {
+                diff = true;
+                break;
+            }
+        }
+        if(diff)
+            updateOptions();
     }
 
     public static void readOptions() {
@@ -1051,6 +1073,25 @@ public class FortytwoEdit implements ClientModInitializer {
             if(!valid)
                 itemWarningMode = ITEM_WARNING_MODES[0];
         }
+        if(options.contains("keybinds",NbtElement.COMPOUND_TYPE)) {
+            NbtCompound keybindsCompound = options.getCompound("keybinds");
+            Set<String> foundKeys = Sets.newHashSet();
+            for(String k : keybindsCompound.getKeys()) {
+                for(int i=0; i<KEYBINDS.length; i++) {
+                    if(KEYBINDS[i].getTranslationKey().equals(k)) {
+                        try {
+                            KEYBINDS[i].setBoundKey(InputUtil.fromTranslationKey(keybindsCompound.getString(k)));
+                        }
+                        catch(Exception ex) {
+                            logError("Failed to set keybind for binding "+k+" to key "+BlackMagick.nbtToString(keybindsCompound.get(k)));
+                        }
+                        foundKeys.add(k);
+                    }
+                }
+            }
+            for(String k : foundKeys)
+                keybindsCompound.remove(k);
+        }
         if(options.contains("opticapes",NbtElement.BYTE_TYPE))
             opticapesOn = options.getByte("opticapes") == 1;
         if(options.contains("web_items",NbtElement.BYTE_TYPE))
@@ -1063,6 +1104,8 @@ public class FortytwoEdit implements ClientModInitializer {
         options.remove("custom_cape_toggle");
         options.remove("custom_cape");
         options.remove("item_warning_override");
+        if(options.getCompound("keybinds").isEmpty())
+            options.remove("keybinds");
         options.remove("opticapes");
         options.remove("web_items");
         options.remove("web_items_url");
@@ -1086,6 +1129,12 @@ public class FortytwoEdit implements ClientModInitializer {
         options.putBoolean("custom_cape_toggle",showClientCape);
         options.putString("custom_cape",CLIENT_CAPES[clientCape].id());
         options.putString("item_warning_override",itemWarningMode);
+        NbtCompound keysCompound = options.getCompound("keybinds");
+        for(int i=0; i<KEYBINDS.length; i++) {
+            keysCompound.put(KEYBINDS[i].getTranslationKey(),NbtString.of(KEYBINDS[i].getBoundKeyTranslationKey()));
+            KEYBINDS_CONFIG_CACHE[i] = KEYBINDS[i].getBoundKeyTranslationKey();
+        }
+        options.put("keybinds",keysCompound);
         options.putBoolean("opticapes",opticapesOn);
         options.putBoolean("web_items",webItemsAuto);
         options.putString("web_items_url",webItemsUrlOverride);

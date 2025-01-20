@@ -94,7 +94,7 @@ public abstract class GenericScreen extends Screen {
         if(super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        if(FortytwoEdit.magickGuiKey.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
+        if(FortytwoEdit.keyMagickGui.matchesKey(keyCode,scanCode) || client.options.inventoryKey.matchesKey(keyCode,scanCode)) {
             if(shouldCloseOnKeybind()) {
                 this.close();
                 return true;

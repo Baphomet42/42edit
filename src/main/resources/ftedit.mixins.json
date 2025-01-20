@@ -12,6 +12,7 @@
     "HandledScreenMixin",
     "HotbarStorageAccessor",
     "InGameHudMixin",
+    "GameOptionsMixin",
     "KeyBindingAccessor",
     "KeyBindingMixin",
     "MinecraftClientMixin",

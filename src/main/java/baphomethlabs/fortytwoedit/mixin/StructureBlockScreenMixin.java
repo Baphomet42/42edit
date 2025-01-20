@@ -42,7 +42,7 @@ public abstract class StructureBlockScreenMixin extends Screen {
                     suggs.refresh();
                 else {
                     suggs = new TextSuggestor(client, inputName, textRenderer);
-                    suggs.setSuggestions(FortytwoEdit.STRUCTURES);
+                    suggs.setSuggestions(FortytwoEdit.REG_STRUCTURES);
                 }
 
             }

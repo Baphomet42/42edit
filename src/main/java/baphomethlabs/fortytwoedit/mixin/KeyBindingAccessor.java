@@ -14,6 +14,11 @@ public interface KeyBindingAccessor {
 		throw new AssertionError();
 	}
 
+	@Accessor("CATEGORY_ORDER_MAP")
+	public static Map<String, Integer> getCategoryOrderMap() {
+		throw new AssertionError();
+	}
+
 	@Accessor("boundKey")
 	InputUtil.Key getBoundKey();
 
