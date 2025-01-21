@@ -75,7 +75,7 @@ import net.minecraft.client.MinecraftClient;
 public class FortytwoEdit implements ClientModInitializer {
 
     // log
-    public static final String MOD_ID_JAVA = "ftedit";
+    public static final String MOD_ID_JAVA = "fortytwoedit";
     public static final String MOD_ID_MC = "42edit";
 	private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID_MC);
 
@@ -94,12 +94,12 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     // keys
-    public static KeyBinding keyAfkClick = new KeyBinding("42edit.key.afkClick", GLFW.GLFW_KEY_MINUS, "42edit.key.categories.42edit");
-    public static KeyBinding keyAfkMove = new KeyBinding("42edit.key.afkMove", GLFW.GLFW_KEY_EQUAL, "42edit.key.categories.42edit");
-    public static KeyBinding keyFreeLook = new KeyBinding("42edit.key.freeLook", GLFW.GLFW_KEY_LEFT_ALT, "42edit.key.categories.42edit");
-    public static KeyBinding keyMagickGui = new KeyBinding("42edit.key.openMagickGui", GLFW.GLFW_KEY_J, "42edit.key.categories.42edit");
-    public static KeyBinding keyMod = new KeyBinding("42edit.key.modKey", InputUtil.UNKNOWN_KEY.getCode(), "42edit.key.categories.42edit");
-    public static KeyBinding keySpamClick = new KeyBinding("42edit.key.spamClick", InputUtil.UNKNOWN_KEY.getCode(), "42edit.key.categories.42edit");
+    public static KeyBinding keyAfkClick = new KeyBinding("42edit.key.afk_click", GLFW.GLFW_KEY_MINUS, "42edit.key.categories.42edit");
+    public static KeyBinding keyAfkMove = new KeyBinding("42edit.key.afk_move", GLFW.GLFW_KEY_EQUAL, "42edit.key.categories.42edit");
+    public static KeyBinding keyFreeLook = new KeyBinding("42edit.key.free_look", GLFW.GLFW_KEY_LEFT_ALT, "42edit.key.categories.42edit");
+    public static KeyBinding keyMagickGui = new KeyBinding("42edit.key.open_magick_gui", GLFW.GLFW_KEY_J, "42edit.key.categories.42edit");
+    public static KeyBinding keyMod = new KeyBinding("42edit.key.key_mod", InputUtil.UNKNOWN_KEY.getCode(), "42edit.key.categories.42edit");
+    public static KeyBinding keySpamClick = new KeyBinding("42edit.key.spam_click", InputUtil.UNKNOWN_KEY.getCode(), "42edit.key.categories.42edit");
     public static KeyBinding keyZoom = new KeyBinding("42edit.key.zoom", GLFW.GLFW_KEY_R, "42edit.key.categories.42edit");
 
     public static final KeyBinding[] KEYBINDS = new KeyBinding[]{
@@ -297,7 +297,7 @@ public class FortytwoEdit implements ClientModInitializer {
         return false;
     }
     private static Identifier getCapeCacheID(String name) {
-        return Identifier.of("42edit","cache/capes/"+name.toLowerCase());
+        return Identifier.of("42edit","cache/cape/"+name.toLowerCase());
     }
 
     // custom capes
@@ -350,7 +350,7 @@ public class FortytwoEdit implements ClientModInitializer {
         }
 
         public CapeTexture(CapeGroup group, String id, String name, String link, String desc) {
-            this(group, id, name, link, desc, Identifier.of("42edit", "textures/capes/"+id+".png"));
+            this(group, id, name, link, desc, Identifier.of("42edit", "textures/cape/"+id+".png"));
         }
 
     }
@@ -449,7 +449,9 @@ public class FortytwoEdit implements ClientModInitializer {
         if(SECRETSOUNDS != null && SECRETSOUNDS.length > 0) {
             final MinecraftClient client = MinecraftClient.getInstance();
             int i = (int)(Math.random()*SECRETSOUNDS.length);
-            client.player.playSoundToPlayer(SoundEvent.of(SECRETSOUNDS[i]), SoundCategory.MASTER, 1f, .5f);
+            try {
+                client.player.playSoundToPlayer(SoundEvent.of(SECRETSOUNDS[i]), SoundCategory.MASTER, 1f, .5f);
+            } catch(Exception ex) {}
         }
     }
     public static void cycleSuperSecretSetting() {
@@ -533,7 +535,7 @@ public class FortytwoEdit implements ClientModInitializer {
     //web items
     public static boolean webItemsAuto = true;
     public static NbtList webItems = null;
-    private static String webItemsUrlDefault = "https://baphomet42.github.io/mc/blackmarket/items.json";
+    private static final String WEB_ITEMS_URL_DEFAULT = "https://baphomet42.github.io/mc/blackmarket/items.json";
     private static String webItemsUrlOverride = "";
 
     // itemstack warning
@@ -558,6 +560,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
         getSavedItems();
         refreshWebItems(false);
+        
+        FileTools.scanModFiles();
 
         ComponentHelper.clearCacheInfo(); // now that registries have been set, clear any caches that may have had empty lists
 
@@ -1014,11 +1018,12 @@ public class FortytwoEdit implements ClientModInitializer {
      * Refresh a wide variety of features. Can be used for debug reasons, to fetch new web items, etc.
      */
     public static void debugTryRefreshVarious() {
-        final MinecraftClient client = MinecraftClient.getInstance();
+        logInfo("Starting debug...");
 
         readOptions();
         refreshWebItems(true);
 
+        final MinecraftClient client = MinecraftClient.getInstance();
         ((HotbarStorageAccessor)client.getCreativeHotbarStorage()).setLoaded(false);
         client.getCreativeHotbarStorage().getSavedHotbar(0);
 
@@ -1027,7 +1032,11 @@ public class FortytwoEdit implements ClientModInitializer {
         clearCapes();
         setCustomSkin(null);
 
+        FileTools.scanModFiles();
+
         LogScreen.debugTryRefreshVarious();
+
+        logInfo("Debug complete");
     }
 
     /**
@@ -1089,15 +1098,23 @@ public class FortytwoEdit implements ClientModInitializer {
                     }
                 }
             }
-            for(String k : foundKeys)
-                keybindsCompound.remove(k);
+            if(!foundKeys.isEmpty()) {
+                for(String k : foundKeys)
+                    keybindsCompound.remove(k);
+                KeyBinding.updateKeysByCode();
+            }
         }
         if(options.contains("opticapes",NbtElement.BYTE_TYPE))
             opticapesOn = options.getByte("opticapes") == 1;
         if(options.contains("web_items",NbtElement.BYTE_TYPE))
             webItemsAuto = options.getByte("web_items") == 1;
-        if(options.contains("web_items_url",NbtElement.STRING_TYPE))
+        if(options.contains("web_items_url",NbtElement.STRING_TYPE)) {
             webItemsUrlOverride = options.getString("web_items_url");
+            if(webItemsUrlOverride.length()>0 && !webItemsUrlOverride.startsWith("https://") && !webItemsUrlOverride.startsWith("http://")) {
+                logError("Invalid web_items_url (expected 'http://' or 'https://'): "+webItemsUrlOverride);
+                webItemsUrlOverride = "";
+            }
+        }
 
         // keep options consistent
         options.remove("file_format");
@@ -1193,7 +1210,7 @@ public class FortytwoEdit implements ClientModInitializer {
         NbtCompound newItems = cacheNbt.copy();
 
         if(webItemsAuto || forceWeb) {
-            String webItemsUrlActive = webItemsUrlOverride.equals("") ? webItemsUrlDefault : webItemsUrlOverride;
+            String webItemsUrlActive = webItemsUrlOverride.length()>0 ? webItemsUrlOverride : WEB_ITEMS_URL_DEFAULT;
             String webJson = "";
             boolean didError = false;
 
@@ -1211,7 +1228,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     con.disconnect();
                 }
             } catch(Exception ex) {
-                logWarn("Failed connection to BaphomethLabs Black Market");
+                logWarn("Failed connection to BaphomethLabs Black Market ("+webItemsUrlActive+")");
                 didError = true;
             }
             if(con != null)

@@ -111,7 +111,7 @@ public class Capes extends GenericScreen {
             String serverId = random1Bi.xor(random2Bi).toString(16);
             client.getSessionService().joinServer(client.getSession().getUuidOrNull(),client.getSession().getAccessToken(),serverId);
             String url = "https://optifine.net/capeChange?u=" +
-                client.getSession().getUuidOrNull().toString().replaceAll("-","") + "&n=" + client.getSession().getUsername() + "&s=" + serverId;
+                client.getSession().getUuidOrNull().toString().replace("-","") + "&n=" + client.getSession().getUsername() + "&s=" + serverId;
             Util.getOperatingSystem().open(url);
         } catch(Exception ex) {
             FortytwoEdit.showToast("Failed to edit cape","Could not open OptiFine cape editor webpage");

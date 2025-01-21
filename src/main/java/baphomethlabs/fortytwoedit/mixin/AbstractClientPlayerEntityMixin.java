@@ -33,7 +33,7 @@ public abstract class AbstractClientPlayerEntityMixin {
             //cape
             if(FortytwoEdit.opticapesWorking && FortytwoEdit.opticapesOn) {
                 if(FortytwoEdit.capeCached(name)) {
-                    cape = Identifier.of("42edit","cache/capes/"+name.toLowerCase());
+                    cape = Identifier.of("42edit","cache/cape/"+name.toLowerCase());
                     changed = true;
                 }
                 else if(!FortytwoEdit.nameCached(name) && FortytwoEdit.capeTimeCheck()) {

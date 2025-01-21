@@ -14,10 +14,8 @@ public abstract class WindowMixin {
 
     @Redirect(method="setIcon", at=@At(value="INVOKE", target="Lnet/minecraft/client/texture/NativeImage;read(Ljava/io/InputStream;)Lnet/minecraft/client/texture/NativeImage;"))
     private NativeImage returnIcon(InputStream stream) {
-
         try {
-            if(getClass().getClassLoader().getResourceAsStream("assets/42edit/icon.png") != null)
-                return NativeImage.read(getClass().getClassLoader().getResourceAsStream("assets/42edit/game_icon/mycelium.png"));
+            return NativeImage.read(getClass().getClassLoader().getResourceAsStream("assets/42edit/textures/icon/mycelium.png"));
         } catch(IOException ex) {
             FortytwoEdit.logError("Failed to set game icon");
         }

@@ -1378,7 +1378,7 @@ public class ItemBuilder extends GenericScreen {
      */
     private String cleanPath(String path) {
         if(path.startsWith("components."))
-            path = path.replaceFirst("components.","");
+            path = path.replaceFirst("components\\.","");
         return path.replace("minecraft:","");
     }
 
@@ -1803,9 +1803,10 @@ public class ItemBuilder extends GenericScreen {
                     String inp = widgets.get(i).get(j).btn()[0];
                     if(!inp.trim().equals("")) {
                         String sound = inp.trim();
-                        sound = sound.replaceAll("[^a-zA-Z0-9_.:]","");
-                        if(!sound.equals("")) {
-                            client.player.playSoundToPlayer(SoundEvent.of(Identifier.of(sound)), SoundCategory.MASTER, 1, 1);
+                        if(sound.matches("[a-z0-9/._\\-:]+")) {// to_do verify valid sound without regex
+                            try {
+                                client.player.playSoundToPlayer(SoundEvent.of(Identifier.of(sound)), SoundCategory.MASTER, 1, 1);
+                            } catch(Exception ex) {}
                         }
                     }
                 }, FortytwoEdit.REG_SOUNDS,true));
@@ -1817,8 +1818,7 @@ public class ItemBuilder extends GenericScreen {
                     String inp = widgets.get(i).get(j-1).btn()[0];
                     if(!inp.trim().equals("")) {
                         String sound = inp.trim();
-                        sound = sound.replaceAll("[^a-zA-Z0-9_.:]","");
-                        if(!sound.equals("")) {
+                        if(sound.matches("[a-z0-9/._\\-:]+")) {// to_do verify valid sound without regex
                             String soundDisplay = sound;
                             if(soundDisplay.startsWith("minecraft:") && !soundDisplay.equals("minecraft:"))
                                 soundDisplay = soundDisplay.replaceFirst("minecraft:","");
@@ -3796,7 +3796,7 @@ public class ItemBuilder extends GenericScreen {
                         createBlankTab(0,BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+path+"\"}")));
                     }
                     else if(path.startsWith("components.")) {
-                        String comp = path.replaceFirst("components.","");
+                        String comp = path.replaceFirst("components\\.","");
                         BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
                             BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
                     }
@@ -3832,7 +3832,7 @@ public class ItemBuilder extends GenericScreen {
                 this.btns = new ButtonWidget[]{
                 keyBtn,
                 ButtonWidget.builder(Text.of("False"), btn -> {
-                    String comp = path.replaceFirst("components.","");
+                    String comp = path.replaceFirst("components\\.","");
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
                         BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
                     unsel();
@@ -3872,7 +3872,7 @@ public class ItemBuilder extends GenericScreen {
                 this.btns = new ButtonWidget[]{
                 keyBtn,
                 ButtonWidget.builder(Text.of("Unset"), btn -> {
-                    String comp = path.replaceFirst("components.","");
+                    String comp = path.replaceFirst("components\\.","");
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
                         BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
                     unsel();
@@ -3916,7 +3916,7 @@ public class ItemBuilder extends GenericScreen {
                 this.btns = new ButtonWidget[]{
                 keyBtn,
                 ButtonWidget.builder(Text.of("False"), btn -> {
-                    String comp = path.replaceFirst("components.","");
+                    String comp = path.replaceFirst("components\\.","");
                     BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
                         BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound())));
                     unsel();
@@ -3973,7 +3973,7 @@ public class ItemBuilder extends GenericScreen {
                         if(inp.equals("") || el != null) {
                             ItemStack newItem;
                             if(inp.equals("")) {
-                                String comp = path.replaceFirst("components.","");
+                                String comp = path.replaceFirst("components\\.","");
                                 newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
                                     BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new NbtCompound()));
                             }
@@ -4028,7 +4028,7 @@ public class ItemBuilder extends GenericScreen {
                             else {
                                 try {
                                     ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(
-                                        new StringReader("stone["+path.replaceAll("components.","")+"="+value+"]"));
+                                        new StringReader("stone["+path.replaceFirst("components\\.","")+"="+value+"]"));
                                 } catch(Exception ex) {
                                     if(ex instanceof CommandSyntaxException) {
                                         setErrorMsg(((CommandSyntaxException)ex).getMessage());

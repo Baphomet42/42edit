@@ -146,16 +146,16 @@ public class Hacks extends GenericScreen {
                     entityData = (new EntityDataObject(current)).getNbt();
                 components.put("entity_data",entityData);
                 if(current.getType() == EntityType.ARMOR_STAND) {
-                    nbt.putString("id","armor_stand");
-                    entityData.putString("id","armor_stand");
+                    nbt.putString("id","minecraft:armor_stand");
+                    entityData.putString("id","minecraft:armor_stand");
                     if(mode == 1) {
                         entityData.remove("Brain");
                         entityData.remove("Health");
                     }
                 }
                 else {
-                    nbt.putString("id","ender_dragon_spawn_egg");
-                    entityData.putString("id",current.getType().toString().replace("entity.minecraft.",""));
+                    nbt.putString("id","minecraft:ender_dragon_spawn_egg");
+                    entityData.putString("id",EntityType.getId(current.getType()).toString());
                     components.put("item_name",NbtString.of("{\"text\":\"Custom "+
                     current.getType().getName().getString()+" Spawn Egg\",\"italic\":false}"));
                 }
@@ -259,7 +259,7 @@ public class Hacks extends GenericScreen {
 
     private void reportInvis(Entity entity) {
         String text = "[{\"text\":\""+entity.getName().getString()+"\",\"hoverEvent\":{\"action\":\"show_entity\",\"contents\":"
-            + "{\"type\":\""+entity.getType().toString().replaceFirst("entity.","").replaceFirst("minecraft.","")
+            + "{\"type\":\""+EntityType.getId(entity.getType()).toString()
             + "\",\"id\":\""+entity.getUuidAsString()+"\"}},\"clickEvent\":"
             + "{\"action\":\"suggest_command\",\"value\":\"/tp "+entity.getBlockX() + " " + entity.getBlockY() + " " + entity.getBlockZ() + "\"}},{\"text\":\" \"},"
             + "{\"text\":\"["+entity.getBlockX() + ", " + entity.getBlockY() + ", " + entity.getBlockZ() + "]\"}]";

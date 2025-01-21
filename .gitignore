@@ -43,7 +43,6 @@ replay_*.log
 
 build/*
 !build/libs/
-
 build/libs/*
-!build/libs/fortytwoedit-*.jar
-build/libs/fortytwoedit-*-sources.jar
+!build/libs/*.jar
+build/libs/*-sources.jar
