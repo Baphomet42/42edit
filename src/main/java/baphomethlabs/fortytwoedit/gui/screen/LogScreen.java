@@ -19,6 +19,7 @@ public class LogScreen extends GenericScreen {
     private EditBoxWidget box;
     private static File logFile;
     private static final List<LogMessage> FULL_LOG = new ArrayList<>();
+    private static int fullLogLines = 0;
     private static final List<LogMessage> MOD_LOG = new ArrayList<>();
     private static final List<LogMessage> MOD_LOG_QUEUE = new ArrayList<>();
 
@@ -77,51 +78,43 @@ public class LogScreen extends GenericScreen {
         StringBuilder sb = new StringBuilder();
         List<LogMessage> logList = onlyMod ? MOD_LOG : FULL_LOG;
 
-        boolean hideLastLog = false;
         boolean firstLog = true;
         String regexError = null;
         for(int i=0; i<logList.size(); i++) {
-            if(logList.get(i).timestamp() != null) {
-                if(regexInput.length()>0) {
-                    boolean matchRegex = false;
 
-                    if(useRegex) {
-                        try {
-                            String regexMod = regexInput + "";
-                            "".matches(regexMod); // used to get errors on original input regex
+            if(regexInput.length()>0) {
+                boolean matchRegex = false;
+                if(useRegex) {
+                    try {
+                        String regexMod = regexInput + "";
+                        "".matches(regexMod); // used to get errors on original input regex
 
-                            if(!regexMod.startsWith("^"))
-                                regexMod = ".*"+regexMod;
-                            if(!regexMod.matches(REGEX_STRING_ENDS_DOLLAR))
-                                regexMod = regexMod+".*";
+                        if(!regexMod.startsWith("^"))
+                            regexMod = ".*"+regexMod;
+                        if(!regexMod.matches(REGEX_STRING_ENDS_DOLLAR))
+                            regexMod = regexMod+".*";
 
-                            if(logList.get(i).plainLine().matches(regexMod))
-                                matchRegex = true;
-                        } catch(Exception ex) {
-                            regexError = ex.getMessage();
-                        }
-                    }
-                    else if(logList.get(i).plainLine().toLowerCase().contains(regexInput.toLowerCase()))
-                        matchRegex = true;
-
-                    if(!matchRegex) {
-                        hideLastLog = true;
-                        continue;
+                        if(logList.get(i).searchLine().matches(regexMod))
+                            matchRegex = true;
+                    } catch(Exception ex) {
+                        regexError = ex.getMessage();
                     }
                 }
-                if(!firstLog)
-                    sb.append("\n");
-            }
-            else if(hideLastLog)
-                continue;
+                else if(logList.get(i).searchLine().toLowerCase().contains(regexInput.toLowerCase()))
+                    matchRegex = true;
 
-            hideLastLog = false;
+                if(!matchRegex)
+                    continue;
+            }
+
             if(!firstLog)
-                sb.append("\n");
+                sb.append("\n\n");
             else
                 firstLog = false;
+
             sb.append(logList.get(i).formattedLine());
         }
+        // end log box with empty line unless no lines were added
         if(!firstLog)
             sb.append("\n");
 
@@ -141,7 +134,7 @@ public class LogScreen extends GenericScreen {
         }
     }
 
-    private record LogMessage(String timestamp, LogType type, String message, String formattedLine, String plainLine) {
+    private record LogMessage(String timestamp, LogType type, String message, String formattedLine, String searchLine) {
 
         public static LogMessage build(String inpLine) {
             String line = inpLine + "";
@@ -165,29 +158,29 @@ public class LogScreen extends GenericScreen {
         }
         public static LogMessage build(String timestamp, LogType type, String message) {
             StringBuilder formattedLine = new StringBuilder();
-            StringBuilder plainLine = new StringBuilder();
+            StringBuilder searchLine = new StringBuilder();
 
             if(timestamp != null) {
                 formattedLine.append(ss).append("9").append(timestamp).append(ss).append("r ");
-                plainLine.append(timestamp).append(" ");
+                searchLine.append(timestamp).append(" ");
             }
             
             if(type != null) {
                 formattedLine.append(ss).append(type.formatCode()).append(type.text()).append(ss).append("r ");
-                plainLine.append(type.text()).append(" ");
+                searchLine.append(type.text()).append(" ");
             }
 
             String formatMessage = message.replace("\t","  ");
             if(timestamp != null && type != null && formatMessage.matches("^\\([^)]+\\) .+")) {
                 formattedLine.append(ss).append("3").append(formatMessage.substring(0,formatMessage.indexOf(")")+1)).append(ss).append("r ");
-                plainLine.append(formatMessage.substring(0,formatMessage.indexOf(")")+1)).append(" ");
+                searchLine.append(formatMessage.substring(0,formatMessage.indexOf(")")+1)).append(" ");
 
                 formatMessage = formatMessage.replaceFirst("^\\([^)]+\\) ","");
             }
             formattedLine.append(formatMessage);
-            plainLine.append(formatMessage);
+            searchLine.append(formatMessage);
 
-            return new LogMessage(timestamp, type, message, formattedLine.toString(), plainLine.toString());
+            return new LogMessage(timestamp, type, message, formattedLine.toString(), searchLine.toString().replace("\n"," "));
         }
     }
 
@@ -254,6 +247,7 @@ public class LogScreen extends GenericScreen {
                     lastUpdate = 0;
                     clearFullLogCache = false;
                     FULL_LOG.clear();
+                    fullLogLines = 0;
                 }
 
                 lastCheck = System.currentTimeMillis();
@@ -264,8 +258,17 @@ public class LogScreen extends GenericScreen {
                         String line;
                         int i = 0;
                         while((line = reader.readLine()) != null) {
-                            if(i>=FULL_LOG.size()) {
-                                FULL_LOG.add(LogMessage.build(line));
+                            if(i>=fullLogLines) {
+                                LogMessage temp = LogMessage.build(line);
+
+                                if(temp.timestamp() != null || FULL_LOG.isEmpty())
+                                    FULL_LOG.add(temp);
+                                else {
+                                    LogMessage lastLog = FULL_LOG.getLast();
+                                    FULL_LOG.set(FULL_LOG.size()-1, LogMessage.build(lastLog.timestamp(), lastLog.type(), lastLog.message()+"\n"+line));
+                                }
+
+                                fullLogLines++;
                             }
                             i++;
                         }

@@ -104,7 +104,6 @@ public class ItemBuilder extends GenericScreen {
     private final Set<ClickableWidget> allSliderWidgets = Sets.newHashSet();
     public static boolean savedModeSet = false;
     private NbtList savedItems = null;
-    private boolean savedErrorSaving = false;
     private String inpError = null;
     private String inpErrorTrim = null;
     private static boolean showUnusedComponents = false;
@@ -3465,15 +3464,39 @@ public class ItemBuilder extends GenericScreen {
                             if(!savedItem.isEmpty()) {
                                 nbt = BlackMagick.itemToNbtStorage(savedItem);
                             }
-                            savedItems.set(index,nbt);
-                            FortytwoEdit.setSavedItems(savedItems);
-                            refreshSaved();
-                            ItemStack savedItemNew = BlackMagick.itemFromNbt(savedItems.getCompound(index));
-                            if(!ItemStack.areEqual(savedItem,savedItemNew)) {
-                                savedErrorSaving = true;
-                                FortytwoEdit.logError("Failed to save item correctly\n\nOriginal: " +
-                                    BlackMagick.itemToNbtStorage(savedItem).asString() + "\n\nSaved: " + 
-                                    BlackMagick.itemToNbtStorage(savedItemNew).asString());
+
+                            if(savedItems.asString().equals(FortytwoEdit.getSavedItems().asString())) {
+                                NbtList savedItemsOriginalBackup = savedItems.copy();
+                                savedItems.set(index,nbt);
+                                FortytwoEdit.setSavedItems(savedItems);
+                                NbtList savedItemsNew = FortytwoEdit.getSavedItems();
+                                if(!savedItems.asString().equals(savedItemsNew.asString())) {
+                                    ItemStack testItem = BlackMagick.itemFromNbt(savedItemsNew.getCompound(index));
+
+                                    NbtList savedItemsAfterEdit = savedItems.copy();
+                                    NbtList restoredItemsAfterEdit = savedItemsNew.copy();
+                                    savedItemsAfterEdit.set(index,new NbtCompound());
+                                    restoredItemsAfterEdit.set(index,new NbtCompound());
+
+                                    if(savedItemsAfterEdit.asString().equals(restoredItemsAfterEdit.asString()) && !ItemStack.areEqual(savedItem,testItem)) {
+                                        FortytwoEdit.logError("Failed to save item. The item could not be loaded properly after saving. Reverting file."
+                                            + "\nTried to save: " + nbt.asString()
+                                            + "\nItem loaded: " + BlackMagick.itemToNbtStorage(testItem).asString());
+                                    }
+                                    else {
+                                        FortytwoEdit.logError("Failed to save item. The saved items list could not be loaded properly after saving. Reverting file."
+                                            + "\nTried to save: " + nbt.asString());
+                                    }
+
+                                    FortytwoEdit.showToast("Error Saving Item","Item NBT could not be saved.");
+                                    FortytwoEdit.setSavedItems(savedItemsOriginalBackup);
+                                }
+                                refreshSaved();
+                            }
+                            else {
+                                FortytwoEdit.showToast("Error Saving Item","Reopen the screen and try again.");
+                                FortytwoEdit.logWarn("Failed to save item. The saved items file has changed since the screen has been open. File not changed."
+                                    +"\nTried to save: "+nbt.asString());
                             }
                         }
                         else {
@@ -5287,8 +5310,6 @@ public class ItemBuilder extends GenericScreen {
             txtFormat.render(context, mouseX, mouseY, delta);
             if(!this.unsavedTxtWidgets.isEmpty())
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Unsaved"), this.width / 2, y-11, TEXT_COLOR);
-            if(savedErrorSaving)
-                context.drawCenteredTextWithShadow(this.textRenderer, Text.of("A recent saved item does not match original!"), this.width / 2, y-11-10, ERROR_COLOR);
         }
         else {
             if(textComponentPreview != null) {

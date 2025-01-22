@@ -1062,6 +1062,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
     public static void readOptions() {
         NbtCompound options = FileTools.readCompoundFromFile(FileTools.FILE_OPTIONS);
+        if(options == null)
+            options = new NbtCompound();
 
         // keep options consistent
         if(options.contains("custom_cape_toggle",NbtElement.BYTE_TYPE))
@@ -1161,6 +1163,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
     public static NbtList getSavedItems() {
         NbtCompound savedItemsNbt = FileTools.readCompoundFromFile(FileTools.FILE_SAVED_ITEMS);
+        if(savedItemsNbt == null)
+            savedItemsNbt = new NbtCompound();
 
         NbtList itemsList = new NbtList();
         boolean foundItems = false;
@@ -1188,7 +1192,7 @@ public class FortytwoEdit implements ClientModInitializer {
             return;
 
         NbtCompound savedItemsNbt = new NbtCompound();
-        savedItemsNbt.put("items",nbt);
+        savedItemsNbt.put("items",nbt.copy());
         savedItemsNbt.putInt("data_format",SharedConstants.getGameVersion().getResourceVersion(ResourceType.SERVER_DATA));
         savedItemsNbt.putInt("file_format",FileTools.FILE_FORMAT);
         FileTools.writeCompoundToFile(FileTools.FILE_SAVED_ITEMS, savedItemsNbt, FileDisplayType.TREE_CONDITIONAL_COLLAPSE);
@@ -1207,6 +1211,8 @@ public class FortytwoEdit implements ClientModInitializer {
         NbtCompound result = new NbtCompound();
         
         NbtCompound cacheNbt = FileTools.readCompoundFromFile(FileTools.FILE_WEB_CACHE);
+        if(cacheNbt == null)
+            cacheNbt = new NbtCompound();
         NbtCompound newItems = cacheNbt.copy();
 
         if(webItemsAuto || forceWeb) {

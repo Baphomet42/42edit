@@ -67,28 +67,42 @@ public class FileTools {
      * @param filePath path to file relative to .minecraft
      * @param nbt
      * @param display how to format file
-     * @return
+     * @return true if compound was set successfully
      */
     public static boolean writeCompoundToFile(String filePath, NbtCompound nbt, FileDisplayType display) {
         String fileContents = "";
-        if(nbt == null)
-            fileContents = "{}";
-        else {
-            switch(display) {
-                case TREE : {
-                    fileContents = BlackMagick.formatSnbtAsTree(nbt, false);
-                    break;
+        NbtCompound nbtCopy = new NbtCompound();
+        if(nbt != null)
+            nbtCopy = nbt.copy();
+            
+        switch(display) {
+            case TREE : {
+                fileContents = BlackMagick.formatSnbtAsTree(nbtCopy, false);
+                break;
+            }
+            case TREE_CONDITIONAL_COLLAPSE : {
+                fileContents = BlackMagick.formatSnbtAsTree(nbtCopy, true);
+                break;
+            }
+            default : {
+                fileContents = nbtCopy.asString();
+            }
+        }
+
+        if(writeStringToFile(filePath,fileContents)) {
+            NbtCompound nbtNew = readCompoundFromFile(filePath);
+            if(nbtNew != null) {
+                if(nbtCopy.asString().equals(nbtNew.asString())) {
+                    return true;
                 }
-                case TREE_CONDITIONAL_COLLAPSE : {
-                    fileContents = BlackMagick.formatSnbtAsTree(nbt, true);
-                    break;
-                }
-                default : {
-                    fileContents = nbt.asString();
+                else {
+                    FortytwoEdit.logError("Failed to write compound to file '" + filePath + "'"
+                        + "\nTried to save: " + nbtCopy.asString()
+                        + "\nCompound loaded: " + nbtNew.asString());
                 }
             }
         }
-        return writeStringToFile(filePath,fileContents);
+        return false;
     }
 
     /**
@@ -101,10 +115,10 @@ public class FileTools {
     }
 
     /**
-     * Reads a compound from a .snbt file. Returns empty compound if file contents are invalid or cannot be accessed.
+     * Reads a compound from a .snbt file
      * 
      * @param filePath path to file relative to .minecraft
-     * @return
+     * @return compound from file or null if compound could not be parsed
      */
     public static NbtCompound readCompoundFromFile(String filePath) {
         String fileContents = readStringFromFile(filePath);
@@ -117,7 +131,7 @@ public class FileTools {
             FortytwoEdit.logError("Failed to parse file '" + filePath + "' as compound: " + fileContents);
         }
 
-        return new NbtCompound();
+        return null;
     }
 
     /**
