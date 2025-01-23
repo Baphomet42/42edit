@@ -558,7 +558,7 @@ public class FortytwoEdit implements ClientModInitializer {
             UUID = NbtHelper.fromUuid(client.getSession().getUuidOrNull());
         clearCapes();
 
-        getSavedItems();
+        getSavedItems(); // used to show log errors in file
         refreshWebItems(false);
         
         FileTools.scanModFiles();
@@ -1011,7 +1011,11 @@ public class FortytwoEdit implements ClientModInitializer {
 
     public static void showToast(Text title, Text desc) {
         final MinecraftClient client = MinecraftClient.getInstance();
-        client.getToastManager().add(new SystemToast(TOAST_TYPE, TOAST_PREFIX.copy().append(title), desc));
+        try {
+            client.getToastManager().add(new SystemToast(TOAST_TYPE, TOAST_PREFIX.copy().append(title), desc));
+        } catch(Exception ex) {
+            logError("Failed to show toast ("+title.getString()+") ("+desc.getString()+"): "+ex.getMessage());
+        }
     }
 
     /**
@@ -1026,6 +1030,8 @@ public class FortytwoEdit implements ClientModInitializer {
         final MinecraftClient client = MinecraftClient.getInstance();
         ((HotbarStorageAccessor)client.getCreativeHotbarStorage()).setLoaded(false);
         client.getCreativeHotbarStorage().getSavedHotbar(0);
+
+        getSavedItems(); // used to show log errors in file
 
         ComponentHelper.clearCacheInfo();
         
@@ -1162,9 +1168,15 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     public static NbtList getSavedItems() {
+        ItemBuilder.savedItemsError = false;
         NbtCompound savedItemsNbt = FileTools.readCompoundFromFile(FileTools.FILE_SAVED_ITEMS);
-        if(savedItemsNbt == null)
+        if(savedItemsNbt == null) {
             savedItemsNbt = new NbtCompound();
+            String fileString = FileTools.readStringFromFile(FileTools.FILE_SAVED_ITEMS);
+            if(fileString != null && !fileString.isEmpty()) {
+                ItemBuilder.savedItemsError = true;
+            }
+        }
 
         NbtList itemsList = new NbtList();
         boolean foundItems = false;
@@ -1177,6 +1189,7 @@ public class FortytwoEdit implements ClientModInitializer {
         }
         if(!foundItems && !savedItemsNbt.isEmpty()) {
             FortytwoEdit.logError("Failed to read saved items: " + savedItemsNbt.asString());
+            ItemBuilder.savedItemsError = true;
         }
         
         while(itemsList.size()<9*SAVED_ROWS)
@@ -1187,18 +1200,19 @@ public class FortytwoEdit implements ClientModInitializer {
         return itemsList;
     }
 
-    public static void setSavedItems(NbtList nbt) {
+    public static boolean setSavedItems(NbtList nbt) {
         if(nbt == null)
-            return;
+            return false;
 
         NbtCompound savedItemsNbt = new NbtCompound();
         savedItemsNbt.put("items",nbt.copy());
         savedItemsNbt.putInt("data_format",SharedConstants.getGameVersion().getResourceVersion(ResourceType.SERVER_DATA));
         savedItemsNbt.putInt("file_format",FileTools.FILE_FORMAT);
-        FileTools.writeCompoundToFile(FileTools.FILE_SAVED_ITEMS, savedItemsNbt, FileDisplayType.TREE_CONDITIONAL_COLLAPSE);
-
-        // call get method to find errors when reading
-        getSavedItems();
+        if(FileTools.writeCompoundToFile(FileTools.FILE_SAVED_ITEMS, savedItemsNbt, FileDisplayType.TREE_CONDITIONAL_COLLAPSE)) {
+            getSavedItems(); // used to show log errors in file
+            return true;
+        }
+        return false;
     }
 
     /**

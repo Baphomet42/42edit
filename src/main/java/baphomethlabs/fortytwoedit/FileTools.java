@@ -89,16 +89,24 @@ public class FileTools {
             }
         }
 
+        String oldFile = null;
+        if(readCompoundFromFile(filePath) != null) {
+            oldFile = readStringFromFile(filePath);
+        }
         if(writeStringToFile(filePath,fileContents)) {
             NbtCompound nbtNew = readCompoundFromFile(filePath);
-            if(nbtNew != null) {
-                if(nbtCopy.asString().equals(nbtNew.asString())) {
-                    return true;
+            if(nbtNew != null && nbtCopy.asString().equals(nbtNew.asString()))
+                return true;
+            else {
+                String errorMsg = "Failed to write compound to file '" + filePath + "'"
+                    + "\nTried to save: " + nbtCopy.asString()
+                    + "\nCompound loaded: " + (nbtNew==null ? "null" : nbtNew.asString());
+                if(oldFile == null) {
+                    FortytwoEdit.logError(errorMsg+"\nNo file to revert to.");
                 }
                 else {
-                    FortytwoEdit.logError("Failed to write compound to file '" + filePath + "'"
-                        + "\nTried to save: " + nbtCopy.asString()
-                        + "\nCompound loaded: " + nbtNew.asString());
+                    FortytwoEdit.logError(errorMsg+"\nReverting file.");
+                    writeStringToFile(filePath, oldFile);
                 }
             }
         }
@@ -145,6 +153,7 @@ public class FileTools {
 
         if(verifyFileExists(filePath)) {
             FileWriter writer = null;
+            String error = null;
             try {
                 writer = new FileWriter(pathFromMinecraft(filePath), FILE_CHARSET, false);
                 writer.write(text);
@@ -154,13 +163,18 @@ public class FileTools {
                 if(newText != null && newText.equals(text))
                     return true;
             }
-            catch(Exception ex) {}
+            catch(Exception ex) {
+                error = ex.getMessage();
+            }
             if(writer != null)
                 try {
                     writer.close();
                 } catch(Exception ex) {}
 
-            FortytwoEdit.logError("Failed to write to file '" + filePath + "': "+text);
+            String logMsg = "Failed to write to file '" + filePath + "': "+text;
+            if(error != null)
+                logMsg += "\n\nError: "+error;
+            FortytwoEdit.logError(logMsg);
         }
 
         return false;
@@ -172,14 +186,20 @@ public class FileTools {
      * @param filePath path to file relative to .minecraft
      * @return
      */
-    private static String readStringFromFile(String filePath) {
+    public static String readStringFromFile(String filePath) {
 
         if(verifyFileExists(filePath)) {
+            String error = null;
             try {
                 return Files.readString(Paths.get(pathFromMinecraft(filePath)), FILE_CHARSET);
             }
-            catch(Exception ex) {}
-            FortytwoEdit.logError("Failed to read from file '" + filePath + "'");
+            catch(Exception ex) {
+                error = ex.getMessage();
+            }
+            String logMsg = "Failed to read from file '" + filePath + "'";
+            if(error != null)
+                logMsg += ": "+error;
+            FortytwoEdit.logError(logMsg);
         }
 
         return null;
@@ -195,6 +215,7 @@ public class FileTools {
      * @return
      */
     private static boolean verifyFileExists(String filePath) {
+        String error = null;
         if(filePath.length()>0) {
             try {
                 Path path = Paths.get(filePath);
@@ -208,10 +229,15 @@ public class FileTools {
                 if(file.exists())
                     return true;
 
-            } catch(Exception ex) {}
+            } catch(Exception ex) {
+                error = ex.getMessage();
+            }
         }
 
-        FortytwoEdit.logError("Failed to access or create file '" + filePath + "'");
+        String logMsg = "Failed to access or create file '" + filePath + "'";
+        if(error != null)
+            logMsg += ": "+error;
+        FortytwoEdit.logError(logMsg);
         return false;
     }
 
@@ -235,14 +261,20 @@ public class FileTools {
      * @return true if file was opened
      */
     private static boolean openMinecraftDirEntry(String filePath) {
+        String error = null;
         try {
             File dir = new File(pathFromMinecraft(filePath));
             if(dir.exists() && dir.isDirectory()) {
                 Util.getOperatingSystem().open(dir);
                 return true;
             }
-        } catch(Exception ex) {}
-        FortytwoEdit.logError("Failed to open directory: " + filePath);
+        } catch(Exception ex) {
+            error = ex.getMessage();
+        }
+        String logMsg = "Failed to open directory '" + filePath + "'";
+        if(error != null)
+            logMsg += ": "+error;
+        FortytwoEdit.logError(logMsg);
         return false;
     }
 

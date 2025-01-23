@@ -115,7 +115,8 @@ public class BlackMagick {
         NbtCompound temp;
         try {
             temp = StringNbtReader.parse(nbt);
-            return temp.get("temp");
+            if(temp.contains("temp") && temp.getSize()==1)
+                return temp.get("temp");
         } catch(CommandSyntaxException ex) {}
         return null;
     }
@@ -397,7 +398,7 @@ public class BlackMagick {
      */
     public static String getItemCompoundErrors(String item, String inpError) {
         String invalidMsg = "Invalid item";
-        if(item==null || item.length()==0)
+        if(item==null || item.isEmpty())
             return invalidMsg;
         try {
             String giveMsg = "bundle[bundle_contents=["+item+"]]";
@@ -546,7 +547,7 @@ public class BlackMagick {
     public static NbtCompound moveListElement(NbtCompound base, String path, int index, boolean up) {
         if(base == null)
             return null;
-        if(path == null || path.length() == 0 || index<0)
+        if(path == null || path.isEmpty() || index<0)
             return base.copy();
 
         NbtCompound nbt = base.copy();
@@ -577,7 +578,7 @@ public class BlackMagick {
     public static NbtCompound cloneListElement(NbtCompound base, String path, int index) {
         if(base == null)
             return null;
-        if(path == null || path.length() == 0 || index<0)
+        if(path == null || path.isEmpty() || index<0)
             return base.copy();
 
         NbtCompound nbt = base.copy();

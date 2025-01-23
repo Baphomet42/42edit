@@ -9,6 +9,7 @@ import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.EditBoxWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -17,9 +18,14 @@ import net.minecraft.text.Text;
 public class LogScreen extends GenericScreen {
 
     private EditBoxWidget box;
+    private ClickableWidget pauseBtn;
+    private static final Tooltip PAUSE_TOOLTIP = Tooltip.of(Text.of("Temporarily freeze new messages from appearing"));
+    private static final Tooltip RESUME_TOOLTIP = Tooltip.of(Text.of("Unpause log and show new messages"));
     private static File logFile;
-    private static final List<LogMessage> FULL_LOG = new ArrayList<>();
     private static int fullLogLines = 0;
+    private static int fullLogStart = 0;
+    private static int modLogStart = 0;
+    private static final List<LogMessage> FULL_LOG = new ArrayList<>();
     private static final List<LogMessage> MOD_LOG = new ArrayList<>();
     private static final List<LogMessage> MOD_LOG_QUEUE = new ArrayList<>();
 
@@ -47,14 +53,18 @@ public class LogScreen extends GenericScreen {
         logFile = new File(client.runDirectory.getAbsolutePath()+"\\logs\\latest.log");
 
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> changeScreen(new DebugScreen())).dimensions(x+5,y+5,40,20).build());
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Resume"),
+        pauseBtn = this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Resume"),
                 Text.literal("Pause")).initially(paused).omitKeyText().build(x+5+40+5,y+5,40,20, Text.of(""), (button, trackOutput) -> {
             paused = (boolean)trackOutput;
             updateBox();
             unsel();
-        })).setTooltip(Tooltip.of(Text.of("Temporarily freeze new messages from appearing")));
+            pauseBtn.setTooltip(paused ? RESUME_TOOLTIP : PAUSE_TOOLTIP);
+        }));
+        pauseBtn.setTooltip(PAUSE_TOOLTIP);
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Clear"), button -> btnClearLog()).dimensions(x+backgroundWidth-5-50-40-5,y+5,40,20).build())
+            .setTooltip(Tooltip.of(Text.of("Clear all logged messages\n\nShift click to restore all cleared messages")));
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("[42edit]"),
-                Text.literal("[All]")).initially(onlyMod).omitKeyText().build(x+backgroundWidth-5-60,y+5,60,20, Text.of(""), (button, trackOutput) -> {
+                Text.literal("[All]")).initially(onlyMod).omitKeyText().build(x+backgroundWidth-5-50,y+5,50,20, Text.of(""), (button, trackOutput) -> {
             onlyMod = (boolean)trackOutput;
             updateBox();
             unsel();
@@ -77,10 +87,11 @@ public class LogScreen extends GenericScreen {
     protected void updateBox() {
         StringBuilder sb = new StringBuilder();
         List<LogMessage> logList = onlyMod ? MOD_LOG : FULL_LOG;
+        int logStart = onlyMod ? modLogStart : fullLogStart;
 
         boolean firstLog = true;
         String regexError = null;
-        for(int i=0; i<logList.size(); i++) {
+        for(int i=logStart; i<logList.size(); i++) {
 
             if(regexInput.length()>0) {
                 boolean matchRegex = false;
@@ -216,11 +227,40 @@ public class LogScreen extends GenericScreen {
         regexInput = "";
         useRegex = false;
     }
+
+    private void refreshVariousOnTick() {
+        lastCheck = 0;
+        lastUpdate = 0;
+        FULL_LOG.clear();
+        fullLogLines = 0;
+        unhideAllLogged();
+    }
+
+    private void btnClearLog() {
+        if(hasShiftDown()) {
+            unhideAllLogged();
+        }
+        else {
+            hideCurrentlyLogged();
+        }
+        unsel();
+        updateBox();
+    }
+
+    private void hideCurrentlyLogged() {
+        fullLogStart = FULL_LOG.size();
+        modLogStart = MOD_LOG.size();
+    }
+
+    private void unhideAllLogged() {
+        fullLogStart = 0;
+        modLogStart = 0;
+    }
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Output Log"), this.width / 2, y+11, TEXT_COLOR);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Log"), this.width / 2, y+11, TEXT_COLOR);
     }
 
     @Override
@@ -243,11 +283,9 @@ public class LogScreen extends GenericScreen {
 
             if(System.currentTimeMillis()-lastCheck >= UPDATE_WAIT_MS) {
                 if(clearFullLogCache) {
-                    lastCheck = 0;
-                    lastUpdate = 0;
                     clearFullLogCache = false;
-                    FULL_LOG.clear();
-                    fullLogLines = 0;
+                    refreshVariousOnTick();
+                    updateBox();
                 }
 
                 lastCheck = System.currentTimeMillis();

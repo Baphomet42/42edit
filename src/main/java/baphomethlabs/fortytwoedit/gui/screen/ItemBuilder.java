@@ -104,6 +104,7 @@ public class ItemBuilder extends GenericScreen {
     private final Set<ClickableWidget> allSliderWidgets = Sets.newHashSet();
     public static boolean savedModeSet = false;
     private NbtList savedItems = null;
+    public static boolean savedItemsError = false;
     private String inpError = null;
     private String inpErrorTrim = null;
     private static boolean showUnusedComponents = false;
@@ -299,7 +300,7 @@ public class ItemBuilder extends GenericScreen {
             p.w.setY(y+p.y);
             this.addDrawableChild(p.w);
         }
-        if(widgets.get(tab).size()!=0) {
+        if(!widgets.get(tab).isEmpty()) {
             this.tabWidget = new TabWidget(tab);
             this.tabWidget.setScrollY(tabScroll[tab]);
             this.addDrawableChild(this.tabWidget);
@@ -1003,7 +1004,7 @@ public class ItemBuilder extends GenericScreen {
             textComponentBase = "{\"text\":\""+textComponentBase+"\"}";
 
         if(textComponentEffectMode == 0 || textComponentEffectMode == 1) {
-            if(textComponentBase.length()==0 || textComponentBase.equals("{}") || textComponentBase.equals("[]")
+            if(textComponentBase.isEmpty() || textComponentBase.equals("{}") || textComponentBase.equals("[]")
                     || textComponentBase.equals("[{}]") || textComponentBase.equals("{\"text\":\"\"}") || textComponentBase.equals("[{\"text\":\"\"}]"))
                 return textComponentEffect;
             else if(textComponentBase.length()>=4 && textComponentBase.charAt(0)=='[' && textComponentBase.charAt(textComponentBase.length()-1)==']'
@@ -3466,32 +3467,18 @@ public class ItemBuilder extends GenericScreen {
                             }
 
                             if(savedItems.asString().equals(FortytwoEdit.getSavedItems().asString())) {
-                                NbtList savedItemsOriginalBackup = savedItems.copy();
-                                savedItems.set(index,nbt);
-                                FortytwoEdit.setSavedItems(savedItems);
-                                NbtList savedItemsNew = FortytwoEdit.getSavedItems();
-                                if(!savedItems.asString().equals(savedItemsNew.asString())) {
-                                    ItemStack testItem = BlackMagick.itemFromNbt(savedItemsNew.getCompound(index));
-
-                                    NbtList savedItemsAfterEdit = savedItems.copy();
-                                    NbtList restoredItemsAfterEdit = savedItemsNew.copy();
-                                    savedItemsAfterEdit.set(index,new NbtCompound());
-                                    restoredItemsAfterEdit.set(index,new NbtCompound());
-
-                                    if(savedItemsAfterEdit.asString().equals(restoredItemsAfterEdit.asString()) && !ItemStack.areEqual(savedItem,testItem)) {
-                                        FortytwoEdit.logError("Failed to save item. The item could not be loaded properly after saving. Reverting file."
-                                            + "\nTried to save: " + nbt.asString()
-                                            + "\nItem loaded: " + BlackMagick.itemToNbtStorage(testItem).asString());
-                                    }
-                                    else {
-                                        FortytwoEdit.logError("Failed to save item. The saved items list could not be loaded properly after saving. Reverting file."
-                                            + "\nTried to save: " + nbt.asString());
-                                    }
-
-                                    FortytwoEdit.showToast("Error Saving Item","Item NBT could not be saved.");
-                                    FortytwoEdit.setSavedItems(savedItemsOriginalBackup);
+                                if(savedItems.get(index).asString().equals(nbt.asString())) {
+                                    FortytwoEdit.showToast("No Change","Item already saved");
                                 }
-                                refreshSaved();
+                                else {
+                                    savedItems.set(index,nbt);
+                                    if(!FortytwoEdit.setSavedItems(savedItems)) {
+                                        FortytwoEdit.logError("Failed to save item. The saved items list could not be loaded properly after saving."
+                                            + "\nTried to save: " + nbt.asString());
+                                        FortytwoEdit.showToast("Error Saving Item","Item NBT could not be saved.");
+                                    }
+                                    refreshSaved();
+                                }
                             }
                             else {
                                 FortytwoEdit.showToast("Error Saving Item","Reopen the screen and try again.");
@@ -4064,7 +4051,7 @@ public class ItemBuilder extends GenericScreen {
                         }
                         else if(path.equals("id")) {
                             keyType = "id";
-                            if(value.length()==0)
+                            if(value.isEmpty())
                                 value = "stone";
                             try {
                                 ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader(value));
@@ -4103,7 +4090,7 @@ public class ItemBuilder extends GenericScreen {
                         }
                         else {
                             if(client.player.getAbilities().creativeMode) {
-                                if(value.length()==0)
+                                if(value.isEmpty())
                                     newBtnTt = Text.empty().append(Text.of("Remove "+keyType+"\n\n")).append(btnTt);
                                 else
                                     newBtnTt = Text.empty().append(Text.of("Set "+keyType+"\n\n")).append(btnTt);
@@ -4415,7 +4402,7 @@ public class ItemBuilder extends GenericScreen {
                     setErrorMsg(null);
 
                     NbtElement el = isString ? NbtString.of(value) : BlackMagick.nbtFromString(value);
-                    if(value.length()==0)
+                    if(value.isEmpty())
                         el = null;
 
                     if((value != null && !value.equals(startVal))) {
@@ -4753,7 +4740,7 @@ public class ItemBuilder extends GenericScreen {
                 setErrorMsg(null);
                 NbtElement el = isString ? NbtString.of(value) : BlackMagick.nbtFromString(value);
 
-                if(el != null || value.length()==0)
+                if(el != null || value.isEmpty())
                     setEditingElement(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
                         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,el),blankElPath),saveBtn,
                         path2==null ? null : fullPath);
@@ -5047,7 +5034,7 @@ public class ItemBuilder extends GenericScreen {
                         TextFieldWidget txt = (TextFieldWidget)widgetCache.get(cacheType);
                         if(txt.getText().equals(""+poseCompound.asString()))
                             editorEqual = true;
-                        else if(txt.getText().length()==0 && poseCompound.isEmpty())
+                        else if(txt.getText().isEmpty() && poseCompound.isEmpty())
                             editorEqual = true;
                     }
                     break;
@@ -5072,7 +5059,7 @@ public class ItemBuilder extends GenericScreen {
                     case TXT_POSE: {
                         if(widgetCache.containsKey(cacheType) && widgetCache.get(cacheType)!=null) {
                             TextFieldWidget txt = (TextFieldWidget)widgetCache.get(cacheType);
-                            if((txt.getText().equals("{}") || txt.getText().length()==0) && (poseCompound.isEmpty()))
+                            if((txt.getText().equals("{}") || txt.getText().isEmpty()) && (poseCompound.isEmpty()))
                                 cleared = true;
                         }
                         break;
@@ -5294,8 +5281,12 @@ public class ItemBuilder extends GenericScreen {
             if(tab == CACHE_TAB_SAVED) { 
                 if(viewBlackMarket)
                     drawItem(context,savedModeItems[1], x+14, y+38);
-                else
+                else {
                     drawItem(context,savedModeItems[0], x+14, y+38);
+                    if(savedItemsError)
+                        context.drawCenteredTextWithShadow(this.textRenderer,
+                            Text.of("Failed to read saved items"), this.width / 2, y+this.backgroundHeight+3, ERROR_COLOR);
+                }
             }
             
             if(prevArmorStand)
