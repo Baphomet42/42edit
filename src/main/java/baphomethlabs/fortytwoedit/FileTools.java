@@ -74,7 +74,7 @@ public class FileTools {
         NbtCompound nbtCopy = new NbtCompound();
         if(nbt != null)
             nbtCopy = nbt.copy();
-            
+
         switch(display) {
             case TREE : {
                 fileContents = BlackMagick.formatSnbtAsTree(nbtCopy, false);
@@ -85,7 +85,7 @@ public class FileTools {
                 break;
             }
             default : {
-                fileContents = nbtCopy.asString();
+                fileContents = BlackMagick.nbtToString(nbtCopy);
             }
         }
 
@@ -95,12 +95,12 @@ public class FileTools {
         }
         if(writeStringToFile(filePath,fileContents)) {
             NbtCompound nbtNew = readCompoundFromFile(filePath);
-            if(nbtNew != null && nbtCopy.asString().equals(nbtNew.asString()))
+            if(nbtNew != null && BlackMagick.elementsEqual(nbtCopy,nbtNew))
                 return true;
             else {
                 String errorMsg = "Failed to write compound to file '" + filePath + "'"
-                    + "\nTried to save: " + nbtCopy.asString()
-                    + "\nCompound loaded: " + (nbtNew==null ? "null" : nbtNew.asString());
+                    + "\nTried to save: " + BlackMagick.nbtToString(nbtCopy)
+                    + "\nCompound loaded: " + (nbtNew==null ? "null" : BlackMagick.nbtToString(nbtNew));
                 if(oldFile == null) {
                     FortytwoEdit.logError(errorMsg+"\nNo file to revert to.");
                 }
@@ -338,5 +338,5 @@ public class FileTools {
         FortytwoEdit.logError("Failed to trim scanned file path: "+path);
         return path;
     }
-    
+
 }

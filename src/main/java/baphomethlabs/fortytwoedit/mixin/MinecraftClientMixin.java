@@ -16,12 +16,12 @@ public abstract class MinecraftClientMixin {
 	private void appendClientTick(CallbackInfo ci) {
 		FortytwoEdit.clientTick((MinecraftClient)(Object)this);
 	}
-    
+
     @Inject(method = "hasOutline(Lnet/minecraft/entity/Entity;)Z", at = @At("RETURN"), cancellable = true)
     private void setGlow(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if(FortytwoEdit.xrayEntity) {
             cir.setReturnValue(true);
         }
     }
-    
+
 }

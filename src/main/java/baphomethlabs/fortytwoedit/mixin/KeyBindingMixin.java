@@ -48,7 +48,7 @@ public abstract class KeyBindingMixin {
                 stopAutoClicker = true;
             else if(FortytwoEdit.autoClick && key.equals(((KeyBindingAccessor)client.options.useKey).getBoundKey()))
                 stopAutoClicker = true;
-            
+
             if(stopAutoClicker) {
                 FortytwoEdit.autoClicker = false;
                 client.options.useKey.setPressed(false);

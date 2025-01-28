@@ -26,7 +26,7 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation include("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
-	
+
 	//	UPDATE PROTOCOL
 	//	paste gradle.properties Fabric Properties and Dependencies and manually update Mod Properties
 	//	update fabric.mod.json depends minecraft version (for new full mc versions)
@@ -38,7 +38,7 @@ dependencies {
 	//		remove runDir lines
 	//	java project clean workspace
 	//	./gradlew build
-	
+
 	//	UPDATE LAUNCHER
 	//	use fabric installer to get new launcher profile
 	//	copy 42jar from build/libs to mods

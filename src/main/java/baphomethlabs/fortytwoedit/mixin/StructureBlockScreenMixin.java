@@ -31,11 +31,11 @@ public abstract class StructureBlockScreenMixin extends Screen {
 
     @Shadow
     private ButtonWidget buttonLoad;
-    
+
     @Inject(method="init()V", at=@At("TAIL"), cancellable = true)
     private void init(CallbackInfo c) {
         inputName.setChangedListener(value -> {
-            
+
             if(buttonLoad.visible) {
 
                 if(suggs != null)
@@ -51,13 +51,13 @@ public abstract class StructureBlockScreenMixin extends Screen {
 
         });
     }
-    
+
     @Inject(method="render(Lnet/minecraft/client/gui/DrawContext;IIF)V", at=@At("TAIL"), cancellable = true)
     private void render(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo c) {
         if(suggs != null)
             suggs.render(context, mouseX, mouseY);
     }
-    
+
     @Inject(method="keyPressed(III)Z", at=@At("HEAD"), cancellable = true)
     private void keyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         if(suggs != null && suggs.keyPressed(keyCode, scanCode, modifiers)) {

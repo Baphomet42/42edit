@@ -34,7 +34,7 @@ import net.minecraft.util.Identifier;
  * </ul>
  */
 public class ComponentHelper {
-    
+
     /**
      * Vanilla dyes as they appear in banner color IDs
      */
@@ -128,7 +128,7 @@ public class ComponentHelper {
             case "minecraft:block_state": return !BlackMagick.getBlockStates(stack.getItem()).isEmpty();
             case "minecraft:bucket_entity_data": return item instanceof EntityBucketItem;
             case "minecraft:dyed_color": return (new ItemStack(item)).isIn(ItemTags.DYEABLE);
-            case "minecraft:entity_data": return (item instanceof DecorationItem || stack.isOf(Items.ARMOR_STAND) || item instanceof BoatItem || 
+            case "minecraft:entity_data": return (item instanceof DecorationItem || stack.isOf(Items.ARMOR_STAND) || item instanceof BoatItem ||
                 item instanceof MinecartItem || item.toString().contains("spawn_egg"));
             case "minecraft:container_loot": return BlackMagick.stringContains(item.toString(),"chest","barrel","dispenser","dropper","hopper","crafter","shulker_box");
             case "minecraft:damage": return componentReadRecursiveLogic(stack,"minecraft:max_damage",true);
@@ -472,7 +472,7 @@ public class ComponentHelper {
             if(path.endsWith("components.enchantments.show_in_tooltip"))
                 return PathInfos.TRINARY;
         }
-        
+
         if(path.contains("enchantments.levels.")) {
             int maxLvl = 1;
             for(String e : BlackMagick.getWorldEnchantmentList()) {
@@ -536,7 +536,7 @@ public class ComponentHelper {
                 return PathInfos.INT;
             if(path.endsWith(".entity_data.UUID"))
                 return PathInfos.UUID;
-            
+
             String lbl = "Mobs";
             if(path.endsWith(".entity_data.active_effects"))
                 return PathInfos.LIST_COMPOUND.withGroup(lbl);
@@ -575,7 +575,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.HandItems[0]"))
                 return PathInfos.ITEM_NODE;
             if(path.endsWith(".entity_data.leash"))
-                return (new PathInfo(PathType.DEFAULT,new String[]{"{UUID:[I;0,0,0,0]}","{UUID:"+FortytwoEdit.UUID.asString()+"}","[I;0,0,0]"})).withDesc(Text.of("Can be either:\na) NbtCompound like {UUID:[I;0,0,0,0]} pointing to an entity UUID\nb) NbtIntArray containing [I; X, Y, Z]")).withGroup(lbl);
+                return (new PathInfo(PathType.DEFAULT,new String[]{"{UUID:[I;0,0,0,0]}","{UUID:"+BlackMagick.nbtToString(FortytwoEdit.UUID)+"}","[I;0,0,0]"})).withDesc(Text.of("Can be either:\na) NbtCompound like {UUID:[I;0,0,0,0]} pointing to an entity UUID\nb) NbtIntArray containing [I; X, Y, Z]")).withGroup(lbl);
             if(path.endsWith(".entity_data.LeftHanded"))
                 return PathInfos.TRINARY.withGroup(lbl);
             if(path.endsWith(".entity_data.NoAI"))
@@ -1352,7 +1352,7 @@ public class ComponentHelper {
                     .withDesc(Text.of("Can be either:\na) NbtString of an item ID or item tag\nb) NbtList of item ID NbtStrings"));
             return CACHE_ITEM_PREDICATE_ITEMS;
         }
-    
+
     }
 
 }

@@ -32,7 +32,7 @@ public class LogScreen extends GenericScreen {
     private static boolean clearFullLogCache = false;
     private static boolean paused = false;
     private static boolean onlyMod = false;
-    
+
     protected TextFieldWidget txtRegex;
     private static String regexInput = "";
     private static boolean useRegex = false;
@@ -42,7 +42,7 @@ public class LogScreen extends GenericScreen {
     private long lastUpdate = 0;
     private static final int UPDATE_WAIT_MS = 1000;
     private static final String ss = "\u00a7";
-    
+
     public LogScreen() {}
 
     @Override
@@ -175,7 +175,7 @@ public class LogScreen extends GenericScreen {
                 formattedLine.append(ss).append("9").append(timestamp).append(ss).append("r ");
                 searchLine.append(timestamp).append(" ");
             }
-            
+
             if(type != null) {
                 formattedLine.append(ss).append(type.formatCode()).append(type.text()).append(ss).append("r ");
                 searchLine.append(type.text()).append(" ");
@@ -256,7 +256,7 @@ public class LogScreen extends GenericScreen {
         fullLogStart = 0;
         modLogStart = 0;
     }
-    
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);

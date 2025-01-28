@@ -28,7 +28,7 @@ public abstract class CameraMixin {
 
     @Shadow
     protected abstract void moveBy(float x, float y, float z);
-    
+
     @Shadow
     private float cameraY;
 

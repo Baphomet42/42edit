@@ -30,7 +30,7 @@ public class Hacks extends GenericScreen {
     protected ButtonWidget btnWgtFindInvis;
     protected TextFieldWidget txtRando;
     protected boolean unsaved = false;
-    
+
     public Hacks() {}
 
     @Override
@@ -197,7 +197,7 @@ public class Hacks extends GenericScreen {
             if(items.size()==1)
                 item = BlackMagick.itemFromNbt((NbtCompound)bundle.get(0));
 
-            client.keyboard.setClipboard(BlackMagick.itemToNbtStorage(item).asString());
+            client.keyboard.setClipboard(BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(item)));
             FortytwoEdit.showToast("Get Entity","Entity data copied");
 
             if(client.player.getAbilities().creativeMode && !item.isEmpty()) {
@@ -220,7 +220,7 @@ public class Hacks extends GenericScreen {
                     NbtCompound nbt = new NbtCompound();
                     if((new EntityDataObject(current)).getNbt()!=null)
                         nbt = (new EntityDataObject(current)).getNbt();
-                    if(nbt.contains("Invisible",NbtElement.BYTE_TYPE) && nbt.get("Invisible").asString().equals("1b") 
+                    if(nbt.contains("Invisible",NbtElement.BYTE_TYPE) && nbt.get("Invisible").asString().equals("1b")
                     && !(nbt.contains("CustomNameVisible",NbtElement.BYTE_TYPE) && nbt.get("CustomNameVisible").asString().equals("1b"))) {
                         if(((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(0))).isEmpty()
                                 && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(1))).isEmpty()
@@ -308,7 +308,7 @@ public class Hacks extends GenericScreen {
     protected void saveAll() {
         setTxtRando();
     }
-    
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
@@ -319,7 +319,7 @@ public class Hacks extends GenericScreen {
 		context.drawItemWithoutEntity(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+22*5+1+2);
 		context.drawItemWithoutEntity(new ItemStack(Items.FISHING_ROD),x+20+2+100+5,y+22*5+1+2);
     }
-    
+
     @Override
     public void resize(MinecraftClient client, int width, int height) {
         saveAll();

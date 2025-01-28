@@ -151,7 +151,7 @@ public class FortytwoEdit implements ClientModInitializer {
             int found = -1;
 
             for(int i=0; i<itemHistList.size(); i++) {
-                if(itemHistList.get(i).asString().equals(item.asString())) {
+                if(BlackMagick.elementsEqual(itemHistList.get(i),item)) {
                     found = i;
                     break;
                 }
@@ -469,7 +469,7 @@ public class FortytwoEdit implements ClientModInitializer {
         }
         secretSound();
     }
-    
+
     //items
     public static final ItemStack HEAD42 = BlackMagick.itemFromNbtStatic((NbtCompound)BlackMagick.nbtFromString("{id:player_head,components:{profile:{name:\"42Richtofen42\","
         +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlc"
@@ -560,7 +560,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         getSavedItems(); // used to show log errors in file
         refreshWebItems(false);
-        
+
         FileTools.scanModFiles();
 
         ComponentHelper.clearCacheInfo(); // now that registries have been set, clear any caches that may have had empty lists
@@ -738,7 +738,7 @@ public class FortytwoEdit implements ClientModInitializer {
         if(hitResult.getType() == HitResult.Type.BLOCK) {
             BlockPos blockPos = ((BlockHitResult)hitResult).getBlockPos();
             BlockState blockState = client.player.getWorld().getBlockState(blockPos);
-            
+
             if(!blockState.getProperties().isEmpty()) {
                 NbtCompound stack = new NbtCompound();
                 stack.put("id",NbtString.of(blockState.getBlock().asItem().toString()));
@@ -814,7 +814,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         list.remove("minecraft:creative_slot_lock");
         list.remove("minecraft:map_post_processing");
-        
+
         for(String k : list) {
             // this will log warnings if ComponentHelper doesn't include a vanilla component
             ComponentHelper.getPathInfo("components."+k);
@@ -1034,7 +1034,7 @@ public class FortytwoEdit implements ClientModInitializer {
         getSavedItems(); // used to show log errors in file
 
         ComponentHelper.clearCacheInfo();
-        
+
         clearCapes();
         setCustomSkin(null);
 
@@ -1137,7 +1137,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         optionsExtra = null;
         if(!options.isEmpty()) {
-            logWarn("Config file contains unknown keys: "+options.asString());
+            logWarn("Config file contains unknown keys: "+BlackMagick.nbtToString(options));
             optionsExtra = options.copy();
         }
 
@@ -1188,10 +1188,10 @@ public class FortytwoEdit implements ClientModInitializer {
                 itemsList = new NbtList();
         }
         if(!foundItems && !savedItemsNbt.isEmpty()) {
-            FortytwoEdit.logError("Failed to read saved items: " + savedItemsNbt.asString());
+            FortytwoEdit.logError("Failed to read saved items: " + BlackMagick.nbtToString(savedItemsNbt));
             ItemBuilder.savedItemsError = true;
         }
-        
+
         while(itemsList.size()<9*SAVED_ROWS)
             itemsList.add(new NbtCompound());
         if(itemsList.size()>9*SAVED_ROWS)
@@ -1223,7 +1223,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static NbtCompound refreshWebItems(boolean forceWeb) {
         webItems = null;
         NbtCompound result = new NbtCompound();
-        
+
         NbtCompound cacheNbt = FileTools.readCompoundFromFile(FileTools.FILE_WEB_CACHE);
         if(cacheNbt == null)
             cacheNbt = new NbtCompound();
@@ -1265,7 +1265,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 NbtCompound webNbt = (NbtCompound)parseWebJson;
                 newItems = webNbt.copy();
 
-                if(webNbt.asString().equals(cacheNbt.asString())) {
+                if(BlackMagick.elementsEqual(webNbt,cacheNbt)) {
                     logInfo("Black Market items are up to date");
                     result.put("site_match_catch",new NbtCompound());
                 }
@@ -1290,7 +1290,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 NbtCompound versionData = (NbtCompound)versionsList.get(i);
                 if(versionData.contains("version",NbtElement.INT_TYPE) && versionData.contains("items",NbtElement.LIST_TYPE)) {
                     int versionNum = versionData.getInt("version");
-                    
+
                     if(itemsVer == -1 || (versionNum > itemsVer && versionNum <= SharedConstants.getGameVersion().getResourceVersion(ResourceType.SERVER_DATA))) {
                         itemsVer = versionNum;
                         jsonItems = versionData.getList("items",NbtElement.COMPOUND_TYPE);

@@ -19,7 +19,7 @@ public class MagickGui extends GenericScreen {
     private static final int TOP_OFFSET = 1;
     private static final int ITEM_OFFSET = 2;
     private static final Text TITLE_TEXT = Text.translatable("42edit.gui.magick_screen.title").copy().withColor(0x420666).formatted(Formatting.BOLD);
-    
+
     public MagickGui() {}
 
     @Override
@@ -62,7 +62,7 @@ public class MagickGui extends GenericScreen {
 
     protected void btnSuperSecretSettings() {
         if(hasShiftDown()) {
-            changeScreen(new DebugScreen());//to_do return to SecretScreen()
+            changeScreen(new SecretScreen());
         }
         else {
             FortytwoEdit.cycleSuperSecretSetting();
@@ -107,7 +107,7 @@ public class MagickGui extends GenericScreen {
     protected Identifier getBackgroundTexture() {
         return null;
     }
-    
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);

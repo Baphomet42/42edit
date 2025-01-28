@@ -53,7 +53,7 @@ public abstract class GameOptionsMixin {
 
         for(KeyBinding k : FortytwoEdit.KEYBINDS)
             allKeysList.remove(k);
-        
+
 		return allKeysList.toArray(new KeyBinding[0]);
 	}
 

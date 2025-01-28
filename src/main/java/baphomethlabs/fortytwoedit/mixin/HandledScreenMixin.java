@@ -46,10 +46,10 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
 
     @Shadow
     protected abstract void onMouseClick(Slot slot, int slotId, int button, SlotActionType actionType);
-    
+
     @Shadow
     private Slot getSlotAt(double x, double y) {return null;}
-    
+
     @Inject(method="drawMouseoverTooltip(Lnet/minecraft/client/gui/DrawContext;II)V", at=@At("HEAD"), cancellable = true)
     private void drawContainerTooltip(DrawContext context, int x, int y, CallbackInfo c) {
 
@@ -95,7 +95,7 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
             Slot slot = this.getSlotAt(d, e);
 
             if(slot != null && ((ScreenHandler)this.handler).canInsertIntoSlot(ItemStack.EMPTY, slot)) {
-                
+
                 if(slot.hasStack()) {
                     ItemStack stack = slot.getStack().copy();
                     for(Slot slot2 : ((ScreenHandler)this.handler).slots) {

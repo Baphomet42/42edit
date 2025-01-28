@@ -90,7 +90,7 @@ public class BlackMagick {
             // Removing the bundle item in an inventory may result in a ghost item.
             // Emptying the bundle with the use key ingame will spawn the item, and it will not be a ghost.
             if(!item.isEmpty() && !client.player.networkHandler.hasFeature(item.getItem().getRequiredFeatures())) {
-                ItemStack newStack = BlackMagick.itemFromString("{id:bundle,components:{bundle_contents:["+BlackMagick.itemToNbtStorage(item).asString()+"]}}");
+                ItemStack newStack = BlackMagick.itemFromString("{id:bundle,components:{bundle_contents:["+BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(item))+"]}}");
                 if(!newStack.isEmpty()) {
                     item = newStack;
                 }
@@ -441,7 +441,7 @@ public class BlackMagick {
                     return el.copy();
             }
         } catch(Exception ex) {}
-        
+
         return null;
     }
 
@@ -486,7 +486,7 @@ public class BlackMagick {
                     nbt = removeComponentLocks(nbt,path);
             }
         } catch(Exception ex) {}
-        
+
         return nbt;
     }
 
@@ -527,7 +527,7 @@ public class BlackMagick {
                 component = component.substring(0,component.indexOf("."));
             if(component.contains("["))
                 component = component.substring(0,component.indexOf("["));
-            
+
             if(nbtToString(getNbtPath(nbt,"components.!"+component)).equals("{}"))
                 nbt = setNbtPath(nbt,"components.!"+component,null);
         }
@@ -593,6 +593,21 @@ public class BlackMagick {
         }
 
         return nbt;
+    }
+
+    /**
+     * 
+     * @param left
+     * @param right
+     * @return true if left and right elements are identical
+     */
+    public static boolean elementsEqual(NbtElement left, NbtElement right) {
+        if(left == null && right == null)
+            return true;
+        else if(left == null || right == null)
+            return false;
+
+        return nbtToString(left).equals(nbtToString(right));
     }
 
     public static String validSnbtKey(String key) {
@@ -694,7 +709,7 @@ public class BlackMagick {
     /**
      * Get the Nbt representation of an item for pre-made banner designs for various characters
      * 
-     * @param character 
+     * @param character
      * @param baseColor the banner background color
      * @param charColor the color of the character
      * @return compound representation of an itemstack, or null
@@ -749,9 +764,7 @@ public class BlackMagick {
     /**
      * stores parsed text component or an error message if isValid is false
      */
-    public record ParsedText(boolean isValid, Text text) {
-        
-    }
+    public record ParsedText(boolean isValid, Text text) {}
 
     /**
      * 
@@ -767,7 +780,7 @@ public class BlackMagick {
         // remove ender chest
 
         String id = item.toString();
-        
+
         if(id.contains("ender_chest")) {
 
         }
@@ -874,7 +887,7 @@ public class BlackMagick {
      */
     public static String[] formatStringSuggs(String[] suggs) {
         List<String> list = new ArrayList<>();
-        
+
         for(String s : suggs) {
             list.add(nbtToString(NbtString.of(s)));
         }
@@ -890,7 +903,7 @@ public class BlackMagick {
      */
     public static String[] formatSuggs(String[] suggs, String prefix, String suffix) {
         List<String> list = new ArrayList<>();
-        
+
         for(String s : suggs) {
             list.add(prefix+s+suffix);
         }
@@ -960,7 +973,7 @@ public class BlackMagick {
             return Text.of(BlackMagick.nbtToString(right)).copy().formatted(Formatting.GREEN);
         if(right==null)
             return Text.of(BlackMagick.nbtToString(left)).copy().formatted(Formatting.RED);
-        
+
         if(left.getType() == right.getType()) {
             if(BlackMagick.nbtToString(left).equals(BlackMagick.nbtToString(right)))
                 return Text.of(BlackMagick.nbtToString(left));
@@ -1054,14 +1067,14 @@ public class BlackMagick {
         for(int i=0; i<indents; i++)
             indentBuilder.append("\t");
         String indent = indentBuilder.toString();
-        
+
         switch(el.getType()) {
             case NbtElement.COMPOUND_TYPE: {
                 NbtCompound nbt = (NbtCompound)el;
                 if(nbt.isEmpty())
                     current.append("{}");
                 else if(collapseItems && nbt.contains("id"))
-                    current.append(nbt.asString());
+                    current.append(BlackMagick.nbtToString(nbt));
                 else {
                     current.append("{\n");
 
@@ -1071,7 +1084,7 @@ public class BlackMagick {
                             firstKey = false;
                         else
                             current.append(",\n");
-                        
+
                         String keyString = BlackMagick.validSnbtKey(k);
                         current.append(indent + "\t" + keyString + ": " + formatSnbtAsTree(nbt.get(k), collapseItems, indents+1));
                     }

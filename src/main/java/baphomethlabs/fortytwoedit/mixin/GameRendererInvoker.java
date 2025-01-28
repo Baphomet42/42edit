@@ -14,5 +14,5 @@ public interface GameRendererInvoker {
 
 	@Accessor("postProcessorEnabled")
 	public void setPostProcessorEnabled(boolean enabled);
-    
+
 }

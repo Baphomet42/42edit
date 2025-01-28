@@ -15,7 +15,7 @@ public class AutoClick extends GenericScreen {
 
     protected TextFieldWidget txtAttackCooldown;
     protected boolean unsaved = false;
-    
+
     public AutoClick() {}
 
     @Override
@@ -65,7 +65,7 @@ public class AutoClick extends GenericScreen {
     protected void saveAll() {
         setTxtAttackCooldown();
     }
-    
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
@@ -75,7 +75,7 @@ public class AutoClick extends GenericScreen {
 		context.drawItemWithoutEntity(new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+22*4+1+2);
         context.drawTextWithShadow(this.textRenderer, Text.of("Attack Cooldown:"), x+20+3,y+7+22*6, LABEL_COLOR);
     }
-    
+
     @Override
     public void resize(MinecraftClient client, int width, int height) {
         saveAll();

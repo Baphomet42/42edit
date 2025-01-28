@@ -13,7 +13,7 @@ import net.minecraft.item.SpawnEggItem;
 @Mixin (SpawnEggItem.class)
 public abstract class SpawnEggItemMixin {
 
-    /** 
+    /**
      * See {@link net.minecraft.block.entity.BlockEntityType} and {@link net.minecraft.entity.EntityType} `POTENTIALLY_EXECUTES_COMMANDS`
      */
     @Inject(method="shouldShowOperatorBlockWarnings", at=@At(value = "RETURN"), cancellable = true)

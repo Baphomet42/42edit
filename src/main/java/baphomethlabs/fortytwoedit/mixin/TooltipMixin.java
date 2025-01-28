@@ -52,5 +52,5 @@ public abstract class TooltipMixin {
 
         }
     }
-    
+
 }

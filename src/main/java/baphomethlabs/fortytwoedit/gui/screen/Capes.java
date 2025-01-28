@@ -30,7 +30,7 @@ public class Capes extends GenericScreen {
     protected int playerY;
     private static final Vector3f vec = new Vector3f();
     private static final String CUSTOM_SKIN_ERROR_TITLE = "Failed to load skin";
-    
+
     public Capes() {}
 
     @Override
@@ -202,7 +202,7 @@ public class Capes extends GenericScreen {
         entity.prevHeadYaw = k;
         entity.headYaw = l;
     }
-    
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);

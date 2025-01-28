@@ -38,7 +38,7 @@ public abstract class GenericScreen extends Screen {
     public static final Text ERROR_CREATIVE = Text.of("Creative required");
     public static final Tooltip TT_CREATIVE = Tooltip.of(ERROR_CREATIVE);
     private boolean unsel = false;
-    
+
     public GenericScreen() {
         super(NarratorManager.EMPTY);
     }

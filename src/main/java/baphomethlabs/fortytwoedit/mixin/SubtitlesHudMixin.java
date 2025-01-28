@@ -18,5 +18,5 @@ public abstract class SubtitlesHudMixin {
             FortytwoEdit.autoFishClick = true;
         }
     }
-    
+
 }

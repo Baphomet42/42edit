@@ -24,5 +24,5 @@ public abstract class TooltipPositionerMixin {
             cir.setReturnValue(pos);
         }
     }
-    
+
 }
