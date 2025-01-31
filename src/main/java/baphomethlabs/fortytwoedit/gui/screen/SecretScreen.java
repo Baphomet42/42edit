@@ -5,6 +5,7 @@ import java.util.List;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.nbt.NbtCompound;
@@ -17,6 +18,7 @@ public class SecretScreen extends GenericScreen {
     protected TextFieldWidget txtUpsideDown;
     protected static final String UPSIDE_DOWN_REF = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789 .,?!':[](){}-=";
     protected static final String UPSIDE_DOWN_CHARS = "ⱯɐᗺqƆɔᗡpƎǝℲɟ⅁ᵷHɥIᴉՐɾꞰʞꞀꞁWɯNuOoԀdꝹbᴚɹSs⟘ʇ∩nɅʌMʍXx⅄ʎZz0⥝ᘔƐ߈ϛ9ㄥ86 ˙'¿¡,:][)(}{-=";
+    protected static final Tooltip ITEM_WARN_TT = Tooltip.of(Text.of("vanilla - no change to item warnings\n\nhide - never show warnings\n\nsmart - hide warnings for items that cannot run operator commands"));
 
     public SecretScreen() {}
 
@@ -31,6 +33,15 @@ public class SecretScreen extends GenericScreen {
         this.txtUpsideDown = new TextFieldWidget(this.textRenderer,x+105+1,y+22*3+1,100-2,20,Text.of(""));
         this.txtUpsideDown.setMaxLength(MAX_TEXT_LENGTH);
         this.addDrawableChild(this.txtUpsideDown);
+        this.addDrawableChild(ButtonWidget.builder(Text.of("<"), button -> this.btnCycleItemWarn(false)).dimensions(x+20+80+5,y+22*4+1,15,20).build());
+        TextFieldWidget txtCustom = new TextFieldWidget(this.textRenderer,x+20+1+80+5+15,y+22*4+1,90-2,20,Text.of(""));
+        txtCustom.setMaxLength(256);
+        txtCustom.setText(FortytwoEdit.getItemWarningMode());
+        txtCustom.setCursorToStart(false);
+        txtCustom.setTooltip(ITEM_WARN_TT);
+        txtCustom.setEditable(false);
+        this.addDrawableChild(txtCustom);
+        this.addDrawableChild(ButtonWidget.builder(Text.of(">"), button -> this.btnCycleItemWarn(true)).dimensions(x+20+80+5+15+90,y+22*4+1,15,20).build());
     }
 
     protected void flipTextBox() {
@@ -87,6 +98,11 @@ public class SecretScreen extends GenericScreen {
         return character;
     }
 
+    protected void btnCycleItemWarn(boolean right) {
+        FortytwoEdit.cycleItemWarningMode(right);
+        reloadScreen();
+    }
+
     @Override
     public boolean shouldCloseOnKeybind() {
         return !txtUpsideDown.isActive();
@@ -96,6 +112,7 @@ public class SecretScreen extends GenericScreen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Super Secret Settings"), this.width / 2, y+11, TEXT_COLOR);
+        context.drawTextWithShadow(this.textRenderer, Text.of("Item Op Warning:"), x+20+3,y+7+22*4, LABEL_COLOR);
     }
 
 }

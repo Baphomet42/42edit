@@ -121,6 +121,7 @@ public class FortytwoEdit implements ClientModInitializer {
     private static boolean smooth = false;
 
     // hacks
+    private static final SecureRandom RNG = new SecureRandom();
     public static boolean autoMove = false;
     public static boolean autoClicker = false;
     public static boolean autoClick = true;
@@ -131,11 +132,15 @@ public class FortytwoEdit implements ClientModInitializer {
     private static long lastSpam = 0;
     public static boolean xrayEntity = false;
     public static boolean autoFish = false;
-    public static boolean autoFishClick = false;
+    private static boolean autoFishClickQueue = false;
     private static long lastFish = 0;
     private static boolean didFish = false;
     private static final int fishWait = 1000;
     public static boolean suppressKeybind = false;
+    public static void queueAutoFish() {
+        autoFishClickQueue = true;
+        lastFish = Math.max(lastFish, System.currentTimeMillis() + 100+(int)(RNG.nextDouble()*400) - fishWait);
+    }
 
     // item history
     private static final NbtList itemHistList = new NbtList();
@@ -175,7 +180,6 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean seeInvis = false;
 
     // randomizer mode
-    private static SecureRandom rand = new SecureRandom();
     public static int[] randoSlots;
     public static boolean randoMode = false;
 
@@ -539,8 +543,28 @@ public class FortytwoEdit implements ClientModInitializer {
     private static String webItemsUrlOverride = "";
 
     // itemstack warning
-    public static final String[] ITEM_WARNING_MODES = {"vanilla","hide","smart"};
-    public static String itemWarningMode = ITEM_WARNING_MODES[0];
+    private static final String[] ITEM_WARNING_MODES = {"vanilla","hide","smart"};
+    private static int itemWarningMode = 0;
+    public static String getItemWarningMode() {
+        return ITEM_WARNING_MODES[itemWarningMode];
+    }
+    public static void cycleItemWarningMode(boolean right) {
+        int newWarn = itemWarningMode;
+        if(right) {
+            newWarn++;
+            if(newWarn>=ITEM_WARNING_MODES.length)
+                newWarn = 0;
+        }
+        else {
+            newWarn--;
+            if(newWarn<0)
+                newWarn = ITEM_WARNING_MODES.length-1;
+        }
+
+        readOptions();
+        itemWarningMode = newWarn;
+        updateOptions();
+    }
 
 
     @Override
@@ -635,24 +659,24 @@ public class FortytwoEdit implements ClientModInitializer {
         }
 
         //autoFish
-        if(autoFishClick && System.currentTimeMillis()>=lastFish + fishWait) {
+        if(autoFishClickQueue && System.currentTimeMillis()>=(lastFish+fishWait)) {
             if(autoFish && !autoClicker && client.currentScreen == null && ((!client.player.getMainHandStack().isEmpty()
                     && client.player.getMainHandStack().isOf(Items.FISHING_ROD)) || (client.player.getMainHandStack().isEmpty()
                     && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().isOf(Items.FISHING_ROD))) ) {
                 KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
                 didFish = true;
             }
-            autoFishClick = false;
-            lastFish = System.currentTimeMillis();
+            autoFishClickQueue = false;
+            lastFish = System.currentTimeMillis() + 100+(int)(RNG.nextDouble()*400);
         }
-        if(didFish && System.currentTimeMillis()>=lastFish + fishWait) {
+        if(didFish && System.currentTimeMillis()>=(lastFish+fishWait)) {
             if(autoFish && !autoClicker && client.currentScreen == null && ((!client.player.getMainHandStack().isEmpty()
                     && client.player.getMainHandStack().isOf(Items.FISHING_ROD)) || (client.player.getMainHandStack().isEmpty()
                     && !client.player.getOffHandStack().isEmpty() && client.player.getOffHandStack().isOf(Items.FISHING_ROD))) ) {
                 KeyBinding.onKeyPressed(((KeyBindingAccessor)client.options.useKey).getBoundKey());
             }
             didFish = false;
-            lastFish = System.currentTimeMillis();
+            lastFish = System.currentTimeMillis() + 100+(int)(RNG.nextDouble()*400);
         }
 
         //freelook
@@ -723,7 +747,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void changeRandoSlot() {
         if(randoSlots != null && testRandoSlot()) {
             final MinecraftClient client = MinecraftClient.getInstance();
-            int slot = (int) (rand.nextDouble() * randoSlots.length);
+            int slot = (int) (RNG.nextDouble() * randoSlots.length);
             slot = randoSlots[slot];
             client.player.getInventory().selectedSlot = slot - 1;
         }
@@ -1082,13 +1106,11 @@ public class FortytwoEdit implements ClientModInitializer {
                     clientCape = i;
         }
         if(options.contains("item_warning_override",NbtElement.STRING_TYPE)) {
-            itemWarningMode = options.getString("item_warning_override");
-            boolean valid = false;
+            String warnModeName = options.getString("item_warning_override");
+            itemWarningMode = 0;
             for(int i=0; i<ITEM_WARNING_MODES.length; i++)
-                if(ITEM_WARNING_MODES[i].equals(itemWarningMode))
-                    valid = true;
-            if(!valid)
-                itemWarningMode = ITEM_WARNING_MODES[0];
+                if(ITEM_WARNING_MODES[i].equals(warnModeName))
+                    itemWarningMode = i;
         }
         if(options.contains("keybinds",NbtElement.COMPOUND_TYPE)) {
             NbtCompound keybindsCompound = options.getCompound("keybinds");
@@ -1153,7 +1175,7 @@ public class FortytwoEdit implements ClientModInitializer {
         options.putInt("file_format",FileTools.FILE_FORMAT);
         options.putBoolean("custom_cape_toggle",showClientCape);
         options.putString("custom_cape",CLIENT_CAPES[clientCape].id());
-        options.putString("item_warning_override",itemWarningMode);
+        options.putString("item_warning_override",getItemWarningMode());
         NbtCompound keysCompound = options.getCompound("keybinds");
         for(int i=0; i<KEYBINDS.length; i++) {
             keysCompound.put(KEYBINDS[i].getTranslationKey(),NbtString.of(KEYBINDS[i].getBoundKeyTranslationKey()));

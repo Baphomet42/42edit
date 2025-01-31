@@ -54,7 +54,7 @@ public class ContainerTooltipComponent implements TooltipComponent {
     private void drawSlot(int x, int y, int index, DrawContext context, TextRenderer textRenderer) {
         ItemStack itemStack = this.inventory.get(index);
         this.draw(context, x, y, Sprite.SLOT);
-        context.drawItem(itemStack, x + 1, y + 1, index);
+        context.drawItem(itemStack, x + 1, y + 1);
         context.drawStackOverlay(textRenderer, itemStack, x + 1, y + 1);
     }
 

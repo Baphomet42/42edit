@@ -19,7 +19,7 @@ public abstract class SpawnEggItemMixin {
     @Inject(method="shouldShowOperatorBlockWarnings", at=@At(value = "RETURN"), cancellable = true)
     private void overrideWarningMessage(ItemStack stack, @Nullable PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
         if(cir.getReturnValue().booleanValue()) {
-            switch(FortytwoEdit.itemWarningMode) {
+            switch(FortytwoEdit.getItemWarningMode()) {
                 case "hide": {
                     cir.setReturnValue(false);
                     break;

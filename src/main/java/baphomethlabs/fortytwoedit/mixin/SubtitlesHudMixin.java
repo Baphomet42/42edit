@@ -15,7 +15,7 @@ public abstract class SubtitlesHudMixin {
     @Inject(method = "onSoundPlayed", at = @At("HEAD"), cancellable = true)
     private void testSound(SoundInstance sound, WeightedSoundSet soundSet, float range, CallbackInfo c) {
         if(FortytwoEdit.autoFish && sound.getId().getPath().equals("entity.fishing_bobber.splash")) {
-            FortytwoEdit.autoFishClick = true;
+            FortytwoEdit.queueAutoFish();
         }
     }
 

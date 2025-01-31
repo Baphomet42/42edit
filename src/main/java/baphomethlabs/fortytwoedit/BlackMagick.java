@@ -1079,7 +1079,7 @@ public class BlackMagick {
                     current.append("{\n");
 
                     boolean firstKey = true;
-                    for(String k : nbt.getKeys()) {
+                    for(String k : sortSet(nbt.getKeys())) {
                         if(firstKey)
                             firstKey = false;
                         else
