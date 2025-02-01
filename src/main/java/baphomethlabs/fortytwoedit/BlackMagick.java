@@ -197,7 +197,9 @@ public class BlackMagick {
      * @return stack from nbt without world registries (or empty stack if invalid)
      */
     public static ItemStack itemFromNbtStatic(NbtCompound inp) {
-        return ItemStack.fromNbtOrEmpty(DynamicRegistryManager.EMPTY, inp);
+        if(inp != null)
+            return ItemStack.fromNbtOrEmpty(DynamicRegistryManager.EMPTY, inp);
+        return ItemStack.EMPTY;
     }
 
     /**
@@ -208,7 +210,7 @@ public class BlackMagick {
         final MinecraftClient client = MinecraftClient.getInstance();
         if(client.world != null && inp != null)
             return ItemStack.fromNbtOrEmpty(client.world.getRegistryManager(),inp);
-        return ItemStack.EMPTY;
+        return itemFromNbtStatic(inp);
     }
 
     /**
@@ -842,6 +844,22 @@ public class BlackMagick {
             if(query.equals(s))
                 return true;
         return false;
+    }
+
+    /**
+     * Returns a list of ints in ascending order.
+     * 
+     * @param set
+     * @return
+     */
+    public static List<Integer> sortIntSet(Set<Integer> set) {
+        List<Integer> list = new ArrayList<>();
+
+        for(Integer i : set)
+            list.add(i);
+
+        Collections.sort(list);
+        return list;
     }
 
     /**

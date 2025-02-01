@@ -16,9 +16,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.compress.utils.Lists;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
 import baphomethlabs.fortytwoedit.gui.screen.AutoClick;
@@ -538,7 +540,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     //web items
     public static boolean webItemsAuto = true;
-    public static NbtList webItems = null;
+    public static List<String> webItems = Lists.newArrayList();
     private static final String WEB_ITEMS_URL_DEFAULT = "https://baphomet42.github.io/mc/blackmarket/items.json";
     private static String webItemsUrlOverride = "";
 
@@ -582,7 +584,7 @@ public class FortytwoEdit implements ClientModInitializer {
             UUID = NbtHelper.fromUuid(client.getSession().getUuidOrNull());
         clearCapes();
 
-        getSavedItems(); // used to show log errors in file
+        getSavedItems(); // used to show log errors
         refreshWebItems(false);
 
         FileTools.scanModFiles();
@@ -1055,7 +1057,7 @@ public class FortytwoEdit implements ClientModInitializer {
         ((HotbarStorageAccessor)client.getCreativeHotbarStorage()).setLoaded(false);
         client.getCreativeHotbarStorage().getSavedHotbar(0);
 
-        getSavedItems(); // used to show log errors in file
+        getSavedItems(); // used to show log errors
 
         ComponentHelper.clearCacheInfo();
 
@@ -1189,49 +1191,109 @@ public class FortytwoEdit implements ClientModInitializer {
         FileTools.writeCompoundToFile(FileTools.FILE_OPTIONS, options, FileDisplayType.TREE);
     }
 
-    public static NbtList getSavedItems() {
+    public static Map<Integer,String> getSavedItems() {
+        Map<Integer,String> itemsMap = Maps.newHashMap();
         ItemBuilder.savedItemsError = false;
         NbtCompound savedItemsNbt = FileTools.readCompoundFromFile(FileTools.FILE_SAVED_ITEMS);
         if(savedItemsNbt == null) {
             savedItemsNbt = new NbtCompound();
-            String fileString = FileTools.readStringFromFile(FileTools.FILE_SAVED_ITEMS);
-            if(fileString != null && !fileString.isEmpty()) {
-                ItemBuilder.savedItemsError = true;
+            if(FileTools.testFileExists(FileTools.FILE_SAVED_ITEMS)) {
+                String fileString = FileTools.readStringFromFile(FileTools.FILE_SAVED_ITEMS);
+                if(fileString != null && !fileString.isEmpty()) {
+                    ItemBuilder.savedItemsError = true;
+                }
+            }
+            else {
+                setSavedItems(itemsMap);
             }
         }
 
-        NbtList itemsList = new NbtList();
         boolean foundItems = false;
         if(savedItemsNbt.contains("items",NbtElement.LIST_TYPE)) {
-            itemsList = (NbtList)savedItemsNbt.get("items");
-            if(!itemsList.isEmpty() && itemsList.getHeldType() == NbtElement.COMPOUND_TYPE)
-                foundItems = true;
-            else
-                itemsList = new NbtList();
+            NbtList storedItems = (NbtList)savedItemsNbt.get("items");
+            foundItems = true;
+            if(!storedItems.isEmpty() && storedItems.getHeldType() == NbtElement.COMPOUND_TYPE) {
+                boolean itemsOutOfRange = false;
+                final int MAX_SAVED_ITEM_SLOT = FortytwoEdit.SAVED_ROWS*9-1;
+                int currentDupeSlot = MAX_SAVED_ITEM_SLOT+1;
+                NbtList unknownItemHolders = new NbtList();
+                for(int i=0; i<storedItems.size(); i++) {
+                    NbtCompound itemHolder = storedItems.getCompound(i);
+                    if(itemHolder.isEmpty())
+                        continue;
+                    if((itemHolder.contains("item",NbtElement.COMPOUND_TYPE) || itemHolder.contains("item",NbtElement.STRING_TYPE))
+                    && itemHolder.contains("slot",NbtElement.INT_TYPE)) {
+                        String itemString = itemHolder.getString("item");
+                        if(itemHolder.get("item").getType()==NbtElement.COMPOUND_TYPE)
+                            itemString = BlackMagick.nbtToString(itemHolder.getCompound("item"));
+                        itemHolder.remove("item");
+                        if(itemString.isEmpty() || itemString.equals("{}"))
+                            continue;
+                        int slot = itemHolder.getInt("slot");
+                        itemHolder.remove("slot");
+                        if(!itemHolder.isEmpty()) {
+                            FortytwoEdit.logError("Saved item contains unknown keys: "+BlackMagick.nbtToString(itemHolder));
+                        }
+                        if(slot<0 || slot>MAX_SAVED_ITEM_SLOT) {
+                            itemsOutOfRange = true;
+                        }
+                        if(itemsMap.containsKey(slot)) {
+                            int newSlot = currentDupeSlot;
+                            while(itemsMap.containsKey(newSlot)) {
+                                newSlot++;
+                            }
+                            currentDupeSlot = newSlot+1;
+                            FortytwoEdit.logError("Saved items file contains duplicate slot "+slot+". Item will move to slot "+newSlot+" after saving.");
+                            slot = newSlot;
+                        }
+                        itemsMap.put(slot,itemString);
+                    }
+                    else
+                        unknownItemHolders.add(itemHolder);
+                }
+                if(itemsOutOfRange) {
+                    FortytwoEdit.logWarn("Saved items file contains slots outside of range 0-"+MAX_SAVED_ITEM_SLOT);
+                }
+                if(!unknownItemHolders.isEmpty()) {
+                    FortytwoEdit.logError("Saved items file contains invalid entries. After saving, the following will be deleted: "+BlackMagick.nbtToString(unknownItemHolders));
+                }
+            }
         }
         if(!foundItems && !savedItemsNbt.isEmpty()) {
-            FortytwoEdit.logError("Failed to read saved items: " + BlackMagick.nbtToString(savedItemsNbt));
+            logError("Failed to read saved items: " + BlackMagick.nbtToString(savedItemsNbt));
             ItemBuilder.savedItemsError = true;
         }
 
-        while(itemsList.size()<9*SAVED_ROWS)
-            itemsList.add(new NbtCompound());
-        if(itemsList.size()>9*SAVED_ROWS)
-            logWarn("Saved items file contains more than " + 9*SAVED_ROWS + " items ("+itemsList.size()+")");
-
-        return itemsList;
+        return itemsMap;
     }
 
-    public static boolean setSavedItems(NbtList nbt) {
-        if(nbt == null)
-            return false;
+    public static boolean setSavedItems(Map<Integer,String> savedItemsMap) {
+        NbtList itemsList = new NbtList();
+        for(int slot : BlackMagick.sortIntSet(savedItemsMap.keySet())) {
+            NbtCompound nbt = new NbtCompound();
+            nbt.putInt("slot",slot);
+            nbt.putString("item",savedItemsMap.get(slot));
+            itemsList.add(nbt);
+        }
 
         NbtCompound savedItemsNbt = new NbtCompound();
-        savedItemsNbt.put("items",nbt.copy());
+        savedItemsNbt.put("items",itemsList);
         savedItemsNbt.putInt("data_format",SharedConstants.getGameVersion().getResourceVersion(ResourceType.SERVER_DATA));
         savedItemsNbt.putInt("file_format",FileTools.FILE_FORMAT);
         if(FileTools.writeCompoundToFile(FileTools.FILE_SAVED_ITEMS, savedItemsNbt, FileDisplayType.TREE_CONDITIONAL_COLLAPSE)) {
-            getSavedItems(); // used to show log errors in file
+            getSavedItems(); // used to show log errors
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean testSavedItems(Map<Integer,String> oldMap) {
+        Map<Integer,String> newMap = getSavedItems();
+        if(newMap.keySet().size()==oldMap.keySet().size()) {
+            for(int slot : oldMap.keySet()) {
+                if(!(newMap.containsKey(slot) && newMap.get(slot).equals(oldMap.get(slot))))
+                    return false;
+            }
             return true;
         }
         return false;
@@ -1243,7 +1305,7 @@ public class FortytwoEdit implements ClientModInitializer {
      * @return compound with keys to mark results (site_match_catch, site_updated_catch)
      */
     public static NbtCompound refreshWebItems(boolean forceWeb) {
-        webItems = null;
+        webItems.clear();
         NbtCompound result = new NbtCompound();
 
         NbtCompound cacheNbt = FileTools.readCompoundFromFile(FileTools.FILE_WEB_CACHE);
@@ -1321,19 +1383,22 @@ public class FortytwoEdit implements ClientModInitializer {
             }
 
             if(jsonItems != null && !jsonItems.isEmpty()) {
-                webItems = new NbtList();
                 for(int i=0; i<jsonItems.size(); i++) {
-                    if(((NbtCompound)jsonItems.get(i)).contains("item",NbtElement.STRING_TYPE)) {
-                        NbtCompound stack = BlackMagick.validCompound(BlackMagick.nbtFromString(((NbtCompound)jsonItems.get(i)).getString("item")));
-                        if(!stack.isEmpty())
-                            webItems.add(stack);
+                    NbtCompound itemHolder = (NbtCompound)jsonItems.get(i);
+                    if(itemHolder.contains("item",NbtElement.COMPOUND_TYPE) || itemHolder.contains("item",NbtElement.STRING_TYPE)) {
+                        String itemString = itemHolder.getString("item");
+                        if(itemHolder.get("item").getType()==NbtElement.COMPOUND_TYPE)
+                            itemString = BlackMagick.nbtToString(itemHolder.getCompound("item"));
+                        webItems.add(itemString);
                     }
                 }
             }
         }
 
-        if(webItems == null || webItems.isEmpty())
+        if(webItems.isEmpty())
             logWarn("No source of Black Market items available");
+        else if(webItems.size()>SAVED_ROWS*9)
+            FortytwoEdit.logWarn("Web items list contains more than " + (SAVED_ROWS*9) + " items ("+webItems.size()+")");
 
         return result;
     }

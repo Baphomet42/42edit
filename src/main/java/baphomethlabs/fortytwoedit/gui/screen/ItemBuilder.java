@@ -103,7 +103,7 @@ public class ItemBuilder extends GenericScreen {
     private final Set<ClickableWidget> allTxtWidgets = Sets.newHashSet();
     private final Set<ClickableWidget> allSliderWidgets = Sets.newHashSet();
     public static boolean savedModeSet = false;
-    private NbtList savedItems = null;
+    private Map<Integer,String> savedItems = Maps.newHashMap();
     public static boolean savedItemsError = false;
     private String inpError = null;
     private String inpErrorTrim = null;
@@ -115,7 +115,6 @@ public class ItemBuilder extends GenericScreen {
     private static final Tooltip TOOLTIP_LOCAL_ITEMS =
         Tooltip.of(BlackMagick.textFromJson("[{\"text\":\"Local Items\"},"
         + "{\"text\":\"\n\nSave items for later without using up your saved hotbars\",\"color\":\"gray\"}]").text());
-    private static NbtList webItems = null;
     private static final ItemStack[] savedModeItems = new ItemStack[]{BlackMagick.itemFromNbtStatic((NbtCompound)BlackMagick.nbtFromString(
         "{id:player_head,components:{profile:{properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQ"
         +"iIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iZDlmMThjOWQ4NWY5MmY3"
@@ -545,6 +544,15 @@ public class ItemBuilder extends GenericScreen {
             mutableText).append(Text.of("\n"+itemData)));
     }
 
+    protected Tooltip makeItemTooltip(String nbtString) {
+        if(nbtString==null || nbtString.isEmpty())
+            return Tooltip.of(Text.of("Failed to read item"));
+        String itemData = nbtString;
+        itemData = makeItemTooltipShorten(itemData);
+
+        return Tooltip.of(Text.empty().append(BlackMagick.textFromJson("{\"text\":\"Failed to read item\",\"color\":\"red\"}").text()).append(Text.of("\n"+itemData)));
+    }
+
     private String makeItemTooltipShorten(String itemData) {
         //remove profile component properties
         String props = "properties:[";
@@ -577,19 +585,6 @@ public class ItemBuilder extends GenericScreen {
 
     private void refreshSaved() {
         savedItems = FortytwoEdit.getSavedItems();
-        updateSavedTab();
-    }
-    private void getWebItems() {
-        webItems = new NbtList();
-
-        if(FortytwoEdit.webItems != null)
-            webItems = FortytwoEdit.webItems.copy();
-
-        while(webItems.size()<9*FortytwoEdit.SAVED_ROWS)
-            webItems.add(new NbtCompound());
-        if(webItems.size()>9*FortytwoEdit.SAVED_ROWS)
-            FortytwoEdit.logWarn("Web items list contains more than " + 9*FortytwoEdit.SAVED_ROWS + " items ("+webItems.size()+")");
-
         updateSavedTab();
     }
     private void updateSavedTab() {
@@ -1905,6 +1900,7 @@ public class ItemBuilder extends GenericScreen {
                         String inp = ""+value;
                         ItemStack item = ItemStack.EMPTY;
 
+                        // keep consistent
                         inp = inp.trim();
                         if(inp.contains("/") && inp.indexOf("/")==0)
                             inp = inp.substring(1);
@@ -1943,6 +1939,23 @@ public class ItemBuilder extends GenericScreen {
                                     Text.of("Set current item to:\n"+BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(item)))));
                             }
                         }
+                        else if(((inp.startsWith("\"{") && inp.endsWith("}\"")) || (inp.startsWith("'{") && inp.endsWith("}'")))
+                        && BlackMagick.nbtFromString(inp,NbtElement.STRING_TYPE) != null) {
+                            String inpString = ((NbtString)BlackMagick.nbtFromString(inp,NbtElement.STRING_TYPE)).asString(); // keep asString
+                            if(BlackMagick.nbtFromString(inpString,NbtElement.COMPOUND_TYPE) != null) {
+                                item = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString(inpString,NbtElement.COMPOUND_TYPE));
+                            }
+
+                            setErrorMsg(BlackMagick.getItemCompoundErrors(inpString,inpError));
+                            if(item.isEmpty() && inpError == null)
+                                setErrorMsg("Invalid item");
+
+                            if(!item.isEmpty() && inpError == null) {
+                                ((ButtonWidget)noScrollWidgets.get(i).get(j+2).w).active = true;
+                                ((ButtonWidget)noScrollWidgets.get(i).get(j+2).w).setTooltip(Tooltip.of(
+                                    Text.of("Set current item to:\n"+BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(item)))));
+                            }
+                        }
                         else {
                             int count = 1;
                             if(inp.contains(" ")) {
@@ -1953,8 +1966,6 @@ public class ItemBuilder extends GenericScreen {
                                 } catch(NumberFormatException ex) {}
                             }
 
-                            ((ButtonWidget)noScrollWidgets.get(i).get(j+3).w).active = false;
-                            ((ButtonWidget)noScrollWidgets.get(i).get(j+3).w).setTooltip(Tooltip.of(Text.of("Not a compound")));
                             try {
                                 item = ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader(inp)).createStack(1,false);
                             } catch(Exception ex) {
@@ -2028,6 +2039,7 @@ public class ItemBuilder extends GenericScreen {
                     if(client.player.getAbilities().creativeMode) {
                         ItemStack item = ItemStack.EMPTY;
 
+                        // keep consistent
                         inp = inp.trim();
                         if(inp.contains("/") && inp.indexOf("/")==0)
                             inp = inp.substring(1);
@@ -2043,6 +2055,13 @@ public class ItemBuilder extends GenericScreen {
                         if(inp.startsWith("{") && inp.endsWith("}")) {
                             if(BlackMagick.nbtFromString(inp,NbtElement.COMPOUND_TYPE) != null) {
                                 item = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString(inp,NbtElement.COMPOUND_TYPE));
+                            }
+                        }
+                        else if(((inp.startsWith("\"{") && inp.endsWith("}\"")) || (inp.startsWith("'{") && inp.endsWith("}'")))
+                        && BlackMagick.nbtFromString(inp,NbtElement.STRING_TYPE) != null) {
+                            String inpString = ((NbtString)BlackMagick.nbtFromString(inp,NbtElement.STRING_TYPE)).asString(); // keep asString
+                            if(BlackMagick.nbtFromString(inpString,NbtElement.COMPOUND_TYPE) != null) {
+                                item = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString(inpString,NbtElement.COMPOUND_TYPE));
                             }
                         }
                         else {
@@ -2080,6 +2099,7 @@ public class ItemBuilder extends GenericScreen {
                     if(client.player.getAbilities().creativeMode && !selItem.isEmpty()) {
                         NbtCompound nbt = null;
 
+                        // keep consistent
                         inp = inp.trim();
                         if(inp.contains("/") && inp.indexOf("/")==0)
                             inp = inp.substring(1);
@@ -2135,7 +2155,6 @@ public class ItemBuilder extends GenericScreen {
                         else
                             FortytwoEdit.showToast("Black Market", "Failed to connect to website");
 
-                        getWebItems();
                         refreshSaved();
                         reloadScreen();
                     }
@@ -2153,8 +2172,6 @@ public class ItemBuilder extends GenericScreen {
                 widgets.get(tabNum).add(new RowWidget());
             }
             refreshSaved();
-            if(webItems == null)
-                getWebItems();
             setSavedModeTooltip();
         }
 
@@ -3460,21 +3477,26 @@ public class ItemBuilder extends GenericScreen {
                     ItemBuilder.this.unsel();
                     if(!viewBlackMarket) {
                         if(savedModeSet) {
-                            NbtCompound nbt = new NbtCompound();
+                            String itemString = "";
                             ItemStack savedItem = client.player.getMainHandStack().copy();
                             if(!savedItem.isEmpty()) {
-                                nbt = BlackMagick.itemToNbtStorage(savedItem);
+                                itemString = BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(savedItem));
                             }
 
-                            if(BlackMagick.elementsEqual(savedItems,FortytwoEdit.getSavedItems())) {
-                                if(BlackMagick.elementsEqual(savedItems.get(index),nbt)) {
+                            if(FortytwoEdit.testSavedItems(savedItems)) {
+                                boolean inMap = savedItems.containsKey(index);
+                                if((!inMap && itemString.isEmpty()) || (inMap && savedItems.get(index).equals(itemString))) {
                                     FortytwoEdit.showToast("No Change","Item already saved");
                                 }
                                 else {
-                                    savedItems.set(index,nbt);
+                                    if(itemString.isEmpty())
+                                        savedItems.remove(index);
+                                    else
+                                        savedItems.put(index,itemString);
+
                                     if(!FortytwoEdit.setSavedItems(savedItems)) {
                                         FortytwoEdit.logError("Failed to save item. The saved items list could not be loaded properly after saving."
-                                            + "\nTried to save: " + BlackMagick.nbtToString(nbt));
+                                            + "\nTried to save: " + (itemString.isEmpty() ? "air" : itemString));
                                         FortytwoEdit.showToast("Error Saving Item","Item NBT could not be saved.");
                                     }
                                     refreshSaved();
@@ -3483,23 +3505,19 @@ public class ItemBuilder extends GenericScreen {
                             else {
                                 FortytwoEdit.showToast("Error Saving Item","Reopen the screen and try again.");
                                 FortytwoEdit.logWarn("Failed to save item. The saved items file has changed since the screen has been open. File not changed."
-                                    +"\nTried to save: "+BlackMagick.nbtToString(nbt));
+                                    +"\nTried to save: "+(itemString.isEmpty() ? "air" : itemString));
                             }
                         }
-                        else {
-                            if(client.player.getAbilities().creativeMode) {
-                                ItemStack item = BlackMagick.itemFromNbt((NbtCompound)(savedItems.get(index)));
-                                if(item!=null && !item.isEmpty())
-                                    BlackMagick.setItemMain(item);
-                            }
-                        }
-                    }
-                    else {
-                        if(client.player.getAbilities().creativeMode) {
-                            ItemStack item = BlackMagick.itemFromNbt((NbtCompound)(webItems.get(index)));
+                        else if(client.player.getAbilities().creativeMode && savedItems.containsKey(index)) {
+                            ItemStack item = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.nbtFromString(savedItems.get(index))));
                             if(item!=null && !item.isEmpty())
                                 BlackMagick.setItemMain(item);
                         }
+                    }
+                    else if(client.player.getAbilities().creativeMode && FortytwoEdit.webItems.size()>index) {
+                        ItemStack item = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.nbtFromString(FortytwoEdit.webItems.get(index))));
+                        if(item!=null && !item.isEmpty())
+                            BlackMagick.setItemMain(item);
                     }
                 }).dimensions(currentX,5,20,20).build();
                 currentX += 20;
@@ -3661,37 +3679,46 @@ public class ItemBuilder extends GenericScreen {
         }
 
         public void updateSavedDisplay() {
-            if(savedStacksMode == 1)
+            if(savedStacksMode == 1) {
                 for(int i=0; i<9; i++) {
-                    NbtCompound current = viewBlackMarket ? (NbtCompound)webItems.get(savedRow*9+i) : (NbtCompound)savedItems.get(savedRow*9+i);
                     this.btns[i].active = savedModeSet && !viewBlackMarket;
-                    ItemStack parsedStack = BlackMagick.itemFromNbt(current);
                     if(savedStacksWarn != null && savedStacksWarn.length == 9)
                         savedStacksWarn[i] = false;
-                    if(!parsedStack.isEmpty()) {
-                        savedStacks[i] = parsedStack;
-                        if(!BlackMagick.elementsEqual(BlackMagick.itemToNbtStorage(parsedStack),current)) {
-                            if(savedStacksWarn != null && savedStacksWarn.length == 9)
-                                savedStacksWarn[i] = true;
-                            this.btns[i].setTooltip(Tooltip.of(Text.empty().append(BlackMagick.textFromJson("{\"text\":\"Failed to read item\",\"color\":\"red\"}")
-                                .text()).append(Text.of("\n")).append(BlackMagick.getElementDifferences(current, BlackMagick.itemToNbtStorage(parsedStack)))));
-                        }
-                        else
-                            this.btns[i].setTooltip(makeItemTooltip(current,parsedStack));
-                        if(client.player.getAbilities().creativeMode)
-                            this.btns[i].active = true;
-                    }
-                    else {
-                        if(current.isEmpty()) {
-                            this.btns[i].setTooltip(null);
-                            savedStacks[i] = ItemStack.EMPTY;
-                        }
-                        else {
-                            this.btns[i].setTooltip(makeItemTooltip(current,null));
+                    if((!viewBlackMarket && savedItems.containsKey(savedRow*9+i)) || (viewBlackMarket && FortytwoEdit.webItems.size()>(savedRow*9+i))) {
+                        SavedItem current = SavedItem.build(viewBlackMarket ? FortytwoEdit.webItems.get(savedRow*9+i) : savedItems.get(savedRow*9+i));
+                        if(current.stack()==null) {
+                            this.btns[i].setTooltip(makeItemTooltip(current.storedString()));
                             savedStacks[i] = FortytwoEdit.ITEM_ERROR;
                         }
+                        else {
+                            savedStacks[i] = current.stack();
+                            if(current.nbtError()) {
+                                if(savedStacksWarn != null && savedStacksWarn.length == 9)
+                                    savedStacksWarn[i] = true;
+                                NbtElement currentEl = BlackMagick.nbtFromString(current.storedString());
+                                if(currentEl != null && currentEl.getType()==NbtElement.COMPOUND_TYPE) {
+                                    this.btns[i].setTooltip(Tooltip.of(Text.empty().append(
+                                        BlackMagick.textFromJson("{\"text\":\"Failed to read item\",\"color\":\"red\"}").text()).append(
+                                        Text.of("\n")).append(
+                                        BlackMagick.getElementDifferences((NbtCompound)currentEl, BlackMagick.itemToNbtStorage(current.stack())))));
+                                }
+                                else {
+                                    this.btns[i].setTooltip(makeItemTooltip(current.storedString()));
+                                }
+                            }
+                            else
+                                this.btns[i].setTooltip(makeItemTooltip(current.stack()));
+
+                            if(client.player.getAbilities().creativeMode)
+                                this.btns[i].active = true;
+                        }
+                    }
+                    else {
+                        this.btns[i].setTooltip(null);
+                        savedStacks[i] = ItemStack.EMPTY;
                     }
                 }
+            }
         }
 
         @Override
@@ -5260,6 +5287,22 @@ public class ItemBuilder extends GenericScreen {
         TXT_DECIMAL_COLOR,      // TextFieldWidget for PathType.DECIMAL_COLOR
         TEXT_COMPONENT_RADIAL,            // ButtonWidget for Radial | Linear (in text component page)
         TXT_POSE,               // TextFieldWidget for PathType.POSE
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    public record SavedItem(String storedString, ItemStack stack, boolean nbtError) {
+        public static SavedItem build(String itemString) {
+            ItemStack stack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.nbtFromString(itemString)));
+            if(!stack.isEmpty()) {
+                String newItemString = BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(stack));
+                if(newItemString.equals(itemString)) {
+                    return new SavedItem(itemString,stack,false);
+                }
+                else {
+                    return new SavedItem(itemString,stack,true);
+                }
+            }
+            return new SavedItem(itemString,null,true);
+        }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
 

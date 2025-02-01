@@ -21,7 +21,7 @@ import net.minecraft.util.Util;
 public class FileTools {
 
     // .42edit files
-    public static final int FILE_FORMAT = 3; // increment for any breaking file format changes
+    public static final int FILE_FORMAT = 4; // increment for any breaking file format changes
     public static final Charset FILE_CHARSET = StandardCharsets.UTF_8;
     public static final String PATH_SEPARATOR = File.separator;
     public static final String FILE_DIRECTORY = ".42edit";
@@ -188,7 +188,7 @@ public class FileTools {
      */
     public static String readStringFromFile(String filePath) {
 
-        if(verifyFileExists(filePath)) {
+        if(testFileExists(filePath)) {
             String error = null;
             try {
                 return Files.readString(Paths.get(pathFromMinecraft(filePath)), FILE_CHARSET);
@@ -211,7 +211,6 @@ public class FileTools {
      * If file cannot be verified, return false.
      * 
      * @param filePath path to file relative to .minecraft
-     * @param defaultText the file contents to insert when creating a new file
      * @return
      */
     private static boolean verifyFileExists(String filePath) {
@@ -238,6 +237,24 @@ public class FileTools {
         if(error != null)
             logMsg += ": "+error;
         FortytwoEdit.logError(logMsg);
+        return false;
+    }
+
+    /**
+     * If file exists, returns true.
+     * If file does not exist or cannot be verified, return false.
+     * 
+     * @param filePath path to file relative to .minecraft
+     * @return
+     */
+    public static boolean testFileExists(String filePath) {
+        if(filePath.length()>0) {
+            try {
+                File file = new File(pathFromMinecraft(filePath));
+                if(file.exists())
+                    return true;
+            } catch(Exception ex) {}
+        }
         return false;
     }
 
