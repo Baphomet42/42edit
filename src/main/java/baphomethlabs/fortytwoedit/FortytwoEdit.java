@@ -7,12 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.security.SecureRandom;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,10 +29,8 @@ import baphomethlabs.fortytwoedit.gui.screen.SecretScreen;
 import baphomethlabs.fortytwoedit.mixin.GameRendererInvoker;
 import baphomethlabs.fortytwoedit.mixin.HotbarStorageAccessor;
 import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
-import baphomethlabs.fortytwoedit.mixin.TranslationStorageAccessor;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
-import net.minecraft.client.resource.language.TranslationStorage;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.toast.SystemToast;
@@ -53,9 +46,7 @@ import net.minecraft.nbt.NbtIntArray;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.registry.Registries;
-import net.minecraft.resource.InputSupplier;
 import net.minecraft.resource.ResourceType;
-import net.minecraft.resource.VanillaDataPackProvider;
 import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.sound.SoundCategory;
@@ -427,16 +418,6 @@ public class FortytwoEdit implements ClientModInitializer {
     //see feature items
     public static final FeatureSet FEATURES = FeatureSet.of(FeatureFlags.VANILLA);
 
-    //format codes
-    public static final Text formatTooltip = BlackMagick.textFromJson("[{\"text\":\"Formatting\n"+
-        "0-black§r 1-§1dark_blue§r 2-§2dark_green§r 3-§3dark_aqua§r 4-§4dark_red§r 5-§5dark_purple§r "+
-        "6-§6gold§r 7-§7gray§r 8-§8dark_gray§r 9-§9blue§r a-§agreen§r b-§baqua§r "+
-        "c-§cred§r d-§dlight_purple§r e-§eyellow§r f-§fwhite§r #420666-\"},{\"text\":\"0xRRGGBB\",\"color\":\"#420666\"},"+
-        "{\"text\":\"\nr-§rreset§r k-obfuscated§r l-§lbold§r m-§mstrikethrough§r n-§nunderlined§r o-§oitalic§r\"},"+
-        "{\"text\":\"\n\nFonts\ndefault- ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\nuniform- \"},{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\n\",\"font\":\"uniform\"},"+
-        "{\"text\":\"alt- \"},{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\n\",\"font\":\"alt\"},{\"text\":\"illageralt- \"},"+
-        "{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\",\"font\":\"illageralt\"}]").text();
-
     //supersecretsettings
     public static final Identifier[] SUPER_SECRET_SETTING_PROGRAMS = new Identifier[]{/*Identifier.of("42edit","shaders/post/notch.json"), Identifier.of("42edit","shaders/post/fxaa.json"), Identifier.of("42edit","shaders/post/art.json"), Identifier.of("42edit","shaders/post/bumpy.json"), Identifier.of("42edit","shaders/post/blobs2.json"), Identifier.of("42edit","shaders/post/pencil.json"), Identifier.of("42edit","shaders/post/color_convolve.json"), Identifier.of("42edit","shaders/post/deconverge.json"), Identifier.of("42edit","shaders/post/flip.json"),*/ Identifier.ofVanilla("invert"),/* Identifier.of("42edit","shaders/post/ntsc.json"), Identifier.of("42edit","shaders/post/outline.json"), Identifier.of("42edit","shaders/post/phosphor.json"), Identifier.of("42edit","shaders/post/scan_pincushion.json"), Identifier.of("42edit","shaders/post/sobel.json"), Identifier.of("42edit","shaders/post/bits.json"), Identifier.of("42edit","shaders/post/desaturate.json"), Identifier.of("42edit","shaders/post/green.json"), Identifier.of("42edit","shaders/post/blur.json"), Identifier.of("42edit","shaders/post/wobble.json"), Identifier.of("42edit","shaders/post/blobs.json"), Identifier.of("42edit","shaders/post/antialias.json"),*/ Identifier.ofVanilla("creeper"), Identifier.ofVanilla("spider")};
     private static int superSecretSettingIndex = SUPER_SECRET_SETTING_PROGRAMS.length;
@@ -498,45 +479,6 @@ public class FortytwoEdit implements ClientModInitializer {
 
     //saved items
     public static final int SAVED_ROWS = 12;
-
-    //registry suggestions
-    public static final String[] REG_ATTRIBUTES = getCacheAttributes();
-    public static final String[] REG_BLOCKS = getCacheBlocks();
-    public static final String[] REG_BLOCKTAGS = getCacheBlockTags();
-    public static final String[] REG_COMPONENTS = getCacheComponents();
-    public static final String[] REG_ITEMS = getCacheItems();
-    public static final String[] REG_ITEMTAGS = getCacheItemTags();
-    public static final String[] REG_EFFECTS = getCacheEffects();
-    public static final String[] REG_ENTITIES = getCacheEntities();
-    public static final String[] REG_ENTITYTAGS = getCacheEntityTags();
-    private static String[] REG_KEYBINDS = null;
-    public static final String[] REG_LOOT = getCacheLootTables();
-    public static final String[] REG_PARTICLES = getCacheParticles();
-    public static final String[] REG_SOUNDS = getCacheSounds();
-    public static final String[] REG_STRUCTURES = getCacheStructures();
-    private static String[] REG_TRANSLATIONS = null;
-
-    public static String[] joinCommandSuggs(String[][] joinLists, String[] startVals) {
-        List<String> list = new ArrayList<>();
-
-        if(joinLists != null)
-            for(int i=0; i<joinLists.length; i++) {
-                if(joinLists[i] != null)
-                    for(int j=0; j<joinLists[i].length; j++)
-                        list.add(joinLists[i][j]);
-            }
-
-        list = new ArrayList<String>((new HashSet<String>(list)));
-        Collections.sort(list);
-
-        if(startVals != null)
-            for(int i=0; i<startVals.length; i++)
-                list.add(0,startVals[startVals.length-1-i]);
-
-        if(!list.isEmpty())
-            return list.toArray(new String[0]);
-        return null;
-    }
 
     //web items
     public static boolean webItemsAuto = true;
@@ -796,223 +738,7 @@ public class FortytwoEdit implements ClientModInitializer {
         return property.name(state.get(property));
     }
 
-    private static String[] getCacheAttributes() {
-        List<String> list = new ArrayList<>();
-
-        Registries.ATTRIBUTE.forEach(a -> {
-            list.add(Registries.ATTRIBUTE.getId(a).toString());
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheBlocks() {
-        List<String> list = new ArrayList<>();
-
-        Registries.BLOCK.forEach(b -> {
-            list.add(Registries.BLOCK.getId(b).toString());
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheBlockTags() {
-        List<String> list = new ArrayList<>();
-
-        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/block", map::putIfAbsent);
-        map.keySet().forEach(t -> {
-            list.add("#"+t.toString().replaceFirst("tags/block/","").replaceFirst(".json",""));
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheComponents() {
-        List<String> list = new ArrayList<>();
-
-        Registries.DATA_COMPONENT_TYPE.forEach(c -> {
-            list.add(Registries.DATA_COMPONENT_TYPE.getId(c).toString());
-        });
-
-        list.remove("minecraft:creative_slot_lock");
-        list.remove("minecraft:map_post_processing");
-
-        for(String k : list) {
-            // this will log warnings if ComponentHelper doesn't include a vanilla component
-            ComponentHelper.getPathInfo("components."+k);
-        }
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheItems() {
-        List<String> list = new ArrayList<>();
-
-        Registries.ITEM.forEach(i -> {
-            list.add(Registries.ITEM.getId(i).toString());
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheItemTags() {
-        List<String> list = new ArrayList<>();
-
-        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/item", map::putIfAbsent);
-        map.keySet().forEach(t -> {
-            list.add("#"+t.toString().replaceFirst("tags/item/","").replaceFirst(".json",""));
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheEffects() {
-        List<String> list = new ArrayList<>();
-
-        Registries.STATUS_EFFECT.forEach(e -> {
-            list.add(Registries.STATUS_EFFECT.getId(e).toString());
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheEntities() {
-        List<String> list = new ArrayList<>();
-
-        Registries.ENTITY_TYPE.forEach(e -> {
-            list.add(Registries.ENTITY_TYPE.getId(e).toString());
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheEntityTags() {
-        List<String> list = new ArrayList<>();
-
-        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/entity", map::putIfAbsent);
-        map.keySet().forEach(t -> {
-            list.add("#"+t.toString().replaceFirst("tags/entity/","").replaceFirst(".json",""));
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    public static String[] getCacheKeybinds() {
-        if(REG_KEYBINDS == null) {
-            List<String> list = new ArrayList<>();
-            List<String> list2 = new ArrayList<>();
-
-            for(String k: KeyBindingAccessor.getKeysList().keySet()) {
-                if(k.startsWith("42edit.")) {
-                    list2.add(k);
-                }
-                else
-                    list.add(k);
-            }
-
-            Collections.sort(list);
-            Collections.sort(list2);
-
-            for(String k: list2)
-                list.add(k);
-
-            REG_KEYBINDS = list.toArray(new String[0]);
-        }
-        return REG_KEYBINDS;
-    }
-
-    private static String[] getCacheLootTables() {
-        List<String> list = new ArrayList<>();
-
-        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "loot_table", map::putIfAbsent);
-        map.keySet().forEach(l -> {
-            list.add(l.toString().replaceFirst("loot_table/","").replaceFirst(".json",""));
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheParticles() {
-        List<String> list = new ArrayList<>();
-
-        Registries.PARTICLE_TYPE.forEach(p -> {
-            list.add(Registries.PARTICLE_TYPE.getId(p).toString());
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheSounds() {
-        List<String> list = new ArrayList<>();
-
-        Registries.SOUND_EVENT.forEach(s -> {
-            list.add(Registries.SOUND_EVENT.getId(s).toString());
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] getCacheStructures() {
-        List<String> list = new ArrayList<>();
-
-        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "structure", map::putIfAbsent);
-        map.keySet().forEach(s -> {
-            list.add(s.toString().replaceFirst("structure/","").replaceFirst(".nbt",""));
-        });
-
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    public static String[] getCacheTranslations() {
-        if(REG_TRANSLATIONS == null) {
-            List<String> list = new ArrayList<>();
-            List<String> list2 = new ArrayList<>();
-
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.getResourceManager() != null) {
-                List<String> l = new ArrayList<>();
-                l.add("en_us");
-                TranslationStorage s = TranslationStorage.load(client.getResourceManager(),l,false);
-                for(String t: ((TranslationStorageAccessor)s).getTranslations().keySet()) {
-                    if(t.startsWith("42edit.")) {
-                        list2.add(t);
-                    }
-                    else
-                        list.add(t);
-                }
-            }
-
-            Collections.sort(list);
-            Collections.sort(list2);
-
-            for(String k: list2)
-                list.add(k);
-
-            REG_TRANSLATIONS = list.toArray(new String[0]);
-        }
-        return REG_TRANSLATIONS;
-    }
-
     private static final String LOG_PREFIX = "(42edit) ";
-	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss"); // from CommandBlockExecutor.class
     private static final SystemToast.Type TOAST_TYPE = new SystemToast.Type();
     private static final MutableText TOAST_PREFIX = Text.empty().append("").append(Text.empty().append("(42edit) ").formatted(Formatting.BLACK));
 
@@ -1069,15 +795,6 @@ public class FortytwoEdit implements ClientModInitializer {
         LogScreen.debugTryRefreshVarious();
 
         logInfo("Debug complete");
-    }
-
-    /**
-     * Get the current timestamp in the pattern `[HH:mm:ss]`
-     * 
-     * @return
-     */
-    public static String getTimestamp() {
-        return "[" + DATE_FORMAT.format(new Date()) + "]";
     }
 
     public static void saveKeybindOptions() {
@@ -1278,7 +995,6 @@ public class FortytwoEdit implements ClientModInitializer {
 
         NbtCompound savedItemsNbt = new NbtCompound();
         savedItemsNbt.put("items",itemsList);
-        savedItemsNbt.putInt("data_format",SharedConstants.getGameVersion().getResourceVersion(ResourceType.SERVER_DATA));
         savedItemsNbt.putInt("file_format",FileTools.FILE_FORMAT);
         if(FileTools.writeCompoundToFile(FileTools.FILE_SAVED_ITEMS, savedItemsNbt, FileDisplayType.TREE_CONDITIONAL_COLLAPSE)) {
             getSavedItems(); // used to show log errors

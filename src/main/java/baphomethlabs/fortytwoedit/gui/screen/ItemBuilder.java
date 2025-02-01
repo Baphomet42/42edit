@@ -173,6 +173,14 @@ public class ItemBuilder extends GenericScreen {
     protected boolean showPosePreview = false;
     private ItemStack[] cacheInv = new ItemStack[41];
     private int cacheInvSlot = -1;
+    public static final Tooltip FORMAT_CODES_TT = Tooltip.of(BlackMagick.textFromJson("[{\"text\":\"Formatting\n"+
+        "0-black§r 1-§1dark_blue§r 2-§2dark_green§r 3-§3dark_aqua§r 4-§4dark_red§r 5-§5dark_purple§r "+
+        "6-§6gold§r 7-§7gray§r 8-§8dark_gray§r 9-§9blue§r a-§agreen§r b-§baqua§r "+
+        "c-§cred§r d-§dlight_purple§r e-§eyellow§r f-§fwhite§r #420666-\"},{\"text\":\"0xRRGGBB\",\"color\":\"#420666\"},"+
+        "{\"text\":\"\nr-§rreset§r k-obfuscated§r l-§lbold§r m-§mstrikethrough§r n-§nunderlined§r o-§oitalic§r\"},"+
+        "{\"text\":\"\n\nFonts\ndefault- ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\nuniform- \"},{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\n\",\"font\":\"uniform\"},"+
+        "{\"text\":\"alt- \"},{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\n\",\"font\":\"alt\"},{\"text\":\"illageralt- \"},"+
+        "{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\",\"font\":\"illageralt\"}]").text());
 
     public ItemBuilder() {}
 
@@ -239,7 +247,7 @@ public class ItemBuilder extends GenericScreen {
             txtFormat = new TextFieldWidget(this.textRenderer,x+50,y+5+1,15,18,Text.of(""));
             txtFormat.setEditable(false);
             txtFormat.setText(UNICODE_SECTION_SIGN);
-            txtFormat.setTooltip(Tooltip.of(FortytwoEdit.formatTooltip));
+            txtFormat.setTooltip(FORMAT_CODES_TT);
             swapCopyBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("c*"),
                 button -> this.btnSwapOff(true)).dimensions(width/2 - 50,y+5,20,20).build());
             swapBtn = this.addDrawableChild(ButtonWidget.builder(Text.of("c"),
@@ -430,7 +438,7 @@ public class ItemBuilder extends GenericScreen {
             if(!cacheStates.isEmpty())
                 cacheStates.clear();
             if(selItem!=null && !selItem.isEmpty())
-                cacheStates = BlackMagick.getBlockStates(selItem.getItem());
+                cacheStates = ComponentHelper.getBlockStates(selItem.getItem());
 
             if(selItem.isOf(Items.ARMOR_STAND)) {
                 updateArmorStand(selItem.copy());
@@ -1532,7 +1540,7 @@ public class ItemBuilder extends GenericScreen {
             String[][] joinSuggs = null;
             if(suggestions != null)
                 joinSuggs = new String[][]{suggestions};
-            String[] suggsArr = FortytwoEdit.joinCommandSuggs(joinSuggs, startVals);
+            String[] suggsArr = BlackMagick.joinCommandSuggs(joinSuggs, startVals);
             if(suggsArr != null && suggsArr.length>0)
                 suggs.setSuggestions(suggsArr);
         }
@@ -1804,7 +1812,7 @@ public class ItemBuilder extends GenericScreen {
                             } catch(Exception ex) {}
                         }
                     }
-                }, FortytwoEdit.REG_SOUNDS,true));
+                }, ComponentHelper.REG_SOUNDS,true));
             }
             {
                 final int i = tabNum; final int j = widgets.get(tabNum).size();
@@ -1836,7 +1844,7 @@ public class ItemBuilder extends GenericScreen {
                 final int i = tabNum; final int j = widgets.get(tabNum).size();
                 widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("Symbol")},new int[]{40,55,49,55},
                 new String[]{"Create banner(s) with preset designs\n\nChar Color | Chars | Base Color"+"\n\n"+BANNER_PRESET_CHARS},new String[][]
-                {ComponentHelper.DYES,BANNER_CHAR_LIST,ComponentHelper.DYES},false,btn -> {
+                {ComponentHelper.REG_DYES,BANNER_CHAR_LIST,ComponentHelper.REG_DYES},false,btn -> {
                     String[] inps = widgets.get(i).get(j).btn();
                     if(client.player.getAbilities().creativeMode) {
 
@@ -2222,7 +2230,7 @@ public class ItemBuilder extends GenericScreen {
                     widgets.get(tabNum).add(new RowWidget("components"));
                 }
                 List<String> unset = new ArrayList<String>();
-                for(String c : FortytwoEdit.REG_COMPONENTS)
+                for(String c : ComponentHelper.REG_COMPONENTS)
                 {
                     if(ComponentHelper.hasComponent(selItem.getComponents(),c))
                         widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
@@ -2284,7 +2292,7 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<2; i++) {
                 ItemStack current = i==0 ? client.player.getMainHandStack() : client.player.getOffHandStack();
                 if(current != null && !current.isEmpty()) {
-                    int[] size = BlackMagick.containerSize(current.getItem());
+                    int[] size = ComponentHelper.containerSize(current.getItem());
 
                     if(current.isOf(Items.BUNDLE)) {
                         {
@@ -2851,10 +2859,10 @@ public class ItemBuilder extends GenericScreen {
                         bannerPat = bannerNbt.getString("pattern");
 
                     List<String> bannerVals = new ArrayList<>();
-                    for(int i=0; i<ComponentHelper.DYES.length; i++)
-                        bannerVals.add(ComponentHelper.DYES[i]);
-                    for(int i=0; i<ComponentHelper.BANNER_PATTERNS.length; i++)
-                        bannerVals.add(ComponentHelper.BANNER_PATTERNS[i]);
+                    for(String c : ComponentHelper.REG_DYES)
+                        bannerVals.add(c);
+                    for(String b : ComponentHelper.getWorldBannerPatternList())
+                        bannerVals.add(b);
 
                     int row=0;
                     while(!bannerVals.isEmpty()) {
@@ -3018,7 +3026,7 @@ public class ItemBuilder extends GenericScreen {
                         updateTextComponentEffect();
                         if(textComponentEffectMode == 1) {
                             if(textComponentEffects[7]==1 || textComponentEffects[7]==2) {
-                                String[] suggestions = textComponentEffects[7]==1 ? FortytwoEdit.getCacheKeybinds() : FortytwoEdit.getCacheTranslations();
+                                String[] suggestions = textComponentEffects[7]==1 ? ComponentHelper.getCacheKeybinds() : ComponentHelper.getCacheTranslations();
                                 suggsOnChanged(w,suggestions,null);
                             }
                             else
@@ -3106,13 +3114,13 @@ public class ItemBuilder extends GenericScreen {
                     w2.setChangedListener(value -> {
                         if(textComponentEffects[6]==1) {
                             boolean validColor = false;
-                            for(String f : ComponentHelper.FORMAT_COLORS)
+                            for(String f : ComponentHelper.REG_FORMAT_COLORS)
                                 if(f.equals(value))
                                     validColor = true;
 
                             if(validColor)
                                 textComponentLastColor = value;
-                            suggsOnChanged(w2,ComponentHelper.FORMAT_COLORS,null);
+                            suggsOnChanged(w2,ComponentHelper.REG_FORMAT_COLORS,null);
                             updateTextComponentEffect();
                         }
                         else

@@ -3,7 +3,9 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
@@ -145,6 +147,17 @@ public class LogScreen extends GenericScreen {
         }
     }
 
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss"); // from CommandBlockExecutor.class
+
+    /**
+     * Get the current timestamp in the pattern `[HH:mm:ss]`
+     * 
+     * @return
+     */
+    public static String getTimestamp() {
+        return "[" + DATE_FORMAT.format(new Date()) + "]";
+    }
+
     private record LogMessage(String timestamp, LogType type, String message, String formattedLine, String searchLine) {
 
         public static LogMessage build(String inpLine) {
@@ -165,7 +178,7 @@ public class LogScreen extends GenericScreen {
             return build(timestamp, logType, line);
         }
         public static LogMessage build(LogType type, String message) {
-            return build(FortytwoEdit.getTimestamp(), type, message);
+            return build(getTimestamp(), type, message);
         }
         public static LogMessage build(String timestamp, LogType type, String message) {
             StringBuilder formattedLine = new StringBuilder();

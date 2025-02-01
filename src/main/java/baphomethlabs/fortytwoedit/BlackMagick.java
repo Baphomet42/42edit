@@ -2,24 +2,21 @@ package baphomethlabs.fortytwoedit;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.spongepowered.asm.mixin.injection.struct.InjectorGroupInfo.Map;
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.ItemStackArgumentType;
 import net.minecraft.command.argument.NbtPathArgumentType.NbtPath;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.component.ComponentType;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -40,15 +37,12 @@ import net.minecraft.nbt.NbtString;
 import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.state.property.Property;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
 
 /**
  * Class containing static methods used for working with NBT, Text components, and more
@@ -286,7 +280,7 @@ public class BlackMagick {
                 comps = BlackMagick.validCompound(BlackMagick.nbtFromString("{"+compsString+"}"));
 
             Set<String> unusedComps = Sets.newHashSet();
-            for(String comp : FortytwoEdit.REG_COMPONENTS)
+            for(String comp : ComponentHelper.REG_COMPONENTS)
                 unusedComps.add(comp);
             for(String comp : comps.getKeys()) {
                 unusedComps.remove(comp);
@@ -624,91 +618,6 @@ public class BlackMagick {
     }
 
     /**
-     * Get list of all possible block states that can be applied to the item
-     * 
-     * @param item the ItemStack.getItem()
-     * @return list of lists where the first string in each list is the key and the rest are the value options (may be empty but never null)
-     */
-    public static List<List<String>> getBlockStates(Item item) {
-        List<List<String>> states = new ArrayList<>();
-        BlockState blockState = Block.getBlockFromItem(item).getDefaultState();
-        for(Map.Entry<Property<?>, Comparable<?>> entry : blockState.getEntries().entrySet()) {
-            ArrayList<String> list = new ArrayList<>();
-            list.add(entry.getKey().getName());
-            for(Comparable<?> val : entry.getKey().getValues()) {
-                list.add((String)Util.getValueAsString(entry.getKey(), val));
-            }
-            states.add(list);
-        }
-        return states;
-    }
-
-    public static List<String> getWorldEnchantmentList() {
-        List<String> list = new ArrayList<>();
-
-        try {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null)
-                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT).get().getIds())
-                    list.add(i.toString());
-        } catch(Exception ex) {
-            FortytwoEdit.logWarn("Failed to read world enchantments");
-        }
-
-        Collections.sort(list);
-        return list;
-    }
-
-    public static int getWorldEnchantmentMaxLevel(String key) {
-        int max = 1;
-
-        try {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null) {
-                Enchantment ench = client.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT).get().get(Identifier.of(key));
-                if(ench != null)
-                    max = ench.getMaxLevel();
-            }
-        } catch(Exception ex) {
-            FortytwoEdit.logWarn("Failed to read world enchantments");
-        }
-
-        return max;
-    }
-
-    public static List<String> getWorldJukeboxList() {
-        List<String> list = new ArrayList<>();
-
-        try {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null)
-                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.JUKEBOX_SONG).get().getIds())
-                    list.add(i.toString());
-        } catch(Exception ex) {
-            FortytwoEdit.logWarn("Failed to read world jukebox songs");
-        }
-
-        Collections.sort(list);
-        return list;
-    }
-
-    public static List<String> getWorldPaintingList() {
-        List<String> list = new ArrayList<>();
-
-        try {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null)
-                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.PAINTING_VARIANT).get().getIds())
-                    list.add(i.toString());
-        } catch(Exception ex) {
-            FortytwoEdit.logWarn("Failed to read world painting variants");
-        }
-
-        Collections.sort(list);
-        return list;
-    }
-
-    /**
      * Get the Nbt representation of an item for pre-made banner designs for various characters
      * 
      * @param character
@@ -767,56 +676,6 @@ public class BlackMagick {
      * stores parsed text component or an error message if isValid is false
      */
     public record ParsedText(boolean isValid, Text text) {}
-
-    /**
-     * 
-     * @param id the item id (from ItemStack.getItem().toString())
-     * @return int array with [rows,columns] or [-1,-1] depending on storage size of blockentity for item
-     */
-    public static int[] containerSize(Item item) {
-        int rows = -1;
-        int cols = -1;
-
-        // find items by searching net.minecraft.item.Items for DataComponentTypes.CONTAINER
-        // manually enter rows/cols based on ingame gui appearance
-        // remove ender chest
-
-        String id = item.toString();
-
-        if(id.contains("ender_chest")) {
-
-        }
-        else if(id.contains("chest") || id.contains("trapped_chest") || id.contains("shulker") || id.contains("barrel")) {
-            rows = 3;
-            cols = 9;
-        }
-        else if(id.contains("dispenser") || id.contains("dropper") || id.contains("crafter")) {
-            rows = 3;
-            cols = 3;
-        }
-        else if(id.contains("hopper")) {
-            rows = 1;
-            cols = 5;
-        }
-        else if(id.contains("furnace") || id.contains("smoker")) {
-            rows = 1;
-            cols = 3;
-        }
-        else if(id.contains("brewing_stand")) {
-            rows = 1;
-            cols = 5;
-        }
-        else if(id.contains("chiseled_bookshelf")) {
-            rows = 2;
-            cols = 3;
-        }
-        else if(id.contains("campfire")) {
-            rows = 1;
-            cols = 4;
-        }
-
-        return new int[]{rows,cols};
-    }
 
     /**
      * Test if query string contains at least one string in the set
@@ -927,6 +786,28 @@ public class BlackMagick {
         }
 
         return list.toArray(new String[0]);
+    }
+
+    public static String[] joinCommandSuggs(String[][] joinLists, String[] startVals) {
+        List<String> list = new ArrayList<>();
+
+        if(joinLists != null)
+            for(int i=0; i<joinLists.length; i++) {
+                if(joinLists[i] != null)
+                    for(int j=0; j<joinLists[i].length; j++)
+                        list.add(joinLists[i][j]);
+            }
+
+        list = new ArrayList<String>((new HashSet<String>(list)));
+        Collections.sort(list);
+
+        if(startVals != null)
+            for(int i=0; i<startVals.length; i++)
+                list.add(0,startVals[startVals.length-1-i]);
+
+        if(!list.isEmpty())
+            return list.toArray(new String[0]);
+        return null;
     }
 
     public static String[] getIntRangeArray(int min, int max) {

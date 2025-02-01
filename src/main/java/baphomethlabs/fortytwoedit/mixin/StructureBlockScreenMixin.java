@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.ComponentHelper;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -42,7 +42,7 @@ public abstract class StructureBlockScreenMixin extends Screen {
                     suggs.refresh();
                 else {
                     suggs = new TextSuggestor(client, inputName, textRenderer);
-                    suggs.setSuggestions(FortytwoEdit.REG_STRUCTURES);
+                    suggs.setSuggestions(ComponentHelper.REG_STRUCTURES);
                 }
 
             }

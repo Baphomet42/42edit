@@ -1,27 +1,41 @@
 package baphomethlabs.fortytwoedit;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
+import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
+import baphomethlabs.fortytwoedit.mixin.TranslationStorageAccessor;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.resource.language.TranslationStorage;
 import net.minecraft.component.Component;
 import net.minecraft.component.ComponentMap;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.BoatItem;
-import net.minecraft.item.DecorationItem;
-import net.minecraft.item.EntityBucketItem;
-import net.minecraft.item.HangingSignItem;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.MinecartItem;
-import net.minecraft.item.SignItem;
 import net.minecraft.item.ToolMaterial;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.tag.ItemTags;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.resource.InputSupplier;
+import net.minecraft.resource.ResourceType;
+import net.minecraft.resource.VanillaDataPackProvider;
+import net.minecraft.state.property.Property;
 import net.minecraft.text.Text;
+import net.minecraft.util.DyeColor;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 
 /**
  * <p> Class containing static methods related to item components </p>
@@ -34,32 +48,6 @@ import net.minecraft.util.Identifier;
  * </ul>
  */
 public class ComponentHelper {
-
-    /**
-     * Vanilla dyes as they appear in banner color IDs
-     */
-    public static final String[] DYES = {"black","blue","brown","cyan","gray","green","light_blue","light_gray","lime","magenta","orange","pink","purple","red","white","yellow"};
-
-    /**
-     * Vanilla formatting colors as they appear in text components "color"
-     */
-    public static final String[] FORMAT_COLORS = {"aqua","black","blue","dark_aqua","dark_blue","dark_gray","dark_green","dark_purple","dark_red","gold","gray","green","light_purple","red","white","yellow"};
-
-    /**
-     * Vanilla and experimental banner pattern ids.
-     * Update from {@link net.minecraft.block.entity.BannerPatterns}
-     */
-    public static final String[] BANNER_PATTERNS = BlackMagick.formatSuggs(BlackMagick.sortArray(new String[]{
-        "base","square_bottom_left","square_bottom_right","square_top_left","square_top_right",
-        "stripe_bottom","stripe_top","stripe_left","stripe_right","stripe_center",
-        "stripe_middle","stripe_downright","stripe_downleft","small_stripes","cross",
-        "straight_cross","triangle_bottom","triangle_top","triangles_bottom","triangles_top",
-        "diagonal_left","diagonal_up_right","diagonal_up_left","diagonal_right","circle",
-        "rhombus","half_vertical","half_horizontal","half_vertical_right","half_horizontal_bottom",
-        "border","curly_border","gradient","gradient_up","bricks",
-        "globe","creeper","skull","flower","mojang",
-        "piglin","flow","guster"
-    }).toArray(new String[0]),"minecraft:","");
 
     /**
      * 
@@ -75,77 +63,6 @@ public class ComponentHelper {
             }
         }
         return false;
-    }
-
-    /**
-     * Try to determine if a component is used by the game for an Item type.
-     * Also returns true if the component is used because of other components on the stack.
-     * If the component shows up in the item tooltip but otherwise has no use, returns false.
-     * The default return is true, unless the method was told to return false based on the item and comps.
-     * 
-     * @param stack
-     * @param component component id with minecraft namespace
-     * @return false if the component probably isn't used in a meaningful way on the item
-     */
-    public static boolean componentRead(ItemStack stack, String component) {
-        return componentReadRecursiveLogic(stack,component,false);
-    }
-
-    /**
-     * Only used for componentRead logic. Never call this method.
-     */
-    private static boolean componentReadRecursiveLogic(ItemStack stack, String component, boolean recursive) {
-        if(stack==null || component == null)
-            return false;
-        Item item = stack.getItem();
-        if(stack.isOf(Items.ENDER_CHEST) && (component.equals("minecraft:container") || component.equals("minecraft:container_loot")))
-            return false;
-        if(hasComponent(item.getComponents(),component) || (recursive && hasComponent(stack.getComponents(),component)))
-            return true;
-        switch(component) {
-            case "minecraft:banner_patterns":
-            case "minecraft:bees":
-            case "minecraft:bundle_contents":
-            case "minecraft:charged_projectiles":
-            case "minecraft:container":
-            case "minecraft:debug_stick_state":
-            case "minecraft:fireworks":
-            case "minecraft:map_color":
-            case "minecraft:map_decorations":
-            case "minecraft:map_id":
-            case "minecraft:max_damage":
-            case "minecraft:ominous_bottle_amplifier":
-            case "minecraft:pot_decorations":
-            case "minecraft:potion_contents":
-            case "minecraft:recipes":
-            case "minecraft:stored_enchantments":
-            case "minecraft:suspicious_stew_effects":
-            case "minecraft:writable_book_content":
-                return hasComponent(item.getComponents(),component) || (recursive && hasComponent(stack.getComponents(),component));
-            case "minecraft:base_color": return stack.isOf(Items.SHIELD);
-            case "minecraft:block_entity_data": return (BlackMagick.stringEquals(item.toString(),"minecraft:beacon","minecraft:beehive","minecraft:bee_nest","minecraft:blast_furnace","minecraft:brewing_stand","minecraft:campfire","minecraft:chiseled_bookshelf","minecraft:command_block","minecraft:chain_command_block","minecraft:repeating_command_block","minecraft:crafter","minecraft:furnace","minecraft:smoker","minecraft:soul_campfire","minecraft:spawner","minecraft:trial_spawner","minecraft:jukebox","minecraft:lectern")
-                || item instanceof SignItem || item instanceof HangingSignItem); // see https://minecraft.wiki/w/Chunk_format
-            case "minecraft:block_state": return !BlackMagick.getBlockStates(stack.getItem()).isEmpty();
-            case "minecraft:bucket_entity_data": return item instanceof EntityBucketItem;
-            case "minecraft:dyed_color": return (new ItemStack(item)).isIn(ItemTags.DYEABLE);
-            case "minecraft:entity_data": return (item instanceof DecorationItem || stack.isOf(Items.ARMOR_STAND) || item instanceof BoatItem ||
-                item instanceof MinecartItem || item.toString().contains("spawn_egg"));
-            case "minecraft:container_loot": return BlackMagick.stringContains(item.toString(),"chest","barrel","dispenser","dropper","hopper","crafter","shulker_box");
-            case "minecraft:damage": return componentReadRecursiveLogic(stack,"minecraft:max_damage",true);
-            case "minecraft:firework_explosion": return stack.isOf(Items.FIREWORK_STAR);
-            case "minecraft:glider": return componentReadRecursiveLogic(stack,"minecraft:equippable",true);
-            case "minecraft:instrument": return stack.isOf(Items.GOAT_HORN);
-            case "minecraft:intangible_projectile": return item.toString().contains("arrow");
-            case "minecraft:lock": return (stack.isOf(Items.BEACON) || (componentReadRecursiveLogic(stack,"minecraft:container",true) && !item.toString().contains("campfire") && !stack.isOf(Items.CHISELED_BOOKSHELF)));
-            case "minecraft:lodestone_tracker": return stack.isOf(Items.COMPASS);
-            case "minecraft:note_block_sound": return stack.isOf(Items.PLAYER_HEAD);
-            case "minecraft:profile": return stack.isOf(Items.PLAYER_HEAD);
-            case "minecraft:repairable": return componentReadRecursiveLogic(stack,"minecraft:max_damage",true);
-            case "minecraft:trim": return item instanceof ArmorItem;
-            case "minecraft:unbreakable": return componentReadRecursiveLogic(stack,"minecraft:max_damage",true);
-            case "minecraft:written_book_content": return stack.isOf(Items.WRITTEN_BOOK);
-            default: return true;
-        }
     }
 
     private static final Map<String,PathInfo> cacheInfo = Maps.newHashMap();
@@ -202,7 +119,7 @@ public class ComponentHelper {
             if(path.endsWith("components.attribute_modifiers.modifiers[0]"))
                 return (new PathInfo(List.of("type","slot","id","amount","operation"))).withFlag(PathFlag.ATTRIBUTE);
             if(path.endsWith("components.attribute_modifiers.modifiers[0].type"))
-                return (new PathInfo(PathType.STRING, FortytwoEdit.REG_ATTRIBUTES)).asRequired();
+                return (new PathInfo(PathType.STRING, REG_ATTRIBUTES)).asRequired();
             if(path.endsWith("components.attribute_modifiers.modifiers[0].slot"))
                 return (new PathInfo(PathType.STRING, new String[]{"any","hand","mainhand","offhand","armor","head","chest","legs","feet"}));
             if(path.endsWith("components.attribute_modifiers.modifiers[0].id"))
@@ -230,7 +147,7 @@ public class ComponentHelper {
         }
 
         if(path.endsWith("components.base_color"))
-            return (new PathInfo(PathType.STRING,DYES)).withDesc(Text.of("Used for the banner color of a shield")).withIcon(Items.SHIELD);
+            return (new PathInfo(PathType.STRING,REG_DYES)).withDesc(Text.of("Used for the banner color of a shield")).withIcon(Items.SHIELD);
 
         if(path.contains("components.bees")) {
             if(path.endsWith("components.bees"))
@@ -249,7 +166,7 @@ public class ComponentHelper {
             if(path.endsWith("components.block_entity_data"))
                 return (new PathInfo(List.of("id"))).withIcon(Items.SPAWNER);
             if(path.endsWith("components.block_entity_data.id"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_ENTITIES)).asRequired();
+                return (new PathInfo(PathType.STRING,REG_ENTITIES)).asRequired();
         }
 
         if(path.contains("components.block_state")) {
@@ -369,9 +286,9 @@ public class ComponentHelper {
             if(path.endsWith("components.consumable.on_consume_effects[0].diameter"))
                 return PathInfos.FLOAT.withDesc(Text.of("Used for \"teleport_randomly\" (Defaults to 16f)"));
             if(path.endsWith("components.consumable.on_consume_effects[0].sound"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_SOUNDS)).withDesc(Text.of("Used for \"play_sound\""));
+                return (new PathInfo(PathType.STRING,REG_SOUNDS)).withDesc(Text.of("Used for \"play_sound\""));
             if(path.endsWith("components.consumable.sound"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_SOUNDS)).withDesc(Text.of("Defaults to \"entity.generic.eat\""));
+                return (new PathInfo(PathType.STRING,REG_SOUNDS)).withDesc(Text.of("Defaults to \"entity.generic.eat\""));
         }
 
         if(path.contains("components.container")) {
@@ -389,7 +306,7 @@ public class ComponentHelper {
             if(path.endsWith("components.container_loot"))
                 return (new PathInfo(List.of("loot_table","seed"))).withIcon(Items.CHEST);
             if(path.endsWith("components.container_loot.loot_table"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_LOOT)).asRequired();
+                return (new PathInfo(PathType.STRING,REG_LOOT)).asRequired();
             if(path.endsWith("components.container_loot.seed"))
                 return PathInfos.LONG;
         }
@@ -439,7 +356,7 @@ public class ComponentHelper {
             if(path.endsWith("components.death_protection.death_effects[0].diameter"))
                 return PathInfos.FLOAT.withDesc(Text.of("Used for \"teleport_randomly\" (Defaults to 16f)"));
             if(path.endsWith("components.death_protection.death_effects[0].sound"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_SOUNDS)).withDesc(Text.of("Used for \"play_sound\""));
+                return (new PathInfo(PathType.STRING,REG_SOUNDS)).withDesc(Text.of("Used for \"play_sound\""));
         }
 
         if(path.endsWith("components.debug_stick_state"))
@@ -468,16 +385,16 @@ public class ComponentHelper {
             if(path.endsWith("components.enchantments"))
                 return (new PathInfo(List.of("levels","show_in_tooltip"))).withIcon(Items.ENCHANTED_BOOK);
             if(path.endsWith("components.enchantments.levels"))
-                return (new PathInfo(BlackMagick.getWorldEnchantmentList())).asRequired().asDynamic();
+                return (new PathInfo(getWorldEnchantmentList())).asRequired().asDynamic();
             if(path.endsWith("components.enchantments.show_in_tooltip"))
                 return PathInfos.TRINARY;
         }
 
         if(path.contains("enchantments.levels.")) {
             int maxLvl = 1;
-            for(String e : BlackMagick.getWorldEnchantmentList()) {
+            for(String e : getWorldEnchantmentList()) {
                 if(path.endsWith("enchantments.levels."+e.replace("minecraft:",""))) {
-                    maxLvl = BlackMagick.getWorldEnchantmentMaxLevel(e);
+                    maxLvl = getWorldEnchantmentMaxLevel(e);
                 }
             }
             return (new PathInfo(PathType.INT,BlackMagick.getIntRangeArray(1,maxLvl))).withDesc(Text.of("Max level: "+maxLvl)).asDynamic();
@@ -495,7 +412,7 @@ public class ComponentHelper {
                 "Duration","DurationOnUse","potion_contents","Particle","Radius","RadiusOnUse","RadiusPerTick","ReapplicationDelay","WaitTime",
                 "variant"))).withIcon(Items.BREEZE_SPAWN_EGG);
             if(path.endsWith(".entity_data.id"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_ENTITIES)).asRequired();
+                return (new PathInfo(PathType.STRING,REG_ENTITIES)).asRequired();
             if(path.endsWith(".entity_data.Air"))
                 return PathInfos.SHORT;
             if(path.endsWith(".entity_data.CustomName"))
@@ -549,7 +466,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.active_effects[0].duration") || path.endsWith(".hidden_effect.duration"))
                 return PathInfos.EFFECT_DURATION;
             if(path.endsWith(".entity_data.active_effects[0].id") || path.endsWith(".hidden_effect.id"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_EFFECTS));
+                return (new PathInfo(PathType.STRING,REG_EFFECTS));
             if(path.endsWith(".entity_data.active_effects[0].show_icon") || path.endsWith(".hidden_effect.show_icon"))
                 return PathInfos.TRINARY;
             if(path.endsWith(".entity_data.active_effects[0].show_particles") || path.endsWith(".hidden_effect.show_particles"))
@@ -621,7 +538,7 @@ public class ComponentHelper {
 
             lbl = "Arrows and Tridents";
             if(path.endsWith(".entity_data.SoundEvent"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_SOUNDS)).withDesc(Text.of("Arrows types and tridents will play this sound when hitting something")).withGroup(lbl);
+                return (new PathInfo(PathType.STRING,REG_SOUNDS)).withDesc(Text.of("Arrows types and tridents will play this sound when hitting something")).withGroup(lbl);
 
             lbl = "Area Effect Clouds";
             if(path.endsWith(".entity_data.Duration"))
@@ -631,7 +548,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.potion_contents"))
                 return PathInfos.POTION_CONTENTS.withGroup(lbl);
             if(path.endsWith(".entity_data.Particle"))
-                return (new PathInfo(PathType.INLINE_COMPOUND,BlackMagick.formatSuggs(FortytwoEdit.REG_PARTICLES,"{type:\"","\"}"))).withDesc(Text.of("Format like {type:\"dust\",color:[.5d,0d,1d],scale:2}")).withGroup(lbl);
+                return (new PathInfo(PathType.INLINE_COMPOUND,BlackMagick.formatSuggs(REG_PARTICLES,"{type:\"","\"}"))).withDesc(Text.of("Format like {type:\"dust\",color:[.5d,0d,1d],scale:2}")).withGroup(lbl);
             if(path.endsWith(".entity_data.Radius"))
                 return PathInfos.FLOAT.withGroup(lbl);
             if(path.endsWith(".entity_data.RadiusOnUse"))
@@ -645,7 +562,7 @@ public class ComponentHelper {
 
             lbl = "Paintings";
             if(path.endsWith(".entity_data.variant"))
-                return (new PathInfo(PathType.DEFAULT,FortytwoEdit.joinCommandSuggs(new String[][]{BlackMagick.formatStringSuggs(BlackMagick.getWorldPaintingList().toArray(new String[0]))},
+                return (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{BlackMagick.formatStringSuggs(getWorldPaintingList().toArray(new String[0]))},
                     new String[]{"{asset_id:\"\",width:1,height:1}"}))).withGroup(lbl).withDesc(Text.of("Can be either:\na) NbtString of a painting ID\nb) NbtCompound with {asset_id:\"<variant>\",width:<int>,height:<int>}")).asDynamic();
 
             // when adding new paths, also add keys to entity_data compound
@@ -658,12 +575,12 @@ public class ComponentHelper {
             if(path.endsWith("components.equippable.slot"))
                 return (new PathInfo(PathType.STRING,new String[]{"mainhand","offhand","head","chest","legs","feet"})).asRequired();
             if(path.endsWith("components.equippable.equip_sound"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_SOUNDS)).withDesc(Text.of("Defaults to \"item.armor.equip_generic\""));
+                return (new PathInfo(PathType.STRING,REG_SOUNDS)).withDesc(Text.of("Defaults to \"item.armor.equip_generic\""));
             if(path.endsWith("components.equippable.asset_id"))
                 return (new PathInfo(PathType.STRING)).withDesc(Text.of("An equipment model at \"assets/<namespace>/models/equipment/<id>\"")); // to_do add suggs
             if(path.endsWith("components.equippable.allowed_entities"))
-                return (new PathInfo(PathType.DEFAULT,FortytwoEdit.joinCommandSuggs(new String[][]{
-                    BlackMagick.formatStringSuggs(FortytwoEdit.joinCommandSuggs(new String[][]{FortytwoEdit.REG_ENTITIES,FortytwoEdit.REG_ENTITYTAGS},null))},
+                return (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{
+                    BlackMagick.formatStringSuggs(BlackMagick.joinCommandSuggs(new String[][]{REG_ENTITIES,REG_ENTITYTAGS},null))},
                     new String[]{"[\"skeleton\",\"zombie\"]"})))
                     .withDesc(Text.of("Can be either:\na) NbtString of an entity ID or entity tag\nb) NbtList of entity ID NbtStrings"));
             if(path.endsWith("components.equippable.dispensable"))
@@ -735,8 +652,7 @@ public class ComponentHelper {
             return PathInfos.UNIT.withIcon(Items.COMMAND_BLOCK);
 
         if(path.endsWith("components.instrument"))
-            return (new PathInfo(PathType.STRING,new String[]{"ponder_goat_horn","sing_goat_horn","seek_goat_horn",
-                "feel_goat_horn","admire_goat_horn","call_goat_horn","yearn_goat_horn","dream_goat_horn"})).withIcon(Items.GOAT_HORN);
+            return (new PathInfo(PathType.STRING,getWorldInstrumentList().toArray(new String[0]))).withIcon(Items.GOAT_HORN).asDynamic();
 
         if(path.endsWith("components.intangible_projectile"))
             return PathInfos.UNIT.withIcon(Items.ARROW);
@@ -751,7 +667,7 @@ public class ComponentHelper {
             if(path.endsWith("components.jukebox_playable"))
                 return (new PathInfo(List.of("song","show_in_tooltip"))).withIcon(Items.MUSIC_DISC_MELLOHI);
             if(path.endsWith("components.jukebox_playable.song"))
-                return (new PathInfo(PathType.STRING,BlackMagick.getWorldJukeboxList().toArray(new String[0]))).asRequired().asDynamic();
+                return (new PathInfo(PathType.STRING,getWorldJukeboxList().toArray(new String[0]))).asRequired().asDynamic();
             if(path.endsWith("components.jukebox_playable.show_in_tooltip"))
                 return PathInfos.TRINARY;
         }
@@ -760,7 +676,7 @@ public class ComponentHelper {
             if(path.endsWith("components.lock"))
                 return (new PathInfo(List.of("components","count","items","predicates"))).withIcon(Items.CHEST);
             if(path.endsWith("components.lock.components"))
-                return (new PathInfo(List.of(FortytwoEdit.REG_COMPONENTS))).withDesc(Text.of("Exact components to match"));
+                return (new PathInfo(List.of(REG_COMPONENTS))).withDesc(Text.of("Exact components to match"));
             if(path.endsWith("components.lock.count"))
                 return (new PathInfo(PathType.DEFAULT,new String[]{"1","{min:1,max:2}"})).withDesc(Text.of("Can be either:\na) NbtInt of exact count\nb) NbtCompound containing min, max, or both to test a range"));
             if(path.endsWith("components.lock.items"))
@@ -810,7 +726,7 @@ public class ComponentHelper {
             return PathInfos.ITEM_COUNT.withIcon(Items.STONE);
 
         if(path.endsWith("components.note_block_sound"))
-            return (new PathInfo(PathType.STRING,FortytwoEdit.REG_SOUNDS)).withDesc(Text.of("Used for player heads on a note block")).withIcon(Items.PLAYER_HEAD);
+            return (new PathInfo(PathType.STRING,REG_SOUNDS)).withDesc(Text.of("Used for player heads on a note block")).withIcon(Items.PLAYER_HEAD);
 
         if(path.endsWith("components.ominous_bottle_amplifier"))
             return (new PathInfo(PathType.INT,new String[]{"0","1","2","3","4"})).withIcon(Items.OMINOUS_BOTTLE);
@@ -826,7 +742,7 @@ public class ComponentHelper {
             if(path.endsWith(".potion_contents"))
                 return PathInfos.POTION_CONTENTS.withIcon(Items.SPLASH_POTION);
             if(path.endsWith(".potion_contents.potion"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_EFFECTS)).withDesc(Text.of("Potion base before custom_color and custom_effects")); // to_do add potion variants (strong, etc)
+                return (new PathInfo(PathType.STRING,REG_EFFECTS)).withDesc(Text.of("Potion base before custom_color and custom_effects")); // to_do add potion variants (strong, etc)
             if(path.endsWith(".potion_contents.custom_color"))
                 return PathInfos.DECIMAL_COLOR;
             if(path.endsWith(".potion_contents.custom_effects"))
@@ -834,7 +750,7 @@ public class ComponentHelper {
             if(path.endsWith(".potion_contents.custom_effects[0]"))
                 return PathInfos.EFFECT_NODE;
             if(path.endsWith(".potion_contents.custom_effects[0].id"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_EFFECTS)).asRequired();
+                return (new PathInfo(PathType.STRING,REG_EFFECTS)).asRequired();
             if(path.endsWith(".potion_contents.custom_effects[0].amplifier"))
                 return PathInfos.EFFECT_AMPLIFIER;
             if(path.endsWith(".potion_contents.custom_effects[0].duration"))
@@ -892,7 +808,7 @@ public class ComponentHelper {
             if(path.endsWith("components.stored_enchantments"))
                 return (new PathInfo(List.of("levels","show_in_tooltip"))).withIcon(Items.ENCHANTED_BOOK);
             if(path.endsWith("components.stored_enchantments.levels"))
-                return (new PathInfo(BlackMagick.getWorldEnchantmentList())).asRequired().asDynamic();
+                return (new PathInfo(getWorldEnchantmentList())).asRequired().asDynamic();
             if(path.endsWith("components.stored_enchantments.show_in_tooltip"))
                 return PathInfos.TRINARY;
         }
@@ -903,7 +819,7 @@ public class ComponentHelper {
             if(path.endsWith("components.suspicious_stew_effects[0]"))
                 return (new PathInfo(List.of("id","duration"))).withFlag(PathFlag.EFFECT);
             if(path.endsWith("components.suspicious_stew_effects[0].id"))
-                return (new PathInfo(PathType.STRING,FortytwoEdit.REG_EFFECTS)).asRequired();
+                return (new PathInfo(PathType.STRING,REG_EFFECTS)).asRequired();
             if(path.endsWith("components.suspicious_stew_effects[0].duration"))
                 return PathInfos.EFFECT_DURATION;
         }
@@ -997,13 +913,13 @@ public class ComponentHelper {
         }
 
         if(path.equals("id") || path.endsWith(".id"))
-            return (new PathInfo(PathType.STRING,FortytwoEdit.REG_ITEMS)).asRequired().withIcon(Items.STONE);
+            return (new PathInfo(PathType.STRING,REG_ITEMS)).asRequired().withIcon(Items.STONE);
 
         if(path.equals("count") || path.endsWith(".count"))
             return PathInfos.ITEM_COUNT.withIcon(Items.STONE);
 
         if(path.equals("components") || path.endsWith(".components"))
-            return (new PathInfo(List.of(FortytwoEdit.REG_COMPONENTS)));
+            return (new PathInfo(List.of(REG_COMPONENTS)));
 
         FortytwoEdit.logWarn("No PathInfo found for path: "+path);
         return PathInfos.UNKNOWN;
@@ -1336,8 +1252,8 @@ public class ComponentHelper {
         private static PathInfo CACHE_BLOCK_PREDICATE_BLOCKS = null;
         private static PathInfo getBlockPredicateBlocks() {
             if(CACHE_BLOCK_PREDICATE_BLOCKS == null)
-                CACHE_BLOCK_PREDICATE_BLOCKS = (new PathInfo(PathType.DEFAULT,FortytwoEdit.joinCommandSuggs(new String[][]{
-                    BlackMagick.formatStringSuggs(FortytwoEdit.joinCommandSuggs(new String[][]{FortytwoEdit.REG_BLOCKS,FortytwoEdit.REG_BLOCKTAGS},null))},
+                CACHE_BLOCK_PREDICATE_BLOCKS = (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{
+                    BlackMagick.formatStringSuggs(BlackMagick.joinCommandSuggs(new String[][]{REG_BLOCKS,REG_BLOCKTAGS},null))},
                     new String[]{"[\"dirt\",\"stone\"]"})))
                     .withDesc(Text.of("Can be either:\na) NbtString of a block ID or block tag\nb) NbtList of block ID NbtStrings"));
             return CACHE_BLOCK_PREDICATE_BLOCKS;
@@ -1346,13 +1262,385 @@ public class ComponentHelper {
         private static PathInfo CACHE_ITEM_PREDICATE_ITEMS = null;
         private static PathInfo getItemPredicateItems() {
             if(CACHE_ITEM_PREDICATE_ITEMS == null)
-                CACHE_ITEM_PREDICATE_ITEMS = (new PathInfo(PathType.DEFAULT,FortytwoEdit.joinCommandSuggs(new String[][]{
-                    BlackMagick.formatStringSuggs(FortytwoEdit.joinCommandSuggs(new String[][]{FortytwoEdit.REG_ITEMS,FortytwoEdit.REG_ITEMTAGS},null))},
+                CACHE_ITEM_PREDICATE_ITEMS = (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{
+                    BlackMagick.formatStringSuggs(BlackMagick.joinCommandSuggs(new String[][]{REG_ITEMS,REG_ITEMTAGS},null))},
                     new String[]{"[\"diamond\",\"gold_ingot\"]"})))
                     .withDesc(Text.of("Can be either:\na) NbtString of an item ID or item tag\nb) NbtList of item ID NbtStrings"));
             return CACHE_ITEM_PREDICATE_ITEMS;
         }
 
+    }
+
+
+    /**
+     * Get list of all possible block states that can be applied to the item
+     * 
+     * @param item the ItemStack.getItem()
+     * @return list of lists where the first string in each list is the key and the rest are the value options (may be empty but never null)
+     */
+    public static List<List<String>> getBlockStates(Item item) {
+        List<List<String>> states = new ArrayList<>();
+        BlockState blockState = Block.getBlockFromItem(item).getDefaultState();
+        for(Map.Entry<Property<?>, Comparable<?>> entry : blockState.getEntries().entrySet()) {
+            ArrayList<String> list = new ArrayList<>();
+            list.add(entry.getKey().getName());
+            for(Comparable<?> val : entry.getKey().getValues()) {
+                list.add((String)Util.getValueAsString(entry.getKey(), val));
+            }
+            states.add(list);
+        }
+        return states;
+    }
+
+    public static int getWorldEnchantmentMaxLevel(String key) {
+        int max = 1;
+        try {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null) {
+                Enchantment ench = client.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT).get().get(Identifier.of(key));
+                if(ench != null)
+                    max = ench.getMaxLevel();
+            }
+        } catch(Exception ex) {
+            FortytwoEdit.logWarn("Failed to read world enchantments");
+        }
+        return max;
+    }
+
+    /**
+     * 
+     * @param item
+     * @return int array with [rows,columns] or [-1,-1] depending on storage size of blockentity for item
+     */
+    public static int[] containerSize(Item item) {
+
+        // find items by searching net.minecraft.item.Items for DataComponentTypes.CONTAINER
+        // manually enter rows/cols based on ingame gui appearance
+        // remove ender chest
+
+        String id = Identifier.of(item.toString()).toString();
+
+        if(id.startsWith("minecraft:") && id.endsWith("shulker_box"))
+            return new int[]{3,9};
+
+        switch(id) {
+            case "minecraft:chest":
+            case "minecraft:trapped_chest":
+            case "minecraft:barrel":
+                return new int[]{3,9};
+            case "minecraft:dispenser":
+            case "minecraft:dropper":
+            case "minecraft:crafter":
+                return new int[]{3,3};
+            case "minecraft:hopper":
+            case "minecraft:brewing_stand":
+                return new int[]{1,5};
+            case "minecraft:furnace":
+            case "minecraft:blast_furnace":
+            case "minecraft:smoker":
+                return new int[]{1,3};
+            case "minecraft:chiseled_bookshelf":
+                return new int[]{2,3};
+            case "minecraft:campfire":
+            case "minecraft:soul_campfire":
+                return new int[]{1,4};
+            case "minecraft:decorated_pot":
+                return new int[]{1,1};
+            default:
+                return new int[]{-1,-1};
+        }
+    }
+
+
+    public static final String[] REG_ATTRIBUTES = getCacheAttributes();
+    private static String[] getCacheAttributes() {
+        List<String> list = Lists.newArrayList();;
+        Registries.ATTRIBUTE.forEach(a -> {
+            list.add(Registries.ATTRIBUTE.getId(a).toString());
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    public static final String[] REG_BLOCKS = getCacheBlocks();
+    private static String[] getCacheBlocks() {
+        List<String> list = Lists.newArrayList();;
+        Registries.BLOCK.forEach(b -> {
+            list.add(Registries.BLOCK.getId(b).toString());
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    public static final String[] REG_BLOCKTAGS = getCacheBlockTags();
+    private static String[] getCacheBlockTags() {
+        List<String> list = Lists.newArrayList();;
+        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/block", map::putIfAbsent);
+        map.keySet().forEach(t -> {
+            list.add("#"+t.toString().replaceFirst("tags/block/","").replaceFirst(".json",""));
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    public static final String[] REG_COMPONENTS = getCacheComponents();
+    private static String[] getCacheComponents() {
+        List<String> list = Lists.newArrayList();;
+        Registries.DATA_COMPONENT_TYPE.forEach(c -> {
+            list.add(Registries.DATA_COMPONENT_TYPE.getId(c).toString());
+        });
+        list.remove("minecraft:creative_slot_lock");
+        list.remove("minecraft:map_post_processing");
+        for(String k : list) {
+            // this will log warnings if ComponentHelper doesn't include a vanilla component
+            getPathInfo("components."+k);
+        }
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    /**
+     * Vanilla dyes as they appear in banner color IDs
+     */
+    public static final String[] REG_DYES = getDyes();
+    private static String[] getDyes() {
+        Set<String> dyes = Sets.newHashSet();
+        for(DyeColor d : DyeColor.values())
+            dyes.add(d.asString());
+        return BlackMagick.sortSet(dyes).toArray(new String[0]);
+    }
+
+    public static final String[] REG_ITEMS = getCacheItems();
+    private static String[] getCacheItems() {
+        List<String> list = Lists.newArrayList();;
+        Registries.ITEM.forEach(i -> {
+            list.add(Registries.ITEM.getId(i).toString());
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    public static final String[] REG_ITEMTAGS = getCacheItemTags();
+    private static String[] getCacheItemTags() {
+        List<String> list = Lists.newArrayList();;
+        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/item", map::putIfAbsent);
+        map.keySet().forEach(t -> {
+            list.add("#"+t.toString().replaceFirst("tags/item/","").replaceFirst(".json",""));
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    public static final String[] REG_EFFECTS = getCacheEffects();
+    private static String[] getCacheEffects() {
+        List<String> list = Lists.newArrayList();;
+        Registries.STATUS_EFFECT.forEach(e -> {
+            list.add(Registries.STATUS_EFFECT.getId(e).toString());
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    public static final String[] REG_ENTITIES = getCacheEntities();
+    private static String[] getCacheEntities() {
+        List<String> list = Lists.newArrayList();;
+        Registries.ENTITY_TYPE.forEach(e -> {
+            list.add(Registries.ENTITY_TYPE.getId(e).toString());
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    public static final String[] REG_ENTITYTAGS = getCacheEntityTags();
+    private static String[] getCacheEntityTags() {
+        List<String> list = Lists.newArrayList();;
+        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/entity", map::putIfAbsent);
+        map.keySet().forEach(t -> {
+            list.add("#"+t.toString().replaceFirst("tags/entity/","").replaceFirst(".json",""));
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    /**
+     * Vanilla formatting colors as they appear in text components "color"
+     */
+    public static final String[] REG_FORMAT_COLORS = getFormatColors();
+    private static String[] getFormatColors() {
+        Set<String> colors = Sets.newHashSet();
+        for(String c : Formatting.getNames(true, false))
+            colors.add(c);
+        return BlackMagick.sortSet(colors).toArray(new String[0]);
+    }
+
+    private static String[] REG_KEYBINDS = null;
+    public static String[] getCacheKeybinds() {
+        if(REG_KEYBINDS == null) {
+            List<String> list = Lists.newArrayList();;
+            List<String> list2 = Lists.newArrayList();;
+
+            for(String k: KeyBindingAccessor.getKeysList().keySet()) {
+                if(k.startsWith("42edit.")) {
+                    list2.add(k);
+                }
+                else
+                    list.add(k);
+            }
+
+            Collections.sort(list);
+            Collections.sort(list2);
+
+            for(String k: list2)
+                list.add(k);
+
+            REG_KEYBINDS = list.toArray(new String[0]);
+        }
+        return REG_KEYBINDS;
+    }
+
+    public static final String[] REG_LOOT = getCacheLootTables();
+    private static String[] getCacheLootTables() {
+        List<String> list = Lists.newArrayList();;
+        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "loot_table", map::putIfAbsent);
+        map.keySet().forEach(l -> {
+            list.add(l.toString().replaceFirst("loot_table/","").replaceFirst(".json",""));
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    public static final String[] REG_PARTICLES = getCacheParticles();
+    private static String[] getCacheParticles() {
+        List<String> list = Lists.newArrayList();;
+        Registries.PARTICLE_TYPE.forEach(p -> {
+            list.add(Registries.PARTICLE_TYPE.getId(p).toString());
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    public static final String[] REG_SOUNDS = getCacheSounds();
+    private static String[] getCacheSounds() {
+        List<String> list = Lists.newArrayList();;
+        Registries.SOUND_EVENT.forEach(s -> {
+            list.add(Registries.SOUND_EVENT.getId(s).toString());
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    public static final String[] REG_STRUCTURES = getCacheStructures();
+    private static String[] getCacheStructures() {
+        List<String> list = Lists.newArrayList();;
+        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "structure", map::putIfAbsent);
+        map.keySet().forEach(s -> {
+            list.add(s.toString().replaceFirst("structure/","").replaceFirst(".nbt",""));
+        });
+        Collections.sort(list);
+        return list.toArray(new String[0]);
+    }
+
+    private static String[] REG_TRANSLATIONS = null;
+    public static String[] getCacheTranslations() {
+        if(REG_TRANSLATIONS == null) {
+            List<String> list = Lists.newArrayList();;
+            List<String> list2 = Lists.newArrayList();;
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.getResourceManager() != null) {
+                List<String> l = Lists.newArrayList();;
+                l.add("en_us");
+                TranslationStorage s = TranslationStorage.load(client.getResourceManager(),l,false);
+                for(String t: ((TranslationStorageAccessor)s).getTranslations().keySet()) {
+                    if(t.startsWith("42edit.")) {
+                        list2.add(t);
+                    }
+                    else
+                        list.add(t);
+                }
+            }
+            Collections.sort(list);
+            Collections.sort(list2);
+            for(String k: list2)
+                list.add(k);
+            REG_TRANSLATIONS = list.toArray(new String[0]);
+        }
+        return REG_TRANSLATIONS;
+    }
+
+
+    public static List<String> getWorldBannerPatternList() {
+        List<String> list = new ArrayList<>();
+        try {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null)
+                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.BANNER_PATTERN).get().getIds())
+                    list.add(i.toString());
+        } catch(Exception ex) {
+            FortytwoEdit.logWarn("Failed to read world banner patterns");
+        }
+        Collections.sort(list);
+        return list;
+    }
+
+    public static List<String> getWorldEnchantmentList() {
+        List<String> list = new ArrayList<>();
+        try {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null)
+                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT).get().getIds())
+                    list.add(i.toString());
+        } catch(Exception ex) {
+            FortytwoEdit.logWarn("Failed to read world enchantments");
+        }
+        Collections.sort(list);
+        return list;
+    }
+
+    public static List<String> getWorldInstrumentList() {
+        List<String> list = new ArrayList<>();
+        try {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null)
+                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.INSTRUMENT).get().getIds())
+                    list.add(i.toString());
+        } catch(Exception ex) {
+            FortytwoEdit.logWarn("Failed to read world instruments");
+        }
+        Collections.sort(list);
+        return list;
+    }
+
+    public static List<String> getWorldJukeboxList() {
+        List<String> list = new ArrayList<>();
+        try {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null)
+                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.JUKEBOX_SONG).get().getIds())
+                    list.add(i.toString());
+        } catch(Exception ex) {
+            FortytwoEdit.logWarn("Failed to read world jukebox songs");
+        }
+        Collections.sort(list);
+        return list;
+    }
+
+    public static List<String> getWorldPaintingList() {
+        List<String> list = new ArrayList<>();
+        try {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null)
+                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.PAINTING_VARIANT).get().getIds())
+                    list.add(i.toString());
+        } catch(Exception ex) {
+            FortytwoEdit.logWarn("Failed to read world painting variants");
+        }
+        Collections.sort(list);
+        return list;
     }
 
 }

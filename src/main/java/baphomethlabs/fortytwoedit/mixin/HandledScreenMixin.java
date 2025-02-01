@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import baphomethlabs.fortytwoedit.BlackMagick;
+import baphomethlabs.fortytwoedit.ComponentHelper;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.ContainerTooltipData;
 import net.minecraft.client.gui.DrawContext;
@@ -60,7 +60,7 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                 ContainerComponent container = components.get(DataComponentTypes.CONTAINER);
                 int rows = 3;
                 int columns = 9;
-                int[] size = BlackMagick.containerSize(stack.getItem());
+                int[] size = ComponentHelper.containerSize(stack.getItem());
                 if(size[0]>0)
                     rows = size[0];
                 if(size[1]>0)
