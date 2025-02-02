@@ -1819,7 +1819,7 @@ public class ItemBuilder extends GenericScreen {
                             } catch(Exception ex) {}
                         }
                     }
-                }, ComponentHelper.REG_SOUNDS,true));
+                }, ComponentHelper.REGISTRY_SOUND_EVENT.get().toArray(new String[0]),true));
             }
             {
                 final int i = tabNum; final int j = widgets.get(tabNum).size();
