@@ -6,10 +6,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.function.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
 import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
 import baphomethlabs.fortytwoedit.mixin.TranslationStorageAccessor;
@@ -69,6 +68,7 @@ public class ComponentHelper {
 
     public static void clearCacheInfo() {
         cacheInfo.clear();
+        clearAllListCaches();
     }
 
     /**
@@ -119,7 +119,7 @@ public class ComponentHelper {
             if(path.endsWith("components.attribute_modifiers.modifiers[0]"))
                 return (new PathInfo(List.of("type","slot","id","amount","operation"))).withFlag(PathFlag.ATTRIBUTE);
             if(path.endsWith("components.attribute_modifiers.modifiers[0].type"))
-                return (new PathInfo(PathType.STRING, REG_ATTRIBUTES)).asRequired();
+                return (new PathInfo(PathType.STRING, REGISTRY_ATTRIBUTE.get().toArray(new String[0]))).asRequired();
             if(path.endsWith("components.attribute_modifiers.modifiers[0].slot"))
                 return (new PathInfo(PathType.STRING, new String[]{"any","hand","mainhand","offhand","armor","head","chest","legs","feet"}));
             if(path.endsWith("components.attribute_modifiers.modifiers[0].id"))
@@ -147,7 +147,7 @@ public class ComponentHelper {
         }
 
         if(path.endsWith("components.base_color"))
-            return (new PathInfo(PathType.STRING,REG_DYES)).withDesc(Text.of("Used for the banner color of a shield")).withIcon(Items.SHIELD);
+            return (new PathInfo(PathType.STRING,LIST_DYE_COLOR.get().toArray(new String[0]))).withDesc(Text.of("Used for the banner color of a shield")).withIcon(Items.SHIELD);
 
         if(path.contains("components.bees")) {
             if(path.endsWith("components.bees"))
@@ -166,7 +166,7 @@ public class ComponentHelper {
             if(path.endsWith("components.block_entity_data"))
                 return (new PathInfo(List.of("id"))).withIcon(Items.SPAWNER);
             if(path.endsWith("components.block_entity_data.id"))
-                return (new PathInfo(PathType.STRING,REG_ENTITIES)).asRequired();
+                return (new PathInfo(PathType.STRING,REGISTRY_BLOCK_ENTITY_TYPE.get().toArray(new String[0]))).asRequired();
         }
 
         if(path.contains("components.block_state")) {
@@ -306,7 +306,7 @@ public class ComponentHelper {
             if(path.endsWith("components.container_loot"))
                 return (new PathInfo(List.of("loot_table","seed"))).withIcon(Items.CHEST);
             if(path.endsWith("components.container_loot.loot_table"))
-                return (new PathInfo(PathType.STRING,REG_LOOT)).asRequired();
+                return (new PathInfo(PathType.STRING,DATA_LOOT_TABLE.get().toArray(new String[0]))).asRequired().asDynamic();
             if(path.endsWith("components.container_loot.seed"))
                 return PathInfos.LONG;
         }
@@ -385,16 +385,16 @@ public class ComponentHelper {
             if(path.endsWith("components.enchantments"))
                 return (new PathInfo(List.of("levels","show_in_tooltip"))).withIcon(Items.ENCHANTED_BOOK);
             if(path.endsWith("components.enchantments.levels"))
-                return (new PathInfo(getWorldEnchantmentList())).asRequired().asDynamic();
+                return (new PathInfo(DATA_ENCHANTMENT.get())).asRequired().asDynamic();
             if(path.endsWith("components.enchantments.show_in_tooltip"))
                 return PathInfos.TRINARY;
         }
 
         if(path.contains("enchantments.levels.")) {
             int maxLvl = 1;
-            for(String e : getWorldEnchantmentList()) {
+            for(String e : DATA_ENCHANTMENT.get()) {
                 if(path.endsWith("enchantments.levels."+e.replace("minecraft:",""))) {
-                    maxLvl = getWorldEnchantmentMaxLevel(e);
+                    maxLvl = getEnchantmentMaxLevel(e);
                 }
             }
             return (new PathInfo(PathType.INT,BlackMagick.getIntRangeArray(1,maxLvl))).withDesc(Text.of("Max level: "+maxLvl)).asDynamic();
@@ -412,7 +412,7 @@ public class ComponentHelper {
                 "Duration","DurationOnUse","potion_contents","Particle","Radius","RadiusOnUse","RadiusPerTick","ReapplicationDelay","WaitTime",
                 "variant"))).withIcon(Items.BREEZE_SPAWN_EGG);
             if(path.endsWith(".entity_data.id"))
-                return (new PathInfo(PathType.STRING,REG_ENTITIES)).asRequired();
+                return (new PathInfo(PathType.STRING,REGISTRY_ENTITY_TYPE.get().toArray(new String[0]))).asRequired();
             if(path.endsWith(".entity_data.Air"))
                 return PathInfos.SHORT;
             if(path.endsWith(".entity_data.CustomName"))
@@ -466,7 +466,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.active_effects[0].duration") || path.endsWith(".hidden_effect.duration"))
                 return PathInfos.EFFECT_DURATION;
             if(path.endsWith(".entity_data.active_effects[0].id") || path.endsWith(".hidden_effect.id"))
-                return (new PathInfo(PathType.STRING,REG_EFFECTS));
+                return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT.get().toArray(new String[0])));
             if(path.endsWith(".entity_data.active_effects[0].show_icon") || path.endsWith(".hidden_effect.show_icon"))
                 return PathInfos.TRINARY;
             if(path.endsWith(".entity_data.active_effects[0].show_particles") || path.endsWith(".hidden_effect.show_particles"))
@@ -548,7 +548,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.potion_contents"))
                 return PathInfos.POTION_CONTENTS.withGroup(lbl);
             if(path.endsWith(".entity_data.Particle"))
-                return (new PathInfo(PathType.INLINE_COMPOUND,BlackMagick.formatSuggs(REG_PARTICLES,"{type:\"","\"}"))).withDesc(Text.of("Format like {type:\"dust\",color:[.5d,0d,1d],scale:2}")).withGroup(lbl);
+                return (new PathInfo(PathType.INLINE_COMPOUND,BlackMagick.formatSuggs(REGISTRY_PARTICLE_TYPE.get().toArray(new String[0]),"{type:\"","\"}"))).withDesc(Text.of("Format like {type:\"dust\",color:[.5d,0d,1d],scale:2}")).withGroup(lbl);
             if(path.endsWith(".entity_data.Radius"))
                 return PathInfos.FLOAT.withGroup(lbl);
             if(path.endsWith(".entity_data.RadiusOnUse"))
@@ -562,7 +562,7 @@ public class ComponentHelper {
 
             lbl = "Paintings";
             if(path.endsWith(".entity_data.variant"))
-                return (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{BlackMagick.formatStringSuggs(getWorldPaintingList().toArray(new String[0]))},
+                return (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{BlackMagick.formatStringSuggs(DATA_PAINTING_VARIANT.get().toArray(new String[0]))},
                     new String[]{"{asset_id:\"\",width:1,height:1}"}))).withGroup(lbl).withDesc(Text.of("Can be either:\na) NbtString of a painting ID\nb) NbtCompound with {asset_id:\"<variant>\",width:<int>,height:<int>}")).asDynamic();
 
             // when adding new paths, also add keys to entity_data compound
@@ -580,9 +580,9 @@ public class ComponentHelper {
                 return (new PathInfo(PathType.STRING)).withDesc(Text.of("An equipment model at \"assets/<namespace>/models/equipment/<id>\"")); // to_do add suggs
             if(path.endsWith("components.equippable.allowed_entities"))
                 return (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{
-                    BlackMagick.formatStringSuggs(BlackMagick.joinCommandSuggs(new String[][]{REG_ENTITIES,REG_ENTITYTAGS},null))},
+                    BlackMagick.formatStringSuggs(BlackMagick.joinCommandSuggs(new String[][]{REGISTRY_ENTITY_TYPE.get().toArray(new String[0]),REG_ENTITYTAGS},null))},
                     new String[]{"[\"skeleton\",\"zombie\"]"})))
-                    .withDesc(Text.of("Can be either:\na) NbtString of an entity ID or entity tag\nb) NbtList of entity ID NbtStrings"));
+                    .withDesc(Text.of("Can be either:\na) NbtString of an entity ID or entity tag\nb) NbtList of entity ID NbtStrings")).asDynamic();
             if(path.endsWith("components.equippable.dispensable"))
                 return PathInfos.TRINARY.withDesc(Text.of("Defaults to true"));
             if(path.endsWith("components.equippable.swappable"))
@@ -652,7 +652,7 @@ public class ComponentHelper {
             return PathInfos.UNIT.withIcon(Items.COMMAND_BLOCK);
 
         if(path.endsWith("components.instrument"))
-            return (new PathInfo(PathType.STRING,getWorldInstrumentList().toArray(new String[0]))).withIcon(Items.GOAT_HORN).asDynamic();
+            return (new PathInfo(PathType.STRING,DATA_INSTRUMENT.get().toArray(new String[0]))).withIcon(Items.GOAT_HORN).asDynamic();
 
         if(path.endsWith("components.intangible_projectile"))
             return PathInfos.UNIT.withIcon(Items.ARROW);
@@ -667,7 +667,7 @@ public class ComponentHelper {
             if(path.endsWith("components.jukebox_playable"))
                 return (new PathInfo(List.of("song","show_in_tooltip"))).withIcon(Items.MUSIC_DISC_MELLOHI);
             if(path.endsWith("components.jukebox_playable.song"))
-                return (new PathInfo(PathType.STRING,getWorldJukeboxList().toArray(new String[0]))).asRequired().asDynamic();
+                return (new PathInfo(PathType.STRING,DATA_JUKEBOX_SONG.get().toArray(new String[0]))).asRequired().asDynamic();
             if(path.endsWith("components.jukebox_playable.show_in_tooltip"))
                 return PathInfos.TRINARY;
         }
@@ -676,7 +676,7 @@ public class ComponentHelper {
             if(path.endsWith("components.lock"))
                 return (new PathInfo(List.of("components","count","items","predicates"))).withIcon(Items.CHEST);
             if(path.endsWith("components.lock.components"))
-                return (new PathInfo(List.of(REG_COMPONENTS))).withDesc(Text.of("Exact components to match"));
+                return (new PathInfo(List.of(REGISTRY_DATA_COMPONENT_TYPE.get().toArray(new String[0])))).withDesc(Text.of("Exact components to match"));
             if(path.endsWith("components.lock.count"))
                 return (new PathInfo(PathType.DEFAULT,new String[]{"1","{min:1,max:2}"})).withDesc(Text.of("Can be either:\na) NbtInt of exact count\nb) NbtCompound containing min, max, or both to test a range"));
             if(path.endsWith("components.lock.items"))
@@ -742,7 +742,7 @@ public class ComponentHelper {
             if(path.endsWith(".potion_contents"))
                 return PathInfos.POTION_CONTENTS.withIcon(Items.SPLASH_POTION);
             if(path.endsWith(".potion_contents.potion"))
-                return (new PathInfo(PathType.STRING,REG_EFFECTS)).withDesc(Text.of("Potion base before custom_color and custom_effects")); // to_do add potion variants (strong, etc)
+                return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT.get().toArray(new String[0]))).withDesc(Text.of("Potion base before custom_color and custom_effects")); // to_do add potion variants (strong, etc)
             if(path.endsWith(".potion_contents.custom_color"))
                 return PathInfos.DECIMAL_COLOR;
             if(path.endsWith(".potion_contents.custom_effects"))
@@ -750,7 +750,7 @@ public class ComponentHelper {
             if(path.endsWith(".potion_contents.custom_effects[0]"))
                 return PathInfos.EFFECT_NODE;
             if(path.endsWith(".potion_contents.custom_effects[0].id"))
-                return (new PathInfo(PathType.STRING,REG_EFFECTS)).asRequired();
+                return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT.get().toArray(new String[0]))).asRequired();
             if(path.endsWith(".potion_contents.custom_effects[0].amplifier"))
                 return PathInfos.EFFECT_AMPLIFIER;
             if(path.endsWith(".potion_contents.custom_effects[0].duration"))
@@ -808,7 +808,7 @@ public class ComponentHelper {
             if(path.endsWith("components.stored_enchantments"))
                 return (new PathInfo(List.of("levels","show_in_tooltip"))).withIcon(Items.ENCHANTED_BOOK);
             if(path.endsWith("components.stored_enchantments.levels"))
-                return (new PathInfo(getWorldEnchantmentList())).asRequired().asDynamic();
+                return (new PathInfo(DATA_ENCHANTMENT.get())).asRequired().asDynamic();
             if(path.endsWith("components.stored_enchantments.show_in_tooltip"))
                 return PathInfos.TRINARY;
         }
@@ -819,7 +819,7 @@ public class ComponentHelper {
             if(path.endsWith("components.suspicious_stew_effects[0]"))
                 return (new PathInfo(List.of("id","duration"))).withFlag(PathFlag.EFFECT);
             if(path.endsWith("components.suspicious_stew_effects[0].id"))
-                return (new PathInfo(PathType.STRING,REG_EFFECTS)).asRequired();
+                return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT.get().toArray(new String[0]))).asRequired();
             if(path.endsWith("components.suspicious_stew_effects[0].duration"))
                 return PathInfos.EFFECT_DURATION;
         }
@@ -852,9 +852,9 @@ public class ComponentHelper {
             if(path.endsWith("components.trim"))
                 return (new PathInfo(List.of("pattern","material","show_in_tooltip"))).withIcon(Items.DIAMOND_CHESTPLATE);
             if(path.endsWith("components.trim.pattern"))
-                return (new PathInfo(PathType.STRING,new String[]{"bolt","coast","dune","eye","flow","host","raiser","rib","sentry","shaper","silence","snout","spire","tide","vex","ward","wayfinder","wild"})).asRequired();
+                return (new PathInfo(PathType.STRING,DATA_TRIM_PATTERN.get().toArray(new String[0]))).asRequired();
             if(path.endsWith("components.trim.material"))
-                return (new PathInfo(PathType.STRING,new String[]{"amethyst","copper","diamond","emerald","gold","iron","lapis","netherite","quartz","redstone"})).asRequired();
+                return (new PathInfo(PathType.STRING,DATA_TRIM_MATERIAL.get().toArray(new String[0]))).asRequired();
             if(path.endsWith("components.trim.show_in_tooltip"))
                 return PathInfos.TRINARY;
         }
@@ -913,13 +913,13 @@ public class ComponentHelper {
         }
 
         if(path.equals("id") || path.endsWith(".id"))
-            return (new PathInfo(PathType.STRING,REG_ITEMS)).asRequired().withIcon(Items.STONE);
+            return (new PathInfo(PathType.STRING,REGISTRY_ITEM.get().toArray(new String[0]))).asRequired().withIcon(Items.STONE);
 
         if(path.equals("count") || path.endsWith(".count"))
             return PathInfos.ITEM_COUNT.withIcon(Items.STONE);
 
         if(path.equals("components") || path.endsWith(".components"))
-            return (new PathInfo(List.of(REG_COMPONENTS)));
+            return (new PathInfo(List.of(REGISTRY_DATA_COMPONENT_TYPE.get().toArray(new String[0]))));
 
         FortytwoEdit.logWarn("No PathInfo found for path: "+path);
         return PathInfos.UNKNOWN;
@@ -1249,26 +1249,67 @@ public class ComponentHelper {
         private static final PathInfo EFFECT_DURATION = (new PathInfo(PathType.INT,new String[]{"-1","1"})).withDesc(Text.of("Duration in ticks or -1 for infinity"));
         private static final PathInfo EFFECT_AMPLIFIER = (new PathInfo(PathType.BYTE,new String[]{"0","255"})).withDesc(Text.of("Amplifier 0-255 gives effect level 1-256"));
 
-        private static PathInfo CACHE_BLOCK_PREDICATE_BLOCKS = null;
         private static PathInfo getBlockPredicateBlocks() {
-            if(CACHE_BLOCK_PREDICATE_BLOCKS == null)
-                CACHE_BLOCK_PREDICATE_BLOCKS = (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{
-                    BlackMagick.formatStringSuggs(BlackMagick.joinCommandSuggs(new String[][]{REG_BLOCKS,REG_BLOCKTAGS},null))},
-                    new String[]{"[\"dirt\",\"stone\"]"})))
-                    .withDesc(Text.of("Can be either:\na) NbtString of a block ID or block tag\nb) NbtList of block ID NbtStrings"));
-            return CACHE_BLOCK_PREDICATE_BLOCKS;
+            return (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{
+                BlackMagick.formatStringSuggs(BlackMagick.joinCommandSuggs(new String[][]{REGISTRY_BLOCK.get().toArray(new String[0]),REG_BLOCKTAGS},null))},
+                new String[]{"[\"dirt\",\"stone\"]"})))
+                .withDesc(Text.of("Can be either:\na) NbtString of a block ID or block tag\nb) NbtList of block ID NbtStrings")).asDynamic();
         }
 
-        private static PathInfo CACHE_ITEM_PREDICATE_ITEMS = null;
         private static PathInfo getItemPredicateItems() {
-            if(CACHE_ITEM_PREDICATE_ITEMS == null)
-                CACHE_ITEM_PREDICATE_ITEMS = (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{
-                    BlackMagick.formatStringSuggs(BlackMagick.joinCommandSuggs(new String[][]{REG_ITEMS,REG_ITEMTAGS},null))},
-                    new String[]{"[\"diamond\",\"gold_ingot\"]"})))
-                    .withDesc(Text.of("Can be either:\na) NbtString of an item ID or item tag\nb) NbtList of item ID NbtStrings"));
-            return CACHE_ITEM_PREDICATE_ITEMS;
+            return (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{
+                BlackMagick.formatStringSuggs(BlackMagick.joinCommandSuggs(new String[][]{REGISTRY_ITEM.get().toArray(new String[0]),REG_ITEMTAGS},null))},
+                new String[]{"[\"diamond\",\"gold_ingot\"]"})))
+                .withDesc(Text.of("Can be either:\na) NbtString of an item ID or item tag\nb) NbtList of item ID NbtStrings")).asDynamic();
         }
 
+    }
+
+
+    private static final Map<String,List<String>> STATIC_LIST_CACHES = Maps.newHashMap();
+    private static final Map<String,List<String>> DYNAMIC_LIST_CACHES = Maps.newHashMap();
+    private static final Map<String,Supplier<List<String>>> SUGGS_LIST_METHODS = Maps.newHashMap();
+
+    public static void clearAllListCaches() {
+        STATIC_LIST_CACHES.clear();
+        clearDynamicListCaches();
+    }
+    public static void clearDynamicListCaches() {
+        DYNAMIC_LIST_CACHES.clear();
+    }
+
+    public static void runAllListMethods() {
+        clearAllListCaches();
+        int successCount = 0;
+        int totalCount = 0;
+        for(String list : SUGGS_LIST_METHODS.keySet()) {
+            if(SUGGS_LIST_METHODS.get(list).get().isEmpty())
+                FortytwoEdit.logWarn("Unable to fetch suggestions list: "+list);
+            else
+                successCount++;
+            totalCount++;
+        }
+        FortytwoEdit.logInfo("Loaded "+successCount+"/"+totalCount+" suggestions lists");
+    }
+
+    protected static List<String> getStaticList(String name) {
+        if(STATIC_LIST_CACHES.containsKey(name))
+            return STATIC_LIST_CACHES.get(name);
+        List<String> list = Lists.newArrayList();
+        STATIC_LIST_CACHES.put(name,list);
+        return list;
+    }
+    protected static List<String> getDynamicList(String name) {
+        if(DYNAMIC_LIST_CACHES.containsKey(name))
+            return DYNAMIC_LIST_CACHES.get(name);
+        List<String> list = Lists.newArrayList();
+        DYNAMIC_LIST_CACHES.put(name,list);
+        return list;
+    }
+
+    protected static Supplier<List<String>> registerSuggsList(String list, Supplier<List<String>> method) {
+        SUGGS_LIST_METHODS.put(list, method);
+        return method;
     }
 
 
@@ -1292,7 +1333,12 @@ public class ComponentHelper {
         return states;
     }
 
-    public static int getWorldEnchantmentMaxLevel(String key) {
+    /**
+     * 
+     * @param key an enchantment ID
+     * @return the max level for the enchantment, or 1 if unknown
+     */
+    public static int getEnchantmentMaxLevel(String key) {
         int max = 1;
         try {
             final MinecraftClient client = MinecraftClient.getInstance();
@@ -1312,7 +1358,7 @@ public class ComponentHelper {
      * @param item
      * @return int array with [rows,columns] or [-1,-1] depending on storage size of blockentity for item
      */
-    public static int[] containerSize(Item item) {
+    public static int[] getContainerSize(Item item) {
 
         // find items by searching net.minecraft.item.Items for DataComponentTypes.CONTAINER
         // manually enter rows/cols based on ingame gui appearance
@@ -1352,29 +1398,353 @@ public class ComponentHelper {
     }
 
 
-    public static final String[] REG_ATTRIBUTES = getCacheAttributes();
-    private static String[] getCacheAttributes() {
-        List<String> list = Lists.newArrayList();;
-        Registries.ATTRIBUTE.forEach(a -> {
-            list.add(Registries.ATTRIBUTE.getId(a).toString());
-        });
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
+    public static final Supplier<List<String>> REGISTRY_ATTRIBUTE = registerSuggsList("REGISTRY_ATTRIBUTE", () -> {
+        List<String> list = getStaticList("REGISTRY_ATTRIBUTE");
+        if(list.isEmpty()) {
+            Registries.ATTRIBUTE.forEach(i -> {
+                list.add(Registries.ATTRIBUTE.getId(i).toString());
+            });
+            Collections.sort(list);
+        }
+        return list;
+    });
 
-    public static final String[] REG_BLOCKS = getCacheBlocks();
-    private static String[] getCacheBlocks() {
-        List<String> list = Lists.newArrayList();;
-        Registries.BLOCK.forEach(b -> {
-            list.add(Registries.BLOCK.getId(b).toString());
-        });
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
+    public static final Supplier<List<String>> REGISTRY_BLOCK = registerSuggsList("REGISTRY_BLOCK", () -> {
+        List<String> list = getStaticList("REGISTRY_BLOCK");
+        if(list.isEmpty()) {
+            Registries.BLOCK.forEach(i -> {
+                list.add(Registries.BLOCK.getId(i).toString());
+            });
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> REGISTRY_BLOCK_ENTITY_TYPE = registerSuggsList("REGISTRY_BLOCK_ENTITY_TYPE", () -> {
+        List<String> list = getStaticList("REGISTRY_BLOCK_ENTITY_TYPE");
+        if(list.isEmpty()) {
+            Registries.BLOCK_ENTITY_TYPE.forEach(i -> {
+                list.add(Registries.BLOCK_ENTITY_TYPE.getId(i).toString());
+            });
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> REGISTRY_DATA_COMPONENT_TYPE = registerSuggsList("REGISTRY_DATA_COMPONENT_TYPE", () -> {
+        List<String> list = getStaticList("REGISTRY_DATA_COMPONENT_TYPE");
+        if(list.isEmpty()) {
+            Registries.DATA_COMPONENT_TYPE.forEach(i -> {
+                if(!i.shouldSkipSerialization())
+                    list.add(Registries.DATA_COMPONENT_TYPE.getId(i).toString());
+            });
+            Collections.sort(list);
+
+            for(String k : list) {
+                // this will log warnings if ComponentHelper doesn't include a vanilla component
+                getPathInfo("components."+k);
+            }
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> REGISTRY_ITEM = registerSuggsList("REGISTRY_ITEM", () -> {
+        List<String> list = getStaticList("REGISTRY_ITEM");
+        if(list.isEmpty()) {
+            Registries.ITEM.forEach(i -> {
+                list.add(Registries.ITEM.getId(i).toString());
+            });
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> REGISTRY_STATUS_EFFECT = registerSuggsList("REGISTRY_STATUS_EFFECT", () -> {
+        List<String> list = getStaticList("REGISTRY_STATUS_EFFECT");
+        if(list.isEmpty()) {
+            Registries.STATUS_EFFECT.forEach(i -> {
+                list.add(Registries.STATUS_EFFECT.getId(i).toString());
+            });
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> REGISTRY_ENTITY_TYPE = registerSuggsList("REGISTRY_ENTITY_TYPE", () -> {
+        List<String> list = getStaticList("REGISTRY_ENTITY_TYPE");
+        if(list.isEmpty()) {
+            Registries.ENTITY_TYPE.forEach(i -> {
+                list.add(Registries.ENTITY_TYPE.getId(i).toString());
+            });
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> REGISTRY_PARTICLE_TYPE = registerSuggsList("REGISTRY_PARTICLE_TYPE", () -> {
+        List<String> list = getStaticList("REGISTRY_PARTICLE_TYPE");
+        if(list.isEmpty()) {
+            Registries.PARTICLE_TYPE.forEach(i -> {
+                list.add(Registries.PARTICLE_TYPE.getId(i).toString());
+            });
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+
+    public static final Supplier<List<String>> LIST_DYE_COLOR = registerSuggsList("LIST_DYE_COLOR", () -> {
+        List<String> list = getStaticList("LIST_DYE_COLOR");
+        if(list.isEmpty()) {
+            for(DyeColor i : DyeColor.values())
+                list.add(i.asString());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> LIST_FORMATTING_COLOR = registerSuggsList("LIST_FORMATTING_COLOR", () -> {
+        List<String> list = getStaticList("LIST_FORMATTING_COLOR");
+        if(list.isEmpty()) {
+            for(String i : Formatting.getNames(true, false))
+                if(!i.equals("reset"))
+                    list.add(i);
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> LIST_KEYBIND = registerSuggsList("LIST_KEYBIND", () -> {
+        List<String> list = getStaticList("LIST_KEYBIND");
+        if(list.isEmpty()) {
+            for(String i : KeyBindingAccessor.getKeysList().keySet())
+                if(!i.startsWith("42edit."))
+                    list.add(i);
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> LIST_TRANSLATION_KEY = registerSuggsList("LIST_TRANSLATION_KEY", () -> {
+        List<String> list = getStaticList("LIST_TRANSLATION_KEY");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            List<String> l = Lists.newArrayList();
+            l.add("en_us");
+            TranslationStorage s = TranslationStorage.load(client.getResourceManager(),l,false);
+            for(String i : ((TranslationStorageAccessor)s).getTranslations().keySet())
+                if(!i.startsWith("42edit."))
+                    list.add(i);
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+
+    public static final Supplier<List<String>> DATA_BANNER_PATTERN = registerSuggsList("DATA_BANNER_PATTERN", () -> {
+        List<String> list = getDynamicList("DATA_BANNER_PATTERN");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.BANNER_PATTERN).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_DAMAGE_TYPE = registerSuggsList("DATA_DAMAGE_TYPE", () -> {
+        List<String> list = getDynamicList("DATA_DAMAGE_TYPE");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.DAMAGE_TYPE).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_ENCHANTMENT = registerSuggsList("DATA_ENCHANTMENT", () -> {
+        List<String> list = getDynamicList("DATA_ENCHANTMENT");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_INSTRUMENT = registerSuggsList("DATA_INSTRUMENT", () -> {
+        List<String> list = getDynamicList("DATA_INSTRUMENT");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.INSTRUMENT).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_JUKEBOX_SONG = registerSuggsList("DATA_JUKEBOX_SONG", () -> {
+        List<String> list = getDynamicList("DATA_JUKEBOX_SONG");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.JUKEBOX_SONG).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_LOOT_TABLE = registerSuggsList("DATA_LOOT_TABLE", () -> {//TODO not work
+        List<String> list = getDynamicList("DATA_LOOT_TABLE");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.LOOT_TABLE).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_PAINTING_VARIANT = registerSuggsList("DATA_PAINTING_VARIANT", () -> {
+        List<String> list = getDynamicList("DATA_PAINTING_VARIANT");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.PAINTING_VARIANT).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_RECIPE = registerSuggsList("DATA_RECIPE", () -> {//TODO not work
+        List<String> list = getDynamicList("DATA_RECIPE");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.RECIPE).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_STRUCTURE = registerSuggsList("DATA_STRUCTURE", () -> {//TODO not work
+        List<String> list = getDynamicList("DATA_STRUCTURE");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.STRUCTURE).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_TRIAL_SPAWNER = registerSuggsList("DATA_TRIAL_SPAWNER", () -> {//TODO not work
+        List<String> list = getDynamicList("DATA_TRIAL_SPAWNER");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.TRIAL_SPAWNER).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_TRIM_MATERIAL = registerSuggsList("DATA_TRIM_MATERIAL", () -> {
+        List<String> list = getDynamicList("DATA_TRIM_MATERIAL");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.TRIM_MATERIAL).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_TRIM_PATTERN = registerSuggsList("DATA_TRIM_PATTERN", () -> {
+        List<String> list = getDynamicList("DATA_TRIM_PATTERN");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.TRIM_PATTERN).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> DATA_WOLF_VARIANT = registerSuggsList("DATA_WOLF_VARIANT", () -> {
+        List<String> list = getDynamicList("DATA_WOLF_VARIANT");
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            try {
+                if(client.world != null)
+                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.WOLF_VARIANT).get().getIds())
+                        list.add(i.toString());
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+
+
+    /////////////////////////TODO redo methods
+
+// tags
+// 	    banner_pattern
+// 	    block
+// 	    damage_type
+// 	    enchantment
+// 	    entity_type
+// 	    item
+// 	    painting_variant
+//
+// equipment
+// font
+// items (model definition)
+// sound (test intentionally empty)
+// redo translation to get current lang + en_us keys?
 
     public static final String[] REG_BLOCKTAGS = getCacheBlockTags();
     private static String[] getCacheBlockTags() {
-        List<String> list = Lists.newArrayList();;
+        List<String> list = Lists.newArrayList();
         HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
         VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/block", map::putIfAbsent);
         map.keySet().forEach(t -> {
@@ -1384,46 +1754,9 @@ public class ComponentHelper {
         return list.toArray(new String[0]);
     }
 
-    public static final String[] REG_COMPONENTS = getCacheComponents();
-    private static String[] getCacheComponents() {
-        List<String> list = Lists.newArrayList();;
-        Registries.DATA_COMPONENT_TYPE.forEach(c -> {
-            list.add(Registries.DATA_COMPONENT_TYPE.getId(c).toString());
-        });
-        list.remove("minecraft:creative_slot_lock");
-        list.remove("minecraft:map_post_processing");
-        for(String k : list) {
-            // this will log warnings if ComponentHelper doesn't include a vanilla component
-            getPathInfo("components."+k);
-        }
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    /**
-     * Vanilla dyes as they appear in banner color IDs
-     */
-    public static final String[] REG_DYES = getDyes();
-    private static String[] getDyes() {
-        Set<String> dyes = Sets.newHashSet();
-        for(DyeColor d : DyeColor.values())
-            dyes.add(d.asString());
-        return BlackMagick.sortSet(dyes).toArray(new String[0]);
-    }
-
-    public static final String[] REG_ITEMS = getCacheItems();
-    private static String[] getCacheItems() {
-        List<String> list = Lists.newArrayList();;
-        Registries.ITEM.forEach(i -> {
-            list.add(Registries.ITEM.getId(i).toString());
-        });
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
     public static final String[] REG_ITEMTAGS = getCacheItemTags();
     private static String[] getCacheItemTags() {
-        List<String> list = Lists.newArrayList();;
+        List<String> list = Lists.newArrayList();
         HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
         VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/item", map::putIfAbsent);
         map.keySet().forEach(t -> {
@@ -1433,91 +1766,13 @@ public class ComponentHelper {
         return list.toArray(new String[0]);
     }
 
-    public static final String[] REG_EFFECTS = getCacheEffects();
-    private static String[] getCacheEffects() {
-        List<String> list = Lists.newArrayList();;
-        Registries.STATUS_EFFECT.forEach(e -> {
-            list.add(Registries.STATUS_EFFECT.getId(e).toString());
-        });
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    public static final String[] REG_ENTITIES = getCacheEntities();
-    private static String[] getCacheEntities() {
-        List<String> list = Lists.newArrayList();;
-        Registries.ENTITY_TYPE.forEach(e -> {
-            list.add(Registries.ENTITY_TYPE.getId(e).toString());
-        });
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
     public static final String[] REG_ENTITYTAGS = getCacheEntityTags();
     private static String[] getCacheEntityTags() {
-        List<String> list = Lists.newArrayList();;
+        List<String> list = Lists.newArrayList();
         HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/entity", map::putIfAbsent);
+        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "tags/entity_type", map::putIfAbsent);
         map.keySet().forEach(t -> {
-            list.add("#"+t.toString().replaceFirst("tags/entity/","").replaceFirst(".json",""));
-        });
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    /**
-     * Vanilla formatting colors as they appear in text components "color"
-     */
-    public static final String[] REG_FORMAT_COLORS = getFormatColors();
-    private static String[] getFormatColors() {
-        Set<String> colors = Sets.newHashSet();
-        for(String c : Formatting.getNames(true, false))
-            colors.add(c);
-        return BlackMagick.sortSet(colors).toArray(new String[0]);
-    }
-
-    private static String[] REG_KEYBINDS = null;
-    public static String[] getCacheKeybinds() {
-        if(REG_KEYBINDS == null) {
-            List<String> list = Lists.newArrayList();;
-            List<String> list2 = Lists.newArrayList();;
-
-            for(String k: KeyBindingAccessor.getKeysList().keySet()) {
-                if(k.startsWith("42edit.")) {
-                    list2.add(k);
-                }
-                else
-                    list.add(k);
-            }
-
-            Collections.sort(list);
-            Collections.sort(list2);
-
-            for(String k: list2)
-                list.add(k);
-
-            REG_KEYBINDS = list.toArray(new String[0]);
-        }
-        return REG_KEYBINDS;
-    }
-
-    public static final String[] REG_LOOT = getCacheLootTables();
-    private static String[] getCacheLootTables() {
-        List<String> list = Lists.newArrayList();;
-        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "loot_table", map::putIfAbsent);
-        map.keySet().forEach(l -> {
-            list.add(l.toString().replaceFirst("loot_table/","").replaceFirst(".json",""));
-        });
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    public static final String[] REG_PARTICLES = getCacheParticles();
-    private static String[] getCacheParticles() {
-        List<String> list = Lists.newArrayList();;
-        Registries.PARTICLE_TYPE.forEach(p -> {
-            list.add(Registries.PARTICLE_TYPE.getId(p).toString());
+            list.add("#"+t.toString().replaceFirst("tags/entity_type/","").replaceFirst(".json",""));
         });
         Collections.sort(list);
         return list.toArray(new String[0]);
@@ -1525,122 +1780,12 @@ public class ComponentHelper {
 
     public static final String[] REG_SOUNDS = getCacheSounds();
     private static String[] getCacheSounds() {
-        List<String> list = Lists.newArrayList();;
+        List<String> list = Lists.newArrayList();
         Registries.SOUND_EVENT.forEach(s -> {
             list.add(Registries.SOUND_EVENT.getId(s).toString());
         });
         Collections.sort(list);
         return list.toArray(new String[0]);
-    }
-
-    public static final String[] REG_STRUCTURES = getCacheStructures();
-    private static String[] getCacheStructures() {
-        List<String> list = Lists.newArrayList();;
-        HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-        VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, "minecraft", "structure", map::putIfAbsent);
-        map.keySet().forEach(s -> {
-            list.add(s.toString().replaceFirst("structure/","").replaceFirst(".nbt",""));
-        });
-        Collections.sort(list);
-        return list.toArray(new String[0]);
-    }
-
-    private static String[] REG_TRANSLATIONS = null;
-    public static String[] getCacheTranslations() {
-        if(REG_TRANSLATIONS == null) {
-            List<String> list = Lists.newArrayList();;
-            List<String> list2 = Lists.newArrayList();;
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.getResourceManager() != null) {
-                List<String> l = Lists.newArrayList();;
-                l.add("en_us");
-                TranslationStorage s = TranslationStorage.load(client.getResourceManager(),l,false);
-                for(String t: ((TranslationStorageAccessor)s).getTranslations().keySet()) {
-                    if(t.startsWith("42edit.")) {
-                        list2.add(t);
-                    }
-                    else
-                        list.add(t);
-                }
-            }
-            Collections.sort(list);
-            Collections.sort(list2);
-            for(String k: list2)
-                list.add(k);
-            REG_TRANSLATIONS = list.toArray(new String[0]);
-        }
-        return REG_TRANSLATIONS;
-    }
-
-
-    public static List<String> getWorldBannerPatternList() {
-        List<String> list = new ArrayList<>();
-        try {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null)
-                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.BANNER_PATTERN).get().getIds())
-                    list.add(i.toString());
-        } catch(Exception ex) {
-            FortytwoEdit.logWarn("Failed to read world banner patterns");
-        }
-        Collections.sort(list);
-        return list;
-    }
-
-    public static List<String> getWorldEnchantmentList() {
-        List<String> list = new ArrayList<>();
-        try {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null)
-                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT).get().getIds())
-                    list.add(i.toString());
-        } catch(Exception ex) {
-            FortytwoEdit.logWarn("Failed to read world enchantments");
-        }
-        Collections.sort(list);
-        return list;
-    }
-
-    public static List<String> getWorldInstrumentList() {
-        List<String> list = new ArrayList<>();
-        try {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null)
-                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.INSTRUMENT).get().getIds())
-                    list.add(i.toString());
-        } catch(Exception ex) {
-            FortytwoEdit.logWarn("Failed to read world instruments");
-        }
-        Collections.sort(list);
-        return list;
-    }
-
-    public static List<String> getWorldJukeboxList() {
-        List<String> list = new ArrayList<>();
-        try {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null)
-                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.JUKEBOX_SONG).get().getIds())
-                    list.add(i.toString());
-        } catch(Exception ex) {
-            FortytwoEdit.logWarn("Failed to read world jukebox songs");
-        }
-        Collections.sort(list);
-        return list;
-    }
-
-    public static List<String> getWorldPaintingList() {
-        List<String> list = new ArrayList<>();
-        try {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null)
-                for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.PAINTING_VARIANT).get().getIds())
-                    list.add(i.toString());
-        } catch(Exception ex) {
-            FortytwoEdit.logWarn("Failed to read world painting variants");
-        }
-        Collections.sort(list);
-        return list;
     }
 
 }

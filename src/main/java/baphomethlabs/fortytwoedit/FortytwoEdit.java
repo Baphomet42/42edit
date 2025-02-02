@@ -531,6 +531,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
         FileTools.scanModFiles();
 
+        ComponentHelper.REGISTRY_DATA_COMPONENT_TYPE.get(); // used to show log errors
+
         ComponentHelper.clearCacheInfo(); // now that registries have been set, clear any caches that may have had empty lists
 
         logInfo("Client initialized");
@@ -786,6 +788,7 @@ public class FortytwoEdit implements ClientModInitializer {
         getSavedItems(); // used to show log errors
 
         ComponentHelper.clearCacheInfo();
+        ComponentHelper.runAllListMethods();
 
         clearCapes();
         setCustomSkin(null);

@@ -86,6 +86,7 @@ public class ItemBuilder extends GenericScreen {
     private boolean firstInit = true;
     protected static final int ROW_LEFT = 15;
     protected static final int ROW_RIGHT = 219;
+    private static boolean runSuggsTest = true;
     protected ItemStack selItem = ItemStack.EMPTY;
     protected ItemStack selItemOff = ItemStack.EMPTY;
     protected static List<List<String>> cacheStates = new ArrayList<>();
@@ -214,9 +215,15 @@ public class ItemBuilder extends GenericScreen {
                     poseSliders.get(poseSliders.size()-1).add(Sets.newHashSet());
             }
 
+            ComponentHelper.clearDynamicListCaches();
             firstInit = false;
         }
         pauseSaveScroll = false;
+
+        if(runSuggsTest) {
+            runSuggsTest = false;
+            ComponentHelper.runAllListMethods();
+        }
 
         if(!tabs[tab].hideTabs()) {
 
@@ -1844,7 +1851,8 @@ public class ItemBuilder extends GenericScreen {
                 final int i = tabNum; final int j = widgets.get(tabNum).size();
                 widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("Symbol")},new int[]{40,55,49,55},
                 new String[]{"Create banner(s) with preset designs\n\nChar Color | Chars | Base Color"+"\n\n"+BANNER_PRESET_CHARS},new String[][]
-                {ComponentHelper.REG_DYES,BANNER_CHAR_LIST,ComponentHelper.REG_DYES},false,btn -> {
+                {ComponentHelper.LIST_DYE_COLOR.get().toArray(new String[0]),BANNER_CHAR_LIST,ComponentHelper.LIST_DYE_COLOR.get().toArray(new String[0])},
+                false,btn -> {
                     String[] inps = widgets.get(i).get(j).btn();
                     if(client.player.getAbilities().creativeMode) {
 
@@ -1875,7 +1883,8 @@ public class ItemBuilder extends GenericScreen {
                                     chars = chars.substring(1);
                             }
                             if(!items.isEmpty())
-                                bannerStack = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:bundle,components:{bundle_contents:"+BlackMagick.nbtToString(items)+"}}"));
+                                bannerStack = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:bundle,components:{bundle_contents:"
+                                    +BlackMagick.nbtToString(items)+"}}"));
                         }
 
                         if(!bannerStack.isEmpty()) {
@@ -2230,7 +2239,7 @@ public class ItemBuilder extends GenericScreen {
                     widgets.get(tabNum).add(new RowWidget("components"));
                 }
                 List<String> unset = new ArrayList<String>();
-                for(String c : ComponentHelper.REG_COMPONENTS)
+                for(String c : ComponentHelper.REGISTRY_DATA_COMPONENT_TYPE.get().toArray(new String[0]))
                 {
                     if(ComponentHelper.hasComponent(selItem.getComponents(),c))
                         widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
@@ -2292,7 +2301,7 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<2; i++) {
                 ItemStack current = i==0 ? client.player.getMainHandStack() : client.player.getOffHandStack();
                 if(current != null && !current.isEmpty()) {
-                    int[] size = ComponentHelper.containerSize(current.getItem());
+                    int[] size = ComponentHelper.getContainerSize(current.getItem());
 
                     if(current.isOf(Items.BUNDLE)) {
                         {
@@ -2859,9 +2868,9 @@ public class ItemBuilder extends GenericScreen {
                         bannerPat = bannerNbt.getString("pattern");
 
                     List<String> bannerVals = new ArrayList<>();
-                    for(String c : ComponentHelper.REG_DYES)
+                    for(String c : ComponentHelper.LIST_DYE_COLOR.get())
                         bannerVals.add(c);
-                    for(String b : ComponentHelper.getWorldBannerPatternList())
+                    for(String b : ComponentHelper.DATA_BANNER_PATTERN.get())
                         bannerVals.add(b);
 
                     int row=0;
@@ -3026,7 +3035,8 @@ public class ItemBuilder extends GenericScreen {
                         updateTextComponentEffect();
                         if(textComponentEffectMode == 1) {
                             if(textComponentEffects[7]==1 || textComponentEffects[7]==2) {
-                                String[] suggestions = textComponentEffects[7]==1 ? ComponentHelper.getCacheKeybinds() : ComponentHelper.getCacheTranslations();
+                                String[] suggestions = textComponentEffects[7]==1 ? ComponentHelper.LIST_KEYBIND.get().toArray(new String[0]) :
+                                    ComponentHelper.LIST_TRANSLATION_KEY.get().toArray(new String[0]);
                                 suggsOnChanged(w,suggestions,null);
                             }
                             else
@@ -3114,13 +3124,13 @@ public class ItemBuilder extends GenericScreen {
                     w2.setChangedListener(value -> {
                         if(textComponentEffects[6]==1) {
                             boolean validColor = false;
-                            for(String f : ComponentHelper.REG_FORMAT_COLORS)
+                            for(String f : ComponentHelper.LIST_FORMATTING_COLOR.get())
                                 if(f.equals(value))
                                     validColor = true;
 
                             if(validColor)
                                 textComponentLastColor = value;
-                            suggsOnChanged(w2,ComponentHelper.REG_FORMAT_COLORS,null);
+                            suggsOnChanged(w2,ComponentHelper.LIST_FORMATTING_COLOR.get().toArray(new String[0]),null);
                             updateTextComponentEffect();
                         }
                         else
