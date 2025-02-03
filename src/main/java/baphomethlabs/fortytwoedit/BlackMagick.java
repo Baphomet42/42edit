@@ -280,7 +280,7 @@ public class BlackMagick {
                 comps = BlackMagick.validCompound(BlackMagick.nbtFromString("{"+compsString+"}"));
 
             Set<String> unusedComps = Sets.newHashSet();
-            for(String comp : ComponentHelper.REGISTRY_DATA_COMPONENT_TYPE.get())
+            for(String comp : ComponentHelper.LIST_DATA_COMPONENT_TYPE.get())
                 unusedComps.add(comp);
             for(String comp : comps.getKeys()) {
                 unusedComps.remove(comp);

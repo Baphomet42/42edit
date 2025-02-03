@@ -2239,7 +2239,7 @@ public class ItemBuilder extends GenericScreen {
                     widgets.get(tabNum).add(new RowWidget("components"));
                 }
                 List<String> unset = new ArrayList<String>();
-                for(String c : ComponentHelper.REGISTRY_DATA_COMPONENT_TYPE.get().toArray(new String[0]))
+                for(String c : ComponentHelper.LIST_DATA_COMPONENT_TYPE.get().toArray(new String[0]))
                 {
                     if(ComponentHelper.hasComponent(selItem.getComponents(),c))
                         widgets.get(tabNum).add(new RowWidgetComponent("components."+c));

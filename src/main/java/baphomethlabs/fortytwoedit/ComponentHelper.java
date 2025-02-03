@@ -29,6 +29,8 @@ import net.minecraft.item.ToolMaterial;
 import net.minecraft.item.consume.UseAction;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.resource.InputSupplier;
 import net.minecraft.resource.ResourceType;
@@ -68,11 +70,12 @@ public class ComponentHelper {
         return false;
     }
 
-    private static final Map<String,PathInfo> cacheInfo = Maps.newHashMap();
+    private static final Map<String,PathInfo> pathInfoCaches = Maps.newHashMap();
 
     public static void clearCacheInfo() {
-        cacheInfo.clear();
-        clearAllListCaches();
+        pathInfoCaches.clear();
+        STATIC_LIST_CACHES.clear();
+        clearDynamicListCaches();
     }
 
     /**
@@ -105,11 +108,11 @@ public class ComponentHelper {
             path = superPath.replace("minecraft:","");
         }
 
-        if(cacheInfo.containsKey(path))
-            return cacheInfo.get(path);
+        if(pathInfoCaches.containsKey(path))
+            return pathInfoCaches.get(path);
         PathInfo pi = getNewPathInfo(path);
         if(!pi.dynamic())
-            cacheInfo.put(path,pi);
+            pathInfoCaches.put(path,pi);
         return pi;
     }
 
@@ -680,7 +683,7 @@ public class ComponentHelper {
             if(path.endsWith("components.lock"))
                 return (new PathInfo(List.of("components","count","items","predicates"))).withIcon(Items.CHEST);
             if(path.endsWith("components.lock.components"))
-                return (new PathInfo(List.of(REGISTRY_DATA_COMPONENT_TYPE.get().toArray(new String[0])))).withDesc(Text.of("Exact components to match"));
+                return (new PathInfo(List.of(LIST_DATA_COMPONENT_TYPE.get().toArray(new String[0])))).withDesc(Text.of("Exact components to match"));
             if(path.endsWith("components.lock.count"))
                 return (new PathInfo(PathType.DEFAULT,new String[]{"1","{min:1,max:2}"})).withDesc(Text.of("Can be either:\na) NbtInt of exact count\nb) NbtCompound containing min, max, or both to test a range"));
             if(path.endsWith("components.lock.items"))
@@ -795,7 +798,7 @@ public class ComponentHelper {
             if(path.endsWith("components.recipes"))
                 return PathInfos.LIST_STRING.withIcon(Items.KNOWLEDGE_BOOK);
             if(path.endsWith("components.recipes[0]"))
-                return PathInfos.DEFAULT;
+                return (new PathInfo(PathType.STRING,DATA_RECIPE.get().toArray(new String[0]))).asDynamic();
         }
 
         if(path.endsWith("components.repair_cost"))
@@ -872,7 +875,7 @@ public class ComponentHelper {
             if(path.endsWith("components.use_cooldown.seconds"))
                 return (new PathInfo(PathType.FLOAT,new String[]{"1.0f"})).asRequired();
             if(path.endsWith("components.use_cooldown.cooldown_group"))
-                return (new PathInfo(PathType.STRING)).withDesc(Text.of("Custom namespaced ID or namespaced item ID"));
+                return (new PathInfo(PathType.STRING,REGISTRY_ITEM.get().toArray(new String[0]))).withDesc(Text.of("Custom namespaced ID or namespaced item ID"));
         }
 
         if(path.endsWith("components.use_remainder"))
@@ -923,7 +926,7 @@ public class ComponentHelper {
             return PathInfos.ITEM_COUNT.withIcon(Items.STONE);
 
         if(path.equals("components") || path.endsWith(".components"))
-            return (new PathInfo(List.of(REGISTRY_DATA_COMPONENT_TYPE.get().toArray(new String[0]))));
+            return (new PathInfo(List.of(LIST_DATA_COMPONENT_TYPE.get().toArray(new String[0]))));
 
         FortytwoEdit.logWarn("No PathInfo found for path: "+path);
         return PathInfos.UNKNOWN;
@@ -1274,16 +1277,12 @@ public class ComponentHelper {
     private static final Map<String,List<String>> DYNAMIC_LIST_CACHES = Maps.newHashMap();
     private static final Map<String,Supplier<List<String>>> SUGGS_LIST_METHODS = Maps.newHashMap();
 
-    public static void clearAllListCaches() {
-        STATIC_LIST_CACHES.clear();
-        clearDynamicListCaches();
-    }
     public static void clearDynamicListCaches() {
         DYNAMIC_LIST_CACHES.clear();
     }
 
     public static void runAllListMethods() {
-        clearAllListCaches();
+        clearCacheInfo();
         int successCount = 0;
         int totalCount = 0;
         for(String list : SUGGS_LIST_METHODS.keySet()) {
@@ -1351,9 +1350,7 @@ public class ComponentHelper {
                 if(ench != null)
                     max = ench.getMaxLevel();
             }
-        } catch(Exception ex) {
-            FortytwoEdit.logWarn("Failed to read world enchantments");
-        }
+        } catch(Exception ex) {}
         return max;
     }
 
@@ -1402,125 +1399,6 @@ public class ComponentHelper {
     }
 
 
-    // static registry lists
-
-    public static final Supplier<List<String>> REGISTRY_ATTRIBUTE = registerSuggsList("REGISTRY_ATTRIBUTE", () -> {
-        List<String> list = getStaticList("REGISTRY_ATTRIBUTE");
-        if(list.isEmpty()) {
-            Registries.ATTRIBUTE.forEach(i -> {
-                list.add(Registries.ATTRIBUTE.getId(i).toString());
-            });
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> REGISTRY_BLOCK = registerSuggsList("REGISTRY_BLOCK", () -> {
-        List<String> list = getStaticList("REGISTRY_BLOCK");
-        if(list.isEmpty()) {
-            Registries.BLOCK.forEach(i -> {
-                list.add(Registries.BLOCK.getId(i).toString());
-            });
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> REGISTRY_BLOCK_ENTITY_TYPE = registerSuggsList("REGISTRY_BLOCK_ENTITY_TYPE", () -> {
-        List<String> list = getStaticList("REGISTRY_BLOCK_ENTITY_TYPE");
-        if(list.isEmpty()) {
-            Registries.BLOCK_ENTITY_TYPE.forEach(i -> {
-                list.add(Registries.BLOCK_ENTITY_TYPE.getId(i).toString());
-            });
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> REGISTRY_CONSUME_EFFECT_TYPE = registerSuggsList("REGISTRY_CONSUME_EFFECT_TYPE", () -> {
-        List<String> list = getStaticList("REGISTRY_CONSUME_EFFECT_TYPE");
-        if(list.isEmpty()) {
-            Registries.CONSUME_EFFECT_TYPE.forEach(i -> {
-                list.add(Registries.CONSUME_EFFECT_TYPE.getId(i).toString());
-            });
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> REGISTRY_DATA_COMPONENT_TYPE = registerSuggsList("REGISTRY_DATA_COMPONENT_TYPE", () -> {
-        List<String> list = getStaticList("REGISTRY_DATA_COMPONENT_TYPE");
-        if(list.isEmpty()) {
-            Registries.DATA_COMPONENT_TYPE.forEach(i -> {
-                if(!i.shouldSkipSerialization())
-                    list.add(Registries.DATA_COMPONENT_TYPE.getId(i).toString());
-            });
-            Collections.sort(list);
-
-            for(String k : list) {
-                // this will log warnings if ComponentHelper doesn't include a vanilla component
-                getPathInfo("components."+k);
-            }
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> REGISTRY_ITEM = registerSuggsList("REGISTRY_ITEM", () -> {
-        List<String> list = getStaticList("REGISTRY_ITEM");
-        if(list.isEmpty()) {
-            Registries.ITEM.forEach(i -> {
-                list.add(Registries.ITEM.getId(i).toString());
-            });
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> REGISTRY_SOUND_EVENT = registerSuggsList("REGISTRY_SOUND_EVENT", () -> {
-        List<String> list = getStaticList("REGISTRY_SOUND_EVENT");
-        if(list.isEmpty()) {
-            Registries.SOUND_EVENT.forEach(i -> {
-                list.add(Registries.SOUND_EVENT.getId(i).toString());
-            });
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> REGISTRY_STATUS_EFFECT = registerSuggsList("REGISTRY_STATUS_EFFECT", () -> {
-        List<String> list = getStaticList("REGISTRY_STATUS_EFFECT");
-        if(list.isEmpty()) {
-            Registries.STATUS_EFFECT.forEach(i -> {
-                list.add(Registries.STATUS_EFFECT.getId(i).toString());
-            });
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> REGISTRY_ENTITY_TYPE = registerSuggsList("REGISTRY_ENTITY_TYPE", () -> {
-        List<String> list = getStaticList("REGISTRY_ENTITY_TYPE");
-        if(list.isEmpty()) {
-            Registries.ENTITY_TYPE.forEach(i -> {
-                list.add(Registries.ENTITY_TYPE.getId(i).toString());
-            });
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> REGISTRY_PARTICLE_TYPE = registerSuggsList("REGISTRY_PARTICLE_TYPE", () -> {
-        List<String> list = getStaticList("REGISTRY_PARTICLE_TYPE");
-        if(list.isEmpty()) {
-            Registries.PARTICLE_TYPE.forEach(i -> {
-                list.add(Registries.PARTICLE_TYPE.getId(i).toString());
-            });
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-
     // static hardcoded lists
 
     public static final Supplier<List<String>> LIST_ATTRIBUTE_MODIFIER_SLOT = registerSuggsList("LIST_ATTRIBUTE_MODIFIER_SLOT", () -> {
@@ -1528,6 +1406,18 @@ public class ComponentHelper {
         if(list.isEmpty()) {
             for(AttributeModifierSlot i : AttributeModifierSlot.values())
                 list.add(i.asString());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final Supplier<List<String>> LIST_DATA_COMPONENT_TYPE = registerSuggsList("LIST_DATA_COMPONENT_TYPE", () -> {
+        List<String> list = getStaticList("LIST_DATA_COMPONENT_TYPE");
+        if(list.isEmpty()) {
+            Registries.DATA_COMPONENT_TYPE.forEach(i -> {
+                if(!i.shouldSkipSerialization())
+                    list.add(Registries.DATA_COMPONENT_TYPE.getId(i).toString());
+            });
             Collections.sort(list);
         }
         return list;
@@ -1611,272 +1501,190 @@ public class ComponentHelper {
     });
 
 
-    // dynamic data lists
+    // static registry lists
 
-    public static final Supplier<List<String>> DATA_BANNER_PATTERN = registerSuggsList("DATA_BANNER_PATTERN", () -> {
-        List<String> list = getDynamicList("DATA_BANNER_PATTERN");
+    private static List<String> getRegistryIfEmpty(List<String> list, Registry<?> registryRef) {
         if(list.isEmpty()) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            try {
-                if(client.world != null)
-                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.BANNER_PATTERN).get().getIds())
-                        list.add(i.toString());
-            } catch(Exception ex) {}
+            for(Identifier i : registryRef.getIds())
+                list.add(i.toString());
             Collections.sort(list);
         }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_DAMAGE_TYPE = registerSuggsList("DATA_DAMAGE_TYPE", () -> {
-        List<String> list = getDynamicList("DATA_DAMAGE_TYPE");
-        if(list.isEmpty()) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            try {
-                if(client.world != null)
-                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.DAMAGE_TYPE).get().getIds())
-                        list.add(i.toString());
-            } catch(Exception ex) {}
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_ENCHANTMENT = registerSuggsList("DATA_ENCHANTMENT", () -> {
-        List<String> list = getDynamicList("DATA_ENCHANTMENT");
-        if(list.isEmpty()) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            try {
-                if(client.world != null)
-                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT).get().getIds())
-                        list.add(i.toString());
-            } catch(Exception ex) {}
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_INSTRUMENT = registerSuggsList("DATA_INSTRUMENT", () -> {
-        List<String> list = getDynamicList("DATA_INSTRUMENT");
-        if(list.isEmpty()) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            try {
-                if(client.world != null)
-                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.INSTRUMENT).get().getIds())
-                        list.add(i.toString());
-            } catch(Exception ex) {}
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_JUKEBOX_SONG = registerSuggsList("DATA_JUKEBOX_SONG", () -> {
-        List<String> list = getDynamicList("DATA_JUKEBOX_SONG");
-        if(list.isEmpty()) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            try {
-                if(client.world != null)
-                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.JUKEBOX_SONG).get().getIds())
-                        list.add(i.toString());
-            } catch(Exception ex) {}
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_PAINTING_VARIANT = registerSuggsList("DATA_PAINTING_VARIANT", () -> {
-        List<String> list = getDynamicList("DATA_PAINTING_VARIANT");
-        if(list.isEmpty()) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            try {
-                if(client.world != null)
-                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.PAINTING_VARIANT).get().getIds())
-                        list.add(i.toString());
-            } catch(Exception ex) {}
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_TRIM_MATERIAL = registerSuggsList("DATA_TRIM_MATERIAL", () -> {
-        List<String> list = getDynamicList("DATA_TRIM_MATERIAL");
-        if(list.isEmpty()) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            try {
-                if(client.world != null)
-                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.TRIM_MATERIAL).get().getIds())
-                        list.add(i.toString());
-            } catch(Exception ex) {}
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_TRIM_PATTERN = registerSuggsList("DATA_TRIM_PATTERN", () -> {
-        List<String> list = getDynamicList("DATA_TRIM_PATTERN");
-        if(list.isEmpty()) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            try {
-                if(client.world != null)
-                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.TRIM_PATTERN).get().getIds())
-                        list.add(i.toString());
-            } catch(Exception ex) {}
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_WOLF_VARIANT = registerSuggsList("DATA_WOLF_VARIANT", () -> {
-        List<String> list = getDynamicList("DATA_WOLF_VARIANT");
-        if(list.isEmpty()) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            try {
-                if(client.world != null)
-                    for(Identifier i : client.world.getRegistryManager().getOptional(RegistryKeys.WOLF_VARIANT).get().getIds())
-                        list.add(i.toString());
-            } catch(Exception ex) {}
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-
-    // dynamic data lists from hardcoded source with fallback to vanilla
-
-    private static List<String> getVanillaDataSuggs(List<String> list, String path, String suffix) {
-        list.clear();
-        try {
-            HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
-            final String namespace = "minecraft";
-            VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, namespace, path, map::putIfAbsent);
-            map.keySet().forEach(i -> {
-                String temp = i.toString();
-                if(temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
-                    temp = namespace+":"+temp.substring(namespace.length()+1+path.length()+1,temp.length()-suffix.length());
-                    if(path.startsWith("tags/"))
-                        temp = "#"+temp;
-                    list.add(temp);
-                }
-                else {
-                    FortytwoEdit.logWarn("Failed to add data path to list: "+i.toString());
-                }
-            });
-            Collections.sort(list);
-        } catch(Exception ex) {}
         return list;
     }
+
+    public static final Supplier<List<String>> REGISTRY_ATTRIBUTE = registerSuggsList("REGISTRY_ATTRIBUTE", () ->
+        getRegistryIfEmpty(getStaticList("REGISTRY_ATTRIBUTE"),Registries.ATTRIBUTE));
+
+    public static final Supplier<List<String>> REGISTRY_BLOCK = registerSuggsList("REGISTRY_BLOCK", () ->
+        getRegistryIfEmpty(getStaticList("REGISTRY_BLOCK"),Registries.BLOCK));
+
+    public static final Supplier<List<String>> REGISTRY_BLOCK_ENTITY_TYPE = registerSuggsList("REGISTRY_BLOCK_ENTITY_TYPE", () ->
+        getRegistryIfEmpty(getStaticList("REGISTRY_BLOCK_ENTITY_TYPE"),Registries.BLOCK_ENTITY_TYPE));
+
+    public static final Supplier<List<String>> REGISTRY_CONSUME_EFFECT_TYPE = registerSuggsList("REGISTRY_CONSUME_EFFECT_TYPE", () ->
+        getRegistryIfEmpty(getStaticList("REGISTRY_CONSUME_EFFECT_TYPE"),Registries.CONSUME_EFFECT_TYPE));
+
+    public static final Supplier<List<String>> REGISTRY_ITEM = registerSuggsList("REGISTRY_ITEM", () ->
+        getRegistryIfEmpty(getStaticList("REGISTRY_ITEM"),Registries.ITEM));
+
+    public static final Supplier<List<String>> REGISTRY_SOUND_EVENT = registerSuggsList("REGISTRY_SOUND_EVENT", () ->
+        getRegistryIfEmpty(getStaticList("REGISTRY_SOUND_EVENT"),Registries.SOUND_EVENT));
+
+    public static final Supplier<List<String>> REGISTRY_STATUS_EFFECT = registerSuggsList("REGISTRY_STATUS_EFFECT", () ->
+        getRegistryIfEmpty(getStaticList("REGISTRY_STATUS_EFFECT"),Registries.STATUS_EFFECT));
+
+    public static final Supplier<List<String>> REGISTRY_ENTITY_TYPE = registerSuggsList("REGISTRY_ENTITY_TYPE", () ->
+        getRegistryIfEmpty(getStaticList("REGISTRY_ENTITY_TYPE"),Registries.ENTITY_TYPE));
+
+    public static final Supplier<List<String>> REGISTRY_PARTICLE_TYPE = registerSuggsList("REGISTRY_PARTICLE_TYPE", () ->
+        getRegistryIfEmpty(getStaticList("REGISTRY_PARTICLE_TYPE"),Registries.PARTICLE_TYPE));
+
+
+    // dynamic data lists
+
+    private static List<String> getDataIfEmpty(List<String> list, RegistryKey<? extends Registry<?>> registryRef) {
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null)
+                client.world.getRegistryManager().getOptional(registryRef).ifPresent(reg -> {
+                    for(Identifier i : reg.getIds())
+                        list.add(i.toString());
+                });
+            Collections.sort(list);
+        }
+        return list;
+    }
+
+    public static final Supplier<List<String>> DATA_BANNER_PATTERN = registerSuggsList("DATA_BANNER_PATTERN", () ->
+        getDataIfEmpty(getDynamicList("DATA_BANNER_PATTERN"),RegistryKeys.BANNER_PATTERN));
+
+    public static final Supplier<List<String>> DATA_DAMAGE_TYPE = registerSuggsList("DATA_DAMAGE_TYPE", () ->
+        getDataIfEmpty(getDynamicList("DATA_DAMAGE_TYPE"),RegistryKeys.DAMAGE_TYPE));
+
+    public static final Supplier<List<String>> DATA_ENCHANTMENT = registerSuggsList("DATA_ENCHANTMENT", () ->
+        getDataIfEmpty(getDynamicList("DATA_ENCHANTMENT"),RegistryKeys.ENCHANTMENT));
+
+    public static final Supplier<List<String>> DATA_INSTRUMENT = registerSuggsList("DATA_INSTRUMENT", () ->
+        getDataIfEmpty(getDynamicList("DATA_INSTRUMENT"),RegistryKeys.INSTRUMENT));
+
+    public static final Supplier<List<String>> DATA_JUKEBOX_SONG = registerSuggsList("DATA_JUKEBOX_SONG", () ->
+        getDataIfEmpty(getDynamicList("DATA_JUKEBOX_SONG"),RegistryKeys.JUKEBOX_SONG));
+
+    public static final Supplier<List<String>> DATA_PAINTING_VARIANT = registerSuggsList("DATA_PAINTING_VARIANT", () ->
+        getDataIfEmpty(getDynamicList("DATA_PAINTING_VARIANT"),RegistryKeys.PAINTING_VARIANT));
+
+    public static final Supplier<List<String>> DATA_TRIM_MATERIAL = registerSuggsList("DATA_TRIM_MATERIAL", () ->
+        getDataIfEmpty(getDynamicList("DATA_TRIM_MATERIAL"),RegistryKeys.TRIM_MATERIAL));
+
+    public static final Supplier<List<String>> DATA_TRIM_PATTERN = registerSuggsList("DATA_TRIM_PATTERN", () ->
+        getDataIfEmpty(getDynamicList("DATA_TRIM_PATTERN"),RegistryKeys.TRIM_PATTERN));
+
+    public static final Supplier<List<String>> DATA_WOLF_VARIANT = registerSuggsList("DATA_WOLF_VARIANT", () ->
+        getDataIfEmpty(getDynamicList("DATA_WOLF_VARIANT"),RegistryKeys.WOLF_VARIANT));
+
+
+    // dynamic data tags lists
+
+    private static List<String> getTagsIfEmpty(List<String> list, RegistryKey<? extends Registry<?>> registryRef) {
+        if(list.isEmpty()) {
+            final MinecraftClient client = MinecraftClient.getInstance();
+            if(client.world != null)
+                client.world.getRegistryManager().getOptional(registryRef).ifPresent(reg -> {
+                    reg.streamTagKeys().forEach(tag -> {
+                        list.add("#"+tag.id().toString());
+                    });
+                });
+            Collections.sort(list);
+        }
+        return list;
+    }
+
+    public static final Supplier<List<String>> DATA_TAG_BANNER_PATTERN = registerSuggsList("DATA_TAG_BANNER_PATTERN", () ->
+        getTagsIfEmpty(getDynamicList("DATA_TAG_BANNER_PATTERN"),RegistryKeys.BANNER_PATTERN));
+
+    public static final Supplier<List<String>> DATA_TAG_BLOCK = registerSuggsList("DATA_TAG_BLOCK", () ->
+        getTagsIfEmpty(getDynamicList("DATA_TAG_BLOCK"),RegistryKeys.BLOCK));
+
+    public static final Supplier<List<String>> DATA_TAG_DAMAGE_TYPE = registerSuggsList("DATA_TAG_DAMAGE_TYPE", () ->
+        getTagsIfEmpty(getDynamicList("DATA_TAG_DAMAGE_TYPE"),RegistryKeys.DAMAGE_TYPE));
+
+    public static final Supplier<List<String>> DATA_TAG_ENCHANTMENT = registerSuggsList("DATA_TAG_ENCHANTMENT", () ->
+        getTagsIfEmpty(getDynamicList("DATA_TAG_ENCHANTMENT"),RegistryKeys.ENCHANTMENT));
+
+    public static final Supplier<List<String>> DATA_TAG_ENTITY_TYPE = registerSuggsList("DATA_TAG_ENTITY_TYPE", () ->
+        getTagsIfEmpty(getDynamicList("DATA_TAG_ENTITY_TYPE"),RegistryKeys.ENTITY_TYPE));
+
+    public static final Supplier<List<String>> DATA_TAG_ITEM = registerSuggsList("DATA_TAG_ITEM", () ->
+        getTagsIfEmpty(getDynamicList("DATA_TAG_ITEM"),RegistryKeys.ITEM));
+
+    public static final Supplier<List<String>> DATA_TAG_PAINTING_VARIANT = registerSuggsList("DATA_TAG_PAINTING_VARIANT", () ->
+        getTagsIfEmpty(getDynamicList("DATA_TAG_PAINTING_VARIANT"),RegistryKeys.PAINTING_VARIANT));
+
+
+    // dynamic data lists from command suggs with fallback to vanilla
+
+    private static List<String> getVanillaDataIfEmpty(List<String> list, String path, String suffix) {
+        if(list.isEmpty()) {
+            try {
+                HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+                final String namespace = "minecraft";
+                VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, namespace, path, map::putIfAbsent);
+                map.keySet().forEach(i -> {
+                    String temp = i.toString();
+                    if(temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
+                        temp = namespace+":"+temp.substring(namespace.length()+1+path.length()+1,temp.length()-suffix.length());
+                        if(path.startsWith("tags/"))
+                            temp = "#"+temp;
+                        list.add(temp);
+                    }
+                    else {
+                        FortytwoEdit.logWarn("Failed to add data path to list: "+i.toString());
+                    }
+                });
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    }
+
+    // private static List<String> setCommandSuggs(List<String> list, String cmd) {
+    //     if(list.isEmpty()) {
+    //         final MinecraftClient client = MinecraftClient.getInstance();
+    //         CommandDispatcher<CommandSource> commandDispatcher = client.player.networkHandler.getCommandDispatcher();
+    //         ParseResults<CommandSource> cmdSuggsParse = commandDispatcher.parse(cmd, (CommandSource)client.player.networkHandler.getCommandSource());
+    //         CompletableFuture<Suggestions> cmdSuggsPendingSuggestions = commandDispatcher.getCompletionSuggestions(cmdSuggsParse, cmd.length());
+    //         cmdSuggsPendingSuggestions.thenRun(() -> {
+    //             Suggestions suggestions;
+    //             if(cmdSuggsPendingSuggestions.isDone() && !(suggestions = cmdSuggsPendingSuggestions.join()).isEmpty()) {
+    //                 list.clear();
+    //                 for (Suggestion suggestion : suggestions.getList())
+    //                     list.add(suggestion.getText());
+    //                 Collections.sort(list);
+    //             }
+    //         });
+    //     }
+    //     return list;
+    // }
+    //
+    // `loot give @s loot `
+    // `recipe give @s ` (remove `*`)
+    // `place template `
+    // dimension
 
     protected final static String JSON_SUFFIX = ".json";
     protected final static String NBT_SUFFIX = ".nbt";
 
-    // public static void setCommandSuggs(String cmd, TextSuggestor suggs, String[] joinList) { to_do live command suggs
-    //     final MinecraftClient client = MinecraftClient.getInstance();
-    //     CommandDispatcher<CommandSource> commandDispatcher = client.player.networkHandler.getCommandDispatcher();
-    //     ParseResults<CommandSource> cmdSuggsParse = commandDispatcher.parse(cmd, (CommandSource)client.player.networkHandler.getCommandSource());
-    //     CompletableFuture<Suggestions> cmdSuggsPendingSuggestions = commandDispatcher.getCompletionSuggestions(cmdSuggsParse, cmd.length());
-    //     suggs.setSuggestions(new String[]{""});
-    //     cmdSuggsPendingSuggestions.thenRun(() -> {
-    //         List<String> list = new ArrayList<>();
-    //         if(joinList != null && joinList.length>0)
-    //             for(int i=0; i<joinList.length; i++)
-    //                 list.add(joinList[i]);
-    //         Suggestions suggestions;
-    //         if (cmdSuggsPendingSuggestions != null && cmdSuggsPendingSuggestions.isDone() && !(suggestions = cmdSuggsPendingSuggestions.join()).isEmpty()) {
-    //             for (Suggestion suggestion : suggestions.getList())
-    //                 list.add(suggestion.getText().replace("minecraft:",""));
-    //         }
-    //         list = new ArrayList<String>((new HashSet<String>(list)));
-    //         Collections.sort(list);
-    //         if(list.size()>0)
-    //             suggs.setSuggestions(list.toArray(new String[0]));
-    //     });
-    // }
+    public static final Supplier<List<String>> DATA_LOOT_TABLE = registerSuggsList("DATA_LOOT_TABLE", () ->
+        getVanillaDataIfEmpty(getDynamicList("DATA_LOOT_TABLE"),"loot_table",JSON_SUFFIX));
 
-    public static final Supplier<List<String>> DATA_LOOT_TABLE = registerSuggsList("DATA_LOOT_TABLE", () -> {
-        List<String> list = getDynamicList("DATA_LOOT_TABLE");
-        if(list.isEmpty()) {
-            getVanillaDataSuggs(list,"loot_table",JSON_SUFFIX);
-        }
-        return list;
-    });
+    public static final Supplier<List<String>> DATA_RECIPE = registerSuggsList("DATA_RECIPE", () ->
+        getVanillaDataIfEmpty(getDynamicList("DATA_RECIPE"),"recipe",JSON_SUFFIX));
 
-    public static final Supplier<List<String>> DATA_RECIPE = registerSuggsList("DATA_RECIPE", () -> {
-        List<String> list = getDynamicList("DATA_RECIPE");
-        if(list.isEmpty()) {
-            getVanillaDataSuggs(list,"recipe",JSON_SUFFIX);
-        }
-        return list;
-    });
+    public static final Supplier<List<String>> DATA_STRUCTURE = registerSuggsList("DATA_STRUCTURE", () ->
+        getVanillaDataIfEmpty(getDynamicList("DATA_STRUCTURE"),"structure",NBT_SUFFIX));
 
-    public static final Supplier<List<String>> DATA_STRUCTURE = registerSuggsList("DATA_STRUCTURE", () -> {
-        List<String> list = getDynamicList("DATA_STRUCTURE");
-        if(list.isEmpty()) {
-            getVanillaDataSuggs(list,"structure",NBT_SUFFIX);
-        }
-        return list;
-    });
+    public static final Supplier<List<String>> DATA_TRIAL_SPAWNER = registerSuggsList("DATA_TRIAL_SPAWNER", () ->
+        getVanillaDataIfEmpty(getDynamicList("DATA_TRIAL_SPAWNER"),"trial_spawner",JSON_SUFFIX));
 
-    public static final Supplier<List<String>> DATA_TRIAL_SPAWNER = registerSuggsList("DATA_TRIAL_SPAWNER", () -> {
-        List<String> list = getDynamicList("DATA_TRIAL_SPAWNER");
-        if(list.isEmpty()) {
-            getVanillaDataSuggs(list,"trial_spawner",JSON_SUFFIX);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_TAG_BANNER_PATTERN = registerSuggsList("DATA_TAG_BANNER_PATTERN", () -> {
-        List<String> list = getDynamicList("DATA_TAG_BANNER_PATTERN");
-        if(list.isEmpty()) {
-            getVanillaDataSuggs(list,"tags/banner_pattern",JSON_SUFFIX);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_TAG_BLOCK = registerSuggsList("DATA_TAG_BLOCK", () -> {
-        List<String> list = getDynamicList("DATA_TAG_BLOCK");
-        if(list.isEmpty()) {
-            getVanillaDataSuggs(list,"tags/block",JSON_SUFFIX);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_TAG_DAMAGE_TYPE = registerSuggsList("DATA_TAG_DAMAGE_TYPE", () -> {
-        List<String> list = getDynamicList("DATA_TAG_DAMAGE_TYPE");
-        if(list.isEmpty()) {
-            getVanillaDataSuggs(list,"tags/damage_type",JSON_SUFFIX);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_TAG_ENCHANTMENT = registerSuggsList("DATA_TAG_ENCHANTMENT", () -> {
-        List<String> list = getDynamicList("DATA_TAG_ENCHANTMENT");
-        if(list.isEmpty()) {
-            getVanillaDataSuggs(list,"tags/enchantment",JSON_SUFFIX);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_TAG_ENTITY_TYPE = registerSuggsList("DATA_TAG_ENTITY_TYPE", () -> {
-        List<String> list = getDynamicList("DATA_TAG_ENTITY_TYPE");
-        if(list.isEmpty()) {
-            getVanillaDataSuggs(list,"tags/entity_type",JSON_SUFFIX);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_TAG_ITEM = registerSuggsList("DATA_TAG_ITEM", () -> {
-        List<String> list = getDynamicList("DATA_TAG_ITEM");
-        if(list.isEmpty()) {
-            getVanillaDataSuggs(list,"tags/item",JSON_SUFFIX);
-        }
-        return list;
-    });
-
-    public static final Supplier<List<String>> DATA_TAG_PAINTING_VARIANT = registerSuggsList("DATA_TAG_PAINTING_VARIANT", () -> {
-        List<String> list = getDynamicList("DATA_TAG_PAINTING_VARIANT");
-        if(list.isEmpty()) {
-            getVanillaDataSuggs(list,"tags/painting_variant",JSON_SUFFIX);
-        }
-        return list;
-    });
 
 }
