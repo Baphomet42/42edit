@@ -159,6 +159,7 @@ public class ItemBuilder extends GenericScreen {
     private String textComponentEffectBase = null;
     private static int[] textComponentEffects = new int[8];//bold,italic,underlined,strikethrough,obfuscated,radgrad,colmode,elmode
     private static String shadowColor = "";
+    private static String font = "";
     private static double[] tabScroll = new double[tabs.length];
     private boolean pauseSaveScroll = false;
     protected NbtElement blankTabEl = null;
@@ -179,9 +180,9 @@ public class ItemBuilder extends GenericScreen {
         "6-§6gold§r 7-§7gray§r 8-§8dark_gray§r 9-§9blue§r a-§agreen§r b-§baqua§r "+
         "c-§cred§r d-§dlight_purple§r e-§eyellow§r f-§fwhite§r #420666-\"},{\"text\":\"0xRRGGBB\",\"color\":\"#420666\"},"+
         "{\"text\":\"\nr-§rreset§r k-obfuscated§r l-§lbold§r m-§mstrikethrough§r n-§nunderlined§r o-§oitalic§r\"},"+
-        "{\"text\":\"\n\nFonts\ndefault- ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\nuniform- \"},{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\n\",\"font\":\"uniform\"},"+
-        "{\"text\":\"alt- \"},{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\n\",\"font\":\"alt\"},{\"text\":\"illageralt- \"},"+
-        "{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\",\"font\":\"illageralt\"}]").text());
+        "{\"text\":\"\n\nFonts\ndefault- ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789\nuniform- \"},{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789\n\",\"font\":\"uniform\"},"+
+        "{\"text\":\"alt- \"},{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\n\",\"font\":\"alt\"},{\"text\":\"illageralt- \"},"+
+        "{\"text\":\"ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789\",\"font\":\"illageralt\"}]").text());
 
     public ItemBuilder() {}
 
@@ -1135,6 +1136,8 @@ public class ItemBuilder extends GenericScreen {
                 val+="\",\"color\":\""+getRgbHex(0)+"\"";
                 if(shadowColor.length()>0)
                     val+=",\"shadow_color\":"+shadowColor;
+                if(font.length()>0)
+                    val+=",\"font\":\""+font+"\"";
                 if(textComponentEffects[0]==1)
                     val+=",\"bold\":true";
                 else if(textComponentEffects[0]==2)
@@ -1181,6 +1184,8 @@ public class ItemBuilder extends GenericScreen {
                 val+="\"";
                 if(shadowColor.length()>0)
                     val+=",\"shadow_color\":"+shadowColor;
+                if(font.length()>0)
+                    val+=",\"font\":\""+font+"\"";
                 if(textComponentEffects[0]==1)
                     val+=",\"bold\":true";
                 else if(textComponentEffects[0]==2)
@@ -1279,6 +1284,8 @@ public class ItemBuilder extends GenericScreen {
                 val+=",\"color\":\""+textComponentLastColor+"\"";
             if(shadowColor.length()>0)
                 val+=",\"shadow_color\":"+shadowColor;
+            if(font.length()>0)
+                val+=",\"font\":\""+font+"\"";
             if(textComponentEffects[0]==1)
                 val+=",\"bold\":true";
             else if(textComponentEffects[0]==2)
@@ -1315,7 +1322,7 @@ public class ItemBuilder extends GenericScreen {
             String contents = ((TextFieldWidget)widgets.get(clickEventLblI[0]).get(clickEventLblI[1]+5).txts[0]).getText();
             if(click != null && click.length()>0 && value != null && value.length()>0) {
                 val += ",\"clickEvent\":{\"action\":\""+click+"\",\"value\":\"";
-                for(int i=0; i<value.length(); i++) {
+                for(int i=0; i<value.length(); i++) { // to_do redo
                     String thisChar = ""+value.charAt(i);
                     if(thisChar.equals("\\") || thisChar.equals("\""))
                         thisChar = "\\"+thisChar;
@@ -1323,7 +1330,7 @@ public class ItemBuilder extends GenericScreen {
                 }
                 val += "\"}";
             }
-            if(hover != null && hover.length()>0 && contents != null && contents.length()>0) {
+            if(hover != null && hover.length()>0 && contents != null && contents.length()>0) { // to_do handle escapes
                 val += ",\"hoverEvent\":{\"action\":\""+hover+"\",\"contents\":"+contents+"}";
             }
             updateTextComponentPreview(textComponentEffectPath,textComponentEffectBase,val);
@@ -3171,6 +3178,7 @@ public class ItemBuilder extends GenericScreen {
                         colorHexTxts.get(1).add(w2);
                     }
                     widgets.get(tabNum).add(new RowWidget("Shadow:",9));
+                    widgets.get(tabNum).add(new RowWidget("Font:",10));
                 }
                 else if(textComponentEffectMode == 1) {
                     for(int num=0; num<3; num++) {
@@ -3180,6 +3188,7 @@ public class ItemBuilder extends GenericScreen {
                         colorRgbSliders.get(0).get(num).add(w);
                     }
                     widgets.get(tabNum).add(new RowWidget("Shadow:",9));
+                    widgets.get(tabNum).add(new RowWidget("Font:",10));
                     {
                         cacheI.put("textComponentEffectTextMode",new int[]{tabNum,widgets.get(tabNum).size()});
                         widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("[Text]")},
@@ -3348,7 +3357,7 @@ public class ItemBuilder extends GenericScreen {
          * Used for text component effects tab.
          * lbl(size) txt [custom suggs]
          */
-        public RowWidget(String name, int suggsNum) {
+        public RowWidget(String name, int suggsNum) { // to_do remove and replace with real solution
             super();
             this.children = Lists.newArrayList();
             setup();
@@ -3358,8 +3367,12 @@ public class ItemBuilder extends GenericScreen {
             this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
                 ItemBuilder.this.x+15+5+size, 5, 240-41-size, 20, Text.of(""))};
             this.txtX = new int[]{15+5+size};
+
             if(suggsNum==9)
                 this.txts[0].setText(shadowColor);
+            else if(suggsNum==10)
+                this.txts[0].setText(font);
+
             this.txts[0].setChangedListener(value -> {
                 if(value != null && !value.equals("")) {
                     this.txts[0].setEditableColor(TEXT_COLOR);
@@ -3381,6 +3394,8 @@ public class ItemBuilder extends GenericScreen {
                         case 7: suggs.setSuggestions(new String[]{"show_text","show_item"}); break;
                         case 8: suggs.setSuggestions(new String[]
                                 {"{\"text\":\"\"}","{\"id\":\"stone\"}","{\"id\":\"bundle\",\"components\":\"{bundle_content:[{id:\\\"stone\\\"}]}\"}"}); break;
+                        case 9: suggs.setSuggestions(new String[]{"0","[0.0,0.0,0.0,0.0]"}); break;
+                        case 10: suggs.setSuggestions(ComponentHelper.ASSETS_FONT.get().toArray(new String[0])); break;
                         default: resetSuggs(); break;
                     }
                 }
@@ -3398,14 +3413,19 @@ public class ItemBuilder extends GenericScreen {
                             case 7: suggs.setSuggestions(new String[]{"show_text","show_item"}); break;
                             case 8: suggs.setSuggestions(new String[]
                                 {"{\"text\":\"\"}","{\"id\":\"stone\"}","{\"id\":\"bundle\",\"components\":\"{bundle_content:[{id:\\\"stone\\\"}]}\"}"}); break;
+                            case 9: suggs.setSuggestions(new String[]{"0","[0.0,0.0,0.0,0.0]"}); break;
+                            case 10: suggs.setSuggestions(ComponentHelper.ASSETS_FONT.get().toArray(new String[0])); break;
                             default: resetSuggs(); break;
                         }
                     }
                 }
-                if(suggsNum==9) {
+
+                if(suggsNum==9)
                     shadowColor = value;
-                }
-                if(suggsNum >= 3 && suggsNum <= 9) {
+                else if(suggsNum==10)
+                    font = value;
+
+                if(suggsNum >= 3 && suggsNum <= 10) {
                     updateTextComponentEffect();
                 }
             });

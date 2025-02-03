@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
+import baphomethlabs.fortytwoedit.mixin.DecoratedPotPatternsAccessor;
 import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
 import baphomethlabs.fortytwoedit.mixin.TranslationStorageAccessor;
 import net.minecraft.block.Block;
@@ -584,7 +585,7 @@ public class ComponentHelper {
             if(path.endsWith("components.equippable.equip_sound"))
                 return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT.get().toArray(new String[0]))).withDesc(Text.of("Defaults to \"item.armor.equip_generic\""));
             if(path.endsWith("components.equippable.asset_id"))
-                return (new PathInfo(PathType.STRING)).withDesc(Text.of("An equipment model at \"assets/<namespace>/models/equipment/<id>\"")); // to_do add suggs
+                return (new PathInfo(PathType.STRING,ASSETS_EQUIPMENT.get().toArray(new String[0]))).withDesc(Text.of("An equipment model at \"assets/<namespace>/equipment/<id>\""));
             if(path.endsWith("components.equippable.allowed_entities"))
                 return (new PathInfo(PathType.DEFAULT,BlackMagick.joinCommandSuggs(new String[][]{
                     BlackMagick.formatStringSuggs(BlackMagick.joinCommandSuggs(new String[][]{REGISTRY_ENTITY_TYPE.get().toArray(new String[0]),DATA_TAG_ENTITY_TYPE.get().toArray(new String[0])},null))},
@@ -597,7 +598,7 @@ public class ComponentHelper {
             if(path.endsWith("components.equippable.damage_on_hurt"))
                 return PathInfos.TRINARY.withDesc(Text.of("Defaults to true"));
             if(path.endsWith("components.equippable.camera_overlay"))
-                return (new PathInfo(PathType.STRING,new String[]{"minecraft:misc/pumpkinblur"})).withDesc(Text.of("A texture at \"assets/<namespace>/textures/<id>\"")); // to_do add suggs
+                return (new PathInfo(PathType.STRING,ASSETS_TEXTURES.get().toArray(new String[0]))).withDesc(Text.of("A texture at \"assets/<namespace>/textures/<id>\""));
         }
 
         if(path.contains("components.firework_explosion")) {
@@ -665,7 +666,7 @@ public class ComponentHelper {
             return PathInfos.UNIT.withIcon(Items.ARROW);
 
         if(path.endsWith("components.item_model"))
-            return (new PathInfo(PathType.STRING)).withDesc(Text.of("An item model at \"assets/<namespace>/models/item/<id>\"")).withIcon(Items.STONE); // to_do add suggs
+            return (new PathInfo(PathType.STRING,ASSETS_ITEMS.get().toArray(new String[0]))).withDesc(Text.of("An item model definition at \"assets/<namespace>/items/<id>\"")).withIcon(Items.STONE);
 
         if(path.endsWith("components.item_name"))
             return PathInfos.TEXT.withIcon(Items.STONE);
@@ -742,7 +743,7 @@ public class ComponentHelper {
             if(path.endsWith("components.pot_decorations"))
                 return PathInfos.LIST_STRING.withIcon(Items.DECORATED_POT);
             if(path.endsWith("components.pot_decorations[0]"))
-                return (new PathInfo(PathType.STRING,new String[]{"brick","angler_pottery_sherd","archer_pottery_sherd","arms_up_pottery_sherd","blade_pottery_sherd","brewer_pottery_sherd","burn_pottery_sherd","danger_pottery_sherd","explorer_pottery_sherd","flow_pottery_sherd","friend_pottery_sherd","guster_pottery_sherd","heart_pottery_sherd","heartbreak_pottery_sherd","howl_pottery_sherd","miner_pottery_sherd","mourner_pottery_sherd","plenty_pottery_sherd","prize_pottery_sherd","scrape_pottery_sherd","sheaf_pottery_sherd","shelter_pottery_sherd","skull_pottery_sherd","snort_pottery_sherd"}));
+                return (new PathInfo(PathType.STRING,LIST_DECORATED_POT_PATTERN_ITEMS.get().toArray(new String[0])));
         }
 
         if(path.contains(".potion_contents")) {
@@ -1423,6 +1424,19 @@ public class ComponentHelper {
         return list;
     });
 
+    /**
+     * Contains pottery sherd items and brick item
+     */
+    public static final Supplier<List<String>> LIST_DECORATED_POT_PATTERN_ITEMS = registerSuggsList("LIST_DECORATED_POT_PATTERN_ITEMS", () -> {
+        List<String> list = getStaticList("LIST_DECORATED_POT_PATTERN_ITEMS");
+        if(list.isEmpty()) {
+            for(Item i : DecoratedPotPatternsAccessor.getSherdToPattern().keySet())
+                list.add(i.toString());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
     public static final Supplier<List<String>> LIST_DYE_COLOR = registerSuggsList("LIST_DYE_COLOR", () -> {
         List<String> list = getStaticList("LIST_DYE_COLOR");
         if(list.isEmpty()) {
@@ -1621,7 +1635,7 @@ public class ComponentHelper {
         getTagsIfEmpty(getDynamicList("DATA_TAG_PAINTING_VARIANT"),RegistryKeys.PAINTING_VARIANT));
 
 
-    // dynamic data lists from command suggs with fallback to vanilla
+    // dynamic data lists from vanilla
 
     private static List<String> getVanillaDataIfEmpty(List<String> list, String path, String suffix) {
         if(list.isEmpty()) {
@@ -1673,6 +1687,8 @@ public class ComponentHelper {
 
     protected final static String JSON_SUFFIX = ".json";
     protected final static String NBT_SUFFIX = ".nbt";
+    protected final static String PNG_SUFFIX = ".png";
+    protected final static String MCMETA_SUFFIX = ".mcmeta";
 
     public static final Supplier<List<String>> DATA_LOOT_TABLE = registerSuggsList("DATA_LOOT_TABLE", () ->
         getVanillaDataIfEmpty(getDynamicList("DATA_LOOT_TABLE"),"loot_table",JSON_SUFFIX));
@@ -1685,6 +1701,45 @@ public class ComponentHelper {
 
     public static final Supplier<List<String>> DATA_TRIAL_SPAWNER = registerSuggsList("DATA_TRIAL_SPAWNER", () ->
         getVanillaDataIfEmpty(getDynamicList("DATA_TRIAL_SPAWNER"),"trial_spawner",JSON_SUFFIX));
+
+
+    // dynamic assets lists from vanilla
+
+    private static List<String> getVanillaAssetsIfEmpty(List<String> list, String path, String suffix) {
+        if(list.isEmpty()) {
+            try {
+                HashMap<Identifier, InputSupplier<InputStream>> map = new HashMap<Identifier, InputSupplier<InputStream>>();
+                final String namespace = "minecraft";
+                VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.CLIENT_RESOURCES, namespace, path, map::putIfAbsent);
+                map.keySet().forEach(i -> {
+                    String temp = i.toString();
+                    if(!temp.endsWith(suffix+MCMETA_SUFFIX)) {
+                        if(temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
+                            temp = namespace+":"+temp.substring(namespace.length()+1+path.length()+1,temp.length()-suffix.length());
+                            list.add(temp);
+                        }
+                        else {
+                            FortytwoEdit.logWarn("Failed to add assets path to list: "+i.toString());
+                        }
+                    }
+                });
+            } catch(Exception ex) {}
+            Collections.sort(list);
+        }
+        return list;
+    }
+
+    public static final Supplier<List<String>> ASSETS_EQUIPMENT = registerSuggsList("ASSETS_EQUIPMENT", () ->
+        getVanillaAssetsIfEmpty(getDynamicList("ASSETS_EQUIPMENT"),"equipment",JSON_SUFFIX));
+
+    public static final Supplier<List<String>> ASSETS_FONT = registerSuggsList("ASSETS_FONT", () ->
+        getVanillaAssetsIfEmpty(getDynamicList("ASSETS_FONT"),"font",JSON_SUFFIX));
+
+    public static final Supplier<List<String>> ASSETS_ITEMS = registerSuggsList("ASSETS_ITEMS", () ->
+        getVanillaAssetsIfEmpty(getDynamicList("ASSETS_ITEMS"),"items",JSON_SUFFIX));
+
+    public static final Supplier<List<String>> ASSETS_TEXTURES = registerSuggsList("ASSETS_TEXTURES", () ->
+        getVanillaAssetsIfEmpty(getDynamicList("ASSETS_TEXTURES"),"textures",PNG_SUFFIX));
 
 
 }
