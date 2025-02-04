@@ -37,13 +37,13 @@ public abstract class StructureBlockScreenMixin extends Screen {
         inputName.setChangedListener(value -> {
 
             if(buttonLoad.visible) {
-                ComponentHelper.clearDynamicListCaches();
+                //ComponentHelper.clearDynamicListCaches(); uncomment if list made dynamic
 
                 if(suggs != null)
                     suggs.refresh();
                 else {
                     suggs = new TextSuggestor(client, inputName, textRenderer);
-                    suggs.setSuggestions(ComponentHelper.DATA_STRUCTURE.get().toArray(new String[0]));
+                    suggs.setSuggestions(ComponentHelper.DATA_STRUCTURE.getArray());
                 }
 
             }

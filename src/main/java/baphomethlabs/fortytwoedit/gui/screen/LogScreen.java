@@ -4,9 +4,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import com.google.common.collect.Lists;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.Tooltip;
@@ -27,9 +27,9 @@ public class LogScreen extends GenericScreen {
     private static int fullLogLines = 0;
     private static int fullLogStart = 0;
     private static int modLogStart = 0;
-    private static final List<LogMessage> FULL_LOG = new ArrayList<>();
-    private static final List<LogMessage> MOD_LOG = new ArrayList<>();
-    private static final List<LogMessage> MOD_LOG_QUEUE = new ArrayList<>();
+    private static final List<LogMessage> FULL_LOG = Lists.newArrayList();
+    private static final List<LogMessage> MOD_LOG = Lists.newArrayList();
+    private static final List<LogMessage> MOD_LOG_QUEUE = Lists.newArrayList();
 
     private static boolean clearFullLogCache = false;
     private static boolean paused = false;

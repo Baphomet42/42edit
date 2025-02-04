@@ -1,6 +1,5 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,7 +88,7 @@ public class ItemBuilder extends GenericScreen {
     private static boolean runSuggsTest = true;
     protected ItemStack selItem = ItemStack.EMPTY;
     protected ItemStack selItemOff = ItemStack.EMPTY;
-    protected static List<List<String>> cacheStates = new ArrayList<>();
+    protected static List<List<String>> cacheStates = Lists.newArrayList();
     protected ButtonWidget itemBtn = null;
     protected ButtonWidget swapBtn;
     protected ButtonWidget swapCopyBtn;
@@ -98,8 +97,8 @@ public class ItemBuilder extends GenericScreen {
     protected ButtonWidget hotbarRightBtn;
     private TextFieldWidget txtFormat;
     private TabWidget tabWidget;
-    private final List<List<PosWidget>> noScrollWidgets = new ArrayList<>();
-    private final List<List<RowWidget>> widgets = new ArrayList<>();
+    private final List<List<PosWidget>> noScrollWidgets = Lists.newArrayList();
+    private final List<List<RowWidget>> widgets = Lists.newArrayList();
     private final Set<ClickableWidget> unsavedTxtWidgets = Sets.newHashSet();
     private final Set<ClickableWidget> allTxtWidgets = Sets.newHashSet();
     private final Set<ClickableWidget> allSliderWidgets = Sets.newHashSet();
@@ -130,8 +129,8 @@ public class ItemBuilder extends GenericScreen {
     protected final int playerY = -10;
     private static final int RENDER_SIZE = 35;
     private boolean prevArmorStand = false;
-    private ArrayList<ArrayList<Set<PoseSlider>>> poseSliders = new ArrayList<>();
-    private ArrayList<Set<ButtonWidget>> poseSliderBtns = new ArrayList<>();
+    private List<List<Set<PoseSlider>>> poseSliders = Lists.newArrayList();
+    private List<Set<ButtonWidget>> poseSliderBtns = Lists.newArrayList();
     private static NbtCompound poseCompound = new NbtCompound();
     private static final String[] poseTypes = new String[]{"Head","Body","RightArm","LeftArm","RightLeg","LeftLeg"};
     public static final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
@@ -140,11 +139,11 @@ public class ItemBuilder extends GenericScreen {
     private Set<TextFieldWidget> currentTxt = Sets.newHashSet();
     private static int[][] colorSets = {{66,6,102},{0,0,0}};
     private static float[] colorHsv = {0f,0f,0f};
-    private ArrayList<Set<TextFieldWidget>> colorHexTxts = new ArrayList<>();
-    private ArrayList<Set<TextFieldWidget>> colorDecTxts = new ArrayList<>();
-    private ArrayList<ArrayList<Set<RgbSlider>>> colorRgbSliders = new ArrayList<>();
-    private ArrayList<Set<RgbSlider>> colorHsvSliders = new ArrayList<>();
-    private ArrayList<ArrayList<Set<PosWidget>>> colorItemWids = new ArrayList<>();
+    private List<Set<TextFieldWidget>> colorHexTxts = Lists.newArrayList();
+    private List<Set<TextFieldWidget>> colorDecTxts = Lists.newArrayList();
+    private List<List<Set<RgbSlider>>> colorRgbSliders = Lists.newArrayList();
+    private List<Set<RgbSlider>> colorHsvSliders = Lists.newArrayList();
+    private List<List<Set<PosWidget>>> colorItemWids = Lists.newArrayList();
     private boolean editorLocked = false;
     private boolean hsvLock = false;
     private Map<WidgetCacheType,ClickableWidget> widgetCache = Maps.newHashMap();
@@ -200,10 +199,10 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<colorSets.length; i++) {
                 colorHexTxts.add(Sets.newHashSet());
                 colorDecTxts.add(Sets.newHashSet());
-                colorRgbSliders.add(new ArrayList<Set<RgbSlider>>());
+                colorRgbSliders.add(Lists.newArrayList());
                 for(int j=0; j<3; j++)
                     colorRgbSliders.get(colorRgbSliders.size()-1).add(Sets.newHashSet());
-                colorItemWids.add(new ArrayList<Set<PosWidget>>());
+                colorItemWids.add(Lists.newArrayList());
                 for(int j=0; j<3; j++)
                     colorItemWids.get(colorItemWids.size()-1).add(Sets.newHashSet());
             }
@@ -211,7 +210,7 @@ public class ItemBuilder extends GenericScreen {
                 colorHsvSliders.add(Sets.newHashSet());
             for(int i=0; i<6; i++) {
                 poseSliderBtns.add(Sets.newHashSet());
-                poseSliders.add(new ArrayList<Set<PoseSlider>>());
+                poseSliders.add(Lists.newArrayList());
                 for(int j=0; j<3; j++)
                     poseSliders.get(poseSliders.size()-1).add(Sets.newHashSet());
             }
@@ -1548,13 +1547,14 @@ public class ItemBuilder extends GenericScreen {
         if(shouldSetSuggs) {
             if(suggs == null)
                 return;
-            String[] startVals = null;
+            List<String> startVals = null;
             if(startVal != null)
-                startVals = new String[]{startVal};
-            String[][] joinSuggs = null;
-            if(suggestions != null)
-                joinSuggs = new String[][]{suggestions};
-            String[] suggsArr = BlackMagick.joinCommandSuggs(joinSuggs, startVals);
+                startVals = List.of(startVal);
+            List<List<String>> joinSuggs = null;
+            if(suggestions != null) {
+                joinSuggs = List.of(List.of(suggestions));
+            }
+            String[] suggsArr = BlackMagick.joinCommandSuggs(joinSuggs, startVals).toArray(new String[0]);
             if(suggsArr != null && suggsArr.length>0)
                 suggs.setSuggestions(suggsArr);
         }
@@ -1634,8 +1634,8 @@ public class ItemBuilder extends GenericScreen {
         allTxtWidgets.clear();
         allSliderWidgets.clear();
         for(int i=0; i<tabs.length; i++) {
-            widgets.add(new ArrayList<RowWidget>());
-            noScrollWidgets.add(new ArrayList<PosWidget>());
+            widgets.add(Lists.newArrayList());
+            noScrollWidgets.add(Lists.newArrayList());
         }
 
         {
@@ -1826,7 +1826,7 @@ public class ItemBuilder extends GenericScreen {
                             } catch(Exception ex) {}
                         }
                     }
-                }, ComponentHelper.REGISTRY_SOUND_EVENT.get().toArray(new String[0]),true));
+                }, ComponentHelper.REGISTRY_SOUND_EVENT.getArray(),true));
             }
             {
                 final int i = tabNum; final int j = widgets.get(tabNum).size();
@@ -1858,7 +1858,7 @@ public class ItemBuilder extends GenericScreen {
                 final int i = tabNum; final int j = widgets.get(tabNum).size();
                 widgets.get(tabNum).add(new RowWidget(new Text[]{Text.of("Symbol")},new int[]{40,55,49,55},
                 new String[]{"Create banner(s) with preset designs\n\nChar Color | Chars | Base Color"+"\n\n"+BANNER_PRESET_CHARS},new String[][]
-                {ComponentHelper.LIST_DYE_COLOR.get().toArray(new String[0]),BANNER_CHAR_LIST,ComponentHelper.LIST_DYE_COLOR.get().toArray(new String[0])},
+                {ComponentHelper.LIST_DYE_COLOR.getArray(),BANNER_CHAR_LIST,ComponentHelper.LIST_DYE_COLOR.getArray()},
                 false,btn -> {
                     String[] inps = widgets.get(i).get(j).btn();
                     if(client.player.getAbilities().creativeMode) {
@@ -2245,16 +2245,14 @@ public class ItemBuilder extends GenericScreen {
                 {
                     widgets.get(tabNum).add(new RowWidget("components"));
                 }
-                List<String> unset = new ArrayList<String>();
-                for(String c : ComponentHelper.LIST_DATA_COMPONENT_TYPE.get().toArray(new String[0]))
-                {
+                List<String> unset = Lists.newArrayList();
+                for(String c : ComponentHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
                     if(ComponentHelper.hasComponent(selItem.getComponents(),c))
                         widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
                     else
                         unset.add(c);
-
                 }
-                List<String> unused = new ArrayList<String>();
+                List<String> unused = Lists.newArrayList();
                 if(!unset.isEmpty()) {
                     widgets.get(tabNum).add(new RowWidget("unset"));
                     for(String c : unset) {
@@ -2874,10 +2872,10 @@ public class ItemBuilder extends GenericScreen {
                     if(bannerNbt.contains("pattern",NbtElement.STRING_TYPE))
                         bannerPat = bannerNbt.getString("pattern");
 
-                    List<String> bannerVals = new ArrayList<>();
-                    for(String c : ComponentHelper.LIST_DYE_COLOR.get())
+                    List<String> bannerVals = Lists.newArrayList();
+                    for(String c : ComponentHelper.LIST_DYE_COLOR.getList())
                         bannerVals.add(c);
-                    for(String b : ComponentHelper.DATA_BANNER_PATTERN.get())
+                    for(String b : ComponentHelper.DATA_BANNER_PATTERN.getList())
                         bannerVals.add(b);
 
                     int row=0;
@@ -3042,8 +3040,8 @@ public class ItemBuilder extends GenericScreen {
                         updateTextComponentEffect();
                         if(textComponentEffectMode == 1) {
                             if(textComponentEffects[7]==1 || textComponentEffects[7]==2) {
-                                String[] suggestions = textComponentEffects[7]==1 ? ComponentHelper.LIST_KEYBIND.get().toArray(new String[0]) :
-                                    ComponentHelper.LIST_TRANSLATION_KEY.get().toArray(new String[0]);
+                                String[] suggestions = textComponentEffects[7]==1 ? ComponentHelper.LIST_KEYBIND.getArray() :
+                                    ComponentHelper.LIST_TRANSLATION_KEY.getArray();
                                 suggsOnChanged(w,suggestions,null);
                             }
                             else
@@ -3131,13 +3129,13 @@ public class ItemBuilder extends GenericScreen {
                     w2.setChangedListener(value -> {
                         if(textComponentEffects[6]==1) {
                             boolean validColor = false;
-                            for(String f : ComponentHelper.LIST_FORMATTING_COLOR.get())
+                            for(String f : ComponentHelper.LIST_FORMATTING_COLOR.getList())
                                 if(f.equals(value))
                                     validColor = true;
 
                             if(validColor)
                                 textComponentLastColor = value;
-                            suggsOnChanged(w2,ComponentHelper.LIST_FORMATTING_COLOR.get().toArray(new String[0]),null);
+                            suggsOnChanged(w2,ComponentHelper.LIST_FORMATTING_COLOR.getArray(),null);
                             updateTextComponentEffect();
                         }
                         else
@@ -3395,7 +3393,7 @@ public class ItemBuilder extends GenericScreen {
                         case 8: suggs.setSuggestions(new String[]
                                 {"{\"text\":\"\"}","{\"id\":\"stone\"}","{\"id\":\"bundle\",\"components\":\"{bundle_content:[{id:\\\"stone\\\"}]}\"}"}); break;
                         case 9: suggs.setSuggestions(new String[]{"0","[0.0,0.0,0.0,0.0]"}); break;
-                        case 10: suggs.setSuggestions(ComponentHelper.ASSETS_FONT.get().toArray(new String[0])); break;
+                        case 10: suggs.setSuggestions(ComponentHelper.ASSETS_FONT.getArray()); break;
                         default: resetSuggs(); break;
                     }
                 }
@@ -3414,7 +3412,7 @@ public class ItemBuilder extends GenericScreen {
                             case 8: suggs.setSuggestions(new String[]
                                 {"{\"text\":\"\"}","{\"id\":\"stone\"}","{\"id\":\"bundle\",\"components\":\"{bundle_content:[{id:\\\"stone\\\"}]}\"}"}); break;
                             case 9: suggs.setSuggestions(new String[]{"0","[0.0,0.0,0.0,0.0]"}); break;
-                            case 10: suggs.setSuggestions(ComponentHelper.ASSETS_FONT.get().toArray(new String[0])); break;
+                            case 10: suggs.setSuggestions(ComponentHelper.ASSETS_FONT.getArray()); break;
                             default: resetSuggs(); break;
                         }
                     }
@@ -4020,7 +4018,7 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
             else { // inline component
-                String[] baseSuggestions = pi.suggs();
+                String[] baseSuggestions = pi.suggs() == null ? null : pi.suggs().getArray();
 
                 NbtElement tempEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path);
                 final String startVal = (isString && tempEl != null) ? tempEl.asString() : BlackMagick.nbtToString(tempEl);
@@ -4453,7 +4451,7 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
             else {
-                String[] baseSuggestions = pi.suggs();
+                String[] baseSuggestions = pi.suggs() == null ? null : pi.suggs().getArray();
 
                 this.btns = new ButtonWidget[]{keyBtn};
                 this.btnX = new int[]{ROW_LEFT};
@@ -4538,7 +4536,7 @@ public class ItemBuilder extends GenericScreen {
                     btnTxt = getButtonText(fullPath,currentEl);
                 }
                 else {
-                    String[] baseSuggestions = pi.suggs();
+                    String[] baseSuggestions = pi.suggs() == null ? null : pi.suggs().getArray();
                     final String[] suggestions;
                     if(baseSuggestions == null) {
                         if(startVal.length()>0)
@@ -4794,7 +4792,7 @@ public class ItemBuilder extends GenericScreen {
             tempEl = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath);
             final String currentVal = (isString && tempEl != null) ? tempEl.asString() : BlackMagick.nbtToString(tempEl);
 
-            String[] baseSuggestions = pi.suggs();
+            String[] baseSuggestions = pi.suggs() == null ? null : pi.suggs().getArray();
 
             this.txts = new TextFieldWidget[]{new TextFieldWidget(((ItemBuilder)ItemBuilder.this).client.textRenderer,
                 ItemBuilder.this.x+ROW_LEFT, 5, ROW_RIGHT-ROW_LEFT, 20, Text.of(""))};

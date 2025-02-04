@@ -7,7 +7,6 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -217,8 +216,8 @@ public class FortytwoEdit implements ClientModInitializer {
         }
     }
 
-    private static ArrayList<String> capeNames = new ArrayList<>(); // all cached names
-    private static ArrayList<String> capeNames2 = new ArrayList<>(); // names with capes
+    private static List<String> capeNames = Lists.newArrayList(); // all cached names
+    private static List<String> capeNames2 = Lists.newArrayList(); // names with capes
 
     public static int debugCapeNamesSize() {
         return capeNames.size();
@@ -424,13 +423,12 @@ public class FortytwoEdit implements ClientModInitializer {
     private static final Identifier[] SECRETSOUNDS = getSecretSounds();
     private static Identifier[] getSecretSounds() {
         Set<Identifier> sounds = Registries.SOUND_EVENT.getIds();
-        ArrayList<Identifier> valid = new ArrayList<>();
+        List<Identifier> valid = Lists.newArrayList();
         for(Identifier sound: sounds) {
             if(sound.getPath().contains("entity.") || sound.getPath().contains("block.") || sound.getPath().contains("weather.") || sound.getPath().contains("item."))
                 valid.add(sound);
         }
-        Identifier[] arr = new Identifier[valid.size()];
-        return valid.toArray(arr);
+        return valid.toArray(new Identifier[0]);
     }
     private static void secretSound() {
         if(SECRETSOUNDS != null && SECRETSOUNDS.length > 0) {
@@ -531,7 +529,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         FileTools.scanModFiles();
 
-        for(String c : ComponentHelper.LIST_DATA_COMPONENT_TYPE.get()) {
+        for(String c : ComponentHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
             // this will log warnings if ComponentHelper doesnt include a vanilla component
             ComponentHelper.getPathInfo("components."+c);
         }

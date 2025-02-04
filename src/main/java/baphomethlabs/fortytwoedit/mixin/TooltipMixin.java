@@ -1,11 +1,11 @@
 package baphomethlabs.fortytwoedit.mixin;
 
-import java.util.ArrayList;
 import java.util.List;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import com.google.common.collect.Lists;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.tooltip.Tooltip;
@@ -30,7 +30,7 @@ public abstract class TooltipMixin {
 
             if(client.textRenderer.wrapLines(text, largeSafe).size()>lineSwap) {
                 List<OrderedText> linesImmutable = client.textRenderer.wrapLines(text, client.currentScreen.width-safeZone);
-                List<OrderedText> lines = new ArrayList<>();
+                List<OrderedText> lines = Lists.newArrayList();
                 int maxLines = Math.max(lineSwap,((client.currentScreen.height-safeZone)/10)-1);//10 pixels per line, -1 line gives space to see hotbar
                 for(OrderedText t : linesImmutable)
                     lines.add(t);

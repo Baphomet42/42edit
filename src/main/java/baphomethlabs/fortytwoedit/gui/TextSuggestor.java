@@ -6,7 +6,6 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import org.lwjgl.glfw.GLFW;
@@ -45,7 +44,7 @@ public class TextSuggestor {
         this.inWindowIndexOffset = 0;
         this.maxSuggestionSize = 5;
         this.color = 0;
-        suggestions = new Suggestions(StringRange.at(0),new ArrayList<>());
+        suggestions = new Suggestions(StringRange.at(0),Lists.newArrayList());
         windowActive = true;
     }
 
@@ -96,8 +95,8 @@ public class TextSuggestor {
     private List<Suggestion> sortSuggestions(Suggestions suggestions) {
         String string = this.textField.getText().substring(0, this.textField.getCursor());
         String string2 = string.substring(0).toLowerCase(Locale.ROOT);
-        ArrayList<Suggestion> list = Lists.newArrayList();
-        ArrayList<Suggestion> list2 = Lists.newArrayList();
+        List<Suggestion> list = Lists.newArrayList();
+        List<Suggestion> list2 = Lists.newArrayList();
         list.add(new Suggestion(StringRange.at(0),this.textField.getText()));
         for(Suggestion suggestion : suggestions.getList()) {
             if(suggestion.getText().startsWith(string2) || suggestion.getText().startsWith("minecraft:" + string2)) {
@@ -120,7 +119,7 @@ public class TextSuggestor {
         int i = this.textField.getCursor();
         int j = stringReader.getCursor();
         if(!(i < j || this.window != null && this.completingSuggestions)) {
-            ArrayList<Suggestion> tempList = new ArrayList<>();
+            List<Suggestion> tempList = Lists.newArrayList();
             for(String s : suggestionList) {
                 tempList.add(new Suggestion(StringRange.at(0),s));
             }
@@ -205,7 +204,7 @@ public class TextSuggestor {
             //     }
             // }
             boolean bl52 = false;
-            List<Text> textList = new ArrayList<>();
+            List<Text> textList = Lists.newArrayList();
             int width = 0;
             for(int l = 0; l < i; ++l) {
                 Suggestion suggestion = this.suggestions.get(l + this.inWindowIndex);

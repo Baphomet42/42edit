@@ -1,9 +1,9 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import com.google.common.collect.Lists;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FileTools;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
@@ -127,7 +127,7 @@ public class Hacks extends GenericScreen {
 
     protected void btnGetEntity(int mode) {
         Iterator<Entity> entities = client.world.getEntities().iterator();
-        List<NbtCompound> items = new ArrayList<>();
+        List<NbtCompound> items = Lists.newArrayList();
         double x = client.player.getX();
         double y = client.player.getY();
         double z = client.player.getZ();

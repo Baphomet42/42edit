@@ -1,13 +1,12 @@
 package baphomethlabs.fortytwoedit;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.compress.utils.Lists;
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -280,7 +279,7 @@ public class BlackMagick {
                 comps = BlackMagick.validCompound(BlackMagick.nbtFromString("{"+compsString+"}"));
 
             Set<String> unusedComps = Sets.newHashSet();
-            for(String comp : ComponentHelper.LIST_DATA_COMPONENT_TYPE.get())
+            for(String comp : ComponentHelper.LIST_DATA_COMPONENT_TYPE.getList())
                 unusedComps.add(comp);
             for(String comp : comps.getKeys()) {
                 unusedComps.remove(comp);
@@ -712,7 +711,7 @@ public class BlackMagick {
      * @return
      */
     public static List<Integer> sortIntSet(Set<Integer> set) {
-        List<Integer> list = new ArrayList<>();
+        List<Integer> list = Lists.newArrayList();
 
         for(Integer i : set)
             list.add(i);
@@ -729,7 +728,7 @@ public class BlackMagick {
      * @return
      */
     public static List<String> sortSet(Set<String> set) {
-        List<String> list = new ArrayList<>();
+        List<String> list = Lists.newArrayList();
 
         for(String s : set)
             list.add(s);
@@ -746,7 +745,7 @@ public class BlackMagick {
      * @return
      */
     public static List<String> sortArray(String[] array) {
-        List<String> list = new ArrayList<>();
+        List<String> list = Lists.newArrayList();
 
         for(String s : array)
             list.add(s);
@@ -756,58 +755,54 @@ public class BlackMagick {
     }
 
     /**
-     * Format suggs so that they represent an NbtString.
+     * Format suggs so that they represent an NbtString (without modifying original list).
      * Required when string suggs are used in a txt not setup for NbtStrings.
      * 
      * @param suggs
      * @return
      */
-    public static String[] formatStringSuggs(String[] suggs) {
-        List<String> list = new ArrayList<>();
+    public static List<String> formatStringSuggs(List<String> suggs) {
+        List<String> list = Lists.newArrayList();
 
-        for(String s : suggs) {
+        for(String s : suggs)
             list.add(nbtToString(NbtString.of(s)));
-        }
 
-        return list.toArray(new String[0]);
+        return list;
     }
 
     /**
-     * Format suggs with a prefix and suffix
+     * Format suggs with a prefix and suffix (without modifying original list)
      * 
      * @param suggs
      * @return
      */
-    public static String[] formatSuggs(String[] suggs, String prefix, String suffix) {
-        List<String> list = new ArrayList<>();
+    public static List<String> formatSuggs(List<String> suggs, String prefix, String suffix) {
+        List<String> list = Lists.newArrayList();
 
-        for(String s : suggs) {
+        for(String s : suggs)
             list.add(prefix+s+suffix);
-        }
 
-        return list.toArray(new String[0]);
+        return list;
     }
 
-    public static String[] joinCommandSuggs(String[][] joinLists, String[] startVals) {
-        List<String> list = new ArrayList<>();
+    public static List<String> joinCommandSuggs(List<List<String>> joinLists, List<String> startVals) {
+        Set<String> set = Sets.newHashSet();
+        List<String> list = Lists.newArrayList();
 
         if(joinLists != null)
-            for(int i=0; i<joinLists.length; i++) {
-                if(joinLists[i] != null)
-                    for(int j=0; j<joinLists[i].length; j++)
-                        list.add(joinLists[i][j]);
-            }
+            for(List<String> l : joinLists)
+                if(l != null)
+                    for(String s : l)
+                        set.add(s);
 
-        list = new ArrayList<String>((new HashSet<String>(list)));
+        list.addAll(set);
         Collections.sort(list);
 
         if(startVals != null)
-            for(int i=0; i<startVals.length; i++)
-                list.add(0,startVals[startVals.length-1-i]);
+            for(int i=0; i<startVals.size(); i++)
+                list.add(0,startVals.get(startVals.size()-1-i));
 
-        if(!list.isEmpty())
-            return list.toArray(new String[0]);
-        return null;
+        return list;
     }
 
     public static String[] getIntRangeArray(int min, int max) {
