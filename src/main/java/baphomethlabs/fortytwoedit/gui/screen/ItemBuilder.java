@@ -2605,52 +2605,61 @@ public class ItemBuilder extends GenericScreen {
                     if(el2==null || el2.getType()!=NbtElement.COMPOUND_TYPE)
                         el2 = new NbtCompound();
 
-                    Set<String> keys = Sets.newHashSet();
-                    for(String k : ComponentHelper.getPathInfo(fullPath).keys()) {
-                        keys.add(k);
-                    }
-                    for(String k : ((NbtCompound)el2).getKeys()) {
-                        keys.add(k);
-                    }
-                    Map<String,Set<String>> keyGroups = Maps.newHashMap();
-                    String opt = "Optional";
-                    String req = "Required";
-                    String unk = "Unknown";
+                    final Map<String,Set<String>> keyGroups = Maps.newHashMap();
+                    final Set<String> allKeys = Sets.newHashSet();
 
-                    for(String k : BlackMagick.sortSet(keys)) {
+                    final String UNKNOWN_GROUP = "Unknown";
+                    keyGroups.put(UNKNOWN_GROUP,Sets.newHashSet());
+                    final String REQUIRED_GROUP = "Required";
+                    keyGroups.put(REQUIRED_GROUP,Sets.newHashSet());
+                    final String OPTIONAL_GROUP = "Optional";
+                    keyGroups.put(OPTIONAL_GROUP,Sets.newHashSet());
+
+                    {
+                        Set<String> reqKeys = ComponentHelper.getPathInfo(fullPath).keys().getRequired();
+                        keyGroups.get(REQUIRED_GROUP).addAll(reqKeys);
+                        allKeys.addAll(reqKeys);
+                    }
+                    for(String k : ComponentHelper.getPathInfo(fullPath).keys().getOptional()) {
                         PathInfo pi = ComponentHelper.getPathInfo(fullPath+"."+k);
                         String thisGroup;
                         if(pi.keyGroup()!=null)
                             thisGroup = pi.keyGroup();
                         else if(pi.type()==PathType.UNKNOWN)
-                            thisGroup = unk;
+                            thisGroup = UNKNOWN_GROUP;
                         else
-                            thisGroup = opt;
+                            thisGroup = OPTIONAL_GROUP;
 
                         if(!keyGroups.containsKey(thisGroup))
                             keyGroups.put(thisGroup,Sets.newHashSet());
 
                         keyGroups.get(thisGroup).add(k);
+                        allKeys.add(k);
+                    }
+                    for(String k : ((NbtCompound)el2).getKeys()) {
+                        if(!allKeys.contains(k))
+                            keyGroups.get(UNKNOWN_GROUP).add(k);
                     }
 
                     List<String> keyGroupLbls = BlackMagick.sortSet(keyGroups.keySet());
-                    if(keyGroupLbls.contains(opt)) {
-                        keyGroupLbls.remove(opt);
-                        keyGroupLbls.add(0,opt);
+                    if(keyGroupLbls.contains(OPTIONAL_GROUP)) {
+                        keyGroupLbls.remove(OPTIONAL_GROUP);
+                        keyGroupLbls.add(0,OPTIONAL_GROUP);
                     }
-                    if(keyGroupLbls.contains(req)) {
-                        keyGroupLbls.remove(req);
-                        keyGroupLbls.add(0,req);
+                    if(keyGroupLbls.contains(REQUIRED_GROUP)) {
+                        keyGroupLbls.remove(REQUIRED_GROUP);
+                        keyGroupLbls.add(0,REQUIRED_GROUP);
                     }
-                    if(keyGroupLbls.contains(unk)) {
-                        keyGroupLbls.remove(unk);
-                        keyGroupLbls.add(0,unk);
+                    if(keyGroupLbls.contains(UNKNOWN_GROUP)) {
+                        keyGroupLbls.remove(UNKNOWN_GROUP);
+                        keyGroupLbls.add(0,UNKNOWN_GROUP);
                     }
 
-                    for(int i=0; i<keyGroupLbls.size(); i++) {
-                        widgets.get(tabNum).add(new RowWidget(keyGroupLbls.get(i)));
-                        for(String k : BlackMagick.sortSet(keyGroups.get(keyGroupLbls.get(i)))) {
-                            widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,k));
+                    for(String keySetLbl : keyGroupLbls) {
+                        if(!keyGroups.get(keySetLbl).isEmpty()) {
+                            widgets.get(tabNum).add(new RowWidget(keySetLbl));
+                            for(String k : BlackMagick.sortSet(keyGroups.get(keySetLbl)))
+                                widgets.get(tabNum).add(new RowWidgetElement(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,k));
                         }
                     }
 
@@ -3478,10 +3487,10 @@ public class ItemBuilder extends GenericScreen {
                             //ItemBuilder.this.markSaved(this.txts[ii]);
                         }
 
-                        String[] suggestionsList = null;
+                        String[] suggsArr = null;
                         if(suggestions != null && suggestions.length > ii && suggestions[ii] != null)
-                            suggestionsList = suggestions[ii];
-                        suggsOnChanged(this.txts[ii],suggestionsList,null);
+                            suggsArr = suggestions[ii];
+                        suggsOnChanged(this.txts[ii],suggsArr,null);
                     });
                     this.txts[i].setMaxLength(MAX_TEXT_LENGTH);
 
