@@ -122,7 +122,8 @@ public class ItemBuilder extends GenericScreen {
         +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3"
         +"RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MjY0ODZmNDI0ODljZWYwMmM5ZTk4ZGQ4YmU1YTNmMzhlODc5MTQ3NTQzMjZlNzdjODM3YzFiMmJjYmE2NSINCiAgICB9DQogIH0NCn0=\"}]}}}"))};
     protected static final Identifier DELETE_ITEM_OVERLAY = Identifier.ofVanilla("container/beacon/cancel");
-    protected static final Identifier INVALID_ITEM_OVERLAY = Identifier.ofVanilla("spectator/close");
+    protected static final Identifier ITEM_WARNING_OVERLAY = Identifier.ofVanilla("world_list/warning_highlighted");
+    protected static final Identifier ITEM_ERROR_OVERLAY = Identifier.ofVanilla("world_list/error_highlighted");
     protected static final Identifier ITEM_SLOT_BACKGROUND = Identifier.ofVanilla("container/slot");
     private ArmorStandEntity renderArmorStand;
     private ArmorStandEntity renderArmorPose;
@@ -3287,7 +3288,7 @@ public class ItemBuilder extends GenericScreen {
         protected boolean lblCentered = false;
         protected int lblColor = LABEL_COLOR;
         protected ItemStack[] savedStacks;
-        protected boolean[] savedStacksWarn;
+        protected int[] savedStacksWarn;
         protected int savedStacksMode = -1;
         protected int savedRow = -1;
         protected ItemStack item = null;
@@ -3504,7 +3505,7 @@ public class ItemBuilder extends GenericScreen {
 
             this.savedRow = row;
             this.savedStacks = new ItemStack[9];
-            this.savedStacksWarn = new boolean[9];
+            this.savedStacksWarn = new int[9];
             this.savedStacksMode = 1;
             this.btns = new ButtonWidget[9];
             this.btnX = new int[9];
@@ -3607,6 +3608,7 @@ public class ItemBuilder extends GenericScreen {
             }
             this.btns = new ButtonWidget[vals.length];
             this.btnX = new int[vals.length];
+            this.savedStacksWarn = new int[this.btnX.length];
             int currentX = 10+30;
             for(int i=0; i<btns.length; i++) {
                 this.btnX[i] = currentX;
@@ -3625,7 +3627,8 @@ public class ItemBuilder extends GenericScreen {
                     }
                     if(disabled) {
                         tt = Tooltip.of(Text.of("Pattern disabled: "+vals[i]).copy().formatted(Formatting.RED));
-                        this.savedStacks[i] = new ItemStack(Items.BARRIER);//to_do
+                        this.savedStacks[i] = FortytwoEdit.ITEM_ERROR;
+                        this.savedStacksWarn[i] = 2;
                     }
                 }
                 else
@@ -3722,22 +3725,24 @@ public class ItemBuilder extends GenericScreen {
                 for(int i=0; i<9; i++) {
                     this.btns[i].active = savedModeSet && !viewBlackMarket;
                     if(savedStacksWarn != null && savedStacksWarn.length == 9)
-                        savedStacksWarn[i] = false;
+                        savedStacksWarn[i] = 0;
                     if((!viewBlackMarket && savedItems.containsKey(savedRow*9+i)) || (viewBlackMarket && FortytwoEdit.webItems.size()>(savedRow*9+i))) {
                         SavedItem current = SavedItem.build(viewBlackMarket ? FortytwoEdit.webItems.get(savedRow*9+i) : savedItems.get(savedRow*9+i));
                         if(current.stack()==null) {
                             this.btns[i].setTooltip(makeItemTooltip(current.storedString()));
                             savedStacks[i] = FortytwoEdit.ITEM_ERROR;
+                            if(savedStacksWarn != null && savedStacksWarn.length == 9)
+                                savedStacksWarn[i] = 2;
                         }
                         else {
                             savedStacks[i] = current.stack();
                             if(current.nbtError()) {
                                 if(savedStacksWarn != null && savedStacksWarn.length == 9)
-                                    savedStacksWarn[i] = true;
+                                    savedStacksWarn[i] = 1;
                                 NbtElement currentEl = BlackMagick.nbtFromString(current.storedString());
                                 if(currentEl != null && currentEl.getType()==NbtElement.COMPOUND_TYPE) {
                                     this.btns[i].setTooltip(Tooltip.of(Text.empty().append(
-                                        BlackMagick.textFromJson("{\"text\":\"Failed to read item\",\"color\":\"red\"}").text()).append(
+                                        BlackMagick.textFromJson("{\"text\":\"Failed to load all item data\",\"color\":\"red\"}").text()).append(
                                         Text.of("\n")).append(
                                         BlackMagick.getElementDifferences((NbtCompound)currentEl, BlackMagick.itemToNbtStorage(current.stack())))));
                                 }
@@ -3804,22 +3809,29 @@ public class ItemBuilder extends GenericScreen {
             if(item != null) {
                 drawItem(context,item,x+15+2+itemXoff,y+2);
             }
-            if(savedStacksMode == 1 && this.savedStacks != null && this.savedStacks.length == 9)
-                for(int i=0; i<9; i++) {
-                    if(this.savedStacks[i] != null) {
-                        if(this.btns[i].active)
-                            context.drawGuiTexture(RenderLayer::getGuiTextured, ITEM_SLOT_BACKGROUND, x+this.btnX[i]+2, y+2, 16, 16);
-                        drawItem(context,this.savedStacks[i],x+this.btnX[i]+2,y+2);
-                        if(savedModeSet && !viewBlackMarket && !this.savedStacks[i].isEmpty())
-                            context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, DELETE_ITEM_OVERLAY, x+this.btnX[i]+2, y+2, 16, 16);
-                        if(savedStacksWarn != null && savedStacksWarn.length==9 && savedStacksWarn[i])
-                            context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, INVALID_ITEM_OVERLAY, x+this.btnX[i]+2, y+2, 16, 16);
-                    }
-                }
-            else if(savedStacksMode == 0 && this.savedStacks != null && this.savedStacks.length == this.btnX.length)
+            if(savedStacksMode >= 0 && this.savedStacks != null && this.savedStacks.length == this.btnX.length) {
                 for(int i=0; i<this.savedStacks.length; i++)
                     if(this.savedStacks[i] != null && !this.savedStacks[i].isEmpty())
                         drawItem(context,this.savedStacks[i],x+this.btnX[i]+2,y+2);
+            }
+            if(savedStacksMode == 1 && this.savedStacks != null && this.savedStacks.length == this.btnX.length) {
+                for(int i=0; i<this.savedStacks.length; i++) {
+                    if(this.savedStacks[i] != null) {
+                        if(this.btns[i].active)
+                            context.drawGuiTexture(RenderLayer::getGuiTextured, ITEM_SLOT_BACKGROUND, x+this.btnX[i]+1, y+1, 18, 18);
+                        if(savedModeSet && !viewBlackMarket && !this.savedStacks[i].isEmpty())
+                            context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, DELETE_ITEM_OVERLAY, x+this.btnX[i]+2, y+2, 16, 16);
+                    }
+                }
+            }
+            if(savedStacksMode>=0 && this.savedStacksWarn != null && this.savedStacksWarn.length == this.btnX.length) {
+                for(int i=0; i<this.savedStacksWarn.length; i++) {
+                    if(savedStacksWarn[i]==1)
+                        context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, ITEM_WARNING_OVERLAY, x+this.btnX[i], y, 20, 20);
+                    else if(savedStacksWarn[i]==2)
+                        context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, ITEM_ERROR_OVERLAY, x+this.btnX[i], y, 20, 20);
+                }
+            }
 
         }
 
@@ -4953,15 +4965,17 @@ public class ItemBuilder extends GenericScreen {
         @Override
         public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             super.render(context, index, y, x, entryWidth, entryHeight, mouseX, mouseY, hovered, tickDelta);
-            if(this.slotSprites != null && savedStacksMode == 0 && this.savedStacks != null
-            && this.savedStacks.length == this.btnX.length && this.slotSprites.length == this.savedStacks.length) {
-                for(int i=0; i<this.savedStacks.length; i++)
-                    if((this.savedStacks[i] == null || this.savedStacks[i].isEmpty()) && this.slotSprites[i]>0 && this.slotSprites[i]<=this.SPRITES.length)
-                        context.drawGuiTexture(RenderLayer::getGuiTextured, this.SPRITES[this.slotSprites[i]-1], x+this.btnX[i]+2, y+2, 16, 16);
+            if(this.savedStacks != null && this.savedStacks.length == this.btnX.length) {
+                for(int i=0; i<this.savedStacks.length; i++) {
+                    context.drawGuiTexture(RenderLayer::getGuiTextured, ITEM_SLOT_BACKGROUND, x+this.btnX[i]+1, y+1, 18, 18);
+                    if(this.slotSprites != null && savedStacksMode == 0 && this.slotSprites.length == this.savedStacks.length
+                        && (this.savedStacks[i] == null || this.savedStacks[i].isEmpty()) && this.slotSprites[i]>0 && this.slotSprites[i]<=this.SPRITES.length)
+                            context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, this.SPRITES[this.slotSprites[i]-1], x+this.btnX[i]+2, y+2, 16, 16);
+                }
             }
             if(this.isHotbarRow) {
                 int sel = client.player.getInventory().selectedSlot;
-                context.drawGuiTexture(RenderLayer::getGuiTextured, SEL_SLOT, x+(sel*20)+40-2, y-20-2, 24, 23);
+                context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, SEL_SLOT, x+(sel*20)+40-2, y-20-2, 24, 23);
             }
         }
 
@@ -5380,7 +5394,8 @@ public class ItemBuilder extends GenericScreen {
                 InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f,
                     mouseX, mouseY, (LivingEntity)this.client.player);
 
-            drawItem(context,selItem, x+240-20-5+2, y+5+2);
+            context.drawGuiTexture(RenderLayer::getGuiTextured, ITEM_SLOT_BACKGROUND, x+240-20-5+1, y+5+1, 18, 18);
+            drawItem(context, selItem, x+240-20-5+2, y+5+2);
             txtFormat.setX(x+50);
             txtFormat.render(context, mouseX, mouseY, delta);
             if(!this.unsavedTxtWidgets.isEmpty())
