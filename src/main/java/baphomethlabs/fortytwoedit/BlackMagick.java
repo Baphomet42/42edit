@@ -616,6 +616,14 @@ public class BlackMagick {
         return nbtToString(NbtString.of(key));
     }
 
+    public static Identifier identifierOrNull(String id) {
+        try {
+            return Identifier.of(id);
+        }
+        catch(Exception ex) {}
+        return null;
+    }
+
     /**
      * Get the Nbt representation of an item for pre-made banner designs for various characters
      * 

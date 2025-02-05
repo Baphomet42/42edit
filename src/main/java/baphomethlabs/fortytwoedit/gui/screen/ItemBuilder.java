@@ -107,7 +107,6 @@ public class ItemBuilder extends GenericScreen {
     public static boolean savedItemsError = false;
     private String inpError = null;
     private String inpErrorTrim = null;
-    private static boolean showUnusedComponents = false;
     private static boolean viewBlackMarket = false;
     private static final Tooltip TOOLTIP_BLACK_MARKET =
         Tooltip.of(BlackMagick.textFromJson("[{\"text\":\"Black Market Items\"},{\"text\":\"\n\nGet custom items produced by \",\"color\":\"gray\"},"
@@ -121,8 +120,10 @@ public class ItemBuilder extends GenericScreen {
         +"MmY4NjRkNjdjMTM2N2U5YTQ1ZGMxMGYzNzE1NDljNDZhNGQ0ZGQ5ZTRmMTNmZjQiDQogICAgfQ0KICB9DQp9\"}]}}}")),
         BlackMagick.itemFromNbtStatic((NbtCompound)BlackMagick.nbtFromString("{id:player_head,components:{profile:{"
         +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3"
-        +"RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MjY0ODZmNDI0ODljZWYwMmM5ZTk4ZGQ4YmU1YTNmMzhlODc5MTQ3NTQzMjZlNzdjODM3YzFiMmJjYmE2NSINCiAgICB9DQogIH0NCn0=\"}]}}}")),
-        new ItemStack(Items.BARRIER)};
+        +"RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MjY0ODZmNDI0ODljZWYwMmM5ZTk4ZGQ4YmU1YTNmMzhlODc5MTQ3NTQzMjZlNzdjODM3YzFiMmJjYmE2NSINCiAgICB9DQogIH0NCn0=\"}]}}}"))};
+    protected static final Identifier DELETE_ITEM_OVERLAY = Identifier.ofVanilla("container/beacon/cancel");
+    protected static final Identifier INVALID_ITEM_OVERLAY = Identifier.ofVanilla("spectator/close");
+    protected static final Identifier ITEM_SLOT_BACKGROUND = Identifier.ofVanilla("container/slot");
     private ArmorStandEntity renderArmorStand;
     private ArmorStandEntity renderArmorPose;
     protected final int playerX = 240+10;
@@ -1820,13 +1821,11 @@ public class ItemBuilder extends GenericScreen {
                     String inp = widgets.get(i).get(j).btn()[0];
                     if(!inp.trim().equals("")) {
                         String sound = inp.trim();
-                        if(sound.matches("[a-z0-9/._\\-:]+")) {// to_do verify valid sound without regex
-                            try {
-                                client.player.playSoundToPlayer(SoundEvent.of(Identifier.of(sound)), SoundCategory.MASTER, 1, 1);
-                            } catch(Exception ex) {}
-                        }
+                        Identifier soundId = BlackMagick.identifierOrNull(sound);
+                        if(soundId != null)
+                            client.player.playSoundToPlayer(SoundEvent.of(soundId), SoundCategory.MASTER, 1, 1);
                     }
-                }, ComponentHelper.REGISTRY_SOUND_EVENT.getArray(),true));
+                }, ComponentHelper.REGISTRY_SOUND_EVENT.getArray(),true));// to_do add registry sounds + dynamic assets sounds
             }
             {
                 final int i = tabNum; final int j = widgets.get(tabNum).size();
@@ -1835,16 +1834,15 @@ public class ItemBuilder extends GenericScreen {
                     String inp = widgets.get(i).get(j-1).btn()[0];
                     if(!inp.trim().equals("")) {
                         String sound = inp.trim();
-                        if(sound.matches("[a-z0-9/._\\-:]+")) {// to_do verify valid sound without regex
-                            String soundDisplay = sound;
-                            if(soundDisplay.startsWith("minecraft:") && !soundDisplay.equals("minecraft:"))
-                                soundDisplay = soundDisplay.replaceFirst("minecraft:","");
+                        Identifier soundId = BlackMagick.identifierOrNull(sound);
+                        if(soundId != null) {
+                            String soundDisplay = soundId.getNamespace().equals("minecraft") ? soundId.getPath() : soundId.toString();
                             ItemStack item = BlackMagick.itemFromString(
                                 "{id:player_head,components:{\"minecraft:profile\":{properties:[{name:\"textures\",value:"+
                                 "\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDov"+
                                 "L3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80Y2VlYjc3ZDRkMjU3MjRhOWNhZjJjN2NkZjJkODgzOTliMTQxN2M2YjlmZjUyMTM2NTliNjUzYmU0Mz"+
-                                "c2ZTMiDQogICAgfQ0KICB9DQp9\"}]},\"minecraft:note_block_sound\":\""+sound+"\","+
-                                "\"minecraft:custom_name\":'{\"italic\":false,\"text\":\""+soundDisplay+"\"}'}}");
+                                "c2ZTMiDQogICAgfQ0KICB9DQp9\"}]},\"minecraft:note_block_sound\":\""+soundId.toString()+"\","+
+                                "\"minecraft:custom_name\":'{\"italic\":false,\"text\":\""+soundDisplay+"\"}'}}"); //to_do use nbt methods instead of string appending
                             if(!item.isEmpty())
                                 BlackMagick.setItemMain(item);
                         }
@@ -2242,52 +2240,45 @@ public class ItemBuilder extends GenericScreen {
                 {
                     widgets.get(tabNum).add(new RowWidgetComponent("count"));
                 }
-                {
-                    widgets.get(tabNum).add(new RowWidget("components"));
-                }
-                List<String> unset = Lists.newArrayList();
-                for(String c : ComponentHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
-                    if(ComponentHelper.hasComponent(selItem.getComponents(),c))
-                        widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
-                    else
-                        unset.add(c);
-                }
-                List<String> unused = Lists.newArrayList();
-                if(!unset.isEmpty()) {
-                    widgets.get(tabNum).add(new RowWidget("unset"));
-                    for(String c : unset) {
-                        widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
-                        // if(ComponentHelper.componentRead(selItem,c))
-                        //     widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
-                        // else
-                        //     unused.add(c);
-                    }
-                }
-                if(!unused.isEmpty()) {
-                    widgets.get(tabNum).add(new RowWidget());
-                    if(!showUnusedComponents) {
-                        {
-                            ButtonWidget w = ButtonWidget.builder(Text.of("Show Unused"), btn -> {
-                                showUnusedComponents = !showUnusedComponents;
-                                unsel();
-                                createTab(CACHE_TAB_MAIN);
-                            }).dimensions((width/2)-40,5,80,20).build();
-                            w.setTooltip(Tooltip.of(Text.of("Show all vanilla components")));
-                            widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,(width/2)-40-x,0)}));
-                        }
-                    }
+                Set<String> allSetComponentKeys = Sets.newHashSet();
+                Set<String> modifiedComponentKeys = Sets.newHashSet();
+                Set<String> defaultComponentKeys = Sets.newHashSet();
+                Set<String> removedComponentKeys = Sets.newHashSet();
+                Set<String> storedComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(selItem),"components")).getKeys();
+                for(String k : BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),"components")).getKeys()) {
+                    if(k.startsWith("!"))
+                        removedComponentKeys.add(k);
                     else {
-                        {
-                            ButtonWidget w = ButtonWidget.builder(Text.of("Hide Unused"), btn -> {
-                                showUnusedComponents = !showUnusedComponents;
-                                unsel();
-                                createTab(CACHE_TAB_MAIN);
-                            }).dimensions((width/2)-40,5,80,20).build();
-                            w.setTooltip(Tooltip.of(Text.of("Only show relevant components")));
-                            widgets.get(tabNum).add(new RowWidget(new PosWidget[]{new PosWidget(w,(width/2)-40-x,0)}));
+                        allSetComponentKeys.add(k);
+                        if(storedComponentKeys.contains(k))
+                            modifiedComponentKeys.add(k);
+                        else
+                            defaultComponentKeys.add(k);
+                    }
+                }
+                if(!modifiedComponentKeys.isEmpty()) {
+                    widgets.get(tabNum).add(new RowWidget("Modified Components"));
+                    for(String c : modifiedComponentKeys)
+                        widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
+                }
+                if(!defaultComponentKeys.isEmpty()) {
+                    widgets.get(tabNum).add(new RowWidget("Default Components"));
+                    for(String c : defaultComponentKeys)
+                        widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
+                }
+                if(!removedComponentKeys.isEmpty()) {
+                    widgets.get(tabNum).add(new RowWidget("Removed Components"));
+                    for(String c : removedComponentKeys)
+                        widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
+                }
+                boolean firstUnset = true;
+                for(String c : ComponentHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
+                    if(!allSetComponentKeys.contains(c)) {
+                        if(firstUnset) {
+                            widgets.get(tabNum).add(new RowWidget("Unset Components"));
+                            firstUnset = false;
                         }
-                        for(String c : unused)
-                            widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
+                        widgets.get(tabNum).add(new RowWidgetComponent("components."+c));
                     }
                 }
             }
@@ -2620,25 +2611,28 @@ public class ItemBuilder extends GenericScreen {
                         keyGroups.get(REQUIRED_GROUP).addAll(reqKeys);
                         allKeys.addAll(reqKeys);
                     }
-                    for(String k : ComponentHelper.getPathInfo(fullPath).keys().getOptional()) {
-                        PathInfo pi = ComponentHelper.getPathInfo(fullPath+"."+k);
-                        String thisGroup;
-                        if(pi.keyGroup()!=null)
-                            thisGroup = pi.keyGroup();
-                        else if(pi.type()==PathType.UNKNOWN)
-                            thisGroup = UNKNOWN_GROUP;
-                        else
-                            thisGroup = OPTIONAL_GROUP;
+                    {
+                        Set<String> sortKeys = Sets.newHashSet();
+                        sortKeys.addAll(ComponentHelper.getPathInfo(fullPath).keys().getOptional());
+                        sortKeys.addAll(((NbtCompound)el2).getKeys());
+                        for(String k : sortKeys) {
+                            if(!allKeys.contains(k)) {
+                                PathInfo pi = ComponentHelper.getPathInfo(fullPath+"."+k);
+                                String thisGroup;
+                                if(pi.keyGroup()!=null)
+                                    thisGroup = pi.keyGroup();
+                                else if(pi.type()==PathType.UNKNOWN)
+                                    thisGroup = UNKNOWN_GROUP;
+                                else
+                                    thisGroup = OPTIONAL_GROUP;
 
-                        if(!keyGroups.containsKey(thisGroup))
-                            keyGroups.put(thisGroup,Sets.newHashSet());
+                                if(!keyGroups.containsKey(thisGroup))
+                                    keyGroups.put(thisGroup,Sets.newHashSet());
 
-                        keyGroups.get(thisGroup).add(k);
-                        allKeys.add(k);
-                    }
-                    for(String k : ((NbtCompound)el2).getKeys()) {
-                        if(!allKeys.contains(k))
-                            keyGroups.get(UNKNOWN_GROUP).add(k);
+                                keyGroups.get(thisGroup).add(k);
+                                allKeys.add(k);
+                            }
+                        }
                     }
 
                     List<String> keyGroupLbls = BlackMagick.sortSet(keyGroups.keySet());
@@ -3361,7 +3355,7 @@ public class ItemBuilder extends GenericScreen {
         }
 
         /**
-         * Used for text component effects tab.
+         * Used for text component effects tab
          * lbl(size) txt [custom suggs]
          */
         public RowWidget(String name, int suggsNum) { // to_do remove and replace with real solution
@@ -3631,7 +3625,7 @@ public class ItemBuilder extends GenericScreen {
                     }
                     if(disabled) {
                         tt = Tooltip.of(Text.of("Pattern disabled: "+vals[i]).copy().formatted(Formatting.RED));
-                        this.savedStacks[i] = new ItemStack(Items.BARRIER);
+                        this.savedStacks[i] = new ItemStack(Items.BARRIER);//to_do
                     }
                 }
                 else
@@ -3813,11 +3807,13 @@ public class ItemBuilder extends GenericScreen {
             if(savedStacksMode == 1 && this.savedStacks != null && this.savedStacks.length == 9)
                 for(int i=0; i<9; i++) {
                     if(this.savedStacks[i] != null) {
+                        if(this.btns[i].active)
+                            context.drawGuiTexture(RenderLayer::getGuiTextured, ITEM_SLOT_BACKGROUND, x+this.btnX[i]+2, y+2, 16, 16);
                         drawItem(context,this.savedStacks[i],x+this.btnX[i]+2,y+2);
                         if(savedModeSet && !viewBlackMarket && !this.savedStacks[i].isEmpty())
-                            drawItem(context,savedModeItems[2],x+this.btnX[i]+2,y+2);
+                            context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, DELETE_ITEM_OVERLAY, x+this.btnX[i]+2, y+2, 16, 16);
                         if(savedStacksWarn != null && savedStacksWarn.length==9 && savedStacksWarn[i])
-                            drawItem(context,savedModeItems[2],x+this.btnX[i]+2,y+2);
+                            context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, INVALID_ITEM_OVERLAY, x+this.btnX[i]+2, y+2, 16, 16);
                     }
                 }
             else if(savedStacksMode == 0 && this.savedStacks != null && this.savedStacks.length == this.btnX.length)

@@ -17,8 +17,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.resource.language.TranslationStorage;
-import net.minecraft.component.Component;
-import net.minecraft.component.ComponentMap;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.component.type.FireworkExplosionComponent;
 import net.minecraft.enchantment.Enchantment;
@@ -57,22 +55,6 @@ import net.minecraft.util.Util;
  * </ul>
  */
 public class ComponentHelper {
-
-    /**
-     * 
-     * @param comps from ItemStack.getComponents() or Item.getComponents()
-     * @param component component id with minecraft namespace
-     * @return true if comps has the specified component
-     */
-    public static boolean hasComponent(ComponentMap comps, String component) {
-        for(Component<?> c : comps) {
-            Identifier id = Registries.DATA_COMPONENT_TYPE.getId(c.type());
-            if(id != null && id.toString().equals(component)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     private static final Map<String,PathInfo> pathInfoCaches = Maps.newHashMap();
 
@@ -684,7 +666,7 @@ public class ComponentHelper {
             if(path.endsWith("components.lock"))
                 return (new PathInfo(KeyGetter.create().withOptional("components","count","items","predicates"))).withIcon(Items.CHEST);
             if(path.endsWith("components.lock.components"))
-                return (new PathInfo(KeyGetter.create().withOptional(LIST_DATA_COMPONENT_TYPE))).withDesc(Text.of("Exact components to match"));
+                return PathInfos.COMPONENTS_NODE.withDesc(Text.of("Exact components to match"));
             if(path.endsWith("components.lock.count"))
                 return (new PathInfo(PathType.DEFAULT,SuggestionGetter.newInline("1","{min:1,max:2}"))).withDesc(Text.of("Can be either:\na) NbtInt of exact count\nb) NbtCompound containing min, max, or both to test a range"));
             if(path.endsWith("components.lock.items"))
@@ -920,6 +902,14 @@ public class ComponentHelper {
                 return PathInfos.TRINARY.withDesc(Text.of("Whether or not text component is resolved (for selectors/scores/etc)"));
         }
 
+        if(path.contains("components.!")) {
+            for(String c : LIST_DATA_COMPONENT_TYPE.getList()) {
+                if(path.endsWith("components.!"+c.replace("minecraft:",""))) {
+                    return PathInfos.UNIT.withGroup("Inverted Components").withIcon(getPathInfo("components."+c).icon());
+                }
+            }
+        }
+
         if(path.equals("id") || path.endsWith(".id"))
             return (new PathInfo(PathType.STRING,REGISTRY_ITEM)).withIcon(Items.STONE);
 
@@ -927,7 +917,7 @@ public class ComponentHelper {
             return PathInfos.ITEM_COUNT.withIcon(Items.STONE);
 
         if(path.equals("components") || path.endsWith(".components"))
-            return PathInfos.COMPONENTS_NODE;
+            return PathInfos.COMPONENTS_OR_INVERTED;
 
         FortytwoEdit.logWarn("No PathInfo found for path: "+path);
         return PathInfos.UNKNOWN;
@@ -1246,6 +1236,7 @@ public class ComponentHelper {
         private static final PathInfo ITEM_COUNT = (new PathInfo(PathType.INT,SuggestionGetter.newInline("1","16","64","99")));
 
         private static final PathInfo COMPONENTS_NODE = (new PathInfo(KeyGetter.create().withOptional(LIST_DATA_COMPONENT_TYPE)));
+        private static final PathInfo COMPONENTS_OR_INVERTED = (new PathInfo(KeyGetter.create().withOptional(LIST_DATA_COMPONENT_TYPE,LIST_DATA_COMPONENT_TYPE.withFormat(SuggestionGetter.Format.INVERTED))));
 
         private static final PathInfo POTION_CONTENTS = (new PathInfo(KeyGetter.create().withOptional("potion","custom_color","custom_effects","custom_name")));
         private static final PathInfo EFFECT_NODE = (new PathInfo(KeyGetter.create().withRequired("id").withOptional("amplifier","duration","ambient","show_particles","show_icon"))).withFlag(PathFlag.EFFECT);
@@ -1346,17 +1337,22 @@ public class ComponentHelper {
 
         private void addFormatted(Set<String> set, Format format, String[] toAdd) {
             switch(format) {
-                case NONE: {
+                case NONE : {
                     for(String s : toAdd)
                         set.add(s);
                     break;
                 }
-                case NBT_STRING: {
+                case NBT_STRING : {
                     for(String s : toAdd)
                         set.add(BlackMagick.nbtToString(NbtString.of(s)));
                     break;
                 }
-                case AEC_PARTICLE_TYPE: {
+                case INVERTED : {
+                    for(String s : toAdd)
+                        set.add("!"+s);
+                    break;
+                }
+                case AEC_PARTICLE_TYPE : {
                     for(String s : toAdd) {
                         NbtCompound nbt = new NbtCompound();
                         nbt.putString("type",s);
@@ -1387,9 +1383,10 @@ public class ComponentHelper {
         }
 
         public enum Format {
-            NONE,
-            NBT_STRING,
-            AEC_PARTICLE_TYPE
+            NONE,                   // suggs sent as-is
+            NBT_STRING,             // suggs formatted inside valid NBT string (double or single quotes)
+            INVERTED,               // suggs prefixed with !
+            AEC_PARTICLE_TYPE       // suggs listed inside compound in key `type`
         }
 
     }
@@ -1484,37 +1481,40 @@ public class ComponentHelper {
         // manually enter rows/cols based on ingame gui appearance
         // remove ender chest
 
-        String id = Identifier.of(item.toString()).toString();
+        Identifier identifier = BlackMagick.identifierOrNull(item.toString());
+        if(identifier != null) {
+            String id = identifier.toString();
 
-        if(id.startsWith("minecraft:") && id.endsWith("shulker_box"))
-            return new int[]{3,9};
-
-        switch(id) {
-            case "minecraft:chest":
-            case "minecraft:trapped_chest":
-            case "minecraft:barrel":
+            if(id.startsWith("minecraft:") && id.endsWith("shulker_box"))
                 return new int[]{3,9};
-            case "minecraft:dispenser":
-            case "minecraft:dropper":
-            case "minecraft:crafter":
-                return new int[]{3,3};
-            case "minecraft:hopper":
-            case "minecraft:brewing_stand":
-                return new int[]{1,5};
-            case "minecraft:furnace":
-            case "minecraft:blast_furnace":
-            case "minecraft:smoker":
-                return new int[]{1,3};
-            case "minecraft:chiseled_bookshelf":
-                return new int[]{2,3};
-            case "minecraft:campfire":
-            case "minecraft:soul_campfire":
-                return new int[]{1,4};
-            case "minecraft:decorated_pot":
-                return new int[]{1,1};
-            default:
-                return new int[]{-1,-1};
+
+            switch(id) {
+                case "minecraft:chest":
+                case "minecraft:trapped_chest":
+                case "minecraft:barrel":
+                    return new int[]{3,9};
+                case "minecraft:dispenser":
+                case "minecraft:dropper":
+                case "minecraft:crafter":
+                    return new int[]{3,3};
+                case "minecraft:hopper":
+                case "minecraft:brewing_stand":
+                    return new int[]{1,5};
+                case "minecraft:furnace":
+                case "minecraft:blast_furnace":
+                case "minecraft:smoker":
+                    return new int[]{1,3};
+                case "minecraft:chiseled_bookshelf":
+                    return new int[]{2,3};
+                case "minecraft:campfire":
+                case "minecraft:soul_campfire":
+                    return new int[]{1,4};
+                case "minecraft:decorated_pot":
+                    return new int[]{1,1};
+                default: break;
+            }
         }
+        return new int[]{-1,-1};
     }
 
 
@@ -1548,7 +1548,7 @@ public class ComponentHelper {
     /**
      * Contains pottery sherd items and brick item
      */
-    public static final SuggestionGetter LIST_DECORATED_POT_PATTERN_ITEMS = registerSuggsList("LIST_DECORATED_POT_PATTERN_ITEMS", () -> {//TODO use item tag? (#decorated_pot_ingredients or #decorated_pot_sherds)
+    public static final SuggestionGetter LIST_DECORATED_POT_PATTERN_ITEMS = registerSuggsList("LIST_DECORATED_POT_PATTERN_ITEMS", () -> {//to_do use item tag `#minecraft:decorated_pot_ingredients` ?
         List<String> list = createOrGetCacheList("LIST_DECORATED_POT_PATTERN_ITEMS",false);
         if(list.isEmpty()) {
             for(Item i : DecoratedPotPatternsAccessor.getSherdToPattern().keySet())
