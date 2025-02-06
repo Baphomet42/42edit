@@ -18,6 +18,7 @@ import baphomethlabs.fortytwoedit.ComponentHelper.PathInfo;
 import baphomethlabs.fortytwoedit.ComponentHelper.PathType;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
+import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButtonWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
@@ -50,7 +51,6 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.registry.tag.ItemTags;
-import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.MutableText;
@@ -89,7 +89,7 @@ public class ItemBuilder extends GenericScreen {
     protected ItemStack selItem = ItemStack.EMPTY;
     protected ItemStack selItemOff = ItemStack.EMPTY;
     protected static List<List<String>> cacheStates = Lists.newArrayList();
-    protected ButtonWidget itemBtn = null;
+    protected ItemSlotButtonWidget itemBtn = null;
     protected ButtonWidget swapBtn;
     protected ButtonWidget swapCopyBtn;
     protected ButtonWidget throwCopyBtn;
@@ -114,17 +114,16 @@ public class ItemBuilder extends GenericScreen {
     private static final Tooltip TOOLTIP_LOCAL_ITEMS =
         Tooltip.of(BlackMagick.textFromJson("[{\"text\":\"Local Items\"},"
         + "{\"text\":\"\n\nSave items for later without using up your saved hotbars\",\"color\":\"gray\"}]").text());
-    private static final ItemStack[] savedModeItems = new ItemStack[]{BlackMagick.itemFromNbtStatic((NbtCompound)BlackMagick.nbtFromString(
+    private static final ItemStack[] SAVED_TAB_MODE_ITEMS = new ItemStack[]{BlackMagick.itemFromNbtStatic(BlackMagick.validCompound(BlackMagick.nbtFromString(
         "{id:player_head,components:{profile:{properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQ"
-        +"iIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iZDlmMThjOWQ4NWY5MmY3"
-        +"MmY4NjRkNjdjMTM2N2U5YTQ1ZGMxMGYzNzE1NDljNDZhNGQ0ZGQ5ZTRmMTNmZjQiDQogICAgfQ0KICB9DQp9\"}]}}}")),
-        BlackMagick.itemFromNbtStatic((NbtCompound)BlackMagick.nbtFromString("{id:player_head,components:{profile:{"
-        +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3"
-        +"RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MjY0ODZmNDI0ODljZWYwMmM5ZTk4ZGQ4YmU1YTNmMzhlODc5MTQ3NTQzMjZlNzdjODM3YzFiMmJjYmE2NSINCiAgICB9DQogIH0NCn0=\"}]}}}"))};
+        +"iIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pb"
+        +"mVjcmFmdC5uZXQvdGV4dHVyZS9iZDlmMThjOWQ4NWY5MmY3MmY4NjRkNjdjMTM2N2U5YTQ1ZGMxMGYzNzE1NDljNDZhNGQ0ZGQ5ZTRmMTN"
+        +"mZjQiDQogICAgfQ0KICB9DQp9\"}]}}}"))),
+        BlackMagick.itemFromNbtStatic(BlackMagick.validCompound(BlackMagick.nbtFromString("{id:player_head,components:{profile:{"
+        +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlN"
+        +"LSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MjY0ODZmNDI0ODljZWYwMmM5ZTk4ZGQ4Y"
+        +"mU1YTNmMzhlODc5MTQ3NTQzMjZlNzdjODM3YzFiMmJjYmE2NSINCiAgICB9DQogIH0NCn0=\"}]}}}")))};
     protected static final Identifier DELETE_ITEM_OVERLAY = Identifier.ofVanilla("container/beacon/cancel");
-    protected static final Identifier ITEM_WARNING_OVERLAY = Identifier.ofVanilla("world_list/warning_highlighted");
-    protected static final Identifier ITEM_ERROR_OVERLAY = Identifier.ofVanilla("world_list/error_highlighted");
-    protected static final Identifier ITEM_SLOT_BACKGROUND = Identifier.ofVanilla("container/slot");
     private ArmorStandEntity renderArmorStand;
     private ArmorStandEntity renderArmorPose;
     protected final int playerX = 240+10;
@@ -295,7 +294,7 @@ public class ItemBuilder extends GenericScreen {
             if(throwCopyBtn.active)
                 throwCopyBtn.setTooltip(Tooltip.of(Text.of("Throw a copy of item")));
 
-            itemBtn = this.addDrawableChild(ButtonWidget.builder(Text.of(""), button -> this.btnCopyNbt()).dimensions(x+240-20-5,y+5,20,20).build());
+            itemBtn = this.addDrawableChild(new ItemSlotButtonWidget(x+240-20-5, y+5, selItem, button -> this.btnCopySelItemNbt()));
             if(selItem==null || selItem.isEmpty()) {
                 itemBtn.active = false;
                 itemBtn.setTooltip(null);
@@ -409,10 +408,15 @@ public class ItemBuilder extends GenericScreen {
         unsel();
     }
 
-    protected void btnCopyNbt() {
-        if(client.player.getMainHandStack() != null && !client.player.getMainHandStack().isEmpty()) {
-            String itemData = BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(client.player.getMainHandStack()));
+    protected void btnCopySelItemNbt() {
+        btnCopyItemNbt(selItem);
+    }
+
+    protected void btnCopyItemNbt(ItemStack stack) {
+        if(stack != null && !stack.isEmpty()) {
+            String itemData = BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(stack));
             client.keyboard.setClipboard(itemData);
+            FortytwoEdit.showToast("Item Builder","Item NBT copied to clipboard");
         }
         unsel();
     }
@@ -431,6 +435,7 @@ public class ItemBuilder extends GenericScreen {
             FortytwoEdit.addItemHist(selItem);
 
             if(itemBtn != null) {
+                itemBtn.setItem(selItem);
                 if(selItem==null || selItem.isEmpty()) {
                     itemBtn.active = false;
                     itemBtn.setTooltip(null);
@@ -606,25 +611,32 @@ public class ItemBuilder extends GenericScreen {
     }
     private void updateSavedTab() {
         if(widgets.get(CACHE_TAB_SAVED).size() >= FortytwoEdit.SAVED_ROWS)
-            for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
-                widgets.get(CACHE_TAB_SAVED).get(i).updateSavedDisplay();
+            for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++) {
+                RowWidget row = widgets.get(CACHE_TAB_SAVED).get(i);
+                if(row instanceof RowWidgetSavedItemsRow)
+                    ((RowWidgetSavedItemsRow)row).updateSavedDisplay();
+            }
     }
 
-    private void setSavedModeTooltip() {
-        if(viewBlackMarket) {
-            noScrollWidgets.get(CACHE_TAB_SAVED).get(0).w.setTooltip(TOOLTIP_BLACK_MARKET);
-            noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setTooltip(Tooltip.of(Text.of("Refresh from Web")));
-            noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setMessage(Text.of(UNICODE_REFRESH));
-        }
-        else {
-            noScrollWidgets.get(CACHE_TAB_SAVED).get(0).w.setTooltip(TOOLTIP_LOCAL_ITEMS);
-            if(savedModeSet) {
-                noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setTooltip(Tooltip.of(Text.of("C - Save to slot")));
-                noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setMessage(Text.of("C"));
+    private void updateSavedModeButtons() {
+        if(widgetCache.containsKey(WidgetCacheType.BTN_SAVED_SOURCE) && widgetCache.containsKey(WidgetCacheType.BTN_SAVED_MODE)) {
+            if(viewBlackMarket) {
+                widgetCache.get(WidgetCacheType.BTN_SAVED_SOURCE).setTooltip(TOOLTIP_BLACK_MARKET);
+                ((ItemSlotButtonWidget)widgetCache.get(WidgetCacheType.BTN_SAVED_SOURCE)).setItem(SAVED_TAB_MODE_ITEMS[1]);
+                widgetCache.get(WidgetCacheType.BTN_SAVED_MODE).setTooltip(Tooltip.of(Text.of("Refresh from Web")));
+                widgetCache.get(WidgetCacheType.BTN_SAVED_MODE).setMessage(Text.of(UNICODE_REFRESH));
             }
             else {
-                noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setTooltip(Tooltip.of(Text.of("V - Get item")));
-                noScrollWidgets.get(CACHE_TAB_SAVED).get(1).w.setMessage(Text.of("V"));
+                widgetCache.get(WidgetCacheType.BTN_SAVED_SOURCE).setTooltip(TOOLTIP_LOCAL_ITEMS);
+                ((ItemSlotButtonWidget)widgetCache.get(WidgetCacheType.BTN_SAVED_SOURCE)).setItem(SAVED_TAB_MODE_ITEMS[0]);
+                if(savedModeSet) {
+                    widgetCache.get(WidgetCacheType.BTN_SAVED_MODE).setTooltip(Tooltip.of(Text.of("C - Save to slot")));
+                    widgetCache.get(WidgetCacheType.BTN_SAVED_MODE).setMessage(Text.of("C"));
+                }
+                else {
+                    widgetCache.get(WidgetCacheType.BTN_SAVED_MODE).setTooltip(Tooltip.of(Text.of("V - Get item")));
+                    widgetCache.get(WidgetCacheType.BTN_SAVED_MODE).setMessage(Text.of("V"));
+                }
             }
         }
     }
@@ -2158,15 +2170,20 @@ public class ItemBuilder extends GenericScreen {
         {
             int tabNum = CACHE_TAB_SAVED;
             {
-                noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of(""), btn -> {
+                // button is setup in updateSavedModeButtons()
+                ItemSlotButtonWidget w = new ItemSlotButtonWidget(x+15-3, y+35+1+22, btn -> {
                     viewBlackMarket = !viewBlackMarket;
-                    setSavedModeTooltip();
+                    updateSavedModeButtons();
                     updateSavedTab();
                     ItemBuilder.this.unsel();
-                }).dimensions(x+15-3, y+35+1,20,20).build(),15-3,35+1));
+                });
+                w.showSlot(false);
+                widgetCache.put(WidgetCacheType.BTN_SAVED_SOURCE,w);
+                noScrollWidgets.get(tabNum).add(new PosWidget(w,15-3,35+1));
             }
             {
-                noScrollWidgets.get(tabNum).add(new PosWidget(ButtonWidget.builder(Text.of(""), btn -> {
+                // button is setup in updateSavedModeButtons()
+                ButtonWidget w = ButtonWidget.builder(Text.of(""), btn -> {
                     if(viewBlackMarket) {
                         FortytwoEdit.readOptions();
                         NbtCompound result = FortytwoEdit.refreshWebItems(true);
@@ -2183,19 +2200,21 @@ public class ItemBuilder extends GenericScreen {
                     }
                     else {
                         savedModeSet = !savedModeSet;
-                        setSavedModeTooltip();
+                        updateSavedModeButtons();
                         updateSavedTab();
                     }
                     ItemBuilder.this.unsel();
-                }).dimensions(x+15-3, y+35+1+22,20,20).build(),15-3,35+1+22));
+                }).dimensions(x+15-3, y+35+1+22,20,20).build();
+                widgetCache.put(WidgetCacheType.BTN_SAVED_MODE,w);
+                noScrollWidgets.get(tabNum).add(new PosWidget(w,15-3,35+1+22));
             }
             for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++)
-                widgets.get(tabNum).add(new RowWidget(i));
+                widgets.get(tabNum).add(new RowWidgetSavedItemsRow(i));
             {
                 widgets.get(tabNum).add(new RowWidget());
             }
             refreshSaved();
-            setSavedModeTooltip();
+            updateSavedModeButtons();
         }
 
         resetSuggs();
@@ -2343,7 +2362,7 @@ public class ItemBuilder extends GenericScreen {
                             }
                         }
 
-                        widgets.get(tabNum).add(new RowWidgetInvRow(stacks,new int[]{1,2,3,4,0,5}));
+                        widgets.get(tabNum).add(new RowWidgetInvRow(stacks,RowWidgetInvRow.ARMOR_STAND_SPRITES));
                     }
                     else if(size[0]>0 && size[1]>0) {
                         {
@@ -2888,7 +2907,7 @@ public class ItemBuilder extends GenericScreen {
                         for(int i=0; i<currentVals.length; i++)
                             currentVals[i] = bannerVals.remove(0);
                         widgets.get(tabNum).add(
-                            new RowWidget(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,row<2,currentVals,row<2 ? bannerCol : bannerPat,cancelEl));
+                            new RowWidgetBannerRow(path,path2==null ? null : (NbtList)args.get("path2"),saveBtn,row<2,currentVals,row<2 ? bannerCol : bannerPat,cancelEl));
                         row++;
                     }
 
@@ -3287,12 +3306,8 @@ public class ItemBuilder extends GenericScreen {
         protected String lbl;
         protected boolean lblCentered = false;
         protected int lblColor = LABEL_COLOR;
-        protected ItemStack[] savedStacks;
-        protected int[] savedStacksWarn;
-        protected int savedStacksMode = -1;
-        protected int savedRow = -1;
-        protected ItemStack item = null;
-        protected int itemXoff = 0;
+        protected ItemStack displayItem = null;
+        protected int displayItemXoff = 0;
         protected PosWidget[] wids;
 
         /**
@@ -3496,173 +3511,6 @@ public class ItemBuilder extends GenericScreen {
         }
 
         /**
-         * Saved row (9 btns)
-         */
-        public RowWidget(int row) {
-            super();
-            this.children = Lists.newArrayList();
-            setup();
-
-            this.savedRow = row;
-            this.savedStacks = new ItemStack[9];
-            this.savedStacksWarn = new int[9];
-            this.savedStacksMode = 1;
-            this.btns = new ButtonWidget[9];
-            this.btnX = new int[9];
-            int currentX = 10+30;
-            for(int i=0; i<9; i++) {
-                this.btnX[i] = currentX;
-                final int index = row*9+i;
-                this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
-                    ItemBuilder.this.unsel();
-                    if(!viewBlackMarket) {
-                        if(savedModeSet) {
-                            String itemString = "";
-                            ItemStack savedItem = client.player.getMainHandStack().copy();
-                            if(!savedItem.isEmpty()) {
-                                itemString = BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(savedItem));
-                            }
-
-                            if(FortytwoEdit.testSavedItems(savedItems)) {
-                                boolean inMap = savedItems.containsKey(index);
-                                if((!inMap && itemString.isEmpty()) || (inMap && savedItems.get(index).equals(itemString))) {
-                                    FortytwoEdit.showToast("No Change","Item already saved");
-                                }
-                                else {
-                                    if(itemString.isEmpty())
-                                        savedItems.remove(index);
-                                    else
-                                        savedItems.put(index,itemString);
-
-                                    if(!FortytwoEdit.setSavedItems(savedItems)) {
-                                        FortytwoEdit.logError("Failed to save item. The saved items list could not be loaded properly after saving."
-                                            + "\nTried to save: " + (itemString.isEmpty() ? "air" : itemString));
-                                        FortytwoEdit.showToast("Error Saving Item","Item NBT could not be saved.");
-                                    }
-                                    refreshSaved();
-                                }
-                            }
-                            else {
-                                FortytwoEdit.showToast("Error Saving Item","Reopen the screen and try again.");
-                                FortytwoEdit.logWarn("Failed to save item. The saved items file has changed since the screen has been open. File not changed."
-                                    +"\nTried to save: "+(itemString.isEmpty() ? "air" : itemString));
-                            }
-                        }
-                        else if(client.player.getAbilities().creativeMode && savedItems.containsKey(index)) {
-                            ItemStack item = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.nbtFromString(savedItems.get(index))));
-                            if(item!=null && !item.isEmpty())
-                                BlackMagick.setItemMain(item);
-                        }
-                    }
-                    else if(client.player.getAbilities().creativeMode && FortytwoEdit.webItems.size()>index) {
-                        ItemStack item = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.nbtFromString(FortytwoEdit.webItems.get(index))));
-                        if(item!=null && !item.isEmpty())
-                            BlackMagick.setItemMain(item);
-                    }
-                }).dimensions(currentX,5,20,20).build();
-                currentX += 20;
-                this.btns[i].active = false;
-                this.btns[i].setTooltipDelay(TOOLTIP_DELAY_SHORT);
-
-                this.children.add(this.btns[i]);
-            }
-        }
-
-        /**
-         * banner row (8 btns)
-         */
-        public RowWidget(String blankElPath, NbtList path2, ButtonWidget saveBtn, boolean isDye, String[] vals, String currentVal, NbtElement cancelEl) {
-            super();
-            this.children = Lists.newArrayList();
-            setup();
-
-            this.savedStacks = new ItemStack[vals.length];
-            this.savedStacksMode = 0;
-
-            ItemStack[] patternItems = isDye ? null : new ItemStack[vals.length];
-
-            String currentPath2;
-            if(path2==null)
-                currentPath2 = "";
-            else
-                currentPath2 = path2.get(0).asString(); // keep asString
-            String pagePath = blankElPath+currentPath2;
-            String fullPath = pagePath+"."+(isDye ? "color" : "pattern");
-
-            if(!isDye) {
-                for(int i=0; i<vals.length; i++)
-                    patternItems[i] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick
-                        .nbtFromString("{id:white_banner,components:{banner_patterns:[{color:red,pattern:\""+vals[i]+"\"}]}}"));
-
-                if(!bannerShield)
-                    for(int i=0; i<vals.length; i++)
-                        this.savedStacks[i] = patternItems[i];
-                else
-                    for(int i=0; i<vals.length; i++)
-                        this.savedStacks[i] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick
-                            .nbtFromString("{id:shield,components:{base_color:white,banner_patterns:[{color:red,pattern:\""+vals[i]+"\"}]}}"));
-            }
-            else {
-                for(int i=0; i<vals.length; i++)
-                    this.savedStacks[i] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:"+vals[i]+"_dye}"));
-            }
-            this.btns = new ButtonWidget[vals.length];
-            this.btnX = new int[vals.length];
-            this.savedStacksWarn = new int[this.btnX.length];
-            int currentX = 10+30;
-            for(int i=0; i<btns.length; i++) {
-                this.btnX[i] = currentX;
-                final int col = i;
-
-                Tooltip tt = null;
-                boolean disabled = false;
-                if(!isDye) {
-                    disabled = true;
-                    if(!patternItems[i].isEmpty()) {
-                        List<Text> textList = patternItems[i].getTooltip(TooltipContext.DEFAULT,null,TooltipType.BASIC);
-                        if(textList.size()>1) {
-                            disabled = false;
-                            tt = Tooltip.of(Text.of(textList.get(1).getString().replace("Red ","")));
-                        }
-                    }
-                    if(disabled) {
-                        tt = Tooltip.of(Text.of("Pattern disabled: "+vals[i]).copy().formatted(Formatting.RED));
-                        this.savedStacks[i] = FortytwoEdit.ITEM_ERROR;
-                        this.savedStacksWarn[i] = 2;
-                    }
-                }
-                else
-                    tt = Tooltip.of(savedStacks[i].getName());
-
-                this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
-                    setEditingElement(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-                        BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,NbtString.of(vals[col])),blankElPath),saveBtn,
-                        path2==null ? null : pagePath);
-                    NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+blankElPath+"\"}"));
-                    if(path2 != null) {
-                        newArgs.put("path2",path2);
-                    }
-                    if(blankTabEl != null)
-                        newArgs.put("overrideEl",blankTabEl);
-
-                    NbtCompound cancelNbt = new NbtCompound();
-                    if(cancelEl != null)
-                        cancelNbt.put("el",cancelEl);
-                    newArgs.put("cancelEl",cancelNbt);
-
-                    createBlankTab(0,newArgs);
-                }).dimensions(currentX,5,20,20).build();
-                currentX += 20;
-
-                if(currentVal != null && (vals[i].equals(currentVal) || currentVal.equals("minecraft:"+vals[i])))
-                    this.btns[i].active = false;
-
-                this.btns[i].setTooltip(tt);
-                this.children.add(this.btns[i]);
-            }
-        }
-
-        /**
          * PosWidgets
          */
         public RowWidget(PosWidget[] p) {
@@ -3720,51 +3568,6 @@ public class ItemBuilder extends GenericScreen {
             return texts;
         }
 
-        public void updateSavedDisplay() {
-            if(savedStacksMode == 1) {
-                for(int i=0; i<9; i++) {
-                    this.btns[i].active = savedModeSet && !viewBlackMarket;
-                    if(savedStacksWarn != null && savedStacksWarn.length == 9)
-                        savedStacksWarn[i] = 0;
-                    if((!viewBlackMarket && savedItems.containsKey(savedRow*9+i)) || (viewBlackMarket && FortytwoEdit.webItems.size()>(savedRow*9+i))) {
-                        SavedItem current = SavedItem.build(viewBlackMarket ? FortytwoEdit.webItems.get(savedRow*9+i) : savedItems.get(savedRow*9+i));
-                        if(current.stack()==null) {
-                            this.btns[i].setTooltip(makeItemTooltip(current.storedString()));
-                            savedStacks[i] = FortytwoEdit.ITEM_ERROR;
-                            if(savedStacksWarn != null && savedStacksWarn.length == 9)
-                                savedStacksWarn[i] = 2;
-                        }
-                        else {
-                            savedStacks[i] = current.stack();
-                            if(current.nbtError()) {
-                                if(savedStacksWarn != null && savedStacksWarn.length == 9)
-                                    savedStacksWarn[i] = 1;
-                                NbtElement currentEl = BlackMagick.nbtFromString(current.storedString());
-                                if(currentEl != null && currentEl.getType()==NbtElement.COMPOUND_TYPE) {
-                                    this.btns[i].setTooltip(Tooltip.of(Text.empty().append(
-                                        BlackMagick.textFromJson("{\"text\":\"Failed to load all item data\",\"color\":\"red\"}").text()).append(
-                                        Text.of("\n")).append(
-                                        BlackMagick.getElementDifferences((NbtCompound)currentEl, BlackMagick.itemToNbtStorage(current.stack())))));
-                                }
-                                else {
-                                    this.btns[i].setTooltip(makeItemTooltip(current.storedString()));
-                                }
-                            }
-                            else
-                                this.btns[i].setTooltip(makeItemTooltip(current.stack()));
-
-                            if(client.player.getAbilities().creativeMode)
-                                this.btns[i].active = true;
-                        }
-                    }
-                    else {
-                        this.btns[i].setTooltip(null);
-                        savedStacks[i] = ItemStack.EMPTY;
-                    }
-                }
-            }
-        }
-
         @Override
         public List<? extends Element> children() {
             return this.children;
@@ -3797,7 +3600,7 @@ public class ItemBuilder extends GenericScreen {
                     this.wids[i].w.render(context, mouseX, mouseY, tickDelta);
                 }
                 if(this.wids[i].s != null) {
-                    drawItem(context,this.wids[i].s,x+15+2+this.wids[i].x,y+2+this.wids[i].y);
+                    drawItem(context,this.wids[i].s,x+15+2+this.wids[i].x,y+2+this.wids[i].y);//to_do draw item for dyed tab item display
                 }
             }
             if(lbl != null) {
@@ -3806,31 +3609,8 @@ public class ItemBuilder extends GenericScreen {
                 else
                     context.drawTextWithShadow(ItemBuilder.this.textRenderer, Text.of(this.lbl), ItemBuilder.this.x+15+3, y+6, lblColor);
             }
-            if(item != null) {
-                drawItem(context,item,x+15+2+itemXoff,y+2);
-            }
-            if(savedStacksMode >= 0 && this.savedStacks != null && this.savedStacks.length == this.btnX.length) {
-                for(int i=0; i<this.savedStacks.length; i++)
-                    if(this.savedStacks[i] != null && !this.savedStacks[i].isEmpty())
-                        drawItem(context,this.savedStacks[i],x+this.btnX[i]+2,y+2);
-            }
-            if(savedStacksMode == 1 && this.savedStacks != null && this.savedStacks.length == this.btnX.length) {
-                for(int i=0; i<this.savedStacks.length; i++) {
-                    if(this.savedStacks[i] != null) {
-                        if(this.btns[i].active)
-                            context.drawGuiTexture(RenderLayer::getGuiTextured, ITEM_SLOT_BACKGROUND, x+this.btnX[i]+1, y+1, 18, 18);
-                        if(savedModeSet && !viewBlackMarket && !this.savedStacks[i].isEmpty())
-                            context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, DELETE_ITEM_OVERLAY, x+this.btnX[i]+2, y+2, 16, 16);
-                    }
-                }
-            }
-            if(savedStacksMode>=0 && this.savedStacksWarn != null && this.savedStacksWarn.length == this.btnX.length) {
-                for(int i=0; i<this.savedStacksWarn.length; i++) {
-                    if(savedStacksWarn[i]==1)
-                        context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, ITEM_WARNING_OVERLAY, x+this.btnX[i], y, 20, 20);
-                    else if(savedStacksWarn[i]==2)
-                        context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, ITEM_ERROR_OVERLAY, x+this.btnX[i], y, 20, 20);
-                }
+            if(displayItem != null) {
+                drawItem(context,displayItem,x+15+2+displayItemXoff,y+2);//to_do draw item for component widget
             }
 
         }
@@ -3867,8 +3647,8 @@ public class ItemBuilder extends GenericScreen {
             keyBtn.active = false;
             keyBtn.setTooltip(Tooltip.of(btnTt));
 
-            item = pi.icon() == null ? DEFAULT_COMPONENT_ICON : pi.icon();
-            itemXoff = -9;
+            displayItem = pi.icon() == null ? DEFAULT_COMPONENT_ICON : pi.icon();
+            displayItemXoff = -9;
 
             if(ComponentHelper.isComplex(pi.type())) {
 
@@ -4858,20 +4638,257 @@ public class ItemBuilder extends GenericScreen {
 
     }
 
+    class RowWidgetSavedItemsRow extends RowWidget {
+        
+        protected int savedRow;
+
+        /**
+         * Saved row (9 btns)
+         */
+        public RowWidgetSavedItemsRow(int row) {
+            super();
+
+            this.savedRow = row;
+            this.btns = new ButtonWidget[9];
+            this.btnX = new int[9];
+            int currentX = 10+30;
+            for(int i=0; i<9; i++) {
+                this.btnX[i] = currentX;
+                final int index = row*9+i;
+                final ItemStack thisItemStart =
+                    (viewBlackMarket ?
+                        ((FortytwoEdit.webItems.size()>index) ?
+                            BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.nbtFromString(FortytwoEdit.webItems.get(index))))
+                            : ItemStack.EMPTY)
+                        : ((savedItems.containsKey(index)) ?
+                            BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.nbtFromString(savedItems.get(index))))
+                            : ItemStack.EMPTY)
+                    );
+                this.btns[i] = new ItemSlotButtonWidget(currentX, 5, thisItemStart, btn -> {
+                    if(!viewBlackMarket && savedModeSet) {
+                        String itemString = "";
+                        ItemStack savedItem = client.player.getMainHandStack().copy();
+                        if(!savedItem.isEmpty()) {
+                            itemString = BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(savedItem));
+                        }
+
+                        if(FortytwoEdit.testSavedItems(savedItems)) {
+                            boolean inMap = savedItems.containsKey(index);
+                            if((!inMap && itemString.isEmpty()) || (inMap && savedItems.get(index).equals(itemString))) {
+                                FortytwoEdit.showToast("No Change","Item already saved");
+                            }
+                            else {
+                                if(itemString.isEmpty())
+                                    savedItems.remove(index);
+                                else
+                                    savedItems.put(index,itemString);
+
+                                if(!FortytwoEdit.setSavedItems(savedItems)) {
+                                    FortytwoEdit.logError("Failed to save item. The saved items list could not be loaded properly after saving."
+                                        + "\nTried to save: " + (itemString.isEmpty() ? "air" : itemString));
+                                    FortytwoEdit.showToast("Error Saving Item","Item NBT could not be saved.");
+                                }
+                                refreshSaved();
+                            }
+                        }
+                        else {
+                            FortytwoEdit.showToast("Error Saving Item","Reopen the screen and try again.");
+                            FortytwoEdit.logWarn("Failed to save item. The saved items file has changed since the screen has been open. File not changed."
+                                +"\nTried to save: "+(itemString.isEmpty() ? "air" : itemString));
+                        }
+                    }
+                    else if(client.player.getAbilities().creativeMode) {
+                        ItemStack thisItem =
+                            (viewBlackMarket ?
+                                ((FortytwoEdit.webItems.size()>index) ?
+                                    BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.nbtFromString(FortytwoEdit.webItems.get(index))))
+                                    : ItemStack.EMPTY)
+                                : ((savedItems.containsKey(index)) ?
+                                    BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.nbtFromString(savedItems.get(index))))
+                                    : ItemStack.EMPTY)
+                            );
+                        if(!thisItem.isEmpty())
+                            BlackMagick.setItemMain(thisItem);
+                    }
+                    ItemBuilder.this.unsel();
+                });
+                currentX += 20;
+                this.btns[i].active = false;
+                this.btns[i].setTooltipDelay(TOOLTIP_DELAY_SHORT);
+
+                this.children.add(this.btns[i]);
+            }
+        }
+
+        public void updateSavedDisplay() {
+            for(int i=0; i<9; i++) {
+                ItemSlotButtonWidget w = (ItemSlotButtonWidget)this.btns[i];
+                w.active = savedModeSet && !viewBlackMarket;
+                w.setError(null);
+                w.setOverlay(null);
+                w.showSlot(false);
+                if((!viewBlackMarket && savedItems.containsKey(savedRow*9+i)) || (viewBlackMarket && FortytwoEdit.webItems.size()>(savedRow*9+i))) {
+                    SavedItem current = SavedItem.build(viewBlackMarket ? FortytwoEdit.webItems.get(savedRow*9+i) : savedItems.get(savedRow*9+i));
+                    if(current.stack()==null) {
+                        w.setTooltip(makeItemTooltip(current.storedString()));
+                        w.setItem(FortytwoEdit.ITEM_ERROR);
+                        w.setError(ItemSlotButtonWidget.ItemError.ERROR);
+                    }
+                    else {
+                        w.setItem(current.stack());
+                        w.showSlot(true);
+                        if(current.nbtError()) {
+                            w.setError(ItemSlotButtonWidget.ItemError.WARN);
+                            NbtElement currentEl = BlackMagick.nbtFromString(current.storedString());
+                            if(currentEl != null && currentEl.getType()==NbtElement.COMPOUND_TYPE) {
+                                w.setTooltip(Tooltip.of(Text.empty().append(
+                                    BlackMagick.textFromJson("{\"text\":\"Failed to load all item data\",\"color\":\"red\"}").text()).append(
+                                    Text.of("\n")).append(
+                                    BlackMagick.getElementDifferences((NbtCompound)currentEl, BlackMagick.itemToNbtStorage(current.stack())))));
+                            }
+                            else {
+                                w.setTooltip(makeItemTooltip(current.storedString()));
+                            }
+                        }
+                        else
+                            w.setTooltip(makeItemTooltip(current.stack()));
+
+                        if(client.player.getAbilities().creativeMode)
+                            w.active = true;
+                    }
+                    if(savedModeSet && !viewBlackMarket)
+                        w.setOverlay(DELETE_ITEM_OVERLAY);
+                }
+                else {
+                    w.setTooltip(null);
+                    w.setItem(null);
+                    if(savedModeSet && !viewBlackMarket)
+                        w.showSlot(true);
+                }
+            }
+        }
+
+    }
+
+    class RowWidgetBannerRow extends RowWidget {
+
+        /**
+         * banner row (8 btns)
+         */
+        public RowWidgetBannerRow(String blankElPath, NbtList path2, ButtonWidget saveBtn, boolean isDye, String[] vals, String currentVal, NbtElement cancelEl) {
+            super();
+
+            ItemStack[] stacks = new ItemStack[vals.length];
+            boolean[] stackWarns = new boolean[vals.length];
+
+            ItemStack[] patternItems = isDye ? null : new ItemStack[vals.length];
+
+            String currentPath2;
+            if(path2==null)
+                currentPath2 = "";
+            else
+                currentPath2 = path2.get(0).asString(); // keep asString
+            String pagePath = blankElPath+currentPath2;
+            String fullPath = pagePath+"."+(isDye ? "color" : "pattern");
+
+            if(!isDye) {
+                for(int i=0; i<vals.length; i++)
+                    patternItems[i] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick
+                        .nbtFromString("{id:white_banner,components:{banner_patterns:[{color:red,pattern:\""+vals[i]+"\"}]}}"));
+
+                if(!bannerShield)
+                    for(int i=0; i<vals.length; i++)
+                        stacks[i] = patternItems[i];
+                else
+                    for(int i=0; i<vals.length; i++)
+                        stacks[i] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick
+                            .nbtFromString("{id:shield,components:{base_color:white,banner_patterns:[{color:red,pattern:\""+vals[i]+"\"}]}}"));
+            }
+            else {
+                for(int i=0; i<vals.length; i++)
+                    stacks[i] = BlackMagick.itemFromNbt((NbtCompound)BlackMagick.nbtFromString("{id:"+vals[i]+"_dye}"));
+            }
+            this.btns = new ButtonWidget[vals.length];
+            this.btnX = new int[vals.length];
+            int currentX = 10+30;
+            for(int i=0; i<btns.length; i++) {
+                this.btnX[i] = currentX;
+                final int col = i;
+
+                Tooltip tt = null;
+                boolean disabled = false;
+                if(!isDye) {
+                    disabled = true;
+                    if(!patternItems[i].isEmpty()) {
+                        List<Text> textList = patternItems[i].getTooltip(TooltipContext.DEFAULT,null,TooltipType.BASIC);
+                        if(textList.size()>1) {
+                            disabled = false;
+                            tt = Tooltip.of(Text.of(textList.get(1).getString().replace("Red ","")));
+                        }
+                    }
+                    if(disabled) {
+                        tt = Tooltip.of(Text.of("Pattern disabled: "+vals[i]).copy().formatted(Formatting.RED));
+                        stacks[i] = FortytwoEdit.ITEM_ERROR;
+                        stackWarns[i] = true;
+                    }
+                }
+                else
+                    tt = Tooltip.of(stacks[i].getName());
+
+                ItemSlotButtonWidget w = new ItemSlotButtonWidget(currentX, 5, stacks[i], btn -> {
+                    setEditingElement(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
+                        BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,NbtString.of(vals[col])),blankElPath),saveBtn,
+                        path2==null ? null : pagePath);
+                    NbtCompound newArgs = BlackMagick.validCompound(BlackMagick.nbtFromString("{path:\""+blankElPath+"\"}"));
+                    if(path2 != null) {
+                        newArgs.put("path2",path2);
+                    }
+                    if(blankTabEl != null)
+                        newArgs.put("overrideEl",blankTabEl);
+
+                    NbtCompound cancelNbt = new NbtCompound();
+                    if(cancelEl != null)
+                        cancelNbt.put("el",cancelEl);
+                    newArgs.put("cancelEl",cancelNbt);
+
+                    createBlankTab(0,newArgs);
+                });
+                w.showSlot(false);
+                if(stackWarns[i]) {
+                    w.setError(ItemSlotButtonWidget.ItemError.ERROR);
+                }
+                this.btns[i] = w;
+                currentX += 20;
+
+                if(currentVal != null && (vals[i].equals(currentVal) || currentVal.equals("minecraft:"+vals[i])))
+                    this.btns[i].active = false;
+
+                this.btns[i].setTooltip(tt);
+                this.children.add(this.btns[i]);
+            }
+        }
+
+    }
+
     class RowWidgetInvRow extends RowWidget {
 
-        private final Identifier[] SPRITES = new Identifier[]{
-            PlayerScreenHandler.EMPTY_BOOTS_SLOT_TEXTURE,
-            PlayerScreenHandler.EMPTY_LEGGINGS_SLOT_TEXTURE,
-            PlayerScreenHandler.EMPTY_CHESTPLATE_SLOT_TEXTURE,
-            PlayerScreenHandler.EMPTY_HELMET_SLOT_TEXTURE,
-            PlayerScreenHandler.EMPTY_OFF_HAND_SLOT_TEXTURE
+        private static final Identifier[] PLAYER_ARMOR_SPRITES = new Identifier[]{
+            ItemSlotButtonWidget.SPRITE_FEET,
+            ItemSlotButtonWidget.SPRITE_LEGS,
+            ItemSlotButtonWidget.SPRITE_CHEST,
+            ItemSlotButtonWidget.SPRITE_HEAD,
+            ItemSlotButtonWidget.SPRITE_OFFHAND
         };
-
-        private int slotSprites[] = null;
-
+        private static final Identifier[] ARMOR_STAND_SPRITES = new Identifier[]{
+            ItemSlotButtonWidget.SPRITE_FEET,
+            ItemSlotButtonWidget.SPRITE_LEGS,
+            ItemSlotButtonWidget.SPRITE_CHEST,
+            ItemSlotButtonWidget.SPRITE_HEAD,
+            ItemSlotButtonWidget.SPRITE_MAINHAND,
+            ItemSlotButtonWidget.SPRITE_OFFHAND
+        };
         private static final Identifier SEL_SLOT = Identifier.of("hud/hotbar_selection");
-        private boolean isHotbarRow = false;
+        private boolean renderHotbarSel = false;
 
         /**
          * Used for player inventory rows. Always make 5 rows (3 for inv, 1 for hotbar, 1 for armor/offhand).
@@ -4881,36 +4898,36 @@ public class ItemBuilder extends GenericScreen {
         public RowWidgetInvRow(int row) {
             super();
 
-            this.savedStacksMode = 0;
             if(row >= 0 && row < 4) {
-                this.savedStacks = new ItemStack[9];
                 this.btns = new ButtonWidget[9];
-                this.btnX = new int[9];
+                this.btnX = new int[btns.length];
             }
             else if(row == 4) {
-                this.slotSprites = new int[]{1,2,3,4,5};
-                this.savedStacks = new ItemStack[5];
+                renderHotbarSel = true; // rendered on row 4 so sprite isnt covered by row 4
                 this.btns = new ButtonWidget[5];
-                this.btnX = new int[5];
-                isHotbarRow = true;
+                this.btnX = new int[btns.length];
             }
 
             int currentX = 10+30;
             if(row==4)
                 currentX += 20;
-            for(int i=0; i<this.savedStacks.length; i++) {
+            for(int i=0; i<this.btns.length; i++) {
                 this.btnX[i] = currentX;
                 final int index = row*9+i;
-                this.savedStacks[i] = cacheInv[index];
-                this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
-                    ItemBuilder.this.unsel();
-                }).dimensions(currentX,5,20,20).build();
-                if(cacheInv[index] != null && !cacheInv[index].isEmpty())
-                    this.btns[i].setTooltip(makeItemTooltip(cacheInv[index]));
+                final ItemStack thisItem = cacheInv[index];
+                ItemSlotButtonWidget w = new ItemSlotButtonWidget(currentX, 5, thisItem, btn -> {btnCopyItemNbt(thisItem);});
+                if(row == 4) {
+                    w.addEmptySlotSprite(PLAYER_ARMOR_SPRITES[i]);
+                }
+                this.btns[i] = w;
+                this.btns[i].active = false;
+                if(thisItem != null && !thisItem.isEmpty()) {
+                    this.btns[i].active = true;
+                    this.btns[i].setTooltip(makeItemTooltip(thisItem));
+                }
                 currentX += 20;
                 if(row==4 && i==3)
                     currentX += 40;
-                this.btns[i].active = false;
                 this.btns[i].setTooltipDelay(TOOLTIP_DELAY_SHORT);
 
                 this.children.add(this.btns[i]);
@@ -4936,26 +4953,26 @@ public class ItemBuilder extends GenericScreen {
          * @param stacks
          * @param slotSprites
          */
-        public RowWidgetInvRow(ItemStack[] stacks, int[] slotSprites) {
+        public RowWidgetInvRow(ItemStack[] stacks, Identifier[] slotSprites) {
             super();
 
-            this.savedStacksMode = 0;
-            this.savedStacks = stacks;
             this.btns = new ButtonWidget[stacks.length];
-            this.btnX = new int[stacks.length];
-            if(slotSprites != null)
-                this.slotSprites = slotSprites;
+            this.btnX = new int[btns.length];
 
             int currentX = 10+30;
-            for(int i=0; i<this.savedStacks.length; i++) {
+            for(int i=0; i<this.btns.length; i++) {
                 this.btnX[i] = currentX;
-                this.btns[i] = ButtonWidget.builder(Text.of(""), btn -> {
-                    ItemBuilder.this.unsel();
-                }).dimensions(currentX,5,20,20).build();
-                if(this.savedStacks[i] != null && !this.savedStacks[i].isEmpty())
-                    this.btns[i].setTooltip(makeItemTooltip(this.savedStacks[i]));
-                currentX += 20;
+                final ItemStack thisItem = stacks[i];
+                ItemSlotButtonWidget w = new ItemSlotButtonWidget(currentX, 5, thisItem, btn -> {btnCopyItemNbt(thisItem);});
+                if(slotSprites != null && slotSprites.length == stacks.length)
+                    w.addEmptySlotSprite(slotSprites[i]);
+                this.btns[i] = w;
                 this.btns[i].active = false;
+                if(thisItem != null && !thisItem.isEmpty()) {
+                    this.btns[i].active = true;
+                    this.btns[i].setTooltip(makeItemTooltip(thisItem));
+                }
+                currentX += 20;
                 this.btns[i].setTooltipDelay(TOOLTIP_DELAY_SHORT);
 
                 this.children.add(this.btns[i]);
@@ -4965,18 +4982,9 @@ public class ItemBuilder extends GenericScreen {
         @Override
         public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             super.render(context, index, y, x, entryWidth, entryHeight, mouseX, mouseY, hovered, tickDelta);
-            if(this.savedStacks != null && this.savedStacks.length == this.btnX.length) {
-                for(int i=0; i<this.savedStacks.length; i++) {
-                    context.drawGuiTexture(RenderLayer::getGuiTextured, ITEM_SLOT_BACKGROUND, x+this.btnX[i]+1, y+1, 18, 18);
-                    if(this.slotSprites != null && savedStacksMode == 0 && this.slotSprites.length == this.savedStacks.length
-                        && (this.savedStacks[i] == null || this.savedStacks[i].isEmpty()) && this.slotSprites[i]>0 && this.slotSprites[i]<=this.SPRITES.length)
-                            context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, this.SPRITES[this.slotSprites[i]-1], x+this.btnX[i]+2, y+2, 16, 16);
-                }
-            }
-            if(this.isHotbarRow) {
-                int sel = client.player.getInventory().selectedSlot;
-                context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, SEL_SLOT, x+(sel*20)+40-2, y-20-2, 24, 23);
-            }
+            if(this.renderHotbarSel)
+                context.drawGuiTexture(RenderLayer::getGuiTexturedOverlay, SEL_SLOT,
+                    x+(client.player.getInventory().selectedSlot*20)+40-2, y-2-20, 24, 23);
         }
 
     }
@@ -5056,8 +5064,10 @@ public class ItemBuilder extends GenericScreen {
                         }
                         break;
                     }
-                    case TEXT_COMPONENT_RADIAL:
-                    case NONE:
+                    default: {
+                        FortytwoEdit.logWarn("Tried to create RowWidgetEditor for invalid WidgetCacheType: "+cacheType);
+                        break;
+                    }
                 }
                 unsel();
             }).dimensions(ItemBuilder.this.x+ROW_LEFT,5,20,20).build();
@@ -5084,8 +5094,7 @@ public class ItemBuilder extends GenericScreen {
                         }
                         break;
                     }
-                    case TEXT_COMPONENT_RADIAL:
-                    case NONE:
+                    default: break;
                 }
                 unsel();
             }).dimensions(ItemBuilder.this.x+ROW_LEFT+20+5,5,20,20).build();
@@ -5121,8 +5130,7 @@ public class ItemBuilder extends GenericScreen {
                     }
                     break;
                 }
-                case TEXT_COMPONENT_RADIAL:
-                case NONE:
+                default: break;
             }
 
             if(!editorEqual) {
@@ -5146,9 +5154,7 @@ public class ItemBuilder extends GenericScreen {
                         }
                         break;
                     }
-                    case TXT_DECIMAL_COLOR:
-                    case TEXT_COMPONENT_RADIAL:
-                    case NONE:
+                    default: break;
                 }
 
                 if(cleared) {
@@ -5340,8 +5346,10 @@ public class ItemBuilder extends GenericScreen {
     private enum WidgetCacheType {
         NONE,                   // do not cache (used for fallback page)
         TXT_DECIMAL_COLOR,      // TextFieldWidget for PathType.DECIMAL_COLOR
-        TEXT_COMPONENT_RADIAL,            // ButtonWidget for Radial | Linear (in text component page)
+        TEXT_COMPONENT_RADIAL,  // ButtonWidget for Radial | Linear (in text component page)
         TXT_POSE,               // TextFieldWidget for PathType.POSE
+        BTN_SAVED_SOURCE,       // ItemSlotButtonWidget for Local Items | Black Market Items
+        BTN_SAVED_MODE          // ButtonWidget below BTN_SAVED_SOURCE
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
     public record SavedItem(String storedString, ItemStack stack, boolean nbtError) {
@@ -5376,16 +5384,9 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
 
-            if(tab == CACHE_TAB_SAVED) {
-                if(viewBlackMarket)
-                    drawItem(context,savedModeItems[1], x+14, y+38);
-                else {
-                    drawItem(context,savedModeItems[0], x+14, y+38);
-                    if(savedItemsError)
-                        context.drawCenteredTextWithShadow(this.textRenderer,
-                            Text.of("Failed to read saved items"), this.width / 2, y+this.backgroundHeight+3, ERROR_COLOR);
-                }
-            }
+            if(tab == CACHE_TAB_SAVED && !viewBlackMarket && savedItemsError)
+                context.drawCenteredTextWithShadow(this.textRenderer,
+                    Text.of("Failed to read saved items"), this.width / 2, y+this.backgroundHeight+3, ERROR_COLOR);
 
             if(prevArmorStand)
                 InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f,
@@ -5394,8 +5395,6 @@ public class ItemBuilder extends GenericScreen {
                 InventoryScreen.drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, RENDER_SIZE, 0f,
                     mouseX, mouseY, (LivingEntity)this.client.player);
 
-            context.drawGuiTexture(RenderLayer::getGuiTextured, ITEM_SLOT_BACKGROUND, x+240-20-5+1, y+5+1, 18, 18);
-            drawItem(context, selItem, x+240-20-5+2, y+5+2);
             txtFormat.setX(x+50);
             txtFormat.render(context, mouseX, mouseY, delta);
             if(!this.unsavedTxtWidgets.isEmpty())
