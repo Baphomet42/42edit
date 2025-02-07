@@ -197,7 +197,7 @@ public class Hacks extends GenericScreen {
             if(items.size()==1)
                 item = BlackMagick.itemFromNbt((NbtCompound)bundle.get(0));
 
-            client.keyboard.setClipboard(BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(item)));
+            FortytwoEdit.setClipboard(BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(item)));
             FortytwoEdit.showToast("Get Entity","Entity data copied");
 
             if(client.player.getAbilities().creativeMode && !item.isEmpty()) {

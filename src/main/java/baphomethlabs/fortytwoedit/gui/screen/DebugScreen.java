@@ -21,8 +21,8 @@ public class DebugScreen extends GenericScreen {
         this.addDrawableChild(ButtonWidget.builder(Text.of("View Log..."), button -> changeScreen(new LogScreen())).dimensions(x+20,y+22*2+1,80,20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.of("Reset Misc"), button -> this.btnRefreshRuntime()).dimensions(x+20,y+22*3+1,80,20).build())
             .setTooltip(Tooltip.of(Text.of("Clear various caches, refresh files, etc.")));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Output Hist"), button -> this.btnOutputHist()).dimensions(x+20,y+22*4+1,80,20).build())
-            .setTooltip(Tooltip.of(Text.of("Send item history info to log")));
+        this.addDrawableChild(ButtonWidget.builder(Text.of("Copy Hist"), button -> this.btnOutputHist()).dimensions(x+20,y+22*4+1,80,20).build())
+            .setTooltip(Tooltip.of(Text.of("Copy item history info and send to log")));
         this.addDrawableChild(ButtonWidget.builder(Text.of("Open Dir"), button -> btnOpenDir()).dimensions(x+20,y+22*5+1,80,20).build())
             .setTooltip(Tooltip.of(Text.of("Open 42edit file directory")));
     }
@@ -34,8 +34,10 @@ public class DebugScreen extends GenericScreen {
     }
 
     protected void btnOutputHist() {
-        FortytwoEdit.showToast("Output Hist", "Item history has been sent to the output log");
-        FortytwoEdit.logInfo("Item History: "+BlackMagick.nbtToString(FortytwoEdit.getItemHist()));
+        String hist = BlackMagick.nbtToString(FortytwoEdit.getItemHist());
+        FortytwoEdit.setClipboard(hist);
+        FortytwoEdit.logInfo("Item History: "+hist);
+        FortytwoEdit.showToast("Output Hist", "Item history has been copied and sent to the output log");
         unsel();
     }
 

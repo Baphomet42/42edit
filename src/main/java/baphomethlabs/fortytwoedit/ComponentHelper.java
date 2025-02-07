@@ -273,7 +273,21 @@ public class ComponentHelper {
             if(path.endsWith("components.consumable.on_consume_effects[0].type"))
                 return (new PathInfo(PathType.STRING,REGISTRY_CONSUME_EFFECT_TYPE));
             if(path.endsWith("components.consumable.on_consume_effects[0].effects"))
-                return PathInfos.DEFAULT.withDesc(Text.of("Used for \"apply_effects\" or \"remove_effects\"")); // to_do
+                return PathInfos.LIST_COMPOUND;
+            if(path.endsWith("components.consumable.on_consume_effects[0].effects[0]"))
+                return PathInfos.EFFECT_NODE.withDesc(Text.of("Used for \"apply_effects\" or \"remove_effects\""));
+            if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].id"))
+                return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT));
+            if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].amplifier"))
+                return PathInfos.EFFECT_AMPLIFIER;
+            if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].duration"))
+                return PathInfos.EFFECT_DURATION;
+            if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].ambient"))
+                return PathInfos.TRINARY;
+            if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].show_particles"))
+                return PathInfos.TRINARY;
+            if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].show_icon"))
+                return PathInfos.TRINARY;
             if(path.endsWith("components.consumable.on_consume_effects[0].probability"))
                 return PathInfos.FLOAT.withDesc(Text.of("Used for \"apply_effects\""));
             if(path.endsWith("components.consumable.on_consume_effects[0].diameter"))
@@ -330,7 +344,7 @@ public class ComponentHelper {
             if(path.endsWith("components.damage_resistant"))
                 return (new PathInfo(KeyGetter.create().withRequired("types"))).withIcon(Items.NETHERITE_INGOT);
             if(path.endsWith("components.damage_resistant.types"))
-                return (new PathInfo(PathType.STRING));// to_do add suggs
+                return (new PathInfo(PathType.STRING,DATA_TAG_DAMAGE_TYPE)).withDesc(Text.of("Damage type tag of which the item entity is invulnerable"));
         }
 
         if(path.contains("components.death_protection")) {
@@ -343,7 +357,21 @@ public class ComponentHelper {
             if(path.endsWith("components.death_protection.death_effects[0].type"))
                 return (new PathInfo(PathType.STRING,REGISTRY_CONSUME_EFFECT_TYPE));
             if(path.endsWith("components.death_protection.death_effects[0].effects"))
-                return PathInfos.DEFAULT.withDesc(Text.of("Used for \"apply_effects\" or \"remove_effects\"")); // to_do
+                return PathInfos.LIST_COMPOUND;
+            if(path.endsWith("components.death_protection.death_effects[0].effects[0]"))
+                return PathInfos.EFFECT_NODE.withDesc(Text.of("Used for \"apply_effects\" or \"remove_effects\""));
+            if(path.endsWith("components.death_protection.death_effects[0].effects[0].id"))
+                return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT));
+            if(path.endsWith("components.death_protection.death_effects[0].effects[0].amplifier"))
+                return PathInfos.EFFECT_AMPLIFIER;
+            if(path.endsWith("components.death_protection.death_effects[0].effects[0].duration"))
+                return PathInfos.EFFECT_DURATION;
+            if(path.endsWith("components.death_protection.death_effects[0].effects[0].ambient"))
+                return PathInfos.TRINARY;
+            if(path.endsWith("components.death_protection.death_effects[0].effects[0].show_particles"))
+                return PathInfos.TRINARY;
+            if(path.endsWith("components.death_protection.death_effects[0].effects[0].show_icon"))
+                return PathInfos.TRINARY;
             if(path.endsWith("components.death_protection.death_effects[0].probability"))
                 return PathInfos.FLOAT.withDesc(Text.of("Used for \"apply_effects\""));
             if(path.endsWith("components.death_protection.death_effects[0].diameter"))
@@ -672,7 +700,7 @@ public class ComponentHelper {
             if(path.endsWith("components.lock.items"))
                 return PathInfos.ITEM_PREDICATE_ITEMS;
             if(path.endsWith("components.lock.predicates"))
-                return PathInfos.INLINE_COMPOUND.withDesc(Text.of("Item subpredicates to match")); // to_do all subpredicate paths
+                return PathInfos.INLINE_COMPOUND.withDesc(Text.of("Item subpredicates to match")); //to_do all subpredicate paths
         }
 
         if(path.contains("components.lodestone_tracker")) {
@@ -732,7 +760,7 @@ public class ComponentHelper {
             if(path.endsWith(".potion_contents"))
                 return PathInfos.POTION_CONTENTS.withIcon(Items.SPLASH_POTION);
             if(path.endsWith(".potion_contents.potion"))
-                return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT)).withDesc(Text.of("Potion base before custom_color and custom_effects")); // to_do add potion variants (strong, etc)
+                return (new PathInfo(PathType.STRING,REGISTRY_POTION)).withDesc(Text.of("Potion base before custom_color and custom_effects"));
             if(path.endsWith(".potion_contents.custom_color"))
                 return PathInfos.DECIMAL_COLOR;
             if(path.endsWith(".potion_contents.custom_effects"))
@@ -752,7 +780,7 @@ public class ComponentHelper {
             if(path.endsWith(".potion_contents.custom_effects[0].show_icon"))
                 return PathInfos.TRINARY;
             if(path.endsWith(".potion_contents.custom_name"))
-                return (new PathInfo(PathType.STRING));// to_do use same list as potion_contents.potion
+                return (new PathInfo(PathType.STRING));//to_do set of different strings based on item id translation key plus potion base name, or "empty"
         }
 
         if(path.contains("components.profile")) {
@@ -1678,6 +1706,9 @@ public class ComponentHelper {
 
     public static final SuggestionGetter REGISTRY_PARTICLE_TYPE = registerSuggsList("REGISTRY_PARTICLE_TYPE", () ->
         getRegistryIfEmpty(createOrGetCacheList("REGISTRY_PARTICLE_TYPE",false),Registries.PARTICLE_TYPE));
+
+    public static final SuggestionGetter REGISTRY_POTION = registerSuggsList("REGISTRY_POTION", () ->
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_POTION",false),Registries.POTION));
 
 
     // dynamic data lists

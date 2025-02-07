@@ -89,6 +89,7 @@ public class BlackMagick {
                 }
             }
 
+            FortytwoEdit.addItemHist(client.player.getInventory().getStack(invSlot));
             FortytwoEdit.addItemHist(item);
             client.player.getInventory().setStack(invSlot, item);
             client.interactionManager.clickCreativeStack(item, creativeSlot);

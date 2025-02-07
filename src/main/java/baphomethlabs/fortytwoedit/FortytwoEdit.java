@@ -739,6 +739,11 @@ public class FortytwoEdit implements ClientModInitializer {
         return property.name(state.get(property));
     }
 
+    public static void setClipboard(String text) {
+        final MinecraftClient client = MinecraftClient.getInstance();
+        client.keyboard.setClipboard(text);
+    }
+
     private static final String LOG_PREFIX = "(42edit) ";
     private static final SystemToast.Type TOAST_TYPE = new SystemToast.Type();
     private static final MutableText TOAST_PREFIX = Text.empty().append("").append(Text.empty().append("(42edit) ").formatted(Formatting.BLACK));
