@@ -15,7 +15,7 @@ public abstract class InGameHudMixin {
 
     private static final int TEXT_COLOR = 0xFFFFFF;
 
-    @Inject(method="render", at=@At("TAIL"))
+    @Inject(method = "render", at = @At("TAIL"))
     private void renderHud(DrawContext context, RenderTickCounter tickCounter, CallbackInfo c) {
         if(FortytwoEdit.autoMove || FortytwoEdit.autoClicker || FortytwoEdit.randoMode || FortytwoEdit.autoFish) {
             final MinecraftClient client = MinecraftClient.getInstance();

@@ -21,7 +21,7 @@ public abstract class TooltipMixin {
     private static final int small = 170;
     private static final int safeZone = 18;
 
-    @Inject(method="wrapLines(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/text/Text;)Ljava/util/List;", at=@At("RETURN"), cancellable = true)
+    @Inject(method = "wrapLines(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/text/Text;)Ljava/util/List;", at = @At("RETURN"), cancellable = true)
     private static void modWrapLines(MinecraftClient client, Text text, CallbackInfoReturnable<List<OrderedText>> cir) {
         if(client.currentScreen != null && client.currentScreen instanceof ItemBuilder && client.textRenderer.wrapLines(text, small).size()>lineSwap) {
 

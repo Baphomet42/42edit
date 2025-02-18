@@ -120,6 +120,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean autoAttack = false;
     public static boolean autoMine = false;
     public static int attackWait = 1500;
+    public static boolean afkScreenLock = false;
     private static long lastAttack = 0;
     private static long lastSpam = 0;
     public static boolean xrayEntity = false;
@@ -539,6 +540,11 @@ public class FortytwoEdit implements ClientModInitializer {
 
     public static void clientTick(MinecraftClient client) {
 
+        if(client.player == null || client.currentScreen != null) {
+            autoClicker = false;
+            autoMove = false;
+        }
+
         // magickgui
         if(keyMagickGui.wasPressed()) {
             switch(quickScreen) {
@@ -821,6 +827,8 @@ public class FortytwoEdit implements ClientModInitializer {
             options = new NbtCompound();
 
         // keep options consistent
+        if(options.contains("afk_screen_lock",NbtElement.BYTE_TYPE))
+            afkScreenLock = options.getByte("afk_screen_lock") == 1;
         if(options.contains("custom_cape_toggle",NbtElement.BYTE_TYPE))
             showClientCape = options.getByte("custom_cape_toggle") == 1;
         if(options.contains("custom_cape",NbtElement.STRING_TYPE)) {
@@ -873,6 +881,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         // keep options consistent
         options.remove("file_format");
+        options.remove("afk_screen_lock");
         options.remove("custom_cape_toggle");
         options.remove("custom_cape");
         options.remove("item_warning_override");
@@ -898,6 +907,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         // keep options consistent
         options.putInt("file_format",FileTools.FILE_FORMAT);
+        options.putBoolean("afk_screen_lock",afkScreenLock);
         options.putBoolean("custom_cape_toggle",showClientCape);
         options.putString("custom_cape",CLIENT_CAPES[clientCape].id());
         options.putString("item_warning_override",getItemWarningMode());

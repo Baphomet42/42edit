@@ -35,7 +35,7 @@ public abstract class CameraMixin {
     @Shadow
     private float lastCameraY;
 
-    @Inject(method="update", at=@At(value="RETURN"), cancellable=true)
+    @Inject(method = "update", at = @At(value = "RETURN"), cancellable = true)
     private void setView(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo c) {
         if(FortytwoEdit.isFreeLooking) {
             this.setRotation(FortytwoEdit.cameraRotation[0], FortytwoEdit.cameraRotation[1]);

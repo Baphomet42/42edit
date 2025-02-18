@@ -28,7 +28,7 @@ public abstract class BlockItemMixin {
     /**
      * See {@link net.minecraft.block.entity.BlockEntityType} and {@link net.minecraft.entity.EntityType} `POTENTIALLY_EXECUTES_COMMANDS`
      */
-    @Inject(method="shouldShowOperatorBlockWarnings", at=@At(value = "RETURN"), cancellable = true)
+    @Inject(method = "shouldShowOperatorBlockWarnings", at = @At(value = "RETURN"), cancellable = true)
     private void overrideWarningMessage(ItemStack stack, @Nullable PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
         if(cir.getReturnValue().booleanValue()) {
             switch(FortytwoEdit.getItemWarningMode()) {

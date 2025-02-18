@@ -14,7 +14,7 @@ public abstract class ScrollableWidgetMixin extends ClickableWidget {
         super(x, y, width, height, message);
     }
 
-    @ModifyVariable(method="mouseDragged", at=@At("STORE"), ordinal = 1)
+    @ModifyVariable(method = "mouseDragged", at = @At("STORE"), ordinal = 1)
     private int injected(int i) {
         if(i==this.height)
             return 0;

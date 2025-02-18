@@ -50,7 +50,7 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
     @Shadow
     private Slot getSlotAt(double x, double y) {return null;}
 
-    @Inject(method="drawMouseoverTooltip(Lnet/minecraft/client/gui/DrawContext;II)V", at=@At("HEAD"), cancellable = true)
+    @Inject(method = "drawMouseoverTooltip(Lnet/minecraft/client/gui/DrawContext;II)V", at = @At("HEAD"), cancellable = true)
     private void drawContainerTooltip(DrawContext context, int x, int y, CallbackInfo c) {
 
         if(((ScreenHandler)this.handler).getCursorStack().isEmpty() && this.focusedSlot != null && this.focusedSlot.hasStack()) {
@@ -85,7 +85,7 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
         }
     }
 
-    @Inject(method="keyPressed(III)Z", at=@At("HEAD"), cancellable = true)
+    @Inject(method = "keyPressed(III)Z", at = @At("HEAD"), cancellable = true)
     private void keyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
 
         if(FortytwoEdit.keySpamClick.matchesKey(keyCode,scanCode)) {

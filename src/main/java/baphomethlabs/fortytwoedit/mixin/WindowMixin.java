@@ -12,7 +12,7 @@ import net.minecraft.client.util.Window;
 @Mixin(Window.class)
 public abstract class WindowMixin {
 
-    @Redirect(method="setIcon", at=@At(value="INVOKE", target="Lnet/minecraft/client/texture/NativeImage;read(Ljava/io/InputStream;)Lnet/minecraft/client/texture/NativeImage;"))
+    @Redirect(method = "setIcon", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/texture/NativeImage;read(Ljava/io/InputStream;)Lnet/minecraft/client/texture/NativeImage;"))
     private NativeImage returnIcon(InputStream stream) {
         try {
             return NativeImage.read(getClass().getClassLoader().getResourceAsStream("assets/42edit/textures/icon/mycelium.png"));

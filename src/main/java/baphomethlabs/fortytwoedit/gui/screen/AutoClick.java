@@ -24,7 +24,7 @@ public class AutoClick extends GenericScreen {
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.AUTO_CLICK;
 
         this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> changeScreen(new MagickGui())).dimensions(x+5,y+5,40,20).build());
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Use [On]"), Text.literal("Use [Off]")).initially(FortytwoEdit.autoClick).omitKeyText().build(x+20,y+44+1,100,20, Text.of(""), (button, trackOutput) -> {
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Use [On]"), Text.literal("Use [Off]")).initially(FortytwoEdit.autoClick).omitKeyText().build(x+20,y+22*2+1,100,20, Text.of(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick((boolean)trackOutput,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
             unsel();
         })).setTooltip(Tooltip.of(Text.of("Toggle use key in auto click mode\n\nWhen on: auto click mode will hold the use key down")));
@@ -36,11 +36,17 @@ public class AutoClick extends GenericScreen {
             FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,(boolean)trackOutput,FortytwoEdit.attackWait);
             unsel();
         })).setTooltip(Tooltip.of(Text.of("Toggle auto attack in auto click mode\n\nWhen on: auto click mode will use the attack key once per cooldown (1500ms default)")));
-        this.txtAttackCooldown = new TextFieldWidget(this.textRenderer,x+20+100+5+1,y+22*6+1,40-2,20,Text.of(""));
+        this.txtAttackCooldown = new TextFieldWidget(this.textRenderer,x+20+100+5+1,y+22*5+1,40-2,20,Text.of(""));
         this.txtAttackCooldown.setMaxLength(4);
         this.txtAttackCooldown.setText(""+FortytwoEdit.attackWait);
         this.txtAttackCooldown.setChangedListener(this::editTxtAttackCooldown);
         this.addDrawableChild(this.txtAttackCooldown);
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Lock Screen [On]"), Text.literal("Lock Screen [Off]")).initially(FortytwoEdit.afkScreenLock).omitKeyText().build(x+20,y+22*6+1,100,20, Text.of(""), (button, trackOutput) -> {
+            FortytwoEdit.readOptions();
+            FortytwoEdit.afkScreenLock = (boolean)trackOutput;
+            FortytwoEdit.updateOptions();
+            reloadScreen();
+        })).setTooltip(Tooltip.of(Text.of("Toggle screen lock in auto click mode\n\nWhen on: mouse movement will be ignored and FPS will be reduced")));
     }
 
     protected void editTxtAttackCooldown(String text) {
@@ -73,7 +79,7 @@ public class AutoClick extends GenericScreen {
 		context.drawItemWithoutEntity(new ItemStack(Items.FISHING_ROD),x+20+2,y+44+1+2);
 		context.drawItemWithoutEntity(new ItemStack(Items.NETHERITE_PICKAXE),x+20+2,y+22*3+1+2);
 		context.drawItemWithoutEntity(new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+22*4+1+2);
-        context.drawTextWithShadow(this.textRenderer, Text.of("Attack Cooldown:"), x+20+3,y+7+22*6, LABEL_COLOR);
+        context.drawTextWithShadow(this.textRenderer, Text.of("Attack Cooldown:"), x+20+3,y+7+22*5, LABEL_COLOR);
     }
 
     @Override
