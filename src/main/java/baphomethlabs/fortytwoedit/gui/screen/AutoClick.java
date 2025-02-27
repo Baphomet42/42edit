@@ -1,19 +1,19 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import baphomethlabs.fortytwoedit.FortytwoEdit;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class AutoClick extends GenericScreen {
 
-    protected TextFieldWidget txtAttackCooldown;
+    protected EditBox txtAttackCooldown;
     protected boolean unsaved = false;
 
     public AutoClick() {}
@@ -23,30 +23,30 @@ public class AutoClick extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.AUTO_CLICK;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> changeScreen(new MagickGui())).dimensions(x+5,y+5,40,20).build());
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Use [On]"), Text.literal("Use [Off]")).initially(FortytwoEdit.autoClick).omitKeyText().build(x+20,y+22*2+1,100,20, Text.of(""), (button, trackOutput) -> {
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+5,y+5,40,20).build());
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Use [On]"), Component.literal("Use [Off]")).withInitialValue(FortytwoEdit.autoClick).displayOnlyValue().create(x+20,y+22*2+1,100,20, Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick((boolean)trackOutput,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
             unsel();
-        })).setTooltip(Tooltip.of(Text.of("Toggle use key in auto click mode\n\nWhen on: auto click mode will hold the use key down")));
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Mine [On]"), Text.literal("Mine [Off]")).initially(FortytwoEdit.autoMine).omitKeyText().build(x+20,y+22*3+1,100,20, Text.of(""), (button, trackOutput) -> {
+        })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle use key in auto click mode\n\nWhen on: auto click mode will hold the use key down")));
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Mine [On]"), Component.literal("Mine [Off]")).withInitialValue(FortytwoEdit.autoMine).displayOnlyValue().create(x+20,y+22*3+1,100,20, Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,(boolean)trackOutput,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
             unsel();
-        })).setTooltip(Tooltip.of(Text.of("Toggle mine key in auto click mode\n\nWhen on: auto click mode will hold the mine key down")));
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Attack [On]"), Text.literal("Attack [Off]")).initially(FortytwoEdit.autoAttack).omitKeyText().build(x+20,y+22*4+1,100,20, Text.of(""), (button, trackOutput) -> {
+        })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle mine key in auto click mode\n\nWhen on: auto click mode will hold the mine key down")));
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Attack [On]"), Component.literal("Attack [Off]")).withInitialValue(FortytwoEdit.autoAttack).displayOnlyValue().create(x+20,y+22*4+1,100,20, Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,(boolean)trackOutput,FortytwoEdit.attackWait);
             unsel();
-        })).setTooltip(Tooltip.of(Text.of("Toggle auto attack in auto click mode\n\nWhen on: auto click mode will use the attack key once per cooldown (1500ms default)")));
-        this.txtAttackCooldown = new TextFieldWidget(this.textRenderer,x+20+100+5+1,y+22*5+1,40-2,20,Text.of(""));
+        })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle auto attack in auto click mode\n\nWhen on: auto click mode will use the attack key once per cooldown (1500ms default)")));
+        this.txtAttackCooldown = new EditBox(this.font,x+20+100+5+1,y+22*5+1,40-2,20,Component.nullToEmpty(""));
         this.txtAttackCooldown.setMaxLength(4);
-        this.txtAttackCooldown.setText(""+FortytwoEdit.attackWait);
-        this.txtAttackCooldown.setChangedListener(this::editTxtAttackCooldown);
-        this.addDrawableChild(this.txtAttackCooldown);
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Lock Screen [On]"), Text.literal("Lock Screen [Off]")).initially(FortytwoEdit.afkScreenLock).omitKeyText().build(x+20,y+22*6+1,100,20, Text.of(""), (button, trackOutput) -> {
+        this.txtAttackCooldown.setValue(""+FortytwoEdit.attackWait);
+        this.txtAttackCooldown.setResponder(this::editTxtAttackCooldown);
+        this.addRenderableWidget(this.txtAttackCooldown);
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Lock Screen [On]"), Component.literal("Lock Screen [Off]")).withInitialValue(FortytwoEdit.afkScreenLock).displayOnlyValue().create(x+20,y+22*6+1,100,20, Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.readOptions();
             FortytwoEdit.afkScreenLock = (boolean)trackOutput;
             FortytwoEdit.updateOptions();
             reloadScreen();
-        })).setTooltip(Tooltip.of(Text.of("Toggle screen lock in auto click mode\n\nWhen on: mouse movement will be ignored and FPS will be reduced")));
+        })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle screen lock in auto click mode\n\nWhen on: mouse movement will be ignored and FPS will be reduced")));
     }
 
     protected void editTxtAttackCooldown(String text) {
@@ -56,8 +56,8 @@ public class AutoClick extends GenericScreen {
     protected void setTxtAttackCooldown() {
         if(unsaved) {
             String inp = "";
-            if(txtAttackCooldown.getText() != null)
-                inp = txtAttackCooldown.getText();
+            if(txtAttackCooldown.getValue() != null)
+                inp = txtAttackCooldown.getValue();
             int attackWait = 1500;
             inp = inp.replaceAll("[^0-9]","");
             try {
@@ -73,35 +73,35 @@ public class AutoClick extends GenericScreen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Auto Clicker"), this.width / 2, y+11, TEXT_COLOR);
-		context.drawItemWithoutEntity(new ItemStack(Items.FISHING_ROD),x+20+2,y+44+1+2);
-		context.drawItemWithoutEntity(new ItemStack(Items.NETHERITE_PICKAXE),x+20+2,y+22*3+1+2);
-		context.drawItemWithoutEntity(new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+22*4+1+2);
-        context.drawTextWithShadow(this.textRenderer, Text.of("Attack Cooldown:"), x+20+3,y+7+22*5, LABEL_COLOR);
+        context.drawCenteredString(this.font, Component.nullToEmpty("Auto Clicker"), this.width / 2, y+11, TEXT_COLOR);
+		context.renderFakeItem(new ItemStack(Items.FISHING_ROD),x+20+2,y+44+1+2);
+		context.renderFakeItem(new ItemStack(Items.NETHERITE_PICKAXE),x+20+2,y+22*3+1+2);
+		context.renderFakeItem(new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+22*4+1+2);
+        context.drawString(this.font, Component.nullToEmpty("Attack Cooldown:"), x+20+3,y+7+22*5, LABEL_COLOR);
     }
 
     @Override
-    public void resize(MinecraftClient client, int width, int height) {
+    public void resize(Minecraft client, int width, int height) {
         saveAll();
         super.resize(client, width, height);
     }
 
     @Override
     public boolean shouldCloseOnKeybind() {
-        return !txtAttackCooldown.isActive();
+        return !txtAttackCooldown.canConsumeInput();
     }
 
     @Override
-    public void onClose() {
+    public void onCloseAction() {
         saveAll();
-        super.onClose();
+        super.onCloseAction();
     }
 
     @Override
     public void tick() {
-        if(!txtAttackCooldown.isActive())
+        if(!txtAttackCooldown.canConsumeInput())
             setTxtAttackCooldown();
 
         super.tick();

@@ -1,21 +1,21 @@
 package baphomethlabs.fortytwoedit.gui;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipData;
-import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraft.world.item.ItemStack;
 
-public class ContainerTooltipData implements TooltipData {
-    private final DefaultedList<ItemStack> inventory;
+public class ContainerTooltipData implements TooltipComponent {
+    private final NonNullList<ItemStack> inventory;
     public final int rowCount;
     public final int columnCount;
 
-    public ContainerTooltipData(DefaultedList<ItemStack> inventory, int rows, int columns) {
+    public ContainerTooltipData(NonNullList<ItemStack> inventory, int rows, int columns) {
         this.inventory = inventory;
         this.rowCount = rows;
         this.columnCount = columns;
     }
 
-    public DefaultedList<ItemStack> getInventory() {
+    public NonNullList<ItemStack> getInventory() {
         return this.inventory;
     }
 }

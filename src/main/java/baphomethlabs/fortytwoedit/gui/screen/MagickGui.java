@@ -2,23 +2,24 @@ package baphomethlabs.fortytwoedit.gui.screen;
 
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class MagickGui extends GenericScreen {
 
-    private ButtonWidget btnWgtAutoClick;
-    private ButtonWidget btnWgtHat;
+    private Button btnWgtAutoClick;
+    private Button btnWgtHat;
     private static final int LEFT_OFFSET = 20;
     private static final int TOP_OFFSET = 1;
     private static final int ITEM_OFFSET = 2;
-    private static final Text TITLE_TEXT = Text.translatable("42edit.gui.magick_screen.title").copy().withColor(0x420666).formatted(Formatting.BOLD);
+    private static final Component TITLE_TEXT = Component.translatable("42edit.gui.magick_screen.title").copy().withColor(0x420666).withStyle(ChatFormatting.BOLD);
 
     public MagickGui() {}
 
@@ -27,33 +28,33 @@ public class MagickGui extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.NONE;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("42edit.gui.magick_screen.item_builder"),
-            button -> changeScreen(new ItemBuilder())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("42edit.gui.magick_screen.hacks"),
-            button -> changeScreen(new Hacks())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
-        btnWgtHat = this.addDrawableChild(ButtonWidget.builder(Text.translatable("42edit.gui.magick_screen.hat"),
-            button -> this.btnHat()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET,60,WID_HEIGHT).build());
-        if(!client.player.getAbilities().creativeMode) {
+        this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.item_builder"),
+            button -> changeScreen(new ItemBuilder())).bounds(x+LEFT_OFFSET,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.hacks"),
+            button -> changeScreen(new Hacks())).bounds(x+LEFT_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
+        btnWgtHat = this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.hat"),
+            button -> this.btnHat()).bounds(x+LEFT_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET,60,WID_HEIGHT).build());
+        if(!minecraft.player.getAbilities().instabuild) {
             btnWgtHat.active = false;
             btnWgtHat.setTooltip(TT_CREATIVE);
         }
         else
-            btnWgtHat.setTooltip(Tooltip.of(Text.translatable("42edit.gui.magick_screen.hat.tooltip")));
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("42edit.gui.magick_screen.super_secret"),
-            button -> this.btnSuperSecretSettings()).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET,165,WID_HEIGHT).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("42edit.gui.magick_screen.capes"),
-            button -> changeScreen(new Capes())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("42edit.gui.magick_screen.auto_click"),
-            button -> changeScreen(new AutoClick())).dimensions(x+LEFT_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET,90,WID_HEIGHT).build());
-        btnWgtAutoClick = this.addDrawableChild(ButtonWidget.builder(Text.empty(),
-            button -> this.btnAutoClick()).dimensions(x+LEFT_OFFSET+90+5,y+ROW_HEIGHT*7+TOP_OFFSET,70,WID_HEIGHT).build());
+            btnWgtHat.setTooltip(Tooltip.create(Component.translatable("42edit.gui.magick_screen.hat.tooltip")));
+        this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.super_secret"),
+            button -> this.btnSuperSecretSettings()).bounds(x+LEFT_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET,165,WID_HEIGHT).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.capes"),
+            button -> changeScreen(new Capes())).bounds(x+LEFT_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.auto_click"),
+            button -> changeScreen(new AutoClick())).bounds(x+LEFT_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET,90,WID_HEIGHT).build());
+        btnWgtAutoClick = this.addRenderableWidget(Button.builder(Component.empty(),
+            button -> this.btnAutoClick()).bounds(x+LEFT_OFFSET+90+5,y+ROW_HEIGHT*7+TOP_OFFSET,70,WID_HEIGHT).build());
         setAutoClickMessage();
     }
 
     protected void btnHat() {
-        if(client.player.getAbilities().creativeMode) {
-            ItemStack hand = client.player.getMainHandStack().copy();
-            ItemStack head = client.player.getInventory().getArmorStack(3).copy();
+        if(minecraft.player.getAbilities().instabuild) {
+            ItemStack hand = minecraft.player.getMainHandItem().copy();
+            ItemStack head = minecraft.player.getItemBySlot(EquipmentSlot.HEAD).copy();
             BlackMagick.setItem(hand,39,5);
             BlackMagick.setItemMain(head);
         }
@@ -91,34 +92,34 @@ public class MagickGui extends GenericScreen {
 
     private void setAutoClickMessage() {
         if(FortytwoEdit.autoClick && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack)
-            btnWgtAutoClick.setMessage(Text.translatable("42edit.gui.magick_screen.auto_click.use"));
+            btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.use"));
         else if(!FortytwoEdit.autoClick && FortytwoEdit.autoMine && !FortytwoEdit.autoAttack)
-            btnWgtAutoClick.setMessage(Text.translatable("42edit.gui.magick_screen.auto_click.mine"));
+            btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.mine"));
         else if(!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 1500)
-            btnWgtAutoClick.setMessage(Text.translatable("42edit.gui.magick_screen.auto_click.attack_slow"));
+            btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.attack_slow"));
         else if(!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 650)
-            btnWgtAutoClick.setMessage(Text.translatable("42edit.gui.magick_screen.auto_click.attack_fast"));
+            btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.attack_fast"));
         else
-            btnWgtAutoClick.setMessage(Text.translatable("42edit.gui.magick_screen.auto_click.custom"));
-        btnWgtAutoClick.setTooltip(Tooltip.of(Text.translatable("42edit.gui.magick_screen.auto_click.cycle_tooltip")));
+            btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.custom"));
+        btnWgtAutoClick.setTooltip(Tooltip.create(Component.translatable("42edit.gui.magick_screen.auto_click.cycle_tooltip")));
     }
 
     @Override
-    protected Identifier getBackgroundTexture() {
+    protected ResourceLocation getBackgroundTexture() {
         return null;
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        context.drawItemWithoutEntity(new ItemStack(Items.JIGSAW), x+6, y+6);
-        context.drawCenteredTextWithShadow(this.textRenderer, TITLE_TEXT, this.width / 2, y+11, TEXT_COLOR);
-		context.drawItemWithoutEntity(new ItemStack(Items.SPONGE),x+LEFT_OFFSET+ITEM_OFFSET,y+44+TOP_OFFSET+ITEM_OFFSET);
-		context.drawItemWithoutEntity(new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET+ITEM_OFFSET);
-		context.drawItemWithoutEntity(new ItemStack(Items.DIAMOND_HELMET),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET+ITEM_OFFSET);
-		context.drawItemWithoutEntity(new ItemStack(Items.STRUCTURE_BLOCK),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET+ITEM_OFFSET);
-		context.drawItemWithoutEntity(new ItemStack(Items.ELYTRA),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET+ITEM_OFFSET);
-		context.drawItemWithoutEntity(new ItemStack(Items.GOLDEN_SWORD),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET+ITEM_OFFSET);
+        context.renderFakeItem(new ItemStack(Items.JIGSAW), x+6, y+6);
+        context.drawCenteredString(this.font, TITLE_TEXT, this.width / 2, y+11, TEXT_COLOR);
+		context.renderFakeItem(new ItemStack(Items.SPONGE),x+LEFT_OFFSET+ITEM_OFFSET,y+44+TOP_OFFSET+ITEM_OFFSET);
+		context.renderFakeItem(new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET+ITEM_OFFSET);
+		context.renderFakeItem(new ItemStack(Items.DIAMOND_HELMET),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET+ITEM_OFFSET);
+		context.renderFakeItem(new ItemStack(Items.STRUCTURE_BLOCK),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET+ITEM_OFFSET);
+		context.renderFakeItem(new ItemStack(Items.ELYTRA),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET+ITEM_OFFSET);
+		context.renderFakeItem(new ItemStack(Items.GOLDEN_SWORD),x+LEFT_OFFSET+ITEM_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET+ITEM_OFFSET);
     }
 
 }

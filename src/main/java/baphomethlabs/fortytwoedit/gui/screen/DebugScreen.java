@@ -3,10 +3,10 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FileTools;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.network.chat.Component;
 
 public class DebugScreen extends GenericScreen {
 
@@ -17,14 +17,14 @@ public class DebugScreen extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.DEBUG_SCREEN;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> changeScreen(new SecretScreen())).dimensions(x+5,y+5,40,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("View Log..."), button -> changeScreen(new LogScreen())).dimensions(x+20,y+22*2+1,80,20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Reset Misc"), button -> this.btnRefreshRuntime()).dimensions(x+20,y+22*3+1,80,20).build())
-            .setTooltip(Tooltip.of(Text.of("Clear various caches, refresh files, etc.")));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Copy Hist"), button -> this.btnOutputHist()).dimensions(x+20,y+22*4+1,80,20).build())
-            .setTooltip(Tooltip.of(Text.of("Copy item history info and send to log")));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Open Dir"), button -> btnOpenDir()).dimensions(x+20,y+22*5+1,80,20).build())
-            .setTooltip(Tooltip.of(Text.of("Open 42edit file directory")));
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new SecretScreen())).bounds(x+5,y+5,40,20).build());
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("View Log..."), button -> changeScreen(new LogScreen())).bounds(x+20,y+22*2+1,80,20).build());
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Reset Misc"), button -> this.btnRefreshRuntime()).bounds(x+20,y+22*3+1,80,20).build())
+            .setTooltip(Tooltip.create(Component.nullToEmpty("Clear various caches, refresh files, etc.")));
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Copy Hist"), button -> this.btnOutputHist()).bounds(x+20,y+22*4+1,80,20).build())
+            .setTooltip(Tooltip.create(Component.nullToEmpty("Copy item history info and send to log")));
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Open Dir"), button -> btnOpenDir()).bounds(x+20,y+22*5+1,80,20).build())
+            .setTooltip(Tooltip.create(Component.nullToEmpty("Open 42edit file directory")));
     }
 
     protected void btnRefreshRuntime() {
@@ -47,9 +47,9 @@ public class DebugScreen extends GenericScreen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Debug Tools"), this.width / 2, y+11, TEXT_COLOR);
+        context.drawCenteredString(this.font, Component.nullToEmpty("Debug Tools"), this.width / 2, y+11, TEXT_COLOR);
     }
 
 }

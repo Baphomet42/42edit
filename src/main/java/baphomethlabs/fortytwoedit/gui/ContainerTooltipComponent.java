@@ -1,15 +1,15 @@
 package baphomethlabs.fortytwoedit.gui;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.tooltip.TooltipComponent;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
-public class ContainerTooltipComponent implements TooltipComponent {
-    private final DefaultedList<ItemStack> inventory;
+public class ContainerTooltipComponent implements ClientTooltipComponent {
+    private final NonNullList<ItemStack> inventory;
     private final int rowCount;
     private final int columnCount;
 
@@ -20,12 +20,12 @@ public class ContainerTooltipComponent implements TooltipComponent {
     }
 
     @Override
-    public int getHeight(TextRenderer textRenderer) {
+    public int getHeight(Font textRenderer) {
         return this.getRowsHeight() + 4;
     }
 
     @Override
-    public int getWidth(TextRenderer textRenderer) {
+    public int getWidth(Font textRenderer) {
         return this.getColumnsWidth();
     }
 
@@ -38,7 +38,7 @@ public class ContainerTooltipComponent implements TooltipComponent {
     }
 
     @Override
-    public void drawItems(TextRenderer textRenderer, int x, int y, int width, int height, DrawContext context) {
+    public void renderImage(Font textRenderer, int x, int y, int width, int height, GuiGraphics context) {
         int i = columnCount;
         int j = rowCount;
         int k = 0;
@@ -51,25 +51,25 @@ public class ContainerTooltipComponent implements TooltipComponent {
         }
     }
 
-    private void drawSlot(int x, int y, int index, DrawContext context, TextRenderer textRenderer) {
+    private void drawSlot(int x, int y, int index, GuiGraphics context, Font textRenderer) {
         ItemStack itemStack = this.inventory.get(index);
         this.draw(context, x, y, Sprite.SLOT);
-        context.drawItem(itemStack, x + 1, y + 1);
-        context.drawStackOverlay(textRenderer, itemStack, x + 1, y + 1);
+        context.renderItem(itemStack, x + 1, y + 1);
+        context.renderItemDecorations(textRenderer, itemStack, x + 1, y + 1);
     }
 
-    private void draw(DrawContext context, int x, int y, Sprite sprite) {
-        context.drawGuiTexture(RenderLayer::getGuiTextured, sprite.texture, x, y, sprite.width, sprite.height);
+    private void draw(GuiGraphics context, int x, int y, Sprite sprite) {
+        context.blitSprite(RenderType::guiTextured, sprite.texture, x, y, sprite.width, sprite.height);
     }
 
     static enum Sprite {
-        SLOT(Identifier.of("container/slot"), 18, 18);
+        SLOT(ResourceLocation.parse("container/slot"), 18, 18);
 
-        public final Identifier texture;
+        public final ResourceLocation texture;
         public final int width;
         public final int height;
 
-        private Sprite(Identifier texture, int width, int height) {
+        private Sprite(ResourceLocation texture, int width, int height) {
             this.texture = texture;
             this.width = width;
             this.height = height;

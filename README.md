@@ -4,6 +4,8 @@ What if man could harness the power of a god? In a sense, he would need God no l
 
 ------------------------------------------------------------------------------------------------
 
+## <!> This branch is unstable for early snapshot development
+
 **Mod Overview**
 
 42edit is a client-side fabric mod that adds an inventory editor and various other utilities for creative and survival mode.

@@ -10,38 +10,38 @@ import org.apache.commons.compress.utils.Lists;
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.argument.ItemStackArgumentType;
-import net.minecraft.command.argument.NbtPathArgumentType.NbtPath;
-import net.minecraft.component.ComponentMap;
-import net.minecraft.component.ComponentType;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtByte;
-import net.minecraft.nbt.NbtByteArray;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtDouble;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtFloat;
-import net.minecraft.nbt.NbtInt;
-import net.minecraft.nbt.NbtIntArray;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtLong;
-import net.minecraft.nbt.NbtLongArray;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.arguments.NbtPathArgument.NbtPath;
+import net.minecraft.commands.arguments.item.ItemArgument;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.ByteArrayTag;
+import net.minecraft.nbt.ByteTag;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.DoubleTag;
+import net.minecraft.nbt.FloatTag;
+import net.minecraft.nbt.IntArrayTag;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.NbtShort;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.nbt.StringNbtReader;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryOps;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.nbt.ShortTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.RegistryOps;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Class containing static methods used for working with NBT, Text components, and more
@@ -54,8 +54,8 @@ public class BlackMagick {
      * @param item
      */
     public static void setItemMain(ItemStack item) {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        setItem(item,client.player.getInventory().selectedSlot,36+client.player.getInventory().selectedSlot);
+        final Minecraft client = Minecraft.getInstance();
+        setItem(item,client.player.getInventory().getSelectedSlot(),36+client.player.getInventory().getSelectedSlot());
     }
 
     /**
@@ -64,7 +64,7 @@ public class BlackMagick {
      * @param item
      */
     public static void setItemOff(ItemStack item) {
-        setItem(item,PlayerInventory.OFF_HAND_SLOT,45);
+        setItem(item,Inventory.SLOT_OFFHAND,45);
     }
 
     /**
@@ -74,88 +74,97 @@ public class BlackMagick {
      * @param slot
      */
     public static void setItem(ItemStack itemInput, int invSlot, int creativeSlot) {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        if(client.player.getAbilities().creativeMode) {
+        final Minecraft client = Minecraft.getInstance();
+        if(client.player.getAbilities().instabuild) {
 
             ItemStack item = itemInput == null ? ItemStack.EMPTY : itemInput.copy();
 
             // If item is not enabled, sets the slot to a bundle containing the item.
             // Removing the bundle item in an inventory may result in a ghost item.
             // Emptying the bundle with the use key ingame will spawn the item, and it will not be a ghost.
-            if(!item.isEmpty() && !client.player.networkHandler.hasFeature(item.getItem().getRequiredFeatures())) {
+            if(!item.isEmpty() && !client.player.connection.isFeatureEnabled(item.getItem().requiredFeatures())) {
                 ItemStack newStack = BlackMagick.itemFromString("{id:bundle,components:{bundle_contents:["+BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(item))+"]}}");
                 if(!newStack.isEmpty()) {
                     item = newStack;
                 }
             }
 
-            FortytwoEdit.addItemHist(client.player.getInventory().getStack(invSlot));
+            FortytwoEdit.addItemHist(client.player.getInventory().getItem(invSlot));
             FortytwoEdit.addItemHist(item);
-            client.player.getInventory().setStack(invSlot, item);
-            client.interactionManager.clickCreativeStack(item, creativeSlot);
-            client.player.playerScreenHandler.sendContentUpdates();
+            client.player.getInventory().setItem(invSlot, item);
+            client.gameMode.handleCreativeModeItemAdd(item, creativeSlot);
+            client.player.inventoryMenu.broadcastChanges();
         }
     }
 
     /**
-     * Get nbt from stringified nbt.
+     * Get nbt from snbt.
      * Invalid types may be parsed as a string.
      * 
-     * @param inp stringified nbt element
+     * @param inp snbt
      * @return parsed element or null if invalid
      */
-    public static NbtElement nbtFromString(String inp) {
+    public static Tag nbtFromString(String inp) {
         String nbt = "{temp:"+inp+"}";
-        NbtCompound temp;
+        CompoundTag temp;
         try {
-            temp = StringNbtReader.parse(nbt);
-            if(temp.contains("temp") && temp.getSize()==1)
+            temp = TagParser.parseCompoundFully(nbt);
+            if(temp.contains("temp") && temp.size()==1)
                 return temp.get("temp");
         } catch(CommandSyntaxException ex) {}
         return null;
     }
 
     /**
-     * Get nbt from stringified nbt of a certain type.
+     * Get nbt from snbt of a certain type
      * 
-     * @param inp stringified nbt element
+     * @param inp snbt
      * @param type if parsed element not type, returns null
      * @return parsed element or null if invalid
      */
-    public static NbtElement nbtFromString(String inp, byte type) {
-        NbtElement el = nbtFromString(inp);
-        if(el != null && el.getType() != type)
+    public static Tag nbtFromString(String inp, byte type) {
+        Tag el = nbtFromString(inp);
+        if(el != null && el.getId() != type)
             return null;
         return el;
     }
 
     /**
-     * Get stringified nbt where NbtStrings are quoted.
-     * Quotes may be double or single, and some characters may be escaped.
+     * Get nbt compound from snbt (or empty compound if invalid)
+     * 
+     * @param inp snbt
+     * @return parsed compound or empty compound if invalid
+     */
+    public static CompoundTag validCompoundFromString(String inp) {
+        return BlackMagick.validCompound(BlackMagick.nbtFromString(inp));
+    }
+
+    /**
+     * Get SNBT representation of NBT.
      * A null element will return an empty string.
      * 
      * @param inp
      * @return
      */
-    public static String nbtToString(NbtElement inp) {
+    public static String nbtToString(Tag inp) {
         if(inp == null)
             return "";
-        else if(inp.getType()==NbtElement.STRING_TYPE) {
-            NbtCompound temp = new NbtCompound();
+        else if(inp.getId()==Tag.TAG_STRING) {
+            CompoundTag temp = new CompoundTag();
             temp.put("temp",inp);
-            String parsed = temp.asString();
+            String parsed = temp.toString();
             if(parsed.startsWith("{temp:") && parsed.endsWith("}")) {
                 parsed = parsed.substring(6,parsed.length()-1);
-                if(BlackMagick.nbtFromString(parsed)!=null && BlackMagick.nbtFromString(parsed).getType()==NbtElement.STRING_TYPE
-                && (BlackMagick.nbtFromString(parsed)).asString().equals(inp.asString())) {
+                if(BlackMagick.nbtFromString(parsed)!=null && BlackMagick.nbtFromString(parsed).getId()==Tag.TAG_STRING
+                && (BlackMagick.nbtFromString(parsed)).toString().equals(inp.toString())) {
                     return parsed;
                 }
             }
-            FortytwoEdit.logError("Failed to stringify NbtString: "+inp.asString());
-            return inp.asString();
+            FortytwoEdit.logError("Failed to stringify NbtString: "+inp.toString());
+            return inp.toString();
         }
         else
-            return inp.asString();
+            return inp.toString();
     }
 
     /**
@@ -164,10 +173,10 @@ public class BlackMagick {
      * @param el any element or null
      * @return non-null compound
      */
-    public static NbtCompound validCompound(NbtElement el) {
-        if(el == null || el.getType() != NbtElement.COMPOUND_TYPE)
-            return new NbtCompound();
-        return (NbtCompound)el;
+    public static CompoundTag validCompound(Tag el) {
+        if(el == null || el.getId() != Tag.TAG_COMPOUND)
+            return new CompoundTag();
+        return (CompoundTag)el;
     }
 
     /**
@@ -176,23 +185,31 @@ public class BlackMagick {
      * @param inp raw json string
      * @return parsed Text or error message
      */
-    public static ParsedText textFromJson(String inp) {
-        RegistryWrapper.WrapperLookup reg = DynamicRegistryManager.EMPTY;
-        try {
-            Text temp = Text.Serialization.fromJson(inp,reg);
-            if(temp != null)
-                return new ParsedText(true,temp.copy());
-        } catch(Exception ex) {}
-        return new ParsedText(false,Text.of("Invalid Text Component").copy().formatted(Formatting.RED));
+    public static ParsedText textComponentFromString(String inp) {
+        Tag textComponent = BlackMagick.nbtFromString(inp);
+        if(textComponent != null) {
+            CompoundTag nbt = new CompoundTag();
+            nbt.putString("id","stone");
+            CompoundTag components = new CompoundTag();
+            components.put("minecraft:custom_name",textComponent);
+            nbt.put("components",components);
+            ItemStack stack = BlackMagick.itemFromNbt(nbt);
+            if(!stack.isEmpty() && BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(stack),"components.minecraft:custom_name") != null)
+                return new ParsedText(true,stack.getHoverName().copy());
+        }
+        return new ParsedText(false,Component.nullToEmpty("Invalid Text Component").copy().withStyle(ChatFormatting.RED));
     }
 
     /**
      * @param inp item compound with id/count/components
      * @return stack from nbt without world registries (or empty stack if invalid)
      */
-    public static ItemStack itemFromNbtStatic(NbtCompound inp) {
-        if(inp != null)
-            return ItemStack.fromNbtOrEmpty(DynamicRegistryManager.EMPTY, inp);
+    public static ItemStack itemFromNbtStatic(CompoundTag inp) {
+        if(inp != null) {
+            try {
+                return ItemStack.parse(RegistryAccess.EMPTY, inp).orElse(ItemStack.EMPTY);
+            } catch(Exception ex) {}
+        }
         return ItemStack.EMPTY;
     }
 
@@ -200,10 +217,15 @@ public class BlackMagick {
      * @param inp item compound with id/count/components
      * @return stack from nbt (or empty stack if invalid)
      */
-    public static ItemStack itemFromNbt(NbtCompound inp) {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        if(client.world != null && inp != null)
-            return ItemStack.fromNbtOrEmpty(client.world.getRegistryManager(),inp);
+    public static ItemStack itemFromNbt(CompoundTag inp) {
+        final Minecraft client = Minecraft.getInstance();
+        if(client.level != null && inp != null) {
+            try {
+                Optional<ItemStack> optionalStack = ItemStack.parse(client.level.registryAccess(),inp);
+                if(optionalStack.isPresent())
+                    return optionalStack.get();
+            } catch(Exception ex) {}
+        }
         return itemFromNbtStatic(inp);
     }
 
@@ -212,10 +234,7 @@ public class BlackMagick {
      * @return stack from nbt (or empty stack if invalid)
      */
     public static ItemStack itemFromString(String inp) {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        if(client.world != null && inp != null)
-            return ItemStack.fromNbtOrEmpty(client.world.getRegistryManager(),BlackMagick.validCompound(BlackMagick.nbtFromString(inp,NbtElement.COMPOUND_TYPE)));
-        return ItemStack.EMPTY;
+        return itemFromNbt(BlackMagick.validCompoundFromString(inp));
     }
 
     /**
@@ -225,12 +244,14 @@ public class BlackMagick {
      * @param item
      * @return compound with id/count/components (or empty compound)
      */
-    public static NbtCompound itemToNbtStorage(ItemStack item) {
-        NbtCompound nbt = new NbtCompound();
-        final MinecraftClient client = MinecraftClient.getInstance();
-        if(client.world != null && item != null && !item.isEmpty()) {
-            nbt = (NbtCompound)item.toNbtAllowEmpty(client.world.getRegistryManager());
-        }
+    public static CompoundTag itemToNbtStorage(ItemStack item) {
+        CompoundTag nbt = new CompoundTag();
+        final Minecraft client = Minecraft.getInstance();
+        try {
+            if(client.level != null && item != null && !item.isEmpty()) {
+                nbt = (CompoundTag)item.save(client.level.registryAccess());
+            }
+        } catch(Exception ex) {}
         return nbt;
     }
 
@@ -241,16 +262,16 @@ public class BlackMagick {
      * @param item
      * @return compound with id/count/components (or empty compound)
      */
-    public static NbtCompound itemToNbt(ItemStack item) {
-        NbtCompound nbt = new NbtCompound();
+    public static CompoundTag itemToNbt(ItemStack item) {
+        CompoundTag nbt = new CompoundTag();
         if(item != null && !item.isEmpty()) {
-            NbtCompound comps = new NbtCompound();
+            CompoundTag comps = new CompoundTag();
             String compsString = componentsAsString(item.getComponents());
             if(compsString != null && compsString.length()>0)
-                comps = BlackMagick.validCompound(BlackMagick.nbtFromString("{"+compsString+"}"));
+                comps = BlackMagick.validCompoundFromString("{"+compsString+"}");
 
-            NbtCompound itemComps = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(item),"components"));
-            for(String k : itemComps.getKeys()) {
+            CompoundTag itemComps = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(item),"components"));
+            for(String k : itemComps.keySet()) {
                 if(k.startsWith("!"))
                     comps.put(k,itemComps.get(k));
             }
@@ -271,22 +292,22 @@ public class BlackMagick {
      * @param item
      * @return compound with id/count/components (or empty compound)
      */
-    public static NbtCompound itemToNbtExclusive(ItemStack item) {
-        NbtCompound nbt = new NbtCompound();
+    public static CompoundTag itemToNbtExclusive(ItemStack item) {
+        CompoundTag nbt = new CompoundTag();
         if(item != null && !item.isEmpty()) {
-            NbtCompound comps = new NbtCompound();
+            CompoundTag comps = new CompoundTag();
             String compsString = componentsAsString(item.getComponents());
             if(compsString != null && compsString.length()>0)
-                comps = BlackMagick.validCompound(BlackMagick.nbtFromString("{"+compsString+"}"));
+                comps = BlackMagick.validCompoundFromString("{"+compsString+"}");
 
             Set<String> unusedComps = Sets.newHashSet();
             for(String comp : ComponentHelper.LIST_DATA_COMPONENT_TYPE.getList())
                 unusedComps.add(comp);
-            for(String comp : comps.getKeys()) {
+            for(String comp : comps.keySet()) {
                 unusedComps.remove(comp);
             }
             for(String comp : unusedComps)
-                comps.put("!"+comp,new NbtCompound());
+                comps.put("!"+comp,new CompoundTag());
 
             if(!comps.isEmpty())
                 nbt.put("components",comps);
@@ -312,14 +333,14 @@ public class BlackMagick {
      * @param item an item in compound form with id/count/components
      * @return arguments as used after /give (or empty string if invalid)
      */
-    public static String itemToGive(NbtCompound item) {
-        if(item != null && item.contains("id",NbtElement.STRING_TYPE)) {
-            String cmd = item.getString("id").replace("minecraft:","");
-            if(item.contains("components",NbtElement.COMPOUND_TYPE)) {
+    public static String itemToGive(CompoundTag item) {
+        if(item != null && item.getString("id").isPresent()) {
+            String cmd = item.getString("id").get().replace("minecraft:","");
+            if(item.getCompound("components").isPresent()) {
                 cmd += "[";
-                NbtCompound components = item.getCompound("components");
+                CompoundTag components = item.getCompound("components").get();
                 boolean first = true;
-                for(String k : components.getKeys()) {
+                for(String k : components.keySet()) {
                     String key = k.replace("minecraft:","");
                     if(!first)
                         cmd += ",";
@@ -333,8 +354,8 @@ public class BlackMagick {
                 }
                 cmd += "]";
             }
-            if(item.contains("count",NbtElement.INT_TYPE) && item.getInt("count")>1)
-                cmd += " "+item.getInt("count");
+            if(item.getInt("count").isPresent() && item.getInt("count").get()>1)
+                cmd += " "+item.getInt("count").get();
             return cmd;
         }
         return "";
@@ -342,15 +363,15 @@ public class BlackMagick {
 
     // modified from net.minecraft.command.argument.ItemStackArgument
     // change = to : in return line and surround identifier in quotes
-    private static String componentsAsString(ComponentMap comps) {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        if(client.world != null && comps != null) {
-            RegistryWrapper.WrapperLookup registries = client.world.getRegistryManager();
-            RegistryOps<NbtElement> dynamicOps = registries.getOps(NbtOps.INSTANCE);
+    private static String componentsAsString(DataComponentMap comps) {
+        final Minecraft client = Minecraft.getInstance();
+        if(client.level != null && comps != null) {
+            HolderLookup.Provider registries = client.level.registryAccess();
+            RegistryOps<Tag> dynamicOps = registries.createSerializationContext(NbtOps.INSTANCE);
             return comps.stream().flatMap(component -> {
-                ComponentType<?> dataComponentType = component.type();
-                Identifier identifier = Registries.DATA_COMPONENT_TYPE.getId(dataComponentType);
-                Optional<NbtElement> optional = component.encode(dynamicOps).result();
+                DataComponentType<?> dataComponentType = component.type();
+                ResourceLocation identifier = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(dataComponentType);
+                Optional<Tag> optional = component.encodeValue(dynamicOps).result();
                 if(identifier == null || optional.isEmpty()) {
                     return Stream.empty();
                 }
@@ -379,8 +400,8 @@ public class BlackMagick {
      */
     public static String getItemId(Item item, boolean namespace) {
         if(namespace)
-            return Registries.ITEM.getId(item).toString();
-        return Registries.ITEM.getId(item).getPath();
+            return BuiltInRegistries.ITEM.getKey(item).toString();
+        return BuiltInRegistries.ITEM.getKey(item).getPath();
     }
 
     /**
@@ -398,7 +419,7 @@ public class BlackMagick {
             return invalidMsg;
         try {
             String giveMsg = "bundle[bundle_contents=["+item+"]]";
-            ItemStackArgumentType.itemStack(BlackMagick.getCommandRegistries()).parse(new StringReader(giveMsg));
+            ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(giveMsg));
         } catch(Exception ex) {
             if(ex instanceof CommandSyntaxException) {
                 String err = ((CommandSyntaxException)ex).getMessage();
@@ -422,15 +443,15 @@ public class BlackMagick {
      * @param path path like "foo" "foo.bar" or "foo.bar[1]"
      * @return
      */
-    public static NbtElement getNbtPath(NbtCompound inp, String path) {
-        if(inp == null || inp.getType() != NbtElement.COMPOUND_TYPE)
+    public static Tag getNbtPath(CompoundTag inp, String path) {
+        if(inp == null || inp.getId() != Tag.TAG_COMPOUND)
             return null;
 
         try {
-            NbtPath p = NbtPath.parse(path);
-            List<NbtElement> list = p.get(inp);
+            NbtPath p = NbtPath.of(path);
+            List<Tag> list = p.get(inp);
             if(list.size() == 1) {
-                NbtElement el = list.get(0);
+                Tag el = list.get(0);
                 if(el == null)
                     return null;
                 else
@@ -449,9 +470,9 @@ public class BlackMagick {
      * @param type NbtElement type
      * @return
      */
-    public static NbtElement getNbtPath(NbtCompound inp, String path, byte type) {
-        NbtElement el = getNbtPath(inp, path);
-        if(el != null && el.getType() == type)
+    public static Tag getNbtPath(CompoundTag inp, String path, byte type) {
+        Tag el = getNbtPath(inp, path);
+        if(el != null && el.getId() == type)
             return el;
         return null;
     }
@@ -465,19 +486,19 @@ public class BlackMagick {
      * @param el element to be set (or null to remove)
      * @return copy with changes made
      */
-    public static NbtCompound setNbtPath(NbtCompound base, String path, NbtElement el) {
-        NbtCompound nbt;
+    public static CompoundTag setNbtPath(CompoundTag base, String path, Tag el) {
+        CompoundTag nbt;
         if(base != null)
             nbt = base.copy();
         else
-            nbt = new NbtCompound();
+            nbt = new CompoundTag();
 
         try {
-            NbtPath p = NbtPath.parse(path);
+            NbtPath p = NbtPath.of(path);
             if(el == null)
                 p.remove(nbt);
             else {
-                p.put(nbt,el.copy());
+                p.set(nbt,el.copy());
                 if(!path.contains("!"))
                     nbt = removeComponentLocks(nbt,path);
             }
@@ -492,30 +513,30 @@ public class BlackMagick {
      * @param type from NbtElement.getType()
      * @return a new NbtElement or null if the type is unknown
      */
-    public static NbtElement getDefaultNbt(byte type) {
+    public static Tag getDefaultNbt(byte type) {
         switch(type) {
-            case NbtElement.COMPOUND_TYPE : return new NbtCompound();
-            case NbtElement.LIST_TYPE : return new NbtList();
-            case NbtElement.BYTE_TYPE : return NbtByte.ZERO;
-            case NbtElement.BYTE_ARRAY_TYPE : return new NbtByteArray(new byte[0]);
-            case NbtElement.SHORT_TYPE : return NbtShort.of((short)0);
-            case NbtElement.INT_TYPE : return NbtInt.of(0);
-            case NbtElement.INT_ARRAY_TYPE : return new NbtIntArray(new int[0]);
-            case NbtElement.LONG_TYPE : return NbtLong.of((long)0);
-            case NbtElement.LONG_ARRAY_TYPE : return new NbtLongArray(new long[0]);
-            case NbtElement.DOUBLE_TYPE : return NbtDouble.of((double)0);
-            case NbtElement.FLOAT_TYPE : return NbtFloat.of((float)0);
-            case NbtElement.STRING_TYPE : return NbtString.of("");
+            case Tag.TAG_COMPOUND : return new CompoundTag();
+            case Tag.TAG_LIST : return new ListTag();
+            case Tag.TAG_BYTE : return ByteTag.ZERO;
+            case Tag.TAG_BYTE_ARRAY : return new ByteArrayTag(new byte[0]);
+            case Tag.TAG_SHORT : return ShortTag.valueOf((short)0);
+            case Tag.TAG_INT : return IntTag.valueOf(0);
+            case Tag.TAG_INT_ARRAY : return new IntArrayTag(new int[0]);
+            case Tag.TAG_LONG : return LongTag.valueOf((long)0);
+            case Tag.TAG_LONG_ARRAY : return new LongArrayTag(new long[0]);
+            case Tag.TAG_DOUBLE : return DoubleTag.valueOf((double)0);
+            case Tag.TAG_FLOAT : return FloatTag.valueOf((float)0);
+            case Tag.TAG_STRING : return StringTag.valueOf("");
             default: break;
         }
         FortytwoEdit.logError("Failed to create default NbtElement for type: "+type);
         return null;
     }
 
-    private static NbtCompound removeComponentLocks(NbtCompound base, String path) {
+    private static CompoundTag removeComponentLocks(CompoundTag base, String path) {
         if(base == null)
             return null;
-        NbtCompound nbt = base.copy();
+        CompoundTag nbt = base.copy();
 
         if(path.startsWith("components.")) {
             String component = path.substring(11);
@@ -540,18 +561,18 @@ public class BlackMagick {
      * @param up whether to move the element up or down
      * @return copy with changes made
      */
-    public static NbtCompound moveListElement(NbtCompound base, String path, int index, boolean up) {
+    public static CompoundTag moveListElement(CompoundTag base, String path, int index, boolean up) {
         if(base == null)
             return null;
         if(path == null || path.isEmpty() || index<0)
             return base.copy();
 
-        NbtCompound nbt = base.copy();
+        CompoundTag nbt = base.copy();
 
-        if(getNbtPath(nbt,path,NbtElement.LIST_TYPE) != null) {
-            NbtList list = (NbtList)getNbtPath(nbt,path);
+        if(getNbtPath(nbt,path,Tag.TAG_LIST) != null) {
+            ListTag list = (ListTag)getNbtPath(nbt,path);
             if(list.size()>index && index>=0 && !((index==0 && up) || (index==list.size()-1 && !up))) {
-                NbtElement el = list.remove(index);
+                Tag el = list.remove(index);
                 if(up)
                     list.add(index-1,el);
                 else
@@ -571,18 +592,18 @@ public class BlackMagick {
      * @param index index in list
      * @return copy with changes made
      */
-    public static NbtCompound cloneListElement(NbtCompound base, String path, int index) {
+    public static CompoundTag cloneListElement(CompoundTag base, String path, int index) {
         if(base == null)
             return null;
         if(path == null || path.isEmpty() || index<0)
             return base.copy();
 
-        NbtCompound nbt = base.copy();
+        CompoundTag nbt = base.copy();
 
-        if(getNbtPath(nbt,path,NbtElement.LIST_TYPE) != null) {
-            NbtList list = (NbtList)getNbtPath(nbt,path);
+        if(getNbtPath(nbt,path,Tag.TAG_LIST) != null) {
+            ListTag list = (ListTag)getNbtPath(nbt,path);
             if(list.size()>index && index>=0) {
-                NbtElement el = list.get(index).copy();
+                Tag el = list.get(index).copy();
                 list.add(index,el);
                 nbt = setNbtPath(nbt, path, list);
             }
@@ -597,7 +618,7 @@ public class BlackMagick {
      * @param right
      * @return true if left and right elements are identical
      */
-    public static boolean elementsEqual(NbtElement left, NbtElement right) {
+    public static boolean elementsEqual(Tag left, Tag right) {
         if(left == null && right == null)
             return true;
         else if(left == null || right == null)
@@ -607,19 +628,19 @@ public class BlackMagick {
     }
 
     public static String validSnbtKey(String key) {
-        NbtCompound nbt = new NbtCompound();
+        CompoundTag nbt = new CompoundTag();
         nbt.putInt(key,0);
-        String nbtString = nbt.asString();
+        String nbtString = BlackMagick.nbtToString(nbt);
         if(nbtString.startsWith("{") && nbtString.endsWith(":0}")) {
             return nbtString.substring(1,nbtString.length()-3);
         }
         FortytwoEdit.logError("Failed to convert key to valid SNBT key: "+key);
-        return nbtToString(NbtString.of(key));
+        return nbtToString(StringTag.valueOf(key));
     }
 
-    public static Identifier identifierOrNull(String id) {
+    public static ResourceLocation identifierOrNull(String id) {
         try {
-            return Identifier.of(id);
+            return ResourceLocation.parse(id);
         }
         catch(Exception ex) {}
         return null;
@@ -633,49 +654,49 @@ public class BlackMagick {
      * @param charColor the color of the character
      * @return compound representation of an itemstack, or null
      */
-    public static NbtCompound createBanner(char character, String baseColor, String charColor) {
-        NbtElement el = null;
+    public static CompoundTag createBanner(char character, String baseColor, String charColor) {
+        Tag el = null;
         switch(character) {
-            case 'A': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'B': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+baseColor+",pattern:\"minecraft:circle\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'C': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'D': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:half_vertical\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'E': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'F': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'G': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:half_vertical\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'H': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'I': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_center\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'J': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'K': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'L': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:half_vertical\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'M': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:triangle_top\"},{color:"+baseColor+",pattern:\"minecraft:triangles_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'N': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'O': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'P': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'Q': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:square_bottom_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'R': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'S': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'T': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_center\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'U': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'V': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:diagonal_up_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'W': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:triangle_bottom\"},{color:"+baseColor+",pattern:\"minecraft:triangles_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'X': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'Y': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case 'Z': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case '0': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case '1': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:square_top_left\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:stripe_center\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case '2': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case '3': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case '4': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case '5': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case '6': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case '7': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case '8': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
-            case '9': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",NbtElement.COMPOUND_TYPE); break;
+            case 'A': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'B': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+baseColor+",pattern:\"minecraft:circle\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'C': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'D': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:half_vertical\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'E': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'F': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'G': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:half_vertical\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'H': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'I': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_center\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'J': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'K': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'L': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:half_vertical\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'M': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:triangle_top\"},{color:"+baseColor+",pattern:\"minecraft:triangles_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'N': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'O': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'P': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'Q': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:square_bottom_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+charColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'R': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'S': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'T': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_center\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'U': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'V': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:diagonal_up_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'W': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:triangle_bottom\"},{color:"+baseColor+",pattern:\"minecraft:triangles_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'X': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'Y': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case 'Z': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case '0': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case '1': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:square_top_left\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:stripe_center\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case '2': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case '3': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:curly_border\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case '4': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case '5': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case '6': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case '7': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case '8': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_bottom\"},{color:"+baseColor+",pattern:\"minecraft:rhombus\"},{color:"+charColor+",pattern:\"minecraft:stripe_downright\"},{color:"+charColor+",pattern:\"minecraft:stripe_downleft\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
+            case '9': el = BlackMagick.nbtFromString("{components:{banner_patterns:[{color:"+charColor+",pattern:\"minecraft:stripe_left\"},{color:"+baseColor+",pattern:\"minecraft:half_horizontal_bottom\"},{color:"+charColor+",pattern:\"minecraft:stripe_top\"},{color:"+charColor+",pattern:\"minecraft:stripe_right\"},{color:"+charColor+",pattern:\"minecraft:stripe_middle\"},{color:"+baseColor+",pattern:\"minecraft:border\"}]},id:\"minecraft:"+baseColor+"_banner\"}",Tag.TAG_COMPOUND); break;
             default: return null;
         }
         if(el != null)
-            return (NbtCompound)el;
+            return (CompoundTag)el;
         return null;
     }
 
@@ -683,7 +704,7 @@ public class BlackMagick {
     /**
      * stores parsed text component or an error message if isValid is false
      */
-    public record ParsedText(boolean isValid, Text text) {}
+    public record ParsedText(boolean isValid, Component text) {}
 
     /**
      * Test if query string contains at least one string in the set
@@ -774,7 +795,7 @@ public class BlackMagick {
         List<String> list = Lists.newArrayList();
 
         for(String s : suggs)
-            list.add(nbtToString(NbtString.of(s)));
+            list.add(nbtToString(StringTag.valueOf(s)));
 
         return list;
     }
@@ -855,11 +876,11 @@ public class BlackMagick {
      * 
      * @return vanilla command registries with all features enabled
      */
-    public static CommandRegistryAccess getCommandRegistries() {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        if(client.world != null)
-            return CommandRegistryAccess.of(client.world.getRegistryManager(), FortytwoEdit.FEATURES);
-        return CommandRegistryAccess.of(DynamicRegistryManager.EMPTY, FortytwoEdit.FEATURES);
+    public static CommandBuildContext getCommandRegistries() {
+        final Minecraft client = Minecraft.getInstance();
+        if(client.level != null)
+            return CommandBuildContext.simple(client.level.registryAccess(), FortytwoEdit.FEATURES);
+        return CommandBuildContext.simple(RegistryAccess.EMPTY, FortytwoEdit.FEATURES);
     }
 
     /**
@@ -869,26 +890,26 @@ public class BlackMagick {
      * @param right
      * @return formatted Text listing element differences and full content
      */
-    public static Text getElementDifferences(NbtElement left, NbtElement right) {
+    public static Component getElementDifferences(Tag left, Tag right) {
         if(left==null && right==null)
-            return Text.of("null").copy().formatted(Formatting.ITALIC);
+            return Component.nullToEmpty("null").copy().withStyle(ChatFormatting.ITALIC);
         if(left==null)
-            return Text.of(BlackMagick.nbtToString(right)).copy().formatted(Formatting.GREEN);
+            return Component.nullToEmpty(BlackMagick.nbtToString(right)).copy().withStyle(ChatFormatting.GREEN);
         if(right==null)
-            return Text.of(BlackMagick.nbtToString(left)).copy().formatted(Formatting.RED);
+            return Component.nullToEmpty(BlackMagick.nbtToString(left)).copy().withStyle(ChatFormatting.RED);
 
-        if(left.getType() == right.getType()) {
+        if(left.getId() == right.getId()) {
             if(BlackMagick.nbtToString(left).equals(BlackMagick.nbtToString(right)))
-                return Text.of(BlackMagick.nbtToString(left));
-            if(left.getType() == NbtElement.COMPOUND_TYPE) {
-                NbtCompound leftCmp = (NbtCompound)left;
-                NbtCompound rightCmp = (NbtCompound)right;
-                MutableText output = Text.empty().append(Text.of("{"));
+                return Component.nullToEmpty(BlackMagick.nbtToString(left));
+            if(left.getId() == Tag.TAG_COMPOUND) {
+                CompoundTag leftCmp = (CompoundTag)left;
+                CompoundTag rightCmp = (CompoundTag)right;
+                MutableComponent output = Component.empty().append(Component.nullToEmpty("{"));
 
                 Set<String> allKeys = Sets.newHashSet();
-                for(String k : ((NbtCompound)left).getKeys())
+                for(String k : ((CompoundTag)left).keySet())
                     allKeys.add(k);
-                for(String k : ((NbtCompound)right).getKeys())
+                for(String k : ((CompoundTag)right).keySet())
                     allKeys.add(k);
 
                 boolean first = true;
@@ -896,36 +917,36 @@ public class BlackMagick {
                     String k2 = validSnbtKey(k);
 
                     if(!first)
-                        output.append(Text.of(","));
+                        output.append(Component.nullToEmpty(","));
                     else
                         first = false;
 
                     if(leftCmp.contains(k) && rightCmp.contains(k)) {
-                        output.append(Text.of(k2+":"));
+                        output.append(Component.nullToEmpty(k2+":"));
                         output.append(getElementDifferences(leftCmp.get(k),rightCmp.get(k)));
                     }
                     else if(leftCmp.contains(k)) {
-                        output.append((Text.of(k2+":").copy().append(Text.of(BlackMagick.nbtToString(leftCmp.get(k))))).formatted(Formatting.RED));
+                        output.append((Component.nullToEmpty(k2+":").copy().append(Component.nullToEmpty(BlackMagick.nbtToString(leftCmp.get(k))))).withStyle(ChatFormatting.RED));
                     }
                     else {
-                        output.append((Text.of(k2+":").copy().append(Text.of(BlackMagick.nbtToString(rightCmp.get(k))))).formatted(Formatting.GREEN));
+                        output.append((Component.nullToEmpty(k2+":").copy().append(Component.nullToEmpty(BlackMagick.nbtToString(rightCmp.get(k))))).withStyle(ChatFormatting.GREEN));
                     }
                 }
 
-                output.append(Text.of("}"));
+                output.append(Component.nullToEmpty("}"));
                 return output;
             }
-            if(left.getType() == NbtElement.LIST_TYPE) {
-                NbtList leftList = (NbtList)left;
-                NbtList rightList = (NbtList)right;
-                MutableText output = Text.empty().append(Text.of("["));
+            if(left.getId() == Tag.TAG_LIST) {
+                ListTag leftList = (ListTag)left;
+                ListTag rightList = (ListTag)right;
+                MutableComponent output = Component.empty().append(Component.nullToEmpty("["));
 
-                int maxSize = Math.max(((NbtList)left).size(),((NbtList)right).size());
+                int maxSize = Math.max(((ListTag)left).size(),((ListTag)right).size());
 
                 boolean first = true;
                 for(int i=0; i<maxSize; i++) {
                     if(!first)
-                        output.append(Text.of(","));
+                        output.append(Component.nullToEmpty(","));
                     else
                         first = false;
 
@@ -933,18 +954,18 @@ public class BlackMagick {
                         output.append(getElementDifferences(leftList.get(i),rightList.get(i)));
                     }
                     else if(leftList.size()>i) {
-                        output.append((Text.of(BlackMagick.nbtToString(leftList.get(i))).copy()).formatted(Formatting.RED));
+                        output.append((Component.nullToEmpty(BlackMagick.nbtToString(leftList.get(i))).copy()).withStyle(ChatFormatting.RED));
                     }
                     else {
-                        output.append((Text.of(BlackMagick.nbtToString(rightList.get(i))).copy()).formatted(Formatting.GREEN));
+                        output.append((Component.nullToEmpty(BlackMagick.nbtToString(rightList.get(i))).copy()).withStyle(ChatFormatting.GREEN));
                     }
                 }
 
-                output.append(Text.of("]"));
+                output.append(Component.nullToEmpty("]"));
                 return output;
             }
         }
-        return Text.empty().append(Text.of(BlackMagick.nbtToString(left)).copy().formatted(Formatting.RED)).append(Text.of(BlackMagick.nbtToString(right)).copy().formatted(Formatting.GREEN));
+        return Component.empty().append(Component.nullToEmpty(BlackMagick.nbtToString(left)).copy().withStyle(ChatFormatting.RED)).append(Component.nullToEmpty(BlackMagick.nbtToString(right)).copy().withStyle(ChatFormatting.GREEN));
     }
 
     /**
@@ -954,14 +975,14 @@ public class BlackMagick {
      * @param collapseItems if true, compounds that contain the key `id` will be inlined instead of expanded
      * @return
      */
-    public static String formatSnbtAsTree(NbtElement el, boolean collapseItems) {
+    public static String formatSnbtAsTree(Tag el, boolean collapseItems) {
         return formatSnbtAsTree(el, collapseItems, 0);
     }
 
     /**
      * Inner logic for method above
      */
-    private static String formatSnbtAsTree(NbtElement el, boolean collapseItems, int indents) {
+    private static String formatSnbtAsTree(Tag el, boolean collapseItems, int indents) {
         if(el == null)
             return "null";
 
@@ -971,9 +992,9 @@ public class BlackMagick {
             indentBuilder.append("\t");
         String indent = indentBuilder.toString();
 
-        switch(el.getType()) {
-            case NbtElement.COMPOUND_TYPE: {
-                NbtCompound nbt = (NbtCompound)el;
+        switch(el.getId()) {
+            case Tag.TAG_COMPOUND: {
+                CompoundTag nbt = (CompoundTag)el;
                 if(nbt.isEmpty())
                     current.append("{}");
                 else if(collapseItems && nbt.contains("id"))
@@ -982,7 +1003,7 @@ public class BlackMagick {
                     current.append("{\n");
 
                     boolean firstKey = true;
-                    for(String k : sortSet(nbt.getKeys())) {
+                    for(String k : sortSet(nbt.keySet())) {
                         if(firstKey)
                             firstKey = false;
                         else
@@ -996,8 +1017,8 @@ public class BlackMagick {
                 }
                 break;
             }
-            case NbtElement.LIST_TYPE: {
-                NbtList nbt = (NbtList)el;
+            case Tag.TAG_LIST: {
+                ListTag nbt = (ListTag)el;
                 if(nbt.isEmpty())
                     current.append("[]");
                 else {

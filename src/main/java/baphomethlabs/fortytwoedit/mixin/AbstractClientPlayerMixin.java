@@ -1,31 +1,32 @@
 package baphomethlabs.fortytwoedit.mixin;
 
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.util.SkinTextures;
-import net.minecraft.client.util.SkinTextures.Model;
-import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.client.resources.PlayerSkin.Model;
+import net.minecraft.resources.ResourceLocation;
 
-@Mixin(AbstractClientPlayerEntity.class)
-public abstract class AbstractClientPlayerEntityMixin {
+@Mixin(AbstractClientPlayer.class)
+public abstract class AbstractClientPlayerMixin {
 
-    @Shadow protected abstract PlayerListEntry getPlayerListEntry();
+    @Shadow
+    protected abstract PlayerInfo getPlayerInfo();
 
-    @Inject(method = "getSkinTextures()Lnet/minecraft/client/util/SkinTextures;", at = @At("RETURN"), cancellable = true)
-    public void getSkinTextures(CallbackInfoReturnable<SkinTextures> cir) {
+    @Inject(method = "getSkin", at = @At("RETURN"), cancellable = true)
+    public void injectSkin(CallbackInfoReturnable<PlayerSkin> cir) {
 
-        PlayerListEntry playerEntry = this.getPlayerListEntry();
+        PlayerInfo playerEntry = this.getPlayerInfo();
         if(playerEntry != null) {
 
-            SkinTextures skin = playerEntry.getSkinTextures();
-            Identifier texture = skin.texture();
-            Identifier cape = skin.capeTexture();
+            PlayerSkin skin = playerEntry.getSkin();
+            ResourceLocation texture = skin.texture();
+            ResourceLocation cape = skin.capeTexture();
             Model model = skin.model();
             String name = playerEntry.getProfile().getName();
             boolean changed = false;
@@ -33,7 +34,7 @@ public abstract class AbstractClientPlayerEntityMixin {
             //cape
             if(FortytwoEdit.opticapesWorking && FortytwoEdit.opticapesOn) {
                 if(FortytwoEdit.capeCached(name)) {
-                    cape = Identifier.of("42edit","cache/cape/"+name.toLowerCase());
+                    cape = ResourceLocation.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
                     changed = true;
                 }
                 else if(!FortytwoEdit.nameCached(name) && FortytwoEdit.capeTimeCheck()) {
@@ -47,7 +48,7 @@ public abstract class AbstractClientPlayerEntityMixin {
 
             //skin
             if(FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && name.equals(FortytwoEdit.USERNAME)) {
-                texture = FortytwoEdit.customSkinID;
+                texture = FortytwoEdit.CUSTOM_SKIN_ID;
                 changed = true;
             }
 
@@ -63,7 +64,7 @@ public abstract class AbstractClientPlayerEntityMixin {
             }
 
             if(changed) {
-                cir.setReturnValue(new SkinTextures(texture, null, cape, cape, model, false));
+                cir.setReturnValue(new PlayerSkin(texture, null, cape, cape, model, false));
             }
 
         }

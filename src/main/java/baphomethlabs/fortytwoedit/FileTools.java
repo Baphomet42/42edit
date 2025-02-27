@@ -8,12 +8,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Screenshot;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import org.apache.commons.compress.utils.Lists;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.ScreenshotRecorder;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.util.Util;
 
 /**
  * Class containing static methods used for working with files
@@ -57,8 +57,8 @@ public class FileTools {
      * @return absolute path
      */
     public static String pathFromMinecraft(String filePath) {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        return buildFilePath(client.runDirectory.getAbsolutePath(),filePath);
+        final Minecraft client = Minecraft.getInstance();
+        return buildFilePath(client.gameDirectory.getAbsolutePath(),filePath);
     }
 
     /**
@@ -69,9 +69,9 @@ public class FileTools {
      * @param display how to format file
      * @return true if compound was set successfully
      */
-    public static boolean writeCompoundToFile(String filePath, NbtCompound nbt, FileDisplayType display) {
+    public static boolean writeCompoundToFile(String filePath, CompoundTag nbt, FileDisplayType display) {
         String fileContents = "";
-        NbtCompound nbtCopy = new NbtCompound();
+        CompoundTag nbtCopy = new CompoundTag();
         if(nbt != null)
             nbtCopy = nbt.copy();
 
@@ -94,7 +94,7 @@ public class FileTools {
             oldFile = readStringFromFile(filePath);
         }
         if(writeStringToFile(filePath,fileContents)) {
-            NbtCompound nbtNew = readCompoundFromFile(filePath);
+            CompoundTag nbtNew = readCompoundFromFile(filePath);
             if(nbtNew != null && BlackMagick.elementsEqual(nbtCopy,nbtNew))
                 return true;
             else {
@@ -128,12 +128,12 @@ public class FileTools {
      * @param filePath path to file relative to .minecraft
      * @return compound from file or null if compound could not be parsed
      */
-    public static NbtCompound readCompoundFromFile(String filePath) {
+    public static CompoundTag readCompoundFromFile(String filePath) {
         String fileContents = readStringFromFile(filePath);
         if(fileContents != null && fileContents.length()>0) {
-            NbtElement nbt = BlackMagick.nbtFromString(fileContents);
-            if(nbt != null && nbt.getType() == NbtElement.COMPOUND_TYPE) {
-                return ((NbtCompound)nbt);
+            Tag nbt = BlackMagick.nbtFromString(fileContents);
+            if(nbt != null && nbt.getId() == Tag.TAG_COMPOUND) {
+                return ((CompoundTag)nbt);
             }
 
             FortytwoEdit.logError("Failed to parse file '" + filePath + "' as compound: " + fileContents);
@@ -266,7 +266,7 @@ public class FileTools {
     }
 
     public static boolean openMinecraftScreenshots() {
-        if(openMinecraftDirEntry(ScreenshotRecorder.SCREENSHOTS_DIRECTORY))
+        if(openMinecraftDirEntry(Screenshot.SCREENSHOT_DIR))
             return true;
         FortytwoEdit.showToast("File Error","Screenshots folder could not be opened");
         return false;
@@ -282,7 +282,7 @@ public class FileTools {
         try {
             File dir = new File(pathFromMinecraft(filePath));
             if(dir.exists() && dir.isDirectory()) {
-                Util.getOperatingSystem().open(dir);
+                Util.getPlatform().openFile(dir);
                 return true;
             }
         } catch(Exception ex) {

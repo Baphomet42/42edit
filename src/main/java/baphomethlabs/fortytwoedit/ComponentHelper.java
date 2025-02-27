@@ -6,50 +6,50 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.ClientLanguage;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.locale.Language;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.ServerPacksSource;
+import net.minecraft.server.packs.resources.IoSupplier;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.component.FireworkExplosion;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
 import baphomethlabs.fortytwoedit.mixin.DecoratedPotPatternsAccessor;
-import baphomethlabs.fortytwoedit.mixin.KeyBindingAccessor;
-import baphomethlabs.fortytwoedit.mixin.TranslationStorageAccessor;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.resource.language.TranslationStorage;
-import net.minecraft.component.type.AttributeModifierSlot;
-import net.minecraft.component.type.FireworkExplosionComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.ToolMaterial;
-import net.minecraft.item.consume.UseAction;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.resource.InputSupplier;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.resource.VanillaDataPackProvider;
-import net.minecraft.state.property.Property;
-import net.minecraft.text.Text;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Language;
-import net.minecraft.util.Util;
+import baphomethlabs.fortytwoedit.mixin.KeyMappingAccessor;
+import baphomethlabs.fortytwoedit.mixin.ClientLanguageAccessor;
 
 /**
  * <p> Class containing static methods related to item components </p>
  * <p> These often change every update and must be kept up to date manually </p>
  * <p> Check the following for help: </p>
  * <ul>
- *  <li> {@link net.minecraft.component.DataComponentTypes} </li>
+ *  <li> {@link net.minecraft.core.component.DataComponents} </li>
  *  <li> https://minecraft.wiki/w/Item_format </li>
  *  <li> https://minecraft.wiki/w/Entity_format </li>
  * </ul>
@@ -116,12 +116,12 @@ public class ComponentHelper {
             if(path.endsWith("components.attribute_modifiers.modifiers[0].slot"))
                 return (new PathInfo(PathType.STRING,LIST_ATTRIBUTE_MODIFIER_SLOT));
             if(path.endsWith("components.attribute_modifiers.modifiers[0].id"))
-                return (new PathInfo(PathType.STRING,SuggestionGetter.newInline("minecraft:armor.body","minecraft:armor.boots","minecraft:armor.chestplate","minecraft:armor.helmet","minecraft:armor.leggings",Item.BASE_ATTACK_DAMAGE_MODIFIER_ID.toString(),Item.BASE_ATTACK_SPEED_MODIFIER_ID.toString())).withDesc(Text.of("Unique namespaced ID used to update modifiers"))); // hardcoded list
+                return (new PathInfo(PathType.STRING,SuggestionGetter.newInline("minecraft:armor.body","minecraft:armor.boots","minecraft:armor.chestplate","minecraft:armor.helmet","minecraft:armor.leggings",Item.BASE_ATTACK_DAMAGE_ID.toString(),Item.BASE_ATTACK_SPEED_ID.toString())).withDesc(Component.nullToEmpty("Unique namespaced ID used to update modifiers"))); // hardcoded list
             if(path.endsWith("components.attribute_modifiers.modifiers[0].amount"))
                 return PathInfos.DOUBLE;
             if(path.endsWith("components.attribute_modifiers.modifiers[0].operation"))
                 return (new PathInfo(PathType.STRING,SuggestionGetter.newInline("add_value","add_multiplied_base","add_multiplied_total"))).withDesc(
-                Text.of("add_value: base + amount1 + amount2\n\nadd_multiplied_base: base * (1 + amount1 + amount2)\n\n"
+                Component.nullToEmpty("add_value: base + amount1 + amount2\n\nadd_multiplied_base: base * (1 + amount1 + amount2)\n\n"
                 +"add_multiplied_total: base * (1 + amount1) * (1 + amount2)")); // hardcoded list
             if(path.endsWith("components.attribute_modifiers.show_in_tooltip"))
                 return PathInfos.TRINARY;
@@ -140,7 +140,7 @@ public class ComponentHelper {
         }
 
         if(path.endsWith("components.base_color"))
-            return (new PathInfo(PathType.STRING,LIST_DYE_COLOR)).withDesc(Text.of("Used for the banner color of a shield")).withIcon(Items.SHIELD);
+            return (new PathInfo(PathType.STRING,LIST_DYE_COLOR)).withDesc(Component.nullToEmpty("Used for the banner color of a shield")).withIcon(Items.SHIELD);
 
         if(path.contains("components.bees")) {
             if(path.endsWith("components.bees"))
@@ -200,13 +200,13 @@ public class ComponentHelper {
             if(path.endsWith("components.bucket_entity_data.Health"))
                 return PathInfos.FLOAT;
             if(path.endsWith("components.bucket_entity_data.Age"))
-                return PathInfos.INT.withDesc(Text.of("Age of tadpole or axolotl")).withGroup("Item Specific");
+                return PathInfos.INT.withDesc(Component.nullToEmpty("Age of tadpole or axolotl")).withGroup("Item Specific");
             if(path.endsWith("components.bucket_entity_data.Variant"))
-                return (new PathInfo(PathType.INT,SuggestionGetter.newInline("0","1","2","3","4"))).withDesc(Text.of("Axolotl variant id\n0 - lucy (pink)\n1 - wild (brown)\n2 - gold\n3 - cyan\n4 - blue")).withGroup("Item Specific");
+                return (new PathInfo(PathType.INT,SuggestionGetter.newInline("0","1","2","3","4"))).withDesc(Component.nullToEmpty("Axolotl variant id\n0 - lucy (pink)\n1 - wild (brown)\n2 - gold\n3 - cyan\n4 - blue")).withGroup("Item Specific");
             if(path.endsWith("components.bucket_entity_data.HuntingCooldown"))
-                return PathInfos.LONG.withDesc(Text.of("Axolotl hunting cooldown")).withGroup("Item Specific");
+                return PathInfos.LONG.withDesc(Component.nullToEmpty("Axolotl hunting cooldown")).withGroup("Item Specific");
             if(path.endsWith("components.bucket_entity_data.BucketVariantTag"))
-                return PathInfos.INT.withDesc(Text.of("Tropical fish variant")).withGroup("Item Specific");
+                return PathInfos.INT.withDesc(Component.nullToEmpty("Tropical fish variant")).withGroup("Item Specific");
         }
 
         if(path.contains("components.bundle_contents")) {
@@ -261,11 +261,11 @@ public class ComponentHelper {
             if(path.endsWith("components.consumable"))
                 return (new PathInfo(KeyGetter.create().withOptional("animation","consume_seconds","has_consume_particles","on_consume_effects","sound"))).withIcon(Items.APPLE);
             if(path.endsWith("components.consumable.animation"))
-                return (new PathInfo(PathType.STRING,LIST_USE_ACTION)).withDesc(Text.of("Defaults to \"eat\""));
+                return (new PathInfo(PathType.STRING,LIST_USE_ACTION)).withDesc(Component.nullToEmpty("Defaults to \"eat\""));
             if(path.endsWith("components.consumable.consume_seconds"))
-                return (new PathInfo(PathType.FLOAT,SuggestionGetter.newInline("1.6f"))).withDesc(Text.of("Defaults to 1.6f")); // hardcoded list
+                return (new PathInfo(PathType.FLOAT,SuggestionGetter.newInline("1.6f"))).withDesc(Component.nullToEmpty("Defaults to 1.6f")); // hardcoded list
             if(path.endsWith("components.consumable.has_consume_particles"))
-                return PathInfos.TRINARY.withDesc(Text.of("Defaults to true"));
+                return PathInfos.TRINARY.withDesc(Component.nullToEmpty("Defaults to true"));
             if(path.endsWith("components.consumable.on_consume_effects"))
                 return PathInfos.LIST_COMPOUND;
             if(path.endsWith("components.consumable.on_consume_effects[0]"))
@@ -275,7 +275,7 @@ public class ComponentHelper {
             if(path.endsWith("components.consumable.on_consume_effects[0].effects"))
                 return PathInfos.LIST_COMPOUND;
             if(path.endsWith("components.consumable.on_consume_effects[0].effects[0]"))
-                return PathInfos.EFFECT_NODE.withDesc(Text.of("Used for \"apply_effects\" or \"remove_effects\""));
+                return PathInfos.EFFECT_NODE.withDesc(Component.nullToEmpty("Used for \"apply_effects\" or \"remove_effects\""));
             if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].id"))
                 return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT));
             if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].amplifier"))
@@ -289,13 +289,13 @@ public class ComponentHelper {
             if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].show_icon"))
                 return PathInfos.TRINARY;
             if(path.endsWith("components.consumable.on_consume_effects[0].probability"))
-                return PathInfos.FLOAT.withDesc(Text.of("Used for \"apply_effects\""));
+                return PathInfos.FLOAT.withDesc(Component.nullToEmpty("Used for \"apply_effects\""));
             if(path.endsWith("components.consumable.on_consume_effects[0].diameter"))
-                return PathInfos.FLOAT.withDesc(Text.of("Used for \"teleport_randomly\" (Defaults to 16f)"));
+                return PathInfos.FLOAT.withDesc(Component.nullToEmpty("Used for \"teleport_randomly\" (Defaults to 16f)"));
             if(path.endsWith("components.consumable.on_consume_effects[0].sound"))
-                return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Text.of("Used for \"play_sound\""));
+                return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Component.nullToEmpty("Used for \"play_sound\""));
             if(path.endsWith("components.consumable.sound"))
-                return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Text.of("Defaults to \"entity.generic.eat\""));
+                return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Component.nullToEmpty("Defaults to \"entity.generic.eat\""));
         }
 
         if(path.contains("components.container")) {
@@ -319,7 +319,7 @@ public class ComponentHelper {
         }
 
         if(path.endsWith("components.custom_data"))
-            return PathInfos.INLINE_COMPOUND.withDesc(Text.of("Contains unstructured NBT unused ingame")).withIcon(Items.COMMAND_BLOCK);
+            return PathInfos.INLINE_COMPOUND.withDesc(Component.nullToEmpty("Contains unstructured NBT unused ingame")).withIcon(Items.COMMAND_BLOCK);
 
         if(path.contains("components.custom_model_data")) {
             if(path.endsWith("components.custom_model_data"))
@@ -327,15 +327,15 @@ public class ComponentHelper {
             if(path.endsWith("components.custom_model_data.floats"))
                 return PathInfos.LIST_FLOAT;
             if(path.endsWith("components.custom_model_data.flags"))
-                return PathInfos.BYTE_ARRAY.withDesc(Text.of("Array of booleans"));
+                return PathInfos.BYTE_ARRAY.withDesc(Component.nullToEmpty("Array of booleans"));
             if(path.endsWith("components.custom_model_data.strings"))
                 return PathInfos.LIST_STRING;
             if(path.endsWith("components.custom_model_data.colors"))
-                return (new PathInfo(PathType.DEFAULT,SuggestionGetter.newInline("[I;]","[[1.0,1.0,1.0]]"))).withDesc(Text.of("Can be either:\na) NbtIntArray with separate decimal colors\nb) NbtList of NbtLists, where each child list contains 3 numbers for RGB"));
+                return (new PathInfo(PathType.DEFAULT,SuggestionGetter.newInline("[I;]","[[1.0,1.0,1.0]]"))).withDesc(Component.nullToEmpty("Can be either:\na) NbtIntArray with separate decimal colors\nb) NbtList of NbtLists, where each child list contains 3 numbers for RGB"));
         }
 
         if(path.endsWith("components.custom_name"))
-            return PathInfos.TEXT.withDesc(Text.of("This is for renamed items and will appear in italics. See item_name to completely override the vanilla name.")).withIcon(Items.NAME_TAG);
+            return PathInfos.TEXT.withDesc(Component.nullToEmpty("This is for renamed items and will appear in italics. See item_name to completely override the vanilla name.")).withIcon(Items.NAME_TAG);
 
         if(path.endsWith("components.damage"))
             return (new PathInfo(PathType.INT,SuggestionGetter.newInline("0"))).withIcon(Items.DIAMOND_PICKAXE);
@@ -344,7 +344,7 @@ public class ComponentHelper {
             if(path.endsWith("components.damage_resistant"))
                 return (new PathInfo(KeyGetter.create().withRequired("types"))).withIcon(Items.NETHERITE_INGOT);
             if(path.endsWith("components.damage_resistant.types"))
-                return (new PathInfo(PathType.STRING,DATA_TAG_DAMAGE_TYPE)).withDesc(Text.of("Damage type tag of which the item entity is invulnerable"));
+                return (new PathInfo(PathType.STRING,DATA_TAG_DAMAGE_TYPE)).withDesc(Component.nullToEmpty("Damage type tag of which the item entity is invulnerable"));
         }
 
         if(path.contains("components.death_protection")) {
@@ -359,7 +359,7 @@ public class ComponentHelper {
             if(path.endsWith("components.death_protection.death_effects[0].effects"))
                 return PathInfos.LIST_COMPOUND;
             if(path.endsWith("components.death_protection.death_effects[0].effects[0]"))
-                return PathInfos.EFFECT_NODE.withDesc(Text.of("Used for \"apply_effects\" or \"remove_effects\""));
+                return PathInfos.EFFECT_NODE.withDesc(Component.nullToEmpty("Used for \"apply_effects\" or \"remove_effects\""));
             if(path.endsWith("components.death_protection.death_effects[0].effects[0].id"))
                 return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT));
             if(path.endsWith("components.death_protection.death_effects[0].effects[0].amplifier"))
@@ -373,11 +373,11 @@ public class ComponentHelper {
             if(path.endsWith("components.death_protection.death_effects[0].effects[0].show_icon"))
                 return PathInfos.TRINARY;
             if(path.endsWith("components.death_protection.death_effects[0].probability"))
-                return PathInfos.FLOAT.withDesc(Text.of("Used for \"apply_effects\""));
+                return PathInfos.FLOAT.withDesc(Component.nullToEmpty("Used for \"apply_effects\""));
             if(path.endsWith("components.death_protection.death_effects[0].diameter"))
-                return PathInfos.FLOAT.withDesc(Text.of("Used for \"teleport_randomly\" (Defaults to 16f)"));
+                return PathInfos.FLOAT.withDesc(Component.nullToEmpty("Used for \"teleport_randomly\" (Defaults to 16f)"));
             if(path.endsWith("components.death_protection.death_effects[0].sound"))
-                return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Text.of("Used for \"play_sound\""));
+                return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Component.nullToEmpty("Used for \"play_sound\""));
         }
 
         if(path.endsWith("components.debug_stick_state"))
@@ -418,7 +418,7 @@ public class ComponentHelper {
                     maxLvl = getEnchantmentMaxLevel(e);
                 }
             }
-            return (new PathInfo(PathType.INT,SuggestionGetter.newInline(BlackMagick.getIntRangeArray(1,maxLvl)))).withDesc(Text.of("Max level: "+maxLvl)).asDynamic();
+            return (new PathInfo(PathType.INT,SuggestionGetter.newInline(BlackMagick.getIntRangeArray(1,maxLvl)))).withDesc(Component.nullToEmpty("Max level: "+maxLvl)).asDynamic();
         }
 
         if(path.contains(".entity_data")) {
@@ -431,7 +431,7 @@ public class ComponentHelper {
                 "beam_target","ShowBottom",
                 "SoundEvent",
                 "Duration","DurationOnUse","potion_contents","Particle","Radius","RadiusOnUse","RadiusPerTick","ReapplicationDelay","WaitTime",
-                "variant"))).withIcon(Items.BREEZE_SPAWN_EGG);
+                "variant"))).withIcon(Items.CREEPER_SPAWN_EGG);
             if(path.endsWith(".entity_data.id"))
                 return (new PathInfo(PathType.STRING,REGISTRY_ENTITY_TYPE));
             if(path.endsWith(".entity_data.Air"))
@@ -451,7 +451,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.Invulnerable"))
                 return PathInfos.TRINARY;
             if(path.endsWith(".entity_data.Motion"))
-                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0d,0d,0d]"))).withDesc(Text.of("[x, y, z] motion in each direction\nx - east\ny - up\nz - south"));
+                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0d,0d,0d]"))).withDesc(Component.nullToEmpty("[x, y, z] motion in each direction\nx - east\ny - up\nz - south"));
             if(path.endsWith(".entity_data.NoGravity"))
                 return PathInfos.TRINARY;
             if(path.endsWith(".entity_data.OnGround"))
@@ -461,9 +461,9 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.PortalCooldown"))
                 return PathInfos.INT;
             if(path.endsWith(".entity_data.Pos"))
-                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0d,0d,0d]"))).withDesc(Text.of("[x, y, z]"));
+                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0d,0d,0d]"))).withDesc(Component.nullToEmpty("[x, y, z]"));
             if(path.endsWith(".entity_data.Rotation"))
-                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0f,0f]"))).withDesc(Text.of("[Yaw, Pitch]\nYaw: -180 to 180 (0 is south, 90 is west)\nPitch: -90 (up) to 90 (down)"));
+                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0f,0f]"))).withDesc(Component.nullToEmpty("[Yaw, Pitch]\nYaw: -180 to 180 (0 is south, 90 is west)\nPitch: -90 (up) to 90 (down)"));
             if(path.endsWith(".entity_data.Silent"))
                 return PathInfos.TRINARY;
             if(path.endsWith(".entity_data.Tags"))
@@ -493,9 +493,9 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.active_effects[0].show_particles") || path.endsWith(".hidden_effect.show_particles"))
                 return PathInfos.TRINARY;
             if(path.endsWith(".entity_data.ArmorDropChances"))
-                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0f,0f,0f,0f]","[1f,1f,1f,1f]"))).withDesc(Text.of("[feet, legs, chest, head]")).withGroup(lbl);
+                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0f,0f,0f,0f]","[1f,1f,1f,1f]"))).withDesc(Component.nullToEmpty("[feet, legs, chest, head]")).withGroup(lbl);
             if(path.endsWith(".entity_data.ArmorItems"))
-                return PathInfos.LIST_COMPOUND.withDesc(Text.of("[feet, legs, chest, head]")).withGroup(lbl);
+                return PathInfos.LIST_COMPOUND.withDesc(Component.nullToEmpty("[feet, legs, chest, head]")).withGroup(lbl);
             if(path.endsWith(".entity_data.ArmorItems[0]"))
                 return PathInfos.ITEM_NODE;
             if(path.endsWith(".entity_data.attributes"))
@@ -503,17 +503,17 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.CanPickUpLoot"))
                 return PathInfos.TRINARY.withGroup(lbl);
             if(path.endsWith(".entity_data.FallFlying"))
-                return PathInfos.TRINARY.withDesc(Text.of("If true, mob will glide if wearing an elytra")).withGroup(lbl);
+                return PathInfos.TRINARY.withDesc(Component.nullToEmpty("If true, mob will glide if wearing an elytra")).withGroup(lbl);
             if(path.endsWith(".entity_data.Health"))
                 return PathInfos.FLOAT.withGroup(lbl);
             if(path.endsWith(".entity_data.HandDropChances"))
-                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0f,0f]","[1f,1f]"))).withDesc(Text.of("[mainhand, offhand]")).withGroup(lbl);
+                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0f,0f]","[1f,1f]"))).withDesc(Component.nullToEmpty("[mainhand, offhand]")).withGroup(lbl);
             if(path.endsWith(".entity_data.HandItems"))
-                return PathInfos.LIST_COMPOUND.withDesc(Text.of("[mainhand, offhand]")).withGroup(lbl);
+                return PathInfos.LIST_COMPOUND.withDesc(Component.nullToEmpty("[mainhand, offhand]")).withGroup(lbl);
             if(path.endsWith(".entity_data.HandItems[0]"))
                 return PathInfos.ITEM_NODE;
             if(path.endsWith(".entity_data.leash"))
-                return (new PathInfo(PathType.DEFAULT,SuggestionGetter.newInline("{UUID:[I;0,0,0,0]}","{UUID:"+BlackMagick.nbtToString(FortytwoEdit.UUID)+"}","[I;0,0,0]"))).withDesc(Text.of("Can be either:\na) NbtCompound like {UUID:[I;0,0,0,0]} pointing to an entity UUID\nb) NbtIntArray containing [I; X, Y, Z]")).withGroup(lbl);
+                return (new PathInfo(PathType.DEFAULT,SuggestionGetter.newInline("{UUID:[I;0,0,0,0]}","{UUID:"+BlackMagick.nbtToString(FortytwoEdit.UUID)+"}","[I;0,0,0]"))).withDesc(Component.nullToEmpty("Can be either:\na) NbtCompound like {UUID:[I;0,0,0,0]} pointing to an entity UUID\nb) NbtIntArray containing [I; X, Y, Z]")).withGroup(lbl);
             if(path.endsWith(".entity_data.LeftHanded"))
                 return PathInfos.TRINARY.withGroup(lbl);
             if(path.endsWith(".entity_data.NoAI"))
@@ -521,15 +521,15 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.PersistenceRequired"))
                 return PathInfos.TRINARY.withGroup(lbl);
             if(path.endsWith(".entity_data.Team"))
-                return PathInfos.STRING.withDesc(Text.of("Name of team for the mob to join when spawning")).withGroup(lbl);
+                return PathInfos.STRING.withDesc(Component.nullToEmpty("Name of team for the mob to join when spawning")).withGroup(lbl);
 
             lbl = "Common";
             if(path.endsWith(".entity_data.Invisible"))
-                return PathInfos.TRINARY.withGroup(lbl).withDesc(Text.of("Used by armor stands and item frames"));
+                return PathInfos.TRINARY.withGroup(lbl).withDesc(Component.nullToEmpty("Used by armor stands and item frames"));
 
             lbl = "Armor Stands";
             if(path.endsWith(".entity_data.DisabledSlots"))
-                return (new PathInfo(PathType.INT,SuggestionGetter.newInline("16191"))).withDesc(Text.of("Value of 16191 prevents adding, changing, or removing armor or hand items")).withGroup(lbl);
+                return (new PathInfo(PathType.INT,SuggestionGetter.newInline("16191"))).withDesc(Component.nullToEmpty("Value of 16191 prevents adding, changing, or removing armor or hand items")).withGroup(lbl);
             if(path.endsWith(".entity_data.Marker"))
                 return PathInfos.TRINARY.withGroup(lbl);
             if(path.endsWith(".entity_data.NoBasePlate"))
@@ -549,7 +549,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.ItemDropChance"))
                 return PathInfos.FLOAT.withGroup(lbl);
             if(path.endsWith(".entity_data.ItemRotation"))
-                return (new PathInfo(PathType.BYTE,SuggestionGetter.newInline("0","1","2","3","4","5","6","7"))).withDesc(Text.of("Number of times the item is rotated clockwise")).withGroup(lbl);
+                return (new PathInfo(PathType.BYTE,SuggestionGetter.newInline("0","1","2","3","4","5","6","7"))).withDesc(Component.nullToEmpty("Number of times the item is rotated clockwise")).withGroup(lbl);
 
             lbl = "End Crystals";
             if(path.endsWith(".entity_data.beam_target"))
@@ -559,17 +559,17 @@ public class ComponentHelper {
 
             lbl = "Arrows and Tridents";
             if(path.endsWith(".entity_data.SoundEvent"))
-                return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Text.of("Arrows types and tridents will play this sound when hitting something")).withGroup(lbl);
+                return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Component.nullToEmpty("Arrows types and tridents will play this sound when hitting something")).withGroup(lbl);
 
             lbl = "Area Effect Clouds";
             if(path.endsWith(".entity_data.Duration"))
-                return PathInfos.INT.withDesc(Text.of("Max age after WaitTime")).withGroup(lbl);
+                return PathInfos.INT.withDesc(Component.nullToEmpty("Max age after WaitTime")).withGroup(lbl);
             if(path.endsWith(".entity_data.DurationOnUse"))
                 return PathInfos.INT.withGroup(lbl);
             if(path.endsWith(".entity_data.potion_contents"))
                 return PathInfos.POTION_CONTENTS.withGroup(lbl);
             if(path.endsWith(".entity_data.Particle"))
-                return (new PathInfo(PathType.INLINE_COMPOUND,REGISTRY_PARTICLE_TYPE.withFormat(SuggestionGetter.Format.AEC_PARTICLE_TYPE))).withDesc(Text.of("Format like {type:\"dust\",color:[.5d,0d,1d],scale:2}")).withGroup(lbl);
+                return (new PathInfo(PathType.INLINE_COMPOUND,REGISTRY_PARTICLE_TYPE.withFormat(SuggestionGetter.Format.AEC_PARTICLE_TYPE))).withDesc(Component.nullToEmpty("Format like {type:\"dust\",color:[.5d,0d,1d],scale:2}")).withGroup(lbl);
             if(path.endsWith(".entity_data.Radius"))
                 return PathInfos.FLOAT.withGroup(lbl);
             if(path.endsWith(".entity_data.RadiusOnUse"))
@@ -579,12 +579,12 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data.ReapplicationDelay"))
                 return PathInfos.INT.withGroup(lbl);
             if(path.endsWith(".entity_data.WaitTime"))
-                return PathInfos.INT.withDesc(Text.of("Time before cloud can have a radius and effect (particles will still appear in the center)")).withGroup(lbl);
+                return PathInfos.INT.withDesc(Component.nullToEmpty("Time before cloud can have a radius and effect (particles will still appear in the center)")).withGroup(lbl);
 
             lbl = "Paintings";
             if(path.endsWith(".entity_data.variant"))
                 return (new PathInfo(PathType.DEFAULT,SuggestionGetter.newJoined(DATA_PAINTING_VARIANT.withFormat(SuggestionGetter.Format.NBT_STRING),SuggestionGetter.newInline("{asset_id:\"\",width:1,height:1}"))))
-                    .withGroup(lbl).withDesc(Text.of("Can be either:\na) NbtString of a painting ID\nb) NbtCompound with {asset_id:\"<variant>\",width:<int>,height:<int>}"));
+                    .withGroup(lbl).withDesc(Component.nullToEmpty("Can be either:\na) NbtString of a painting ID\nb) NbtCompound with {asset_id:\"<variant>\",width:<int>,height:<int>}"));
 
             // when adding new paths, also add keys to entity_data compound
             // if a key is already used for another entity, move it to common category
@@ -596,19 +596,19 @@ public class ComponentHelper {
             if(path.endsWith("components.equippable.slot"))
                 return (new PathInfo(PathType.STRING,LIST_EQUIPMENT_SLOT));
             if(path.endsWith("components.equippable.equip_sound"))
-                return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Text.of("Defaults to \"item.armor.equip_generic\""));
+                return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Component.nullToEmpty("Defaults to \"item.armor.equip_generic\""));
             if(path.endsWith("components.equippable.asset_id"))
-                return (new PathInfo(PathType.STRING,ASSETS_EQUIPMENT)).withDesc(Text.of("An equipment model at \"assets/<namespace>/equipment/<id>\""));
+                return (new PathInfo(PathType.STRING,ASSETS_EQUIPMENT)).withDesc(Component.nullToEmpty("An equipment model at \"assets/<namespace>/equipment/<id>\""));
             if(path.endsWith("components.equippable.allowed_entities"))
                 return PathInfos.ENTITY_PREDICATE_ENTITIES;
             if(path.endsWith("components.equippable.dispensable"))
-                return PathInfos.TRINARY.withDesc(Text.of("Defaults to true"));
+                return PathInfos.TRINARY.withDesc(Component.nullToEmpty("Defaults to true"));
             if(path.endsWith("components.equippable.swappable"))
-                return PathInfos.TRINARY.withDesc(Text.of("Defaults to true"));
+                return PathInfos.TRINARY.withDesc(Component.nullToEmpty("Defaults to true"));
             if(path.endsWith("components.equippable.damage_on_hurt"))
-                return PathInfos.TRINARY.withDesc(Text.of("Defaults to true"));
+                return PathInfos.TRINARY.withDesc(Component.nullToEmpty("Defaults to true"));
             if(path.endsWith("components.equippable.camera_overlay"))
-                return (new PathInfo(PathType.STRING,ASSETS_TEXTURES)).withDesc(Text.of("A texture at \"assets/<namespace>/textures/<id>\""));
+                return (new PathInfo(PathType.STRING,ASSETS_TEXTURES)).withDesc(Component.nullToEmpty("A texture at \"assets/<namespace>/textures/<id>\""));
         }
 
         if(path.contains("components.firework_explosion")) {
@@ -644,14 +644,14 @@ public class ComponentHelper {
             if(path.endsWith("components.fireworks.explosions[0].has_twinkle"))
                 return PathInfos.TRINARY;
             if(path.endsWith("components.fireworks.flight_duration"))
-                return (new PathInfo(PathType.BYTE,SuggestionGetter.newInline("1","2","3"))).withDesc(Text.of("Value between 0-255 represented as a signed byte"));
+                return (new PathInfo(PathType.BYTE,SuggestionGetter.newInline("1","2","3"))).withDesc(Component.nullToEmpty("Value between 0-255 represented as a signed byte"));
         }
 
         if(path.contains("components.food")) {
             if(path.endsWith("components.food"))
                 return (new PathInfo(KeyGetter.create().withRequired("nutrition","saturation").withOptional("is_meat","can_always_eat"))).withIcon(Items.APPLE);
             if(path.endsWith("components.food.nutrition"))
-                return PathInfos.INT.withDesc(Text.of("How many food points to restore (1 nutrition for each half of a food icon)"));
+                return PathInfos.INT.withDesc(Component.nullToEmpty("How many food points to restore (1 nutrition for each half of a food icon)"));
             if(path.endsWith("components.food.saturation"))
                 return PathInfos.FLOAT;
             if(path.endsWith("components.food.is_meat"))
@@ -676,7 +676,7 @@ public class ComponentHelper {
             return PathInfos.UNIT.withIcon(Items.ARROW);
 
         if(path.endsWith("components.item_model"))
-            return (new PathInfo(PathType.STRING,ASSETS_ITEMS)).withDesc(Text.of("An item model definition at \"assets/<namespace>/items/<id>\"")).withIcon(Items.STONE);
+            return (new PathInfo(PathType.STRING,ASSETS_ITEMS)).withDesc(Component.nullToEmpty("An item model definition at \"assets/<namespace>/items/<id>\"")).withIcon(Items.STONE);
 
         if(path.endsWith("components.item_name"))
             return PathInfos.TEXT.withIcon(Items.STONE);
@@ -694,13 +694,13 @@ public class ComponentHelper {
             if(path.endsWith("components.lock"))
                 return (new PathInfo(KeyGetter.create().withOptional("components","count","items","predicates"))).withIcon(Items.CHEST);
             if(path.endsWith("components.lock.components"))
-                return PathInfos.COMPONENTS_NODE.withDesc(Text.of("Exact components to match"));
+                return PathInfos.COMPONENTS_NODE.withDesc(Component.nullToEmpty("Exact components to match"));
             if(path.endsWith("components.lock.count"))
-                return (new PathInfo(PathType.DEFAULT,SuggestionGetter.newInline("1","{min:1,max:2}"))).withDesc(Text.of("Can be either:\na) NbtInt of exact count\nb) NbtCompound containing min, max, or both to test a range"));
+                return (new PathInfo(PathType.DEFAULT,SuggestionGetter.newInline("1","{min:1,max:2}"))).withDesc(Component.nullToEmpty("Can be either:\na) NbtInt of exact count\nb) NbtCompound containing min, max, or both to test a range"));
             if(path.endsWith("components.lock.items"))
                 return PathInfos.ITEM_PREDICATE_ITEMS;
             if(path.endsWith("components.lock.predicates"))
-                return PathInfos.INLINE_COMPOUND.withDesc(Text.of("Item subpredicates to match")); //to_do all subpredicate paths
+                return PathInfos.INLINE_COMPOUND.withDesc(Component.nullToEmpty("Item subpredicates to match")); //to_do all subpredicate paths
         }
 
         if(path.contains("components.lodestone_tracker")) {
@@ -735,7 +735,7 @@ public class ComponentHelper {
         if(path.endsWith("components.max_damage"))
             return (new PathInfo(PathType.INT,SuggestionGetter.newInline(""+ToolMaterial.WOOD.durability(),""+ToolMaterial.STONE.durability(),
                 ""+ToolMaterial.GOLD.durability(),""+ToolMaterial.IRON.durability(),""+ToolMaterial.DIAMOND.durability(),
-                ""+ToolMaterial.NETHERITE.durability()))).withDesc(Text.of("Default values for reference:\n  Wood tools - "+ToolMaterial.WOOD.durability()
+                ""+ToolMaterial.NETHERITE.durability()))).withDesc(Component.nullToEmpty("Default values for reference:\n  Wood tools - "+ToolMaterial.WOOD.durability()
                 +"\n  Stone tools - "+ToolMaterial.STONE.durability()+"\n  Gold tools - "+ToolMaterial.GOLD.durability()
                 +"\n  Iron tools - "+ToolMaterial.IRON.durability()+"\n  Diamond tools - "+ToolMaterial.DIAMOND.durability()
                 +"\n  Netherite tools - "+ToolMaterial.NETHERITE.durability())).withIcon(Items.DIAMOND_PICKAXE);
@@ -744,7 +744,7 @@ public class ComponentHelper {
             return PathInfos.ITEM_COUNT.withIcon(Items.STONE);
 
         if(path.endsWith("components.note_block_sound"))
-            return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Text.of("Used for player heads on a note block")).withIcon(Items.PLAYER_HEAD);
+            return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Component.nullToEmpty("Used for player heads on a note block")).withIcon(Items.PLAYER_HEAD);
 
         if(path.endsWith("components.ominous_bottle_amplifier"))
             return (new PathInfo(PathType.INT,SuggestionGetter.newInline("0","1","2","3","4"))).withIcon(Items.OMINOUS_BOTTLE);
@@ -760,7 +760,7 @@ public class ComponentHelper {
             if(path.endsWith(".potion_contents"))
                 return PathInfos.POTION_CONTENTS.withIcon(Items.SPLASH_POTION);
             if(path.endsWith(".potion_contents.potion"))
-                return (new PathInfo(PathType.STRING,REGISTRY_POTION)).withDesc(Text.of("Potion base before custom_color and custom_effects"));
+                return (new PathInfo(PathType.STRING,REGISTRY_POTION)).withDesc(Component.nullToEmpty("Potion base before custom_color and custom_effects"));
             if(path.endsWith(".potion_contents.custom_color"))
                 return PathInfos.DECIMAL_COLOR;
             if(path.endsWith(".potion_contents.custom_effects"))
@@ -787,15 +787,15 @@ public class ComponentHelper {
             if(path.endsWith("components.profile"))
                 return (new PathInfo(KeyGetter.create().withOptional("name","id","properties"))).withIcon(Items.PLAYER_HEAD);
             if(path.endsWith("components.profile.name"))
-                return PathInfos.STRING.withDesc(Text.of("Player name used to update skin"));
+                return PathInfos.STRING.withDesc(Component.nullToEmpty("Player name used to update skin"));
             if(path.endsWith("components.profile.id"))
-                return PathInfos.UUID.withDesc(Text.of("Player UUID used to update skin"));
+                return PathInfos.UUID.withDesc(Component.nullToEmpty("Player UUID used to update skin"));
             if(path.endsWith("components.profile.properties"))
                 return PathInfos.LIST_COMPOUND;
             if(path.endsWith("components.profile.properties[0]"))
                 return (new PathInfo(KeyGetter.create().withRequired("name","value").withOptional("signature")));
             if(path.endsWith("components.profile.properties[0].name"))
-                return (new PathInfo(PathType.STRING,SuggestionGetter.newInline("textures"))).withDesc(Text.of("Currently only used for textures"));
+                return (new PathInfo(PathType.STRING,SuggestionGetter.newInline("textures"))).withDesc(Component.nullToEmpty("Currently only used for textures"));
             if(path.endsWith("components.profile.properties[0].value"))
                 return PathInfos.STRING;
             if(path.endsWith("components.profile.properties[0].signature"))
@@ -803,7 +803,7 @@ public class ComponentHelper {
         }
 
         if(path.endsWith("components.rarity"))
-            return (new PathInfo(PathType.STRING,SuggestionGetter.newInline("common","uncommon","rare","epic"))).withDesc(Text.of("Used for item name color:\n  common\n  \u00a7euncommon\n  \u00a7brare\n  \u00a7depic\u00a7r")).withIcon(Items.STONE); // hardcoded list
+            return (new PathInfo(PathType.STRING,SuggestionGetter.newInline("common","uncommon","rare","epic"))).withDesc(Component.nullToEmpty("Used for item name color:\n  common\n  \u00a7euncommon\n  \u00a7brare\n  \u00a7depic\u00a7r")).withIcon(Items.STONE); // hardcoded list
 
         if(path.contains("components.recipes")) {
             if(path.endsWith("components.recipes"))
@@ -864,7 +864,7 @@ public class ComponentHelper {
         }
 
         if(path.endsWith("components.tooltip_style"))
-            return (new PathInfo(PathType.STRING)).withDesc(Text.of("References tooltip sprites at \"assets/<namespace>/textures/gui/sprites/tooltip/<id>_background\" and \"assets/<namespace>/textures/gui/sprites/tooltip/<id>_frame\"")).withIcon(Items.COMMAND_BLOCK);
+            return (new PathInfo(PathType.STRING)).withDesc(Component.nullToEmpty("References tooltip sprites at \"assets/<namespace>/textures/gui/sprites/tooltip/<id>_background\" and \"assets/<namespace>/textures/gui/sprites/tooltip/<id>_frame\"")).withIcon(Items.COMMAND_BLOCK);
 
         if(path.contains("components.trim")) {
             if(path.endsWith("components.trim"))
@@ -886,7 +886,7 @@ public class ComponentHelper {
             if(path.endsWith("components.use_cooldown.seconds"))
                 return (new PathInfo(PathType.FLOAT,SuggestionGetter.newInline("1.0f")));
             if(path.endsWith("components.use_cooldown.cooldown_group"))
-                return (new PathInfo(PathType.STRING,REGISTRY_ITEM)).withDesc(Text.of("Custom namespaced ID or namespaced item ID"));
+                return (new PathInfo(PathType.STRING,REGISTRY_ITEM)).withDesc(Component.nullToEmpty("Custom namespaced ID or namespaced item ID"));
         }
 
         if(path.endsWith("components.use_remainder"))
@@ -900,7 +900,7 @@ public class ComponentHelper {
             if(path.endsWith("components.writable_book_content.pages[0]"))
                 return (new PathInfo(KeyGetter.create().withRequired("raw").withOptional("filtered")));
             if(path.endsWith("components.writable_book_content.pages[0].raw"))
-                return PathInfos.STRING.withDesc(Text.of("Literal string of page text"));
+                return PathInfos.STRING.withDesc(Component.nullToEmpty("Literal string of page text"));
             if(path.endsWith("components.writable_book_content.pages[0].filtered"))
                 return PathInfos.STRING;
         }
@@ -919,15 +919,15 @@ public class ComponentHelper {
             if(path.endsWith("components.written_book_content.title"))
                 return (new PathInfo(KeyGetter.create().withRequired("raw").withOptional("filtered")));
             if(path.endsWith("components.written_book_content.title.raw"))
-                return PathInfos.STRING.withDesc(Text.of("Literal string of title"));
+                return PathInfos.STRING.withDesc(Component.nullToEmpty("Literal string of title"));
             if(path.endsWith("components.written_book_content.title.filtered"))
                 return PathInfos.STRING;
             if(path.endsWith("components.written_book_content.author"))
-                return PathInfos.STRING.withDesc(Text.of("Literal string of author"));
+                return PathInfos.STRING.withDesc(Component.nullToEmpty("Literal string of author"));
             if(path.endsWith("components.written_book_content.generation"))
-                return (new PathInfo(PathType.INT,SuggestionGetter.newInline("0","1","2","3"))).withDesc(Text.of("0 - Original\n1 - Copy of original\n2 - Copy of copy\n3 - Tattered")); // hardcoded list
+                return (new PathInfo(PathType.INT,SuggestionGetter.newInline("0","1","2","3"))).withDesc(Component.nullToEmpty("0 - Original\n1 - Copy of original\n2 - Copy of copy\n3 - Tattered")); // hardcoded list
             if(path.endsWith("components.written_book_content.resolved"))
-                return PathInfos.TRINARY.withDesc(Text.of("Whether or not text component is resolved (for selectors/scores/etc)"));
+                return PathInfos.TRINARY.withDesc(Component.nullToEmpty("Whether or not text component is resolved (for selectors/scores/etc)"));
         }
 
         if(path.contains("components.!")) {
@@ -962,7 +962,7 @@ public class ComponentHelper {
      * <p> PathFlag flag - for hardcoded effects </p>
      * <p> ItemStack icon - icon to show (only for components on main itembuilder component page) </p>
      */
-    public record PathInfo(PathType type, SuggestionGetter suggs, Text description, KeyGetter keys, byte listType, String keyGroup, boolean dynamic, PathFlag flag, ItemStack icon) {
+    public record PathInfo(PathType type, SuggestionGetter suggs, Component description, KeyGetter keys, byte listType, String keyGroup, boolean dynamic, PathFlag flag, ItemStack icon) {
 
         private static final byte DEFAULT_LIST_TYPE = (byte)(-1);
         private static final String DEFAULT_GROUP = null;
@@ -1014,7 +1014,7 @@ public class ComponentHelper {
          * @param desc
          * @return a copy with the description added
          */
-        public PathInfo withDesc(Text desc) {
+        public PathInfo withDesc(Component desc) {
             return new PathInfo(this.type, this.suggs, desc, this.keys, this.listType, this.keyGroup, this.dynamic, this.flag, this.icon);
         }
 
@@ -1177,33 +1177,33 @@ public class ComponentHelper {
     public static byte pathTypeToNbtType(PathType type) {
         if(type != null) {
             switch(type) {
-                case BYTE: return NbtElement.BYTE_TYPE;
-                case SHORT: return NbtElement.SHORT_TYPE;
-                case INT: return NbtElement.INT_TYPE;
-                case LONG: return NbtElement.LONG_TYPE;
-                case DOUBLE: return NbtElement.DOUBLE_TYPE;
-                case FLOAT: return NbtElement.FLOAT_TYPE;
-                case STRING: return NbtElement.STRING_TYPE;
+                case BYTE: return Tag.TAG_BYTE;
+                case SHORT: return Tag.TAG_SHORT;
+                case INT: return Tag.TAG_INT;
+                case LONG: return Tag.TAG_LONG;
+                case DOUBLE: return Tag.TAG_DOUBLE;
+                case FLOAT: return Tag.TAG_FLOAT;
+                case STRING: return Tag.TAG_STRING;
 
-                case BYTE_ARRAY: return NbtElement.BYTE_ARRAY_TYPE;
-                case INT_ARRAY: return NbtElement.INT_ARRAY_TYPE;
-                case LONG_ARRAY: return NbtElement.LONG_ARRAY_TYPE;
+                case BYTE_ARRAY: return Tag.TAG_BYTE_ARRAY;
+                case INT_ARRAY: return Tag.TAG_INT_ARRAY;
+                case LONG_ARRAY: return Tag.TAG_LONG_ARRAY;
 
-                case COMPOUND: return NbtElement.COMPOUND_TYPE;
-                case LIST: return NbtElement.LIST_TYPE;
+                case COMPOUND: return Tag.TAG_COMPOUND;
+                case LIST: return Tag.TAG_LIST;
 
                 case UNKNOWN: return -1;
                 case DEFAULT: return -1;
-                case TEXT: return NbtElement.STRING_TYPE;
-                case DECIMAL_COLOR: return NbtElement.INT_TYPE;
-                case UNIT: return NbtElement.COMPOUND_TYPE;
-                case TRINARY: return NbtElement.BYTE_TYPE;
-                case TOOLTIP_UNIT: return NbtElement.COMPOUND_TYPE;
-                case UUID: return NbtElement.INT_ARRAY_TYPE;
-                case INLINE_LIST: return NbtElement.LIST_TYPE;
-                case INLINE_COMPOUND: return NbtElement.COMPOUND_TYPE;
-                case BANNER: return NbtElement.COMPOUND_TYPE;
-                case POSE: return NbtElement.COMPOUND_TYPE;
+                case TEXT: return -1;
+                case DECIMAL_COLOR: return Tag.TAG_INT;
+                case UNIT: return Tag.TAG_COMPOUND;
+                case TRINARY: return Tag.TAG_BYTE;
+                case TOOLTIP_UNIT: return Tag.TAG_COMPOUND;
+                case UUID: return Tag.TAG_INT_ARRAY;
+                case INLINE_LIST: return Tag.TAG_LIST;
+                case INLINE_COMPOUND: return Tag.TAG_COMPOUND;
+                case BANNER: return Tag.TAG_COMPOUND;
+                case POSE: return Tag.TAG_COMPOUND;
             }
         }
         return -1;
@@ -1217,20 +1217,20 @@ public class ComponentHelper {
      */
     public static String formatNbtType(byte type) {
         switch(type) {
-            case NbtElement.BYTE_TYPE: return "Byte";
-            case NbtElement.SHORT_TYPE: return "Short";
-            case NbtElement.INT_TYPE: return "Int";
-            case NbtElement.LONG_TYPE: return "Long";
-            case NbtElement.DOUBLE_TYPE: return "Double";
-            case NbtElement.FLOAT_TYPE: return "Float";
-            case NbtElement.STRING_TYPE: return "String";
+            case Tag.TAG_BYTE: return "Byte";
+            case Tag.TAG_SHORT: return "Short";
+            case Tag.TAG_INT: return "Int";
+            case Tag.TAG_LONG: return "Long";
+            case Tag.TAG_DOUBLE: return "Double";
+            case Tag.TAG_FLOAT: return "Float";
+            case Tag.TAG_STRING: return "String";
 
-            case NbtElement.BYTE_ARRAY_TYPE: return "Byte Array";
-            case NbtElement.INT_ARRAY_TYPE: return "Int Array";
-            case NbtElement.LONG_ARRAY_TYPE: return "Long Array";
+            case Tag.TAG_BYTE_ARRAY: return "Byte Array";
+            case Tag.TAG_INT_ARRAY: return "Int Array";
+            case Tag.TAG_LONG_ARRAY: return "Long Array";
 
-            case NbtElement.COMPOUND_TYPE: return "Compound";
-            case NbtElement.LIST_TYPE: return "List";
+            case Tag.TAG_COMPOUND: return "Compound";
+            case Tag.TAG_LIST: return "List";
 
             default: return null;
         }
@@ -1240,9 +1240,9 @@ public class ComponentHelper {
 
         private static final PathInfo UNKNOWN = (new PathInfo(PathType.UNKNOWN));
         private static final PathInfo DEFAULT = (new PathInfo(PathType.DEFAULT));
-        private static final PathInfo UNIT = (new PathInfo(PathType.UNIT,SuggestionGetter.newInline("","{}"))).withDesc(Text.of("{} represents true"));
-        private static final PathInfo TOOLTIP_UNIT = (new PathInfo(PathType.TOOLTIP_UNIT,SuggestionGetter.newInline("","{show_in_tooltip:0b}","{}"))).withDesc(Text.of("{} or {show_in_tooltip:0b}"));
-        private static final PathInfo TRINARY = (new PathInfo(PathType.TRINARY,SuggestionGetter.newInline("","0b","1b"))).withDesc(Text.of("Boolean 0b (false) or 1b (true)"));
+        private static final PathInfo UNIT = (new PathInfo(PathType.UNIT,SuggestionGetter.newInline("","{}"))).withDesc(Component.nullToEmpty("{} represents true"));
+        private static final PathInfo TOOLTIP_UNIT = (new PathInfo(PathType.TOOLTIP_UNIT,SuggestionGetter.newInline("","{show_in_tooltip:0b}","{}"))).withDesc(Component.nullToEmpty("{} or {show_in_tooltip:0b}"));
+        private static final PathInfo TRINARY = (new PathInfo(PathType.TRINARY,SuggestionGetter.newInline("","0b","1b"))).withDesc(Component.nullToEmpty("Boolean 0b (false) or 1b (true)"));
         private static final PathInfo SHORT = (new PathInfo(PathType.SHORT,SuggestionGetter.newInline("0s")));
         private static final PathInfo INT = (new PathInfo(PathType.INT,SuggestionGetter.newInline("0")));
         private static final PathInfo LONG = (new PathInfo(PathType.LONG,SuggestionGetter.newInline("0l")));
@@ -1250,15 +1250,15 @@ public class ComponentHelper {
         private static final PathInfo FLOAT = (new PathInfo(PathType.FLOAT,SuggestionGetter.newInline("0.0f")));
         private static final PathInfo STRING = (new PathInfo(PathType.STRING));
         private static final PathInfo BYTE_ARRAY = (new PathInfo(PathType.BYTE_ARRAY,SuggestionGetter.newInline("[B;]")));
-        private static final PathInfo LIST_COMPOUND = (new PathInfo(NbtElement.COMPOUND_TYPE));
-        private static final PathInfo LIST_FLOAT = (new PathInfo(NbtElement.FLOAT_TYPE));
-        private static final PathInfo LIST_STRING = (new PathInfo(NbtElement.STRING_TYPE));
+        private static final PathInfo LIST_COMPOUND = (new PathInfo(Tag.TAG_COMPOUND));
+        private static final PathInfo LIST_FLOAT = (new PathInfo(Tag.TAG_FLOAT));
+        private static final PathInfo LIST_STRING = (new PathInfo(Tag.TAG_STRING));
         private static final PathInfo INLINE_COMPOUND = (new PathInfo(PathType.INLINE_COMPOUND,SuggestionGetter.newInline("{}")));
 
-        private static final PathInfo TEXT = (new PathInfo(PathType.TEXT,SuggestionGetter.newInline("'{\"text\":\"\"}'"))).withDesc(Text.of("Text component"));
-        private static final PathInfo DECIMAL_COLOR = (new PathInfo(PathType.DECIMAL_COLOR,SuggestionGetter.newInline("0","16777215"))).withDesc(Text.of("0xRRGGBB hex color converted to integer"));
+        private static final PathInfo TEXT = (new PathInfo(PathType.TEXT,SuggestionGetter.newInline("\"\"","{text:\"\"}","[\"\"]"))).withDesc(Component.nullToEmpty("Text component"));
+        private static final PathInfo DECIMAL_COLOR = (new PathInfo(PathType.DECIMAL_COLOR,SuggestionGetter.newInline("0","16777215"))).withDesc(Component.nullToEmpty("0xRRGGBB hex color converted to integer"));
         private static final PathInfo UUID = (new PathInfo(PathType.UUID,SuggestionGetter.newInline("[I;0,0,0,0]")));
-        private static final PathInfo INT_ARRAY_POS = (new PathInfo(PathType.INT_ARRAY,SuggestionGetter.newInline("[I;0,0,0]"))).withDesc(Text.of("[I; X, Y, Z] block coordinates"));
+        private static final PathInfo INT_ARRAY_POS = (new PathInfo(PathType.INT_ARRAY,SuggestionGetter.newInline("[I;0,0,0]"))).withDesc(Component.nullToEmpty("[I; X, Y, Z] block coordinates"));
 
         private static final PathInfo ITEM_NODE = (new PathInfo(KeyGetter.create().withRequired("id").withOptional("count","components")));
         private static final PathInfo ITEM_COUNT = (new PathInfo(PathType.INT,SuggestionGetter.newInline("1","16","64","99")));
@@ -1268,24 +1268,24 @@ public class ComponentHelper {
 
         private static final PathInfo POTION_CONTENTS = (new PathInfo(KeyGetter.create().withOptional("potion","custom_color","custom_effects","custom_name")));
         private static final PathInfo EFFECT_NODE = (new PathInfo(KeyGetter.create().withRequired("id").withOptional("amplifier","duration","ambient","show_particles","show_icon"))).withFlag(PathFlag.EFFECT);
-        private static final PathInfo EFFECT_DURATION = (new PathInfo(PathType.INT,SuggestionGetter.newInline("-1","1"))).withDesc(Text.of("Duration in ticks or -1 for infinity"));
-        private static final PathInfo EFFECT_AMPLIFIER = (new PathInfo(PathType.BYTE,SuggestionGetter.newInline("0","255"))).withDesc(Text.of("Amplifier 0-255 gives effect level 1-256"));
+        private static final PathInfo EFFECT_DURATION = (new PathInfo(PathType.INT,SuggestionGetter.newInline("-1","1"))).withDesc(Component.nullToEmpty("Duration in ticks or -1 for infinity"));
+        private static final PathInfo EFFECT_AMPLIFIER = (new PathInfo(PathType.BYTE,SuggestionGetter.newInline("0","255"))).withDesc(Component.nullToEmpty("Amplifier 0-255 gives effect level 1-256"));
 
         private static final PathInfo BLOCK_PREDICATE_BLOCKS = (new PathInfo(PathType.DEFAULT,SuggestionGetter.newJoined(
             REGISTRY_BLOCK.withFormat(SuggestionGetter.Format.NBT_STRING),
             DATA_TAG_BLOCK.withFormat(SuggestionGetter.Format.NBT_STRING),
             SuggestionGetter.newInline("[\"dirt\",\"stone\"]"))))
-            .withDesc(Text.of("Can be either:\na) NbtString of an block ID or block tag\nb) NbtList of block ID NbtStrings"));
+            .withDesc(Component.nullToEmpty("Can be either:\na) NbtString of an block ID or block tag\nb) NbtList of block ID NbtStrings"));
         private static final PathInfo ITEM_PREDICATE_ITEMS = (new PathInfo(PathType.DEFAULT,SuggestionGetter.newJoined(
             REGISTRY_ITEM.withFormat(SuggestionGetter.Format.NBT_STRING),
             DATA_TAG_ITEM.withFormat(SuggestionGetter.Format.NBT_STRING),
             SuggestionGetter.newInline("[\"diamond\",\"gold_ingot\"]"))))
-            .withDesc(Text.of("Can be either:\na) NbtString of an item ID or item tag\nb) NbtList of item ID NbtStrings"));
+            .withDesc(Component.nullToEmpty("Can be either:\na) NbtString of an item ID or item tag\nb) NbtList of item ID NbtStrings"));
         private static final PathInfo ENTITY_PREDICATE_ENTITIES = (new PathInfo(PathType.DEFAULT,SuggestionGetter.newJoined(
             REGISTRY_ENTITY_TYPE.withFormat(SuggestionGetter.Format.NBT_STRING),
             DATA_TAG_ENTITY_TYPE.withFormat(SuggestionGetter.Format.NBT_STRING),
             SuggestionGetter.newInline("[\"skeleton\",\"zombie\"]"))))
-            .withDesc(Text.of("Can be either:\na) NbtString of an entity ID or entity tag\nb) NbtList of entity ID NbtStrings"));
+            .withDesc(Component.nullToEmpty("Can be either:\na) NbtString of an entity ID or entity tag\nb) NbtList of entity ID NbtStrings"));
 
     }
 
@@ -1372,7 +1372,7 @@ public class ComponentHelper {
                 }
                 case NBT_STRING : {
                     for(String s : toAdd)
-                        set.add(BlackMagick.nbtToString(NbtString.of(s)));
+                        set.add(BlackMagick.nbtToString(StringTag.valueOf(s)));
                     break;
                 }
                 case INVERTED : {
@@ -1382,7 +1382,7 @@ public class ComponentHelper {
                 }
                 case AEC_PARTICLE_TYPE : {
                     for(String s : toAdd) {
-                        NbtCompound nbt = new NbtCompound();
+                        CompoundTag nbt = new CompoundTag();
                         nbt.putString("type",s);
                         set.add(BlackMagick.nbtToString(nbt));
                     }
@@ -1468,12 +1468,12 @@ public class ComponentHelper {
      */
     public static List<List<String>> getBlockStates(Item item) {
         List<List<String>> states = Lists.newArrayList();
-        BlockState blockState = Block.getBlockFromItem(item).getDefaultState();
-        for(Map.Entry<Property<?>, Comparable<?>> entry : blockState.getEntries().entrySet()) {
+        BlockState blockState = Block.byItem(item).defaultBlockState();
+        for(Map.Entry<Property<?>, Comparable<?>> entry : blockState.getValues().entrySet()) {
             List<String> list = Lists.newArrayList();
             list.add(entry.getKey().getName());
-            for(Comparable<?> val : entry.getKey().getValues()) {
-                list.add((String)Util.getValueAsString(entry.getKey(), val));
+            for(Comparable<?> val : entry.getKey().getPossibleValues()) {
+                list.add((String)Util.getPropertyName(entry.getKey(), val));
             }
             states.add(list);
         }
@@ -1488,9 +1488,9 @@ public class ComponentHelper {
     public static int getEnchantmentMaxLevel(String key) {
         int max = 1;
         try {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null) {
-                Enchantment ench = client.world.getRegistryManager().getOptional(RegistryKeys.ENCHANTMENT).get().get(Identifier.of(key));
+            final Minecraft client = Minecraft.getInstance();
+            if(client.level != null) {
+                Enchantment ench = client.level.registryAccess().lookup(Registries.ENCHANTMENT).get().getValue(ResourceLocation.parse(key));
                 if(ench != null)
                     max = ench.getMaxLevel();
             }
@@ -1509,7 +1509,7 @@ public class ComponentHelper {
         // manually enter rows/cols based on ingame gui appearance
         // remove ender chest
 
-        Identifier identifier = BlackMagick.identifierOrNull(item.toString());
+        ResourceLocation identifier = BlackMagick.identifierOrNull(item.toString());
         if(identifier != null) {
             String id = identifier.toString();
 
@@ -1551,8 +1551,8 @@ public class ComponentHelper {
     public static final SuggestionGetter LIST_ATTRIBUTE_MODIFIER_SLOT = registerSuggsList("LIST_ATTRIBUTE_MODIFIER_SLOT", () -> {
         List<String> list = createOrGetCacheList("LIST_ATTRIBUTE_MODIFIER_SLOT",false);
         if(list.isEmpty()) {
-            for(AttributeModifierSlot i : AttributeModifierSlot.values())
-                list.add(i.asString());
+            for(EquipmentSlotGroup i : EquipmentSlotGroup.values())
+                list.add(i.getSerializedName());
             Collections.sort(list);
         }
         return list;
@@ -1564,9 +1564,9 @@ public class ComponentHelper {
     public static final SuggestionGetter LIST_DATA_COMPONENT_TYPE = registerSuggsList("LIST_DATA_COMPONENT_TYPE", () -> {
         List<String> list = createOrGetCacheList("LIST_DATA_COMPONENT_TYPE",false);
         if(list.isEmpty()) {
-            Registries.DATA_COMPONENT_TYPE.forEach(i -> {
-                if(!i.shouldSkipSerialization())
-                    list.add(Registries.DATA_COMPONENT_TYPE.getId(i).toString());
+            BuiltInRegistries.DATA_COMPONENT_TYPE.forEach(i -> {
+                if(!i.isTransient())
+                    list.add(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
             });
             Collections.sort(list);
         }
@@ -1579,7 +1579,7 @@ public class ComponentHelper {
     public static final SuggestionGetter LIST_DECORATED_POT_PATTERN_ITEMS = registerSuggsList("LIST_DECORATED_POT_PATTERN_ITEMS", () -> {//to_do use item tag `#minecraft:decorated_pot_ingredients` ?
         List<String> list = createOrGetCacheList("LIST_DECORATED_POT_PATTERN_ITEMS",false);
         if(list.isEmpty()) {
-            for(Item i : DecoratedPotPatternsAccessor.getSherdToPattern().keySet())
+            for(Item i : DecoratedPotPatternsAccessor.getItemToPotTexture().keySet())
                 list.add(i.toString());
             Collections.sort(list);
         }
@@ -1590,7 +1590,7 @@ public class ComponentHelper {
         List<String> list = createOrGetCacheList("LIST_DYE_COLOR",false);
         if(list.isEmpty()) {
             for(DyeColor i : DyeColor.values())
-                list.add(i.asString());
+                list.add(i.getSerializedName());
             Collections.sort(list);
         }
         return list;
@@ -1600,7 +1600,7 @@ public class ComponentHelper {
         List<String> list = createOrGetCacheList("LIST_EQUIPMENT_SLOT",false);
         if(list.isEmpty()) {
             for(EquipmentSlot i : EquipmentSlot.values())
-                list.add(i.asString());
+                list.add(i.getSerializedName());
             Collections.sort(list);
         }
         return list;
@@ -1609,8 +1609,8 @@ public class ComponentHelper {
     public static final SuggestionGetter LIST_FIREWORK_EXPLOSION_COMPONENT_TYPE = registerSuggsList("LIST_FIREWORK_EXPLOSION_COMPONENT_TYPE", () -> {
         List<String> list = createOrGetCacheList("LIST_FIREWORK_EXPLOSION_COMPONENT_TYPE",false);
         if(list.isEmpty()) {
-            for(FireworkExplosionComponent.Type i : FireworkExplosionComponent.Type.values())
-                list.add(i.asString());
+            for(FireworkExplosion.Shape i : FireworkExplosion.Shape.values())
+                list.add(i.getSerializedName());
             Collections.sort(list);
         }
         return list;
@@ -1619,7 +1619,7 @@ public class ComponentHelper {
     public static final SuggestionGetter LIST_FORMATTING_COLOR = registerSuggsList("LIST_FORMATTING_COLOR", () -> {
         List<String> list = createOrGetCacheList("LIST_FORMATTING_COLOR",false);
         if(list.isEmpty()) {
-            for(String i : Formatting.getNames(true, false))
+            for(String i : ChatFormatting.getNames(true, false))
                 if(!i.equals("reset"))
                     list.add(i);
             Collections.sort(list);
@@ -1630,7 +1630,7 @@ public class ComponentHelper {
     public static final SuggestionGetter LIST_KEYBIND = registerSuggsList("LIST_KEYBIND", () -> {
         List<String> list = createOrGetCacheList("LIST_KEYBIND",false);
         if(list.isEmpty()) {
-            for(String i : KeyBindingAccessor.getKeysList().keySet())
+            for(String i : KeyMappingAccessor.getKeysList().keySet())
                 if(!i.startsWith("42edit."))
                     list.add(i);
             Collections.sort(list);
@@ -1644,8 +1644,8 @@ public class ComponentHelper {
     public static final SuggestionGetter LIST_USE_ACTION = registerSuggsList("LIST_USE_ACTION", () -> {
         List<String> list = createOrGetCacheList("LIST_USE_ACTION",false);
         if(list.isEmpty()) {
-            for(UseAction i : UseAction.values())
-                list.add(i.asString());
+            for(ItemUseAnimation i : ItemUseAnimation.values())
+                list.add(i.getSerializedName());
             Collections.sort(list);
         }
         return list;
@@ -1658,8 +1658,8 @@ public class ComponentHelper {
         List<String> list = createOrGetCacheList("LIST_TRANSLATION_KEY",true);
         if(list.isEmpty()) {
             final Language lang = Language.getInstance();
-            if(lang instanceof TranslationStorage) {
-                for(String i : ((TranslationStorageAccessor)lang).getTranslations().keySet())
+            if(lang instanceof ClientLanguage) {
+                for(String i : ((ClientLanguageAccessor)lang).getTranslations().keySet())
                     if(!i.startsWith("42edit."))
                         list.add(i);
                 Collections.sort(list);
@@ -1673,7 +1673,7 @@ public class ComponentHelper {
 
     private static List<String> getRegistryIfEmpty(List<String> list, Registry<?> registryRef) {
         if(list.isEmpty()) {
-            for(Identifier i : registryRef.getIds())
+            for(ResourceLocation i : registryRef.keySet())
                 list.add(i.toString());
             Collections.sort(list);
         }
@@ -1681,44 +1681,44 @@ public class ComponentHelper {
     }
 
     public static final SuggestionGetter REGISTRY_ATTRIBUTE = registerSuggsList("REGISTRY_ATTRIBUTE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ATTRIBUTE",false),Registries.ATTRIBUTE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ATTRIBUTE",false),BuiltInRegistries.ATTRIBUTE));
 
     public static final SuggestionGetter REGISTRY_BLOCK = registerSuggsList("REGISTRY_BLOCK", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_BLOCK",false),Registries.BLOCK));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_BLOCK",false),BuiltInRegistries.BLOCK));
 
     public static final SuggestionGetter REGISTRY_BLOCK_ENTITY_TYPE = registerSuggsList("REGISTRY_BLOCK_ENTITY_TYPE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_BLOCK_ENTITY_TYPE",false),Registries.BLOCK_ENTITY_TYPE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_BLOCK_ENTITY_TYPE",false),BuiltInRegistries.BLOCK_ENTITY_TYPE));
 
     public static final SuggestionGetter REGISTRY_CONSUME_EFFECT_TYPE = registerSuggsList("REGISTRY_CONSUME_EFFECT_TYPE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_CONSUME_EFFECT_TYPE",false),Registries.CONSUME_EFFECT_TYPE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_CONSUME_EFFECT_TYPE",false),BuiltInRegistries.CONSUME_EFFECT_TYPE));
 
     public static final SuggestionGetter REGISTRY_ITEM = registerSuggsList("REGISTRY_ITEM", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ITEM",false),Registries.ITEM));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ITEM",false),BuiltInRegistries.ITEM));
 
     public static final SuggestionGetter REGISTRY_SOUND_EVENT = registerSuggsList("REGISTRY_SOUND_EVENT", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_SOUND_EVENT",false),Registries.SOUND_EVENT));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_SOUND_EVENT",false),BuiltInRegistries.SOUND_EVENT));
 
     public static final SuggestionGetter REGISTRY_STATUS_EFFECT = registerSuggsList("REGISTRY_STATUS_EFFECT", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_STATUS_EFFECT",false),Registries.STATUS_EFFECT));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_STATUS_EFFECT",false),BuiltInRegistries.MOB_EFFECT));
 
     public static final SuggestionGetter REGISTRY_ENTITY_TYPE = registerSuggsList("REGISTRY_ENTITY_TYPE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ENTITY_TYPE",false),Registries.ENTITY_TYPE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ENTITY_TYPE",false),BuiltInRegistries.ENTITY_TYPE));
 
     public static final SuggestionGetter REGISTRY_PARTICLE_TYPE = registerSuggsList("REGISTRY_PARTICLE_TYPE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_PARTICLE_TYPE",false),Registries.PARTICLE_TYPE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_PARTICLE_TYPE",false),BuiltInRegistries.PARTICLE_TYPE));
 
     public static final SuggestionGetter REGISTRY_POTION = registerSuggsList("REGISTRY_POTION", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_POTION",false),Registries.POTION));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_POTION",false),BuiltInRegistries.POTION));
 
 
     // dynamic data lists
 
-    private static List<String> getDataIfEmpty(List<String> list, RegistryKey<? extends Registry<?>> registryRef) {
+    private static List<String> getDataIfEmpty(List<String> list, ResourceKey<? extends Registry<?>> registryRef) {
         if(list.isEmpty()) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null)
-                client.world.getRegistryManager().getOptional(registryRef).ifPresent(reg -> {
-                    for(Identifier i : reg.getIds())
+            final Minecraft client = Minecraft.getInstance();
+            if(client.level != null)
+                client.level.registryAccess().lookup(registryRef).ifPresent(reg -> {
+                    for(ResourceLocation i : reg.keySet())
                         list.add(i.toString());
                 });
             Collections.sort(list);
@@ -1727,42 +1727,42 @@ public class ComponentHelper {
     }
 
     public static final SuggestionGetter DATA_BANNER_PATTERN = registerSuggsList("DATA_BANNER_PATTERN", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_BANNER_PATTERN",true),RegistryKeys.BANNER_PATTERN));
+        getDataIfEmpty(createOrGetCacheList("DATA_BANNER_PATTERN",true),Registries.BANNER_PATTERN));
 
     public static final SuggestionGetter DATA_DAMAGE_TYPE = registerSuggsList("DATA_DAMAGE_TYPE", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_DAMAGE_TYPE",true),RegistryKeys.DAMAGE_TYPE));
+        getDataIfEmpty(createOrGetCacheList("DATA_DAMAGE_TYPE",true),Registries.DAMAGE_TYPE));
 
     public static final SuggestionGetter DATA_ENCHANTMENT = registerSuggsList("DATA_ENCHANTMENT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_ENCHANTMENT",true),RegistryKeys.ENCHANTMENT));
+        getDataIfEmpty(createOrGetCacheList("DATA_ENCHANTMENT",true),Registries.ENCHANTMENT));
 
     public static final SuggestionGetter DATA_INSTRUMENT = registerSuggsList("DATA_INSTRUMENT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_INSTRUMENT",true),RegistryKeys.INSTRUMENT));
+        getDataIfEmpty(createOrGetCacheList("DATA_INSTRUMENT",true),Registries.INSTRUMENT));
 
     public static final SuggestionGetter DATA_JUKEBOX_SONG = registerSuggsList("DATA_JUKEBOX_SONG", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_JUKEBOX_SONG",true),RegistryKeys.JUKEBOX_SONG));
+        getDataIfEmpty(createOrGetCacheList("DATA_JUKEBOX_SONG",true),Registries.JUKEBOX_SONG));
 
     public static final SuggestionGetter DATA_PAINTING_VARIANT = registerSuggsList("DATA_PAINTING_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_PAINTING_VARIANT",true),RegistryKeys.PAINTING_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_PAINTING_VARIANT",true),Registries.PAINTING_VARIANT));
 
     public static final SuggestionGetter DATA_TRIM_MATERIAL = registerSuggsList("DATA_TRIM_MATERIAL", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_TRIM_MATERIAL",true),RegistryKeys.TRIM_MATERIAL));
+        getDataIfEmpty(createOrGetCacheList("DATA_TRIM_MATERIAL",true),Registries.TRIM_MATERIAL));
 
     public static final SuggestionGetter DATA_TRIM_PATTERN = registerSuggsList("DATA_TRIM_PATTERN", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_TRIM_PATTERN",true),RegistryKeys.TRIM_PATTERN));
+        getDataIfEmpty(createOrGetCacheList("DATA_TRIM_PATTERN",true),Registries.TRIM_PATTERN));
 
     public static final SuggestionGetter DATA_WOLF_VARIANT = registerSuggsList("DATA_WOLF_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_WOLF_VARIANT",true),RegistryKeys.WOLF_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_WOLF_VARIANT",true),Registries.WOLF_VARIANT));
 
 
     // dynamic data tags lists
 
-    private static List<String> getTagsIfEmpty(List<String> list, RegistryKey<? extends Registry<?>> registryRef) {
+    private static List<String> getTagsIfEmpty(List<String> list, ResourceKey<? extends Registry<?>> registryRef) {
         if(list.isEmpty()) {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            if(client.world != null)
-                client.world.getRegistryManager().getOptional(registryRef).ifPresent(reg -> {
-                    reg.streamTagKeys().forEach(tag -> {
-                        list.add("#"+tag.id().toString());
+            final Minecraft client = Minecraft.getInstance();
+            if(client.level != null)
+                client.level.registryAccess().lookup(registryRef).ifPresent(reg -> {
+                    reg.listTagIds().forEach(tag -> {
+                        list.add("#"+tag.location().toString());
                     });
                 });
             Collections.sort(list);
@@ -1771,25 +1771,25 @@ public class ComponentHelper {
     }
 
     public static final SuggestionGetter DATA_TAG_BANNER_PATTERN = registerSuggsList("DATA_TAG_BANNER_PATTERN", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_BANNER_PATTERN",true),RegistryKeys.BANNER_PATTERN));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_BANNER_PATTERN",true),Registries.BANNER_PATTERN));
 
     public static final SuggestionGetter DATA_TAG_BLOCK = registerSuggsList("DATA_TAG_BLOCK", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_BLOCK",true),RegistryKeys.BLOCK));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_BLOCK",true),Registries.BLOCK));
 
     public static final SuggestionGetter DATA_TAG_DAMAGE_TYPE = registerSuggsList("DATA_TAG_DAMAGE_TYPE", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_DAMAGE_TYPE",true),RegistryKeys.DAMAGE_TYPE));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_DAMAGE_TYPE",true),Registries.DAMAGE_TYPE));
 
     public static final SuggestionGetter DATA_TAG_ENCHANTMENT = registerSuggsList("DATA_TAG_ENCHANTMENT", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ENCHANTMENT",true),RegistryKeys.ENCHANTMENT));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ENCHANTMENT",true),Registries.ENCHANTMENT));
 
     public static final SuggestionGetter DATA_TAG_ENTITY_TYPE = registerSuggsList("DATA_TAG_ENTITY_TYPE", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ENTITY_TYPE",true),RegistryKeys.ENTITY_TYPE));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ENTITY_TYPE",true),Registries.ENTITY_TYPE));
 
     public static final SuggestionGetter DATA_TAG_ITEM = registerSuggsList("DATA_TAG_ITEM", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ITEM",true),RegistryKeys.ITEM));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ITEM",true),Registries.ITEM));
 
     public static final SuggestionGetter DATA_TAG_PAINTING_VARIANT = registerSuggsList("DATA_TAG_PAINTING_VARIANT", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_PAINTING_VARIANT",true),RegistryKeys.PAINTING_VARIANT));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_PAINTING_VARIANT",true),Registries.PAINTING_VARIANT));
 
 
     // static data lists from vanilla
@@ -1797,9 +1797,9 @@ public class ComponentHelper {
     private static List<String> getVanillaDataIfEmpty(List<String> list, String path, String suffix) {
         if(list.isEmpty()) {
             try {
-                Map<Identifier,InputSupplier<InputStream>> map = Maps.newHashMap();
+                Map<ResourceLocation,IoSupplier<InputStream>> map = Maps.newHashMap();
                 final String namespace = "minecraft";
-                VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.SERVER_DATA, namespace, path, map::putIfAbsent);
+                ServerPacksSource.createVanillaPackSource().listResources(PackType.SERVER_DATA, namespace, path, map::putIfAbsent);
                 map.keySet().forEach(i -> {
                     String temp = i.toString();
                     if(temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
@@ -1865,9 +1865,9 @@ public class ComponentHelper {
     private static List<String> getVanillaAssetsIfEmpty(List<String> list, String path, String suffix) {
         if(list.isEmpty()) {
             try {
-                Map<Identifier,InputSupplier<InputStream>> map = Maps.newHashMap();
+                Map<ResourceLocation,IoSupplier<InputStream>> map = Maps.newHashMap();
                 final String namespace = "minecraft";
-                VanillaDataPackProvider.createDefaultPack().findResources(ResourceType.CLIENT_RESOURCES, namespace, path, map::putIfAbsent);
+                ServerPacksSource.createVanillaPackSource().listResources(PackType.CLIENT_RESOURCES, namespace, path, map::putIfAbsent);
                 map.keySet().forEach(i -> {
                     String temp = i.toString();
                     if(!temp.endsWith(suffix+MCMETA_SUFFIX)) {

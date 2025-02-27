@@ -3,32 +3,30 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.commands.data.EntityDataAccessor;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import com.google.common.collect.Lists;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FileTools;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.command.EntityDataObject;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.GlobalPos;
 
 public class Hacks extends GenericScreen {
 
-    protected ButtonWidget btnWgtFindInvis;
-    protected TextFieldWidget txtRando;
+    protected Button btnWgtFindInvis;
+    protected EditBox txtRando;
     protected boolean unsaved = false;
 
     public Hacks() {}
@@ -38,65 +36,65 @@ public class Hacks extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.HACKS;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Back"), button -> changeScreen(new MagickGui())).dimensions(x+5,y+5,40,20).build());
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Mix [On]"),
-                Text.literal("Mix [Off]")).initially(FortytwoEdit.randoMode).omitKeyText().build(x+20,y+22*2+1,80,20,
-                Text.of(""), (button, trackOutput) -> {
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+5,y+5,40,20).build());
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Mix [On]"),
+                Component.literal("Mix [Off]")).withInitialValue(FortytwoEdit.randoMode).displayOnlyValue().create(x+20,y+22*2+1,80,20,
+                Component.nullToEmpty(""), (button, trackOutput) -> {
             setTxtRando();
             if(!(boolean)trackOutput)
                 FortytwoEdit.randoMode = false;
             else if((boolean)trackOutput && FortytwoEdit.randoSlots != null)
                 FortytwoEdit.randoMode = true;
             unsel();
-        })).setTooltip(Tooltip.of(Text.of("Toggle mix mode\n\nWhen on: after placing a block, change to a random hotbar slot\n\n"
+        })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle mix mode\n\nWhen on: after placing a block, change to a random hotbar slot\n\n"
             +"If numbers are specified, the random slot will be selected from those.\nExample: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)")));
-        this.txtRando = new TextFieldWidget(this.textRenderer,x+105+1,y+44+1,100-2,20,Text.of(""));
+        this.txtRando = new EditBox(this.font,x+105+1,y+44+1,100-2,20,Component.nullToEmpty(""));
         this.txtRando.setMaxLength(15);
         if(FortytwoEdit.randoSlots != null) {
             String keys = "";
             for(int i: FortytwoEdit.randoSlots) {
                 keys += i;
             }
-            txtRando.setText(keys);
+            txtRando.setValue(keys);
         }
-        this.txtRando.setChangedListener(this::editTxtRando);
-        this.addDrawableChild(this.txtRando);
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Get Entity"), button -> this.btnGetEntity(1)).dimensions(x+20,y+22*3+1,80,20).build())
-            .setTooltip(Tooltip.of(Text.of("Copy entity data within 2.5 blocks and get a spawn egg for the entities")));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Full Data"), button -> this.btnGetEntity(0)).dimensions(x+20+80+5,y+22*3+1,60,20).build())
-            .setTooltip(Tooltip.of(Text.of("Get Entity without removing position, uuid, etc.")));
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("Xray [On]"),
-                Text.literal("Xray [Off]")).initially(FortytwoEdit.seeInvis).omitKeyText().build(x+20,y+22*4+1,100,20,
-                Text.of(""), (button, trackOutput) -> {
-            client.worldRenderer.reload();
+        this.txtRando.setResponder(this::editTxtRando);
+        this.addRenderableWidget(this.txtRando);
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Get Entity"), button -> this.btnGetEntity(1)).bounds(x+20,y+22*3+1,80,20).build())
+            .setTooltip(Tooltip.create(Component.nullToEmpty("Copy entity data within 2.5 blocks and get a spawn egg for the entities")));
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Full Data"), button -> this.btnGetEntity(0)).bounds(x+20+80+5,y+22*3+1,60,20).build())
+            .setTooltip(Tooltip.create(Component.nullToEmpty("Get Entity without removing position, uuid, etc.")));
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Xray [On]"),
+                Component.literal("Xray [Off]")).withInitialValue(FortytwoEdit.seeInvis).displayOnlyValue().create(x+20,y+22*4+1,100,20,
+                Component.nullToEmpty(""), (button, trackOutput) -> {
+            minecraft.levelRenderer.allChanged();
             FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
             FortytwoEdit.xrayEntity = FortytwoEdit.seeInvis;
             unsel();
-        })).setTooltip(Tooltip.of(Text.of("Toggle xray mode\n\nWhen on: barriers, light blocks, and other invisible blocks will appear as solid blocks")));
-        btnWgtFindInvis = this.addDrawableChild(ButtonWidget.builder(Text.of("Find Invis Entities"),
-            button -> this.btnFindInvis()).dimensions(x+20+100+5,y+22*4+1,100,20).build());
-        if(!client.player.getAbilities().creativeMode) {
+        })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle xray mode\n\nWhen on: barriers, light blocks, and other invisible blocks will appear as solid blocks")));
+        btnWgtFindInvis = this.addRenderableWidget(Button.builder(Component.nullToEmpty("Find Invis Entities"),
+            button -> this.btnFindInvis()).bounds(x+20+100+5,y+22*4+1,100,20).build());
+        if(!minecraft.player.getAbilities().instabuild) {
             btnWgtFindInvis.active = false;
             btnWgtFindInvis.setTooltip(TT_CREATIVE);
         }
         else
-            btnWgtFindInvis.setTooltip(Tooltip.of(Text.of("Print positions of invisible entities (only you can see this)")));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Death Pos"), button -> this.btnDeathPos()).dimensions(x+20,y+22*5+1,100,20).build())
-            .setTooltip(Tooltip.of(Text.of("Print your last position of death (only you can see this)")));
-        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(Text.literal("   Auto Fish [On]"),
-                Text.literal("   Auto Fish [Off]")).initially(FortytwoEdit.autoFish).omitKeyText().build(x+20+100+5,y+22*5+1,100,20,
-                Text.of(""), (button, trackOutput) -> {
+            btnWgtFindInvis.setTooltip(Tooltip.create(Component.nullToEmpty("Print positions of invisible entities (only you can see this)")));
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Death Pos"), button -> this.btnDeathPos()).bounds(x+20,y+22*5+1,100,20).build())
+            .setTooltip(Tooltip.create(Component.nullToEmpty("Print your last position of death (only you can see this)")));
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("   Auto Fish [On]"),
+                Component.literal("   Auto Fish [Off]")).withInitialValue(FortytwoEdit.autoFish).displayOnlyValue().create(x+20+100+5,y+22*5+1,100,20,
+                Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.autoFish = !FortytwoEdit.autoFish;
             unsel();
-        })).setTooltip(Tooltip.of(Text.of("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on")));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Look N"), button -> this.btnLookN()).dimensions(x+20,y+22*7+1,40,20).build())
-            .setTooltip(Tooltip.of(Text.of("Set your rotation to straight north")));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Rotate"), button -> this.btnLookR()).dimensions(x+20+40+5,y+22*7+1,40,20).build())
-            .setTooltip(Tooltip.of(Text.of("Rotate 90\u00b0 clockwise")));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("Pano"), button -> this.btnPano()).dimensions(x+20+40+5+40+5,y+22*7+1,40,20).build())
-            .setTooltip(Tooltip.of(Text.of("Take a panorama screenshot")));
-        this.addDrawableChild(ButtonWidget.builder(Text.of("View Pano"), button -> this.btnScreenshots()).dimensions(x+20+120+15,y+22*7+1,60,20).build())
-            .setTooltip(Tooltip.of(Text.of("Open screenshots folder to view panorama")));
+        })).setTooltip(Tooltip.create(Component.nullToEmpty("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on")));
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Look N"), button -> this.btnLookN()).bounds(x+20,y+22*7+1,40,20).build())
+            .setTooltip(Tooltip.create(Component.nullToEmpty("Set your rotation to straight north")));
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Rotate"), button -> this.btnLookR()).bounds(x+20+40+5,y+22*7+1,40,20).build())
+            .setTooltip(Tooltip.create(Component.nullToEmpty("Rotate 90\u00b0 clockwise")));
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Pano"), button -> this.btnPano()).bounds(x+20+40+5+40+5,y+22*7+1,40,20).build())
+            .setTooltip(Tooltip.create(Component.nullToEmpty("Take a panorama screenshot")));
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("View Pano"), button -> this.btnScreenshots()).bounds(x+20+120+15,y+22*7+1,60,20).build())
+            .setTooltip(Tooltip.create(Component.nullToEmpty("Open screenshots folder to view panorama")));
     }
 
     protected void editTxtRando(String text) {
@@ -106,8 +104,8 @@ public class Hacks extends GenericScreen {
     protected void setTxtRando() {
         if(unsaved) {
             FortytwoEdit.randoSlots = null;
-            if(txtRando.getText() != null && !txtRando.getText().equals("")) {
-                String inp = txtRando.getText().replaceAll("[^1-9]","");
+            if(txtRando.getValue() != null && !txtRando.getValue().equals("")) {
+                String inp = txtRando.getValue().replaceAll("[^1-9]","");
                 if(inp.length()>0) {
                     int[] slots = new int[inp.length()];
                     for(int i=0; i<slots.length; i++) {
@@ -126,11 +124,11 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnGetEntity(int mode) {
-        Iterator<Entity> entities = client.world.getEntities().iterator();
-        List<NbtCompound> items = Lists.newArrayList();
-        double x = client.player.getX();
-        double y = client.player.getY();
-        double z = client.player.getZ();
+        Iterator<Entity> entities = minecraft.level.entitiesForRendering().iterator();
+        List<CompoundTag> items = Lists.newArrayList();
+        double x = minecraft.player.getX();
+        double y = minecraft.player.getY();
+        double z = minecraft.player.getZ();
         double range = 2.5;
         while(entities.hasNext()) {
             Entity current = entities.next();
@@ -138,12 +136,12 @@ public class Hacks extends GenericScreen {
             && current.getX()>x-range && current.getX()<x+range
             && current.getY()>y-range && current.getY()<y+range
             && current.getZ()>z-range && current.getZ()<z+range) {
-                NbtCompound nbt = new NbtCompound();
-                NbtCompound components = new NbtCompound();
+                CompoundTag nbt = new CompoundTag();
+                CompoundTag components = new CompoundTag();
                 nbt.put("components",components);
-                NbtCompound entityData = new NbtCompound();
-                if((new EntityDataObject(current)).getNbt()!=null)
-                    entityData = (new EntityDataObject(current)).getNbt();
+                CompoundTag entityData = new CompoundTag();
+                if((new EntityDataAccessor(current)).getData()!=null)
+                    entityData = (new EntityDataAccessor(current)).getData();
                 components.put("entity_data",entityData);
                 if(current.getType() == EntityType.ARMOR_STAND) {
                     nbt.putString("id","minecraft:armor_stand");
@@ -154,10 +152,9 @@ public class Hacks extends GenericScreen {
                     }
                 }
                 else {
-                    nbt.putString("id","minecraft:ender_dragon_spawn_egg");
-                    entityData.putString("id",EntityType.getId(current.getType()).toString());
-                    components.put("item_name",NbtString.of("{\"text\":\"Custom "+
-                    current.getType().getName().getString()+" Spawn Egg\",\"italic\":false}"));
+                    nbt.putString("id","minecraft:endermite_spawn_egg");
+                    entityData.putString("id",EntityType.getKey(current.getType()).toString());
+                    components.putString("item_name","Custom "+current.getType().getDescription().getString()+" Spawn Egg");
                 }
                 if(mode == 1) {
                     entityData.remove("Air");
@@ -184,23 +181,23 @@ public class Hacks extends GenericScreen {
             }
         }
         if(!items.isEmpty()) {
-            NbtCompound nbt = new NbtCompound();
+            CompoundTag nbt = new CompoundTag();
             nbt.putString("id","bundle");
-            NbtCompound components = new NbtCompound();
+            CompoundTag components = new CompoundTag();
             nbt.put("components",components);
-            NbtList bundle = new NbtList();
+            ListTag bundle = new ListTag();
             components.put("bundle_contents",bundle);
             for(int i=0; i<items.size(); i++) {
                 bundle.add(items.get(i));
             }
             ItemStack item = BlackMagick.itemFromNbt(nbt);
             if(items.size()==1)
-                item = BlackMagick.itemFromNbt((NbtCompound)bundle.get(0));
+                item = BlackMagick.itemFromNbt(BlackMagick.validCompound(bundle.get(0)));
 
             FortytwoEdit.setClipboard(BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(item)));
             FortytwoEdit.showToast("Get Entity","Entity data copied");
 
-            if(client.player.getAbilities().creativeMode && !item.isEmpty()) {
+            if(minecraft.player.getAbilities().instabuild && !item.isEmpty()) {
                 BlackMagick.setItemMain(item);
             }
         }
@@ -211,34 +208,27 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnFindInvis() {
-        if(client.player.getAbilities().creativeMode) {
+        if(minecraft.player.getAbilities().instabuild) {
             int found = 0;
-            Iterator<Entity> entities = client.world.getEntities().iterator();
+            Iterator<Entity> entities = minecraft.level.entitiesForRendering().iterator();
             while(entities.hasNext()) {
                 Entity current = entities.next();
                 if(current.getType() == EntityType.ARMOR_STAND) {
-                    NbtCompound nbt = new NbtCompound();
-                    if((new EntityDataObject(current)).getNbt()!=null)
-                        nbt = (new EntityDataObject(current)).getNbt();
-                    if(nbt.contains("Invisible",NbtElement.BYTE_TYPE) && nbt.get("Invisible").asString().equals("1b")
-                    && !(nbt.contains("CustomNameVisible",NbtElement.BYTE_TYPE) && nbt.get("CustomNameVisible").asString().equals("1b"))) {
-                        if(((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(0))).isEmpty()
-                                && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(1))).isEmpty()
-                                && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(2))).isEmpty()
-                                && ((NbtCompound)(((NbtList)(nbt.get("ArmorItems"))).get(3))).isEmpty()
-                                && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(0))).isEmpty()
-                                && ((NbtCompound)(((NbtList)(nbt.get("HandItems"))).get(1))).isEmpty()) {
-                            reportInvis(current);
-                            found++;
-                        }
+                    CompoundTag nbt = new CompoundTag();
+                    if((new EntityDataAccessor(current)).getData()!=null)
+                        nbt = (new EntityDataAccessor(current)).getData();
+                    if((nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1)
+                    && !(nbt.getByte("CustomNameVisible").isPresent() && nbt.getByte("CustomNameVisible").get()==1)
+                    && !nbt.getCompound("equipment").isPresent()) {
+                        reportInvis(current);
+                        found++;
                     }
                 }
                 else if(current.getType() == EntityType.ITEM_FRAME || current.getType() == EntityType.GLOW_ITEM_FRAME) {
-                    NbtCompound nbt = new NbtCompound();
-                    if((new EntityDataObject(current)).getNbt()!=null)
-                        nbt = (new EntityDataObject(current)).getNbt();
-                    if(nbt.contains("Invisible") && nbt.get("Invisible").getType()==NbtElement.BYTE_TYPE
-                    && nbt.get("Invisible").asString().equals("1b")) {
+                    CompoundTag nbt = new CompoundTag();
+                    if((new EntityDataAccessor(current)).getData()!=null)
+                        nbt = (new EntityDataAccessor(current)).getData();
+                    if(nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1) {
                         if(!nbt.contains("Item")) {
                             reportInvis(current);
                             found++;
@@ -257,23 +247,23 @@ public class Hacks extends GenericScreen {
         unsel();
     }
 
-    private void reportInvis(Entity entity) {
-        String text = "[{\"text\":\""+entity.getName().getString()+"\",\"hoverEvent\":{\"action\":\"show_entity\",\"contents\":"
-            + "{\"type\":\""+EntityType.getId(entity.getType()).toString()
-            + "\",\"id\":\""+entity.getUuidAsString()+"\"}},\"clickEvent\":"
-            + "{\"action\":\"suggest_command\",\"value\":\"/tp "+entity.getBlockX() + " " + entity.getBlockY() + " " + entity.getBlockZ() + "\"}},{\"text\":\" \"},"
-            + "{\"text\":\"["+entity.getBlockX() + ", " + entity.getBlockY() + ", " + entity.getBlockZ() + "]\"}]";
-        if(BlackMagick.textFromJson(text).isValid())
-            client.player.sendMessage(BlackMagick.textFromJson(text).text(),false);
+    private void reportInvis(Entity entity) {//to_do update to click_event and hover_event
+        String text = "[{text:\""+entity.getName().getString()+"\",hoverEvent:{action:\"show_entity\",contents:"
+            + "{type:\""+EntityType.getKey(entity.getType()).toString()
+            + "\",id:\""+entity.getStringUUID()+"\"}},clickEvent:"
+            + "{action:\"suggest_command\",value:\"/tp "+entity.getBlockX() + " " + entity.getBlockY() + " " + entity.getBlockZ() + "\"}},\" \","
+            + "{text:\"["+entity.getBlockX() + ", " + entity.getBlockY() + ", " + entity.getBlockZ() + "]\"}]";
+        if(BlackMagick.textComponentFromString(text).isValid())
+            minecraft.player.displayClientMessage(BlackMagick.textComponentFromString(text).text(),false);
         else
-            client.player.sendMessage(Text.of(entity.getName().getString()+" ["+entity.getBlockX()+", "+entity.getBlockY()+", "+entity.getBlockZ()+"]"),false);
+            minecraft.player.displayClientMessage(Component.nullToEmpty(entity.getName().getString()+" ["+entity.getBlockX()+", "+entity.getBlockY()+", "+entity.getBlockZ()+"]"),false);
     }
 
     protected void btnDeathPos() {
-        if(client.player.getLastDeathPos().isPresent()) {
-            GlobalPos pos = client.player.getLastDeathPos().get();
-            String coords = "Last death [X: "+pos.pos().getX()+", Y: "+pos.pos().getY()+", Z: "+pos.pos().getZ()+"] in "+pos.dimension().getValue().toString();
-            client.player.sendMessage(Text.of(coords),false);
+        if(minecraft.player.getLastDeathLocation().isPresent()) {
+            GlobalPos pos = minecraft.player.getLastDeathLocation().get();
+            String coords = "Last death [X: "+pos.pos().getX()+", Y: "+pos.pos().getY()+", Z: "+pos.pos().getZ()+"] in "+pos.dimension().location().toString();
+            minecraft.player.displayClientMessage(Component.nullToEmpty(coords),false);
             FortytwoEdit.showToast("Death Pos", "Death coords sent to chat");
         }
         else {
@@ -283,20 +273,18 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnLookN() {
-        client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),180f,0f);
+		minecraft.player.setXRot(0);
+		minecraft.player.setYRot(180);
         unsel();
     }
 
     protected void btnLookR() {
-        float yaw = client.player.getYaw() + 90;
-        if(yaw>=360)
-            yaw=yaw-360;
-        client.player.refreshPositionAndAngles(client.player.getX(),client.player.getY(),client.player.getZ(),yaw,client.player.getPitch());
+		minecraft.player.setYRot(minecraft.player.getYRot() + 90);
         unsel();
     }
 
     protected void btnPano() {
-        client.takePanorama(new File(client.runDirectory.getAbsolutePath()),1024,1024);
+        minecraft.grabPanoramixScreenshot(new File(minecraft.gameDirectory.getAbsolutePath()),1024,1024);
         unsel();
     }
 
@@ -310,36 +298,36 @@ public class Hacks extends GenericScreen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.of("Hacks"), this.width / 2, y+11, TEXT_COLOR);
-		context.drawItemWithoutEntity(new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+22*2+1+2);
-		context.drawItemWithoutEntity(new ItemStack(Items.ENDER_DRAGON_SPAWN_EGG),x+20+2,y+22*3+1+2);
-		context.drawItemWithoutEntity(new ItemStack(Items.BARRIER),x+20+2,y+22*4+1+2);
-		context.drawItemWithoutEntity(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+22*5+1+2);
-		context.drawItemWithoutEntity(new ItemStack(Items.FISHING_ROD),x+20+2+100+5,y+22*5+1+2);
+        context.drawCenteredString(this.font, Component.nullToEmpty("Hacks"), this.width / 2, y+11, TEXT_COLOR);
+		context.renderFakeItem(new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+22*2+1+2);
+		context.renderFakeItem(new ItemStack(Items.CREEPER_SPAWN_EGG),x+20+2,y+22*3+1+2);
+		context.renderFakeItem(new ItemStack(Items.BARRIER),x+20+2,y+22*4+1+2);
+		context.renderFakeItem(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+22*5+1+2);
+		context.renderFakeItem(new ItemStack(Items.FISHING_ROD),x+20+2+100+5,y+22*5+1+2);
     }
 
     @Override
-    public void resize(MinecraftClient client, int width, int height) {
+    public void resize(Minecraft client, int width, int height) {
         saveAll();
         super.resize(client, width, height);
     }
 
     @Override
     public boolean shouldCloseOnKeybind() {
-        return !txtRando.isActive();
+        return !txtRando.canConsumeInput();
     }
 
     @Override
-    public void onClose() {
+    public void onCloseAction() {
         saveAll();
-        super.onClose();
+        super.onCloseAction();
     }
 
     @Override
     public void tick() {
-        if(!txtRando.isActive())
+        if(!txtRando.canConsumeInput())
             setTxtRando();
 
         super.tick();

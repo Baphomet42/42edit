@@ -1,18 +1,18 @@
 package baphomethlabs.fortytwoedit.mixin;
 
 import java.util.Map;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.entity.DecoratedPotPattern;
+import net.minecraft.world.level.block.entity.DecoratedPotPatterns;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
-import net.minecraft.block.DecoratedPotPattern;
-import net.minecraft.block.DecoratedPotPatterns;
-import net.minecraft.item.Item;
-import net.minecraft.registry.RegistryKey;
 
 @Mixin(DecoratedPotPatterns.class)
 public interface DecoratedPotPatternsAccessor {
 
-	@Accessor("SHERD_TO_PATTERN")
-	public static Map<Item,RegistryKey<DecoratedPotPattern>> getSherdToPattern() {
+	@Accessor("ITEM_TO_POT_TEXTURE")
+	public static Map<Item,ResourceKey<DecoratedPotPattern>> getItemToPotTexture() {
         throw new AssertionError();
     }
 

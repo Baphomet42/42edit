@@ -1,16 +1,16 @@
 package baphomethlabs.fortytwoedit.mixin;
 
 import java.util.List;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.google.common.collect.Lists;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
 
 @Mixin(Tooltip.class)
 public abstract class TooltipMixin {
@@ -21,18 +21,18 @@ public abstract class TooltipMixin {
     private static final int small = 170;
     private static final int safeZone = 18;
 
-    @Inject(method = "wrapLines(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/text/Text;)Ljava/util/List;", at = @At("RETURN"), cancellable = true)
-    private static void modWrapLines(MinecraftClient client, Text text, CallbackInfoReturnable<List<OrderedText>> cir) {
-        if(client.currentScreen != null && client.currentScreen instanceof ItemBuilder && client.textRenderer.wrapLines(text, small).size()>lineSwap) {
+    @Inject(method = "splitTooltip", at = @At("RETURN"), cancellable = true)
+    private static void injectSplitTooltip(Minecraft client, Component text, CallbackInfoReturnable<List<FormattedCharSequence>> cir) {
+        if(client.screen != null && client.screen instanceof ItemBuilder && client.font.split(text, small).size()>lineSwap) {
 
-            int largeSafe = Math.min(large,client.currentScreen.width-safeZone);
-            int mediumSafe = Math.min(medium,client.currentScreen.width-safeZone);
+            int largeSafe = Math.min(large,client.screen.width-safeZone);
+            int mediumSafe = Math.min(medium,client.screen.width-safeZone);
 
-            if(client.textRenderer.wrapLines(text, largeSafe).size()>lineSwap) {
-                List<OrderedText> linesImmutable = client.textRenderer.wrapLines(text, client.currentScreen.width-safeZone);
-                List<OrderedText> lines = Lists.newArrayList();
-                int maxLines = Math.max(lineSwap,((client.currentScreen.height-safeZone)/10)-1);//10 pixels per line, -1 line gives space to see hotbar
-                for(OrderedText t : linesImmutable)
+            if(client.font.split(text, largeSafe).size()>lineSwap) {
+                List<FormattedCharSequence> linesImmutable = client.font.split(text, client.screen.width-safeZone);
+                List<FormattedCharSequence> lines = Lists.newArrayList();
+                int maxLines = Math.max(lineSwap,((client.screen.height-safeZone)/10)-1);//10 pixels per line, -1 line gives space to see hotbar
+                for(FormattedCharSequence t : linesImmutable)
                     lines.add(t);
                 if(lines.size()>maxLines) {
                     int i = 0;
@@ -40,15 +40,15 @@ public abstract class TooltipMixin {
                         lines.remove(lines.size()-1);
                         i++;
                     }
-                    List<OrderedText> extra = client.textRenderer.wrapLines(Text.of("..."+i+" more lines..."), client.currentScreen.width-safeZone);
+                    List<FormattedCharSequence> extra = client.font.split(Component.nullToEmpty("..."+i+" more lines..."), client.screen.width-safeZone);
                     lines.add(extra.get(0));
                 }
                 cir.setReturnValue(lines);
             }
-            else if(client.textRenderer.wrapLines(text, mediumSafe).size()>lineSwap)
-                cir.setReturnValue(client.textRenderer.wrapLines(text, largeSafe));
+            else if(client.font.split(text, mediumSafe).size()>lineSwap)
+                cir.setReturnValue(client.font.split(text, largeSafe));
             else
-                cir.setReturnValue(client.textRenderer.wrapLines(text, mediumSafe));
+                cir.setReturnValue(client.font.split(text, mediumSafe));
 
         }
     }
