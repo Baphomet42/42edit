@@ -8,6 +8,7 @@ import net.minecraft.client.HotbarManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Button.OnPress;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
@@ -16,6 +17,7 @@ import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.commands.arguments.item.ItemArgument;
@@ -47,7 +49,6 @@ import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -62,7 +63,7 @@ import baphomethlabs.fortytwoedit.ComponentHelper.PathInfo;
 import baphomethlabs.fortytwoedit.ComponentHelper.PathType;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
-import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButtonWidget;
+import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
 
 public class ItemBuilder extends GenericScreen {
 
@@ -88,7 +89,7 @@ public class ItemBuilder extends GenericScreen {
     protected ItemStack selItem = ItemStack.EMPTY;
     protected ItemStack selItemOff = ItemStack.EMPTY;
     protected static List<List<String>> cacheStates = Lists.newArrayList();
-    protected ItemSlotButtonWidget itemBtn = null;
+    protected ItemSlotButton itemBtn = null;
     protected Button swapBtn;
     protected Button swapCopyBtn;
     protected Button throwCopyBtn;
@@ -98,10 +99,10 @@ public class ItemBuilder extends GenericScreen {
     private TabWidget tabWidget;
     private final List<List<PosWidget>> TAB_WIDGETS_LOCKED = Lists.newArrayList();
     private final List<List<RowWidget>> TAB_WIDGETS_SCROLL = Lists.newArrayList();
-    private final Set<net.minecraft.client.gui.components.AbstractWidget> UNSAVED_TEXT_WIDGETS = Sets.newHashSet();
-    private final Set<net.minecraft.client.gui.components.AbstractWidget> ALL_TEXT_WIDGETS = Sets.newHashSet();
-    private final Set<net.minecraft.client.gui.components.AbstractWidget> ALL_SLIDER_WIDGETS = Sets.newHashSet();
-    private final Map<WidgetCacheType,net.minecraft.client.gui.components.AbstractWidget> WIDGET_CACHE = Maps.newHashMap();
+    private final Set<AbstractWidget> UNSAVED_TEXT_WIDGETS = Sets.newHashSet();
+    private final Set<AbstractWidget> ALL_TEXT_WIDGETS = Sets.newHashSet();
+    private final Set<AbstractWidget> ALL_SLIDER_WIDGETS = Sets.newHashSet();
+    private final Map<WidgetCacheType,AbstractWidget> WIDGET_CACHE = Maps.newHashMap();
     public static boolean savedModeSet = false;
     private Map<Integer,String> savedItems = Maps.newHashMap();
     public static boolean savedItemsError = false;
@@ -129,6 +130,8 @@ public class ItemBuilder extends GenericScreen {
     private ArmorStand renderArmorPose;
     protected final int playerX = 240+10;
     protected final int playerY = -10;
+    protected final int bookX = -150 - 2;
+    protected final int bookY = 7;
     private static final int RENDER_SIZE = 35;
     private boolean prevArmorStand = false;
     private List<List<Set<PoseSlider>>> poseSliders = Lists.newArrayList();
@@ -149,7 +152,7 @@ public class ItemBuilder extends GenericScreen {
     private boolean editorLocked = false;
     private boolean hsvLock = false;
     private boolean editorOutputLocked = false;
-    private Set<net.minecraft.client.gui.components.AbstractWidget> editorLockedWidget = Sets.newHashSet();
+    private Set<AbstractWidget> editorLockedWidget = Sets.newHashSet();
     private static final ItemStack[] rgbItems = new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
     private Component textComponentPreview = Component.nullToEmpty("");
     private boolean textComponentPreviewBook = false;
@@ -242,7 +245,7 @@ public class ItemBuilder extends GenericScreen {
                             tabX = x+240;
                             tabY = y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(posNum-LEFT_TABS);
                         }
-                        ItemSlotButtonWidget w = new ItemSlotButtonWidget(tabX, tabY, TAB_SIZE, tabs[i].display(), btn -> this.btnTab(tabNum));
+                        ItemSlotButton w = new ItemSlotButton(tabX, tabY, TAB_SIZE, tabs[i].display(), btn -> this.btnTab(tabNum));
                         w.setTooltip(Tooltip.create(Component.nullToEmpty(tabs[i].lbl())));
                         w.showSlot(false);
                         if(tab==i)
@@ -294,7 +297,7 @@ public class ItemBuilder extends GenericScreen {
             if(throwCopyBtn.active)
                 throwCopyBtn.setTooltip(Tooltip.create(Component.nullToEmpty("Throw a copy of item")));
 
-            itemBtn = this.addRenderableWidget(new ItemSlotButtonWidget(x+240-20-5, y+5, 20, selItem, button -> this.btnCopySelItemNbt()));
+            itemBtn = this.addRenderableWidget(new ItemSlotButton(x+240-20-5, y+5, 20, selItem, button -> this.btnCopySelItemNbt()));
             if(selItem==null || selItem.isEmpty()) {
                 itemBtn.active = false;
                 itemBtn.setTooltip(null);
@@ -503,27 +506,27 @@ public class ItemBuilder extends GenericScreen {
 
     }
 
-    protected void markUnsaved(net.minecraft.client.gui.components.AbstractWidget widget) {
+    protected void markUnsaved(AbstractWidget widget) {
         this.UNSAVED_TEXT_WIDGETS.add(widget);
     }
 
-    protected void markSaved(net.minecraft.client.gui.components.AbstractWidget widget) {
+    protected void markSaved(AbstractWidget widget) {
         this.UNSAVED_TEXT_WIDGETS.remove(widget);
     }
 
-    protected boolean testUnsaved(net.minecraft.client.gui.components.AbstractWidget widget) {
+    protected boolean testUnsaved(AbstractWidget widget) {
         return this.UNSAVED_TEXT_WIDGETS.contains(widget);
     }
 
     protected boolean activeTxt() {
-        for(net.minecraft.client.gui.components.AbstractWidget w : ALL_TEXT_WIDGETS)
+        for(AbstractWidget w : ALL_TEXT_WIDGETS)
             if(w.isFocused())
                 return true;
         return false;
     }
 
     protected boolean activeSlider() {
-        for(net.minecraft.client.gui.components.AbstractWidget w : ALL_SLIDER_WIDGETS)
+        for(AbstractWidget w : ALL_SLIDER_WIDGETS)
             if(w.isFocused())
                 return true;
         return false;
@@ -619,7 +622,7 @@ public class ItemBuilder extends GenericScreen {
 
     private void updateSavedModeButtons() {
         if(widgetCacheTest(WidgetCacheType.BTN_SAVED_SOURCE, WidgetCacheType.BTN_SAVED_MODE)) {
-            ItemSlotButtonWidget btnSource = (ItemSlotButtonWidget)widgetCacheGet(WidgetCacheType.BTN_SAVED_SOURCE);
+            ItemSlotButton btnSource = (ItemSlotButton)widgetCacheGet(WidgetCacheType.BTN_SAVED_SOURCE);
             Button btnMode = (Button)widgetCacheGet(WidgetCacheType.BTN_SAVED_MODE);
             if(viewBlackMarket) {
                 btnSource.setTooltip(TOOLTIP_BLACK_MARKET);
@@ -642,14 +645,14 @@ public class ItemBuilder extends GenericScreen {
         }
     }
 
-    protected net.minecraft.client.gui.components.AbstractWidget widgetCacheAdd(WidgetCacheType type, net.minecraft.client.gui.components.AbstractWidget widget) {
+    protected AbstractWidget widgetCacheAdd(WidgetCacheType type, AbstractWidget widget) {
         if(type != null && type != WidgetCacheType.NONE && widget != null) {
             WIDGET_CACHE.put(type,widget);
         }
         return widget;
     }
 
-    protected net.minecraft.client.gui.components.AbstractWidget widgetCacheGet(WidgetCacheType type) {
+    protected AbstractWidget widgetCacheGet(WidgetCacheType type) {
         return WIDGET_CACHE.get(type);
     }
 
@@ -868,7 +871,7 @@ public class ItemBuilder extends GenericScreen {
         return hex;
     }
 
-    private void trySetColorHex(int rgbNum, String inp, net.minecraft.client.gui.components.AbstractWidget w) {
+    private void trySetColorHex(int rgbNum, String inp, AbstractWidget w) {
         if(!editorLocked && rgbNum>=0 && rgbNum<colorSets.length && inp!=null && inp.length()>1 && inp.length()<=7 && inp.startsWith("#")) {
             boolean valid = true;
             String hex = inp.substring(1);
@@ -895,7 +898,7 @@ public class ItemBuilder extends GenericScreen {
         }
     }
 
-    private void trySetColorDec(int rgbNum, String inp, net.minecraft.client.gui.components.AbstractWidget w) {
+    private void trySetColorDec(int rgbNum, String inp, AbstractWidget w) {
         trySetColorHex(rgbNum, BlackMagick.colorHexFromDec(inp), w);
     }
 
@@ -1400,6 +1403,9 @@ public class ItemBuilder extends GenericScreen {
         }
     }
 
+    /**
+     * Modified from {@link net.minecraft.client.gui.screens.inventory.BookViewScreen#getClickedComponentStyleAt}
+     */
     private Style getBookTextStyleAt(List<FormattedCharSequence> page, int bookRenderX, int bookRenderY, double x, double y) {
         if(page.isEmpty()) {
             return null;
@@ -1416,7 +1422,6 @@ public class ItemBuilder extends GenericScreen {
                 FormattedCharSequence orderedText = page.get(l);
                 return this.minecraft.font.getSplitter().componentStyleAtWidth(orderedText, i);
             }
-            return null;
         }
         return null;
     }
@@ -2184,7 +2189,7 @@ public class ItemBuilder extends GenericScreen {
             int tabNum = CACHE_TAB_SAVED;
             {
                 // button is setup in updateSavedModeButtons()
-                ItemSlotButtonWidget w = new ItemSlotButtonWidget(x+15-3, y+35+1+22, 20, btn -> {
+                ItemSlotButton w = new ItemSlotButton(x+15-3, y+35+1+22, 20, btn -> {
                     viewBlackMarket = !viewBlackMarket;
                     updateSavedModeButtons();
                     updateSavedTab();
@@ -3288,22 +3293,22 @@ public class ItemBuilder extends GenericScreen {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    private class TabWidget
-    extends ContainerObjectSelectionList<AbstractWidget> { //modified from net.minecraft.client.gui.screen.world.EditGameRulesScreen$RuleListWidget
+    /**
+     * Modified from {@link net.minecraft.client.gui.screens.worldselection.EditGameRulesScreen.RuleEntry}
+     */
+    private static abstract class TabWidgetEntry extends ContainerObjectSelectionList.Entry<TabWidgetEntry> {
+        public TabWidgetEntry() {}
+    }
+    /**
+     * Modified from {@link net.minecraft.client.gui.screens.worldselection.EditGameRulesScreen.RuleList}
+     */
+    private class TabWidget extends ContainerObjectSelectionList<TabWidgetEntry> {
         public TabWidget(final int tab) {
             super(ItemBuilder.this.minecraft, ItemBuilder.this.width-30, ItemBuilder.this.backgroundHeight-32-5, ItemBuilder.this.y+32,
                 (tab == CACHE_TAB_INV || tab == CACHE_TAB_SAVED) ? 20 : 22);
 
             for(RowWidget row : TAB_WIDGETS_SCROLL.get(tab))
-                this.addEntry((AbstractWidget)row);
-        }
-
-        public void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
-            super.renderWidget(context, mouseX, mouseY, delta);
-            AbstractWidget abstractRuleWidget = (AbstractWidget)this.getHovered();
-            if(abstractRuleWidget != null && abstractRuleWidget.description != null) {
-                ItemBuilder.this.setTooltipForNextRenderPass(abstractRuleWidget.description);
-            }
+                this.addEntry((TabWidgetEntry)row);
         }
 
         @Override
@@ -3313,9 +3318,9 @@ public class ItemBuilder extends GenericScreen {
         protected void renderListBackground(GuiGraphics context) {}
     }
 
-    protected class RowWidget extends AbstractWidget {
+    protected class RowWidget extends TabWidgetEntry {
 
-        protected final List<net.minecraft.client.gui.components.AbstractWidget> children;
+        protected final List<AbstractWidget> children;
         protected Button[] btns;
         protected int[] btnX;
         protected int[] btnY = null;
@@ -3685,8 +3690,11 @@ public class ItemBuilder extends GenericScreen {
                     }
                     else if(path.startsWith("components.")) {
                         String comp = path.replaceFirst("components\\.","");
-                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                            BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
+                        if(!comp.startsWith("!"))
+                            BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
+                                BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
+                        else
+                            BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null)));
                     }
                     unsel();
                 }).bounds(ItemBuilder.this.x+ROW_RIGHT-20,5,20,20).build()};
@@ -3721,8 +3729,11 @@ public class ItemBuilder extends GenericScreen {
                 keyBtn,
                 Button.builder(Component.nullToEmpty("False"), btn -> {
                     String comp = path.replaceFirst("components\\.","");
-                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                        BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
+                    if(!comp.startsWith("!"))
+                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
+                            BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
+                    else
+                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null)));
                     unsel();
                 }).bounds(ItemBuilder.this.x+ROW_RIGHT-(2*btnSize+btnSpacing),5,btnSize,20).build(),
                 Button.builder(Component.nullToEmpty("True"), btn -> {
@@ -3761,8 +3772,11 @@ public class ItemBuilder extends GenericScreen {
                 keyBtn,
                 Button.builder(Component.nullToEmpty("Unset"), btn -> {
                     String comp = path.replaceFirst("components\\.","");
-                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                        BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
+                    if(!comp.startsWith("!"))
+                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
+                            BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
+                    else
+                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null)));
                     unsel();
                 }).bounds(ItemBuilder.this.x+ROW_RIGHT-(3*btnSize+2*btnSpacing),5,btnSize,20).build(),
                 Button.builder(Component.nullToEmpty("False"), btn -> {
@@ -3805,8 +3819,11 @@ public class ItemBuilder extends GenericScreen {
                 keyBtn,
                 Button.builder(Component.nullToEmpty("False"), btn -> {
                     String comp = path.replaceFirst("components\\.","");
-                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                        BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
+                    if(!comp.startsWith("!"))
+                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
+                            BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
+                    else
+                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null)));
                     unsel();
                 }).bounds(ItemBuilder.this.x+ROW_RIGHT-(3*btnSize+2*btnSpacing),5,btnSize,20).build(),
                 Button.builder(Component.nullToEmpty("Hide"), btn -> {
@@ -3862,8 +3879,11 @@ public class ItemBuilder extends GenericScreen {
                             ItemStack newItem;
                             if(inp.equals("")) {
                                 String comp = path.replaceFirst("components\\.","");
-                                newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                                    BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag()));
+                                if(!comp.startsWith("!"))
+                                    newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
+                                        BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag()));
+                                else
+                                    newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null));
                             }
                             else
                                 newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,el));
@@ -4675,7 +4695,7 @@ public class ItemBuilder extends GenericScreen {
                             BlackMagick.itemFromString(savedItems.get(index))
                             : ItemStack.EMPTY)
                     );
-                this.btns[i] = new ItemSlotButtonWidget(currentX, 5, 20, thisItemStart, btn -> {
+                this.btns[i] = new ItemSlotButton(currentX, 5, 20, thisItemStart, btn -> {
                     if(!viewBlackMarket && savedModeSet) {
                         String itemString = "";
                         ItemStack savedItem = minecraft.player.getMainHandItem().copy();
@@ -4733,7 +4753,7 @@ public class ItemBuilder extends GenericScreen {
 
         public void updateSavedDisplay() {
             for(int i=0; i<9; i++) {
-                ItemSlotButtonWidget w = (ItemSlotButtonWidget)this.btns[i];
+                ItemSlotButton w = (ItemSlotButton)this.btns[i];
                 w.active = savedModeSet && !viewBlackMarket;
                 w.setError(null);
                 w.removeOverlay();
@@ -4743,13 +4763,13 @@ public class ItemBuilder extends GenericScreen {
                     if(current.stack()==null) {
                         w.setTooltip(makeItemTooltip(current.storedString()));
                         w.setItem(FortytwoEdit.ITEM_ERROR);
-                        w.setError(ItemSlotButtonWidget.ItemError.ERROR);
+                        w.setError(ItemSlotButton.ItemError.ERROR);
                     }
                     else {
                         w.setItem(current.stack());
                         w.showSlot(true);
                         if(current.nbtError()) {
-                            w.setError(ItemSlotButtonWidget.ItemError.WARN);
+                            w.setError(ItemSlotButton.ItemError.WARN);
                             Tag currentEl = BlackMagick.nbtFromString(current.storedString());
                             if(currentEl != null && currentEl.getId()==Tag.TAG_COMPOUND) {
                                 w.setTooltip(Tooltip.create(Component.empty().append(
@@ -4846,7 +4866,7 @@ public class ItemBuilder extends GenericScreen {
                 else
                     tt = Tooltip.create(stacks[i].getHoverName());
 
-                ItemSlotButtonWidget w = new ItemSlotButtonWidget(currentX, 5, 20, stacks[i], btn -> {
+                ItemSlotButton w = new ItemSlotButton(currentX, 5, 20, stacks[i], btn -> {
                     setEditingElement(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
                         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,StringTag.valueOf(vals[col])),blankElPath),saveBtn,
                         path2==null ? null : pagePath);
@@ -4866,7 +4886,7 @@ public class ItemBuilder extends GenericScreen {
                 });
                 w.showSlot(false);
                 if(stackWarns[i]) {
-                    w.setError(ItemSlotButtonWidget.ItemError.ERROR);
+                    w.setError(ItemSlotButton.ItemError.ERROR);
                 }
                 this.btns[i] = w;
                 currentX += 20;
@@ -4884,19 +4904,19 @@ public class ItemBuilder extends GenericScreen {
     class RowWidgetInvRow extends RowWidget {
 
         private static final ResourceLocation[] PLAYER_ARMOR_SPRITES = new ResourceLocation[]{
-            ItemSlotButtonWidget.SPRITE_FEET,
-            ItemSlotButtonWidget.SPRITE_LEGS,
-            ItemSlotButtonWidget.SPRITE_CHEST,
-            ItemSlotButtonWidget.SPRITE_HEAD,
-            ItemSlotButtonWidget.SPRITE_OFFHAND
+            ItemSlotButton.SPRITE_FEET,
+            ItemSlotButton.SPRITE_LEGS,
+            ItemSlotButton.SPRITE_CHEST,
+            ItemSlotButton.SPRITE_HEAD,
+            ItemSlotButton.SPRITE_OFFHAND
         };
         private static final ResourceLocation[] ARMOR_STAND_SPRITES = new ResourceLocation[]{
-            ItemSlotButtonWidget.SPRITE_FEET,
-            ItemSlotButtonWidget.SPRITE_LEGS,
-            ItemSlotButtonWidget.SPRITE_CHEST,
-            ItemSlotButtonWidget.SPRITE_HEAD,
-            ItemSlotButtonWidget.SPRITE_MAINHAND,
-            ItemSlotButtonWidget.SPRITE_OFFHAND
+            ItemSlotButton.SPRITE_FEET,
+            ItemSlotButton.SPRITE_LEGS,
+            ItemSlotButton.SPRITE_CHEST,
+            ItemSlotButton.SPRITE_HEAD,
+            ItemSlotButton.SPRITE_MAINHAND,
+            ItemSlotButton.SPRITE_OFFHAND
         };
         private static final ResourceLocation SEL_SLOT = ResourceLocation.parse("hud/hotbar_selection");
         private boolean renderHotbarSel = false;
@@ -4926,7 +4946,7 @@ public class ItemBuilder extends GenericScreen {
                 this.btnX[i] = currentX;
                 final int index = row*9+i;
                 final ItemStack thisItem = cacheInv[index];
-                ItemSlotButtonWidget w = new ItemSlotButtonWidget(currentX, 5, 20, thisItem, btn -> btnCopyItemNbt(thisItem));
+                ItemSlotButton w = new ItemSlotButton(currentX, 5, 20, thisItem, btn -> btnCopyItemNbt(thisItem));
                 if(row == 4) {
                     w.addEmptySlotSprite(PLAYER_ARMOR_SPRITES[i]);
                 }
@@ -4974,7 +4994,7 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<this.btns.length; i++) {
                 this.btnX[i] = currentX;
                 final ItemStack thisItem = stacks[i];
-                ItemSlotButtonWidget w = new ItemSlotButtonWidget(currentX, 5, 20, thisItem, btn -> btnCopyItemNbt(thisItem));
+                ItemSlotButton w = new ItemSlotButton(currentX, 5, 20, thisItem, btn -> btnCopyItemNbt(thisItem));
                 if(slotSprites != null && slotSprites.length == stacks.length)
                     w.addEmptySlotSprite(slotSprites[i]);
                 this.btns[i] = w;
@@ -5187,16 +5207,6 @@ public class ItemBuilder extends GenericScreen {
         }
 
     }
-
-    private static abstract class AbstractWidget
-    extends ContainerObjectSelectionList.Entry<AbstractWidget> {
-        @Nullable
-        final List<FormattedCharSequence> description;
-
-        public AbstractWidget() {
-            this.description = null;
-        }
-    }
     ///////////////////////////////////////////////////////////////////////////////////////////////
     class PoseSlider extends AbstractSliderButton {
         private final double min;
@@ -5343,12 +5353,12 @@ public class ItemBuilder extends GenericScreen {
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
     private class PosWidget {
-        public net.minecraft.client.gui.components.AbstractWidget w = null;
+        public AbstractWidget w = null;
         public ItemStack s = null;//to_do remove
         public int x;
         public int y;
 
-        public PosWidget(net.minecraft.client.gui.components.AbstractWidget w, int x, int y) {
+        public PosWidget(AbstractWidget w, int x, int y) {
             this.w = w;
             this.x = x;
             this.y = y;
@@ -5439,16 +5449,15 @@ public class ItemBuilder extends GenericScreen {
                 txtFormat.render(context, mouseX, mouseY, delta);
 
                 if(textComponentPreviewBook) {
-                    int i = x - 150 - 1;
-                    int j = y+7;
+                    // Modified from {@link net.minecraft.client.gui.screens.inventory.BookViewScreen#render}
                     FormattedText stringVisitable = textComponentPreview;
                     List<FormattedCharSequence> page = this.font.split(stringVisitable, 114);
                     int l = Math.min(128 / this.font.lineHeight, page.size());
                     for(int m = 0; m < l; ++m) {
                         FormattedCharSequence orderedText = page.get(m);
-                        context.drawString(this.font, orderedText, i + 36, j + 32 + m * this.font.lineHeight, 0, false);
+                        context.drawString(this.font, orderedText, x + bookX + 36, y + bookY + 32 + m * this.font.lineHeight, 0, false);
                     }
-                    Style style = this.getBookTextStyleAt(page, i, j, mouseX, mouseY);
+                    Style style = this.getBookTextStyleAt(page, x + bookX, y + bookY, mouseX, mouseY);
                     if(style != null) {
                         context.renderComponentHoverEffect(this.font, style, mouseX, mouseY);
                     }
@@ -5460,8 +5469,11 @@ public class ItemBuilder extends GenericScreen {
                     textComponentPreview = null;
                 }
             }
-            else if(blankTabUnsaved && tab == CACHE_TAB_BLANK)
-                context.drawCenteredString(this.font, Component.nullToEmpty("Unsaved"), this.width / 2, y-11, TEXT_COLOR);
+            else {
+                textComponentPreviewBook = false;
+                if(blankTabUnsaved && tab == CACHE_TAB_BLANK)
+                    context.drawCenteredString(this.font, Component.nullToEmpty("Unsaved"), this.width / 2, y-11, TEXT_COLOR);
+            }
 
             if(showBannerPreview && bannerChangePreview != null) {
                 if(!bannerShield)
@@ -5485,6 +5497,12 @@ public class ItemBuilder extends GenericScreen {
     @Override
     protected ResourceLocation getBackgroundTexture() {
         return TEXTURE_MENU_BAR;
+    }
+
+    @Override
+    protected void renderBehindBackgroundTexture(GuiGraphics context) {
+        if(textComponentPreviewBook)
+            context.blit(RenderType::guiTextured, BookViewScreen.BOOK_LOCATION, x + bookX, y + bookY, 0.0F, 0.0F, 192, 192, 256, 256);
     }
 
     @Override

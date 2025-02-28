@@ -1499,15 +1499,15 @@ public class ComponentHelper {
     }
 
     /**
+     * <li> Find items by searching {@link net.minecraft.world.item.Items} for {@link net.minecraft.core.component.DataComponents#CONTAINER} aka (`DataComponents.CONTAINER`) </li>
+     * <li> (Search for `DataComponents.CONTAINER`) </li>
+     * <li> Manually enter rows/cols based on ingame gui appearance. </li>
+     * <li> Remove ender chest. </li>
      * 
      * @param item
      * @return int array with [rows,columns] or [-1,-1] depending on storage size of blockentity for item
      */
     public static int[] getContainerSize(Item item) {
-
-        // find items by searching net.minecraft.item.Items for DataComponentTypes.CONTAINER
-        // manually enter rows/cols based on ingame gui appearance
-        // remove ender chest
 
         ResourceLocation identifier = BlackMagick.identifierOrNull(item.toString());
         if(identifier != null) {

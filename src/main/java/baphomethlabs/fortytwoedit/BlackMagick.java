@@ -10,6 +10,7 @@ import org.apache.commons.compress.utils.Lists;
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.serialization.DynamicOps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandBuildContext;
@@ -37,7 +38,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
@@ -361,21 +361,22 @@ public class BlackMagick {
         return "";
     }
 
-    // modified from net.minecraft.command.argument.ItemStackArgument
-    // change = to : in return line and surround identifier in quotes
+    /**
+     * Modified from {@link net.minecraft.commands.arguments.item.ItemInput#serializeComponents}
+     */
     private static String componentsAsString(DataComponentMap comps) {
         final Minecraft client = Minecraft.getInstance();
         if(client.level != null && comps != null) {
-            HolderLookup.Provider registries = client.level.registryAccess();
-            RegistryOps<Tag> dynamicOps = registries.createSerializationContext(NbtOps.INSTANCE);
+            HolderLookup.Provider provider = client.level.registryAccess();
+
+            DynamicOps<Tag> dynamicOps = provider.createSerializationContext(NbtOps.INSTANCE);
             return comps.stream().flatMap(component -> {
                 DataComponentType<?> dataComponentType = component.type();
-                ResourceLocation identifier = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(dataComponentType);
+                ResourceLocation resourceLocation = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(dataComponentType);
                 Optional<Tag> optional = component.encodeValue(dynamicOps).result();
-                if(identifier == null || optional.isEmpty()) {
+                if (resourceLocation == null || !optional.isPresent())
                     return Stream.empty();
-                }
-                return Stream.of("\""+identifier.toString() + "\":" + optional.get());
+                return Stream.of("\"" + resourceLocation.toString() + "\":" + BlackMagick.nbtToString(optional.get()));
             }).collect(Collectors.joining(String.valueOf(',')));
         }
         return "";
@@ -428,6 +429,14 @@ public class BlackMagick {
                     err = err.replaceFirst(bundleErr,"");
                 if(err.contains(" at position ")) {
                     err = err.substring(0,err.indexOf(" at position "));
+                }
+                if(err.contains("Not a boolean: 1") || err.contains("Not a boolean: 0")) { // to_do remove if booleans are fixed in future snapshot
+                    err = err.replace("Not a boolean: 1;","").replace("Not a boolean: 0;","")
+                        .replace("Not a boolean: 1 ","").replace("Not a boolean: 0 ","")
+                        .replace("Not a boolean: 1'","'").replace("Not a boolean: 0'","'");
+                    if(err.matches("^Malformed '[a-z0-9:_/\\-\\.]*' component: ''$")
+                    || err.matches("^\\s*'\\s*missed input:.*"))
+                        return inpError;
                 }
                 return err;
             }

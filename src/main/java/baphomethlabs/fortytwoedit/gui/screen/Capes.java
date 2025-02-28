@@ -179,6 +179,9 @@ public class Capes extends GenericScreen {
         FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE,"File could not be read");
     }
 
+    /**
+     * Modified from {@link net.minecraft.client.gui.screens.inventory.InventoryScreen#renderEntityInInventoryFollowsMouse}
+     */
     private static void drawPlayer(GuiGraphics context, int x, int y, int size, float mouseX, float mouseY, LivingEntity entity) {
         float f = (float)Math.atan(mouseX / 40.0f);
         float g = (float)Math.atan(mouseY / 40.0f);

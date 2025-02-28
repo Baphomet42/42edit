@@ -49,6 +49,8 @@ public abstract class GenericScreen extends Screen {
         return TEXTURE_GENERIC;
     }
 
+    protected void renderBehindBackgroundTexture(GuiGraphics context) {}
+
     protected void changeScreen(Screen newScreen) {
         this.onCloseAction();
         minecraft.setScreen(newScreen);
@@ -65,6 +67,7 @@ public abstract class GenericScreen extends Screen {
     @Override
     public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
         this.renderTransparentBackground(context);
+        this.renderBehindBackgroundTexture(context);
 
         ResourceLocation backgroundTexture = getBackgroundTexture();
         if(backgroundTexture != null)
@@ -107,9 +110,7 @@ public abstract class GenericScreen extends Screen {
         this.rebuildWidgets();
     }
 
-    protected void onCloseAction() {
-
-    }
+    protected void onCloseAction() {}
 
     @Override
     public void onClose() {

@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemStack;
 
-public class ItemSlotButtonWidget extends Button {
+public class ItemSlotButton extends Button {
 
     public static final ResourceLocation SPRITE_SLOT = ResourceLocation.withDefaultNamespace("container/slot");
     public static final ResourceLocation SPRITE_HIGHLIGHT_BACK = ResourceLocation.withDefaultNamespace("container/slot_highlight_back");
@@ -36,17 +36,17 @@ public class ItemSlotButtonWidget extends Button {
     private static final int SIZE_ERROR = 20;
     private static final int SIZE_EMPTY_SLOT_SPRITE = 16;
 
-	public ItemSlotButtonWidget(int x, int y, int size, ItemStack item, Button.OnPress onPress) {
+	public ItemSlotButton(int x, int y, int size, ItemStack item, Button.OnPress onPress) {
 		super(x, y, size, size, Component.empty(), onPress, Button.DEFAULT_NARRATION);
         this.size = size;
         setItem(item);
 	}
 
-	public ItemSlotButtonWidget(int x, int y, int size, Button.OnPress onPress) {
+	public ItemSlotButton(int x, int y, int size, Button.OnPress onPress) {
 		this(x, y, size, null, onPress);
 	}
 
-    public ItemSlotButtonWidget addEmptySlotSprite(ResourceLocation sprite) {
+    public ItemSlotButton addEmptySlotSprite(ResourceLocation sprite) {
         this.emptySlotSprite = sprite;
         return this;
     }

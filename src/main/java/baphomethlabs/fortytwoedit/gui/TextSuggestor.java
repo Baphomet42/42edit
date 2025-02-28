@@ -22,7 +22,9 @@ import net.minecraft.world.phys.Vec2;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * modified from {@link net.minecraft.client.gui.components.CommandSuggestions}
+ * Modified from {@link net.minecraft.client.gui.components.CommandSuggestions}
+ * 
+ * to_do update to match Mojmap?
  */
 public class TextSuggestor {
     final Minecraft client;
