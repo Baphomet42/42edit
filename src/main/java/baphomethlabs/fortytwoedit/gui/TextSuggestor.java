@@ -23,8 +23,6 @@ import org.lwjgl.glfw.GLFW;
 
 /**
  * Modified from {@link net.minecraft.client.gui.components.CommandSuggestions}
- * 
- * to_do update to match Mojmap?
  */
 public class TextSuggestor {
     final Minecraft client;

@@ -73,7 +73,7 @@ public class ComponentHelper {
      *  <li> https://minecraft.wiki/w/Chunk_format </li>
      * </ul>
      * 
-     * @param path path from base item like: components.foo.bar[]
+     * @param path path from base item like: components.foo.bar[0]
      * @return PathInfo with PathType and suggs
      */
     public static PathInfo getPathInfo(String path) {
@@ -106,25 +106,21 @@ public class ComponentHelper {
 
         if(path.contains("components.attribute_modifiers")) {
             if(path.endsWith("components.attribute_modifiers"))
-                return (new PathInfo(KeyGetter.create().withRequired("modifiers").withOptional("show_in_tooltip"))).withIcon(Items.DIAMOND_SWORD);
-            if(path.endsWith("components.attribute_modifiers.modifiers"))
-                return PathInfos.LIST_COMPOUND;
-            if(path.endsWith("components.attribute_modifiers.modifiers[0]"))
+                return PathInfos.LIST_COMPOUND.withIcon(Items.DIAMOND_SWORD);
+            if(path.endsWith("components.attribute_modifiers[0]"))
                 return (new PathInfo(KeyGetter.create().withRequired("type","id","amount","operation").withOptional("slot"))).withFlag(PathFlag.ATTRIBUTE);
-            if(path.endsWith("components.attribute_modifiers.modifiers[0].type"))
+            if(path.endsWith("components.attribute_modifiers[0].type"))
                 return (new PathInfo(PathType.STRING,REGISTRY_ATTRIBUTE));
-            if(path.endsWith("components.attribute_modifiers.modifiers[0].slot"))
+            if(path.endsWith("components.attribute_modifiers[0].slot"))
                 return (new PathInfo(PathType.STRING,LIST_ATTRIBUTE_MODIFIER_SLOT));
-            if(path.endsWith("components.attribute_modifiers.modifiers[0].id"))
+            if(path.endsWith("components.attribute_modifiers[0].id"))
                 return (new PathInfo(PathType.STRING,SuggestionGetter.newInline("minecraft:armor.body","minecraft:armor.boots","minecraft:armor.chestplate","minecraft:armor.helmet","minecraft:armor.leggings",Item.BASE_ATTACK_DAMAGE_ID.toString(),Item.BASE_ATTACK_SPEED_ID.toString())).withDesc(Component.nullToEmpty("Unique namespaced ID used to update modifiers"))); // hardcoded list
-            if(path.endsWith("components.attribute_modifiers.modifiers[0].amount"))
+            if(path.endsWith("components.attribute_modifiers[0].amount"))
                 return PathInfos.DOUBLE;
-            if(path.endsWith("components.attribute_modifiers.modifiers[0].operation"))
+            if(path.endsWith("components.attribute_modifiers[0].operation"))
                 return (new PathInfo(PathType.STRING,SuggestionGetter.newInline("add_value","add_multiplied_base","add_multiplied_total"))).withDesc(
                 Component.nullToEmpty("add_value: base + amount1 + amount2\n\nadd_multiplied_base: base * (1 + amount1 + amount2)\n\n"
                 +"add_multiplied_total: base * (1 + amount1) * (1 + amount2)")); // hardcoded list
-            if(path.endsWith("components.attribute_modifiers.show_in_tooltip"))
-                return PathInfos.TRINARY;
         }
 
         if(path.contains("components.banner_patterns")) {
@@ -218,36 +214,32 @@ public class ComponentHelper {
 
         if(path.contains("components.can_break")) {
             if(path.endsWith("components.can_break"))
-                return (new PathInfo(KeyGetter.create().withOptional("predicates","show_in_tooltip"))).withIcon(Items.DIAMOND_PICKAXE);
-            if(path.endsWith("components.can_break.predicates"))
+                return PathInfos.LIST_COMPOUND.withIcon(Items.DIAMOND_PICKAXE);
+            if(path.endsWith("components.can_break"))
                 return PathInfos.LIST_COMPOUND;
-            if(path.endsWith("components.can_break.predicates[0]"))
+            if(path.endsWith("components.can_break[0]"))
                 return (new PathInfo(KeyGetter.create().withOptional("blocks","nbt","state")));
-            if(path.endsWith("components.can_break.predicates[0].blocks"))
+            if(path.endsWith("components.can_break[0].blocks"))
                 return PathInfos.BLOCK_PREDICATE_BLOCKS;
-            if(path.endsWith("components.can_break.predicates[0].nbt"))
+            if(path.endsWith("components.can_break[0].nbt"))
                 return PathInfos.DEFAULT;
-            if(path.endsWith("components.can_break.predicates[0].state"))
+            if(path.endsWith("components.can_break[0].state"))
                 return PathInfos.DEFAULT;
-            if(path.endsWith("components.can_break.show_in_tooltip"))
-                return PathInfos.TRINARY;
         }
 
         if(path.contains("components.can_place_on")) {
             if(path.endsWith("components.can_place_on"))
-                return (new PathInfo(KeyGetter.create().withOptional("predicates","show_in_tooltip"))).withIcon(Items.TORCH);
-            if(path.endsWith("components.can_place_on.predicates"))
+                return PathInfos.LIST_COMPOUND.withIcon(Items.TORCH);
+            if(path.endsWith("components.can_place_on"))
                 return PathInfos.LIST_COMPOUND;
-            if(path.endsWith("components.can_place_on.predicates[0]"))
+            if(path.endsWith("components.can_place_on[0]"))
                 return (new PathInfo(KeyGetter.create().withOptional("blocks","nbt","state")));
-            if(path.endsWith("components.can_place_on.predicates[0].blocks"))
+            if(path.endsWith("components.can_place_on[0].blocks"))
                 return PathInfos.BLOCK_PREDICATE_BLOCKS;
-            if(path.endsWith("components.can_place_on.predicates[0].nbt"))
+            if(path.endsWith("components.can_place_on[0].nbt"))
                 return PathInfos.DEFAULT;
-            if(path.endsWith("components.can_place_on.predicates[0].state"))
+            if(path.endsWith("components.can_place_on[0].state"))
                 return PathInfos.DEFAULT;
-            if(path.endsWith("components.can_place_on.show_in_tooltip"))
-                return PathInfos.TRINARY;
         }
 
         if(path.contains("components.charged_projectiles")) {
@@ -383,14 +375,8 @@ public class ComponentHelper {
         if(path.endsWith("components.debug_stick_state"))
             return PathInfos.DEFAULT.withIcon(Items.DEBUG_STICK);
 
-        if(path.contains("components.dyed_color")) {
-            if(path.endsWith("components.dyed_color"))
-                return (new PathInfo(KeyGetter.create().withRequired("rgb").withOptional("show_in_tooltip"))).withIcon(Items.LEATHER_CHESTPLATE);
-            if(path.endsWith("components.dyed_color.rgb"))
-                return PathInfos.DECIMAL_COLOR;
-            if(path.endsWith("components.dyed_color.show_in_tooltip"))
-                return PathInfos.TRINARY;
-        }
+        if(path.endsWith("components.dyed_color"))
+            return PathInfos.DECIMAL_COLOR.withIcon(Items.LEATHER_CHESTPLATE);
 
         if(path.contains("components.enchantable")) {
             if(path.endsWith("components.enchantable"))
@@ -402,19 +388,13 @@ public class ComponentHelper {
         if(path.endsWith("components.enchantment_glint_override"))
             return PathInfos.TRINARY.withIcon(Items.ENCHANTED_BOOK);
 
-        if(path.contains("components.enchantments")) {
-            if(path.endsWith("components.enchantments"))
-                return (new PathInfo(KeyGetter.create().withRequired("levels").withOptional("show_in_tooltip"))).withIcon(Items.ENCHANTED_BOOK);
-            if(path.endsWith("components.enchantments.levels"))
-                return (new PathInfo(KeyGetter.create().withOptional(DATA_ENCHANTMENT)));
-            if(path.endsWith("components.enchantments.show_in_tooltip"))
-                return PathInfos.TRINARY;
-        }
+        if(path.endsWith("components.enchantments"))
+            return (new PathInfo(KeyGetter.create().withOptional(DATA_ENCHANTMENT))).withIcon(Items.ENCHANTED_BOOK);
 
-        if(path.contains("enchantments.levels.")) {
+        if(path.contains("enchantments.")) {
             int maxLvl = 1;
             for(String e : DATA_ENCHANTMENT.getList()) {
-                if(path.endsWith("enchantments.levels."+e.replace("minecraft:",""))) {
+                if(path.endsWith("enchantments."+e.replace("minecraft:",""))) {
                     maxLvl = getEnchantmentMaxLevel(e);
                 }
             }
@@ -425,7 +405,7 @@ public class ComponentHelper {
             if(path.endsWith(".entity_data"))
                 return (new PathInfo(KeyGetter.create().withRequired("id").withOptional(
                 "CustomName","CustomNameVisible","Glowing","HasVisualFire","Invulnerable","Motion","NoGravity","Pos","Rotation","Silent","Tags",
-                "active_effects","ArmorDropChances","ArmorItems","attributes","CanPickUpLoot","FallFlying","Health","HandDropChances","HandItems","leash","LeftHanded","NoAI","PersistenceRequired","Team",
+                "active_effects","attributes","CanPickUpLoot","equipment","FallFlying","Health","leash","LeftHanded","NoAI","PersistenceRequired","Team",
                 "DisabledSlots","Invisible","Marker","NoBasePlate","Pose","ShowArms","Small",
                 "Fixed","Invisible","Item","ItemDropChance","ItemRotation",
                 "beam_target","ShowBottom",
@@ -440,6 +420,24 @@ public class ComponentHelper {
                 return PathInfos.TEXT;
             if(path.endsWith(".entity_data.CustomNameVisible"))
                 return PathInfos.TRINARY;
+            if(path.endsWith(".entity_data.equipment"))
+                return (new PathInfo(KeyGetter.create().withOptional("feet","legs","chest","head","body","saddle","mainhand","offhand")));
+            if(path.endsWith(".entity_data.equipment.feet"))
+                return PathInfos.ITEM_NODE;
+            if(path.endsWith(".entity_data.equipment.legs"))
+                return PathInfos.ITEM_NODE;
+            if(path.endsWith(".entity_data.equipment.chest"))
+                return PathInfos.ITEM_NODE;
+            if(path.endsWith(".entity_data.equipment.head"))
+                return PathInfos.ITEM_NODE;
+            if(path.endsWith(".entity_data.equipment.body"))
+                return PathInfos.ITEM_NODE;
+            if(path.endsWith(".entity_data.equipment.saddle"))
+                return PathInfos.ITEM_NODE;
+            if(path.endsWith(".entity_data.equipment.mainhand"))
+                return PathInfos.ITEM_NODE;
+            if(path.endsWith(".entity_data.equipment.offhand"))
+                return PathInfos.ITEM_NODE;
             if(path.endsWith(".entity_data.FallDistance"))
                 return PathInfos.FLOAT;
             if(path.endsWith(".entity_data.Fire"))
@@ -492,12 +490,6 @@ public class ComponentHelper {
                 return PathInfos.TRINARY;
             if(path.endsWith(".entity_data.active_effects[0].show_particles") || path.endsWith(".hidden_effect.show_particles"))
                 return PathInfos.TRINARY;
-            if(path.endsWith(".entity_data.ArmorDropChances"))
-                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0f,0f,0f,0f]","[1f,1f,1f,1f]"))).withDesc(Component.nullToEmpty("[feet, legs, chest, head]")).withGroup(lbl);
-            if(path.endsWith(".entity_data.ArmorItems"))
-                return PathInfos.LIST_COMPOUND.withDesc(Component.nullToEmpty("[feet, legs, chest, head]")).withGroup(lbl);
-            if(path.endsWith(".entity_data.ArmorItems[0]"))
-                return PathInfos.ITEM_NODE;
             if(path.endsWith(".entity_data.attributes"))
                 return PathInfos.DEFAULT.withGroup(lbl);
             if(path.endsWith(".entity_data.CanPickUpLoot"))
@@ -506,12 +498,6 @@ public class ComponentHelper {
                 return PathInfos.TRINARY.withDesc(Component.nullToEmpty("If true, mob will glide if wearing an elytra")).withGroup(lbl);
             if(path.endsWith(".entity_data.Health"))
                 return PathInfos.FLOAT.withGroup(lbl);
-            if(path.endsWith(".entity_data.HandDropChances"))
-                return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0f,0f]","[1f,1f]"))).withDesc(Component.nullToEmpty("[mainhand, offhand]")).withGroup(lbl);
-            if(path.endsWith(".entity_data.HandItems"))
-                return PathInfos.LIST_COMPOUND.withDesc(Component.nullToEmpty("[mainhand, offhand]")).withGroup(lbl);
-            if(path.endsWith(".entity_data.HandItems[0]"))
-                return PathInfos.ITEM_NODE;
             if(path.endsWith(".entity_data.leash"))
                 return (new PathInfo(PathType.DEFAULT,SuggestionGetter.newInline("{UUID:[I;0,0,0,0]}","{UUID:"+BlackMagick.nbtToString(FortytwoEdit.UUID)+"}","[I;0,0,0]"))).withDesc(Component.nullToEmpty("Can be either:\na) NbtCompound like {UUID:[I;0,0,0,0]} pointing to an entity UUID\nb) NbtIntArray containing [I; X, Y, Z]")).withGroup(lbl);
             if(path.endsWith(".entity_data.LeftHanded"))
@@ -681,14 +667,8 @@ public class ComponentHelper {
         if(path.endsWith("components.item_name"))
             return PathInfos.TEXT.withIcon(Items.STONE);
 
-        if(path.contains("components.jukebox_playable")) {
-            if(path.endsWith("components.jukebox_playable"))
-                return (new PathInfo(KeyGetter.create().withRequired("song").withOptional("show_in_tooltip"))).withIcon(Items.MUSIC_DISC_MELLOHI);
-            if(path.endsWith("components.jukebox_playable.song"))
-                return (new PathInfo(PathType.STRING,DATA_JUKEBOX_SONG));
-            if(path.endsWith("components.jukebox_playable.show_in_tooltip"))
-                return PathInfos.TRINARY;
-        }
+        if(path.endsWith("components.jukebox_playable"))
+            return (new PathInfo(PathType.STRING,DATA_JUKEBOX_SONG)).withIcon(Items.MUSIC_DISC_MELLOHI);
 
         if(path.contains("components.lock")) {
             if(path.endsWith("components.lock"))
@@ -822,14 +802,8 @@ public class ComponentHelper {
                 return PathInfos.ITEM_PREDICATE_ITEMS;
         }
 
-        if(path.contains("components.stored_enchantments")) {
-            if(path.endsWith("components.stored_enchantments"))
-                return (new PathInfo(KeyGetter.create().withRequired("levels").withOptional("show_in_tooltip"))).withIcon(Items.ENCHANTED_BOOK);
-            if(path.endsWith("components.stored_enchantments.levels"))
-                return (new PathInfo(KeyGetter.create().withOptional(DATA_ENCHANTMENT)));
-            if(path.endsWith("components.stored_enchantments.show_in_tooltip"))
-                return PathInfos.TRINARY;
-        }
+        if(path.endsWith("components.stored_enchantments"))
+            return (new PathInfo(KeyGetter.create().withOptional(DATA_ENCHANTMENT))).withIcon(Items.ENCHANTED_BOOK);
 
         if(path.contains("components.suspicious_stew_effects")) {
             if(path.endsWith("components.suspicious_stew_effects"))
@@ -868,17 +842,15 @@ public class ComponentHelper {
 
         if(path.contains("components.trim")) {
             if(path.endsWith("components.trim"))
-                return (new PathInfo(KeyGetter.create().withRequired("pattern","material").withOptional("show_in_tooltip"))).withIcon(Items.DIAMOND_CHESTPLATE);
+                return (new PathInfo(KeyGetter.create().withRequired("pattern","material"))).withIcon(Items.DIAMOND_CHESTPLATE);
             if(path.endsWith("components.trim.pattern"))
                 return (new PathInfo(PathType.STRING,DATA_TRIM_PATTERN));
             if(path.endsWith("components.trim.material"))
                 return (new PathInfo(PathType.STRING,DATA_TRIM_MATERIAL));
-            if(path.endsWith("components.trim.show_in_tooltip"))
-                return PathInfos.TRINARY;
         }
 
         if(path.endsWith("components.unbreakable"))
-            return PathInfos.TOOLTIP_UNIT.withIcon(Items.COMMAND_BLOCK);
+            return PathInfos.UNIT.withIcon(Items.COMMAND_BLOCK);
 
         if(path.contains("components.use_cooldown")) {
             if(path.endsWith("components.use_cooldown"))
@@ -1097,7 +1069,6 @@ public class ComponentHelper {
 
         UNIT,               // represents nbt that is either absent or {}
         TRINARY,            // represents nbt that is either absent, 0b, or 1b
-        TOOLTIP_UNIT,       // represents nbt that is either absent, {}, or {show_in_tooltip:0b}
 
         // edit complex
 
@@ -1157,7 +1128,6 @@ public class ComponentHelper {
                 case DECIMAL_COLOR: return true;
                 case UNIT: return false;
                 case TRINARY: return false;
-                case TOOLTIP_UNIT: return false;
                 case UUID: return false;
                 case INLINE_LIST: return false;
                 case INLINE_COMPOUND: return false;
@@ -1198,7 +1168,6 @@ public class ComponentHelper {
                 case DECIMAL_COLOR: return Tag.TAG_INT;
                 case UNIT: return Tag.TAG_COMPOUND;
                 case TRINARY: return Tag.TAG_BYTE;
-                case TOOLTIP_UNIT: return Tag.TAG_COMPOUND;
                 case UUID: return Tag.TAG_INT_ARRAY;
                 case INLINE_LIST: return Tag.TAG_LIST;
                 case INLINE_COMPOUND: return Tag.TAG_COMPOUND;
@@ -1241,7 +1210,6 @@ public class ComponentHelper {
         private static final PathInfo UNKNOWN = (new PathInfo(PathType.UNKNOWN));
         private static final PathInfo DEFAULT = (new PathInfo(PathType.DEFAULT));
         private static final PathInfo UNIT = (new PathInfo(PathType.UNIT,SuggestionGetter.newInline("","{}"))).withDesc(Component.nullToEmpty("{} represents true"));
-        private static final PathInfo TOOLTIP_UNIT = (new PathInfo(PathType.TOOLTIP_UNIT,SuggestionGetter.newInline("","{show_in_tooltip:0b}","{}"))).withDesc(Component.nullToEmpty("{} or {show_in_tooltip:0b}"));
         private static final PathInfo TRINARY = (new PathInfo(PathType.TRINARY,SuggestionGetter.newInline("","0b","1b"))).withDesc(Component.nullToEmpty("Boolean 0b (false) or 1b (true)"));
         private static final PathInfo SHORT = (new PathInfo(PathType.SHORT,SuggestionGetter.newInline("0s")));
         private static final PathInfo INT = (new PathInfo(PathType.INT,SuggestionGetter.newInline("0")));

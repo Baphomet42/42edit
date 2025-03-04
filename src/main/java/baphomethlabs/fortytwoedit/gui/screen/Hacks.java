@@ -12,7 +12,9 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.server.commands.data.EntityDataAccessor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -154,7 +156,7 @@ public class Hacks extends GenericScreen {
                 else {
                     nbt.putString("id","minecraft:endermite_spawn_egg");
                     entityData.putString("id",EntityType.getKey(current.getType()).toString());
-                    components.putString("item_name","Custom "+current.getType().getDescription().getString()+" Spawn Egg");
+                    components.putString("minecraft:item_name","Custom "+current.getType().getDescription().getString()+" Spawn Egg");
                 }
                 if(mode == 1) {
                     entityData.remove("Air");
@@ -247,16 +249,12 @@ public class Hacks extends GenericScreen {
         unsel();
     }
 
-    private void reportInvis(Entity entity) {//to_do update to click_event and hover_event
-        String text = "[{text:\""+entity.getName().getString()+"\",hoverEvent:{action:\"show_entity\",contents:"
-            + "{type:\""+EntityType.getKey(entity.getType()).toString()
-            + "\",id:\""+entity.getStringUUID()+"\"}},clickEvent:"
-            + "{action:\"suggest_command\",value:\"/tp "+entity.getBlockX() + " " + entity.getBlockY() + " " + entity.getBlockZ() + "\"}},\" \","
-            + "{text:\"["+entity.getBlockX() + ", " + entity.getBlockY() + ", " + entity.getBlockZ() + "]\"}]";
-        if(BlackMagick.textComponentFromString(text).isValid())
-            minecraft.player.displayClientMessage(BlackMagick.textComponentFromString(text).text(),false);
-        else
-            minecraft.player.displayClientMessage(Component.nullToEmpty(entity.getName().getString()+" ["+entity.getBlockX()+", "+entity.getBlockY()+", "+entity.getBlockZ()+"]"),false);
+    private void reportInvis(Entity entity) {
+        minecraft.player.displayClientMessage(
+            Component.empty().append(entity.getName()).append(" ["+entity.getBlockX()+", "+entity.getBlockY()+", "+entity.getBlockZ()+"]")
+            .withStyle(style -> style.withHoverEvent(
+            new HoverEvent.ShowEntity(new HoverEvent.EntityTooltipInfo(entity.getType(), entity.getUUID(), entity.getName())))
+            .withClickEvent(new ClickEvent.SuggestCommand("/tp @s "+entity.getBlockX() + " " + entity.getBlockY() + " " + entity.getBlockZ()))),false);
     }
 
     protected void btnDeathPos() {

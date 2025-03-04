@@ -20,6 +20,8 @@ public class ItemSlotButton extends Button {
     public static final ResourceLocation SPRITE_LEGS = InventoryMenu.EMPTY_ARMOR_SLOT_LEGGINGS;
     public static final ResourceLocation SPRITE_CHEST = InventoryMenu.EMPTY_ARMOR_SLOT_CHESTPLATE;
     public static final ResourceLocation SPRITE_HEAD = InventoryMenu.EMPTY_ARMOR_SLOT_HELMET;
+    public static final ResourceLocation SPRITE_BODY = ResourceLocation.withDefaultNamespace("container/slot/horse_armor");
+    public static final ResourceLocation SPRITE_SADDLE = ResourceLocation.withDefaultNamespace("container/slot/saddle");
     public static final ResourceLocation SPRITE_OFFHAND = InventoryMenu.EMPTY_ARMOR_SLOT_SHIELD;
     public static final ResourceLocation SPRITE_MAINHAND = ResourceLocation.withDefaultNamespace("container/slot/sword");
 
