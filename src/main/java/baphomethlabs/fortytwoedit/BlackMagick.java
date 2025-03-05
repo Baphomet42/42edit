@@ -180,7 +180,7 @@ public class BlackMagick {
     }
 
     /**
-     * Converts json string to Text object. Valid forms include {"text":""} [{"text":""}] ""
+     * Converts json string to Text object. Valid forms include {text:""} [{text:""}] ""
      * 
      * @param inp raw json string
      * @return parsed Text or error message
