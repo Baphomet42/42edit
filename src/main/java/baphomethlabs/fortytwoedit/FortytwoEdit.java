@@ -132,7 +132,16 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean suppressKeybind = false;
     public static void queueAutoFish() {
         autoFishClickQueue = true;
-        lastFish = Math.max(lastFish, System.currentTimeMillis() + 100+(int)(RNG.nextDouble()*400) - fishWait);
+        lastFish = Math.max(lastFish, System.currentTimeMillis() + 100+randomInt(400) - fishWait);
+    }
+    private static double random() {
+        return RNG.nextDouble();
+    }
+    public static double randomDouble(int range) {
+        return random()*range;
+    }
+    public static int randomInt(int range) {
+        return (int)randomDouble(range);
     }
 
     // item history
@@ -435,7 +444,7 @@ public class FortytwoEdit implements ClientModInitializer {
     private static void secretSound() {
         if(SECRETSOUNDS != null && SECRETSOUNDS.length > 0) {
             final Minecraft client = Minecraft.getInstance();
-            int i = (int)(Math.random()*SECRETSOUNDS.length);
+            int i = randomInt(SECRETSOUNDS.length);
             try {
                 client.player.playNotifySound(SoundEvent.createVariableRangeEvent(SECRETSOUNDS[i]), SoundSource.MASTER, 1f, .5f);
             } catch(Exception ex) {}
@@ -598,7 +607,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 didFish = true;
             }
             autoFishClickQueue = false;
-            lastFish = System.currentTimeMillis() + 100+(int)(RNG.nextDouble()*400);
+            lastFish = System.currentTimeMillis() + 100+randomInt(400);
         }
         if(didFish && System.currentTimeMillis()>=(lastFish+fishWait)) {
             if(autoFish && !autoClicker && client.screen == null && ((!client.player.getMainHandItem().isEmpty()
@@ -607,7 +616,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
             }
             didFish = false;
-            lastFish = System.currentTimeMillis() + 100+(int)(RNG.nextDouble()*400);
+            lastFish = System.currentTimeMillis() + 100+randomInt(400);
         }
 
         //freelook
@@ -678,7 +687,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void changeRandoSlot() {
         if(randoSlots != null && testRandoSlot()) {
             final Minecraft client = Minecraft.getInstance();
-            int slot = (int) (RNG.nextDouble() * randoSlots.length);
+            int slot = randomInt(randoSlots.length);
             slot = randoSlots[slot];
             client.player.getInventory().setSelectedSlot(slot - 1);
         }

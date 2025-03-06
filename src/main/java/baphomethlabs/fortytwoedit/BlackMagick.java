@@ -622,6 +622,31 @@ public class BlackMagick {
     }
 
     /**
+     * Returns a copy of a compound in which a list element at the path has a new element appended
+     * 
+     * @param base compound to edit
+     * @param path path like "foo" "foo.bar" or "foo.bar[1]" ending in an NbtList
+     * @param element alement to append to end of list
+     * @return copy with changes made
+     */
+    public static CompoundTag appendListElement(CompoundTag base, String path, Tag element) {
+        if(base == null)
+            return null;
+        if(path == null || path.isEmpty() || element == null)
+            return base.copy();
+
+        CompoundTag nbt = base.copy();
+
+        if(getNbtPath(nbt,path,Tag.TAG_LIST) != null) {
+            ListTag list = (ListTag)getNbtPath(nbt,path);
+            list.add(element);
+            nbt = setNbtPath(nbt, path, list);
+        }
+
+        return nbt;
+    }
+
+    /**
      * 
      * @param left
      * @param right
@@ -648,7 +673,7 @@ public class BlackMagick {
     }
 
     public static String validPathKey(String key) {
-        if(key.matches("^[a-zA-Z0-9:/_-]*$"))
+        if(key.matches("^[a-zA-Z0-9:!/_-]*$"))
             return key;
         String newKey = validCompoundKey(key);
         if(key.contains(".") && !newKey.startsWith("\"") && !newKey.startsWith("'"))

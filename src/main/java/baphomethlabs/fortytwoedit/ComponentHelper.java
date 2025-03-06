@@ -1068,7 +1068,7 @@ public class ComponentHelper {
         // edit with custom row
 
         UNIT,               // represents nbt that is either absent or {}
-        TRINARY,            // represents nbt that is either absent, 0b, or 1b
+        TRINARY,            // represents nbt that is either absent, false, or true
 
         // edit complex
 
@@ -1210,7 +1210,7 @@ public class ComponentHelper {
         private static final PathInfo UNKNOWN = (new PathInfo(PathType.UNKNOWN));
         private static final PathInfo DEFAULT = (new PathInfo(PathType.DEFAULT));
         private static final PathInfo UNIT = (new PathInfo(PathType.UNIT,SuggestionGetter.newInline("","{}"))).withDesc(Component.nullToEmpty("{} represents true"));
-        private static final PathInfo TRINARY = (new PathInfo(PathType.TRINARY,SuggestionGetter.newInline("","0b","1b"))).withDesc(Component.nullToEmpty("Boolean 0b (false) or 1b (true)"));
+        private static final PathInfo TRINARY = (new PathInfo(PathType.TRINARY,SuggestionGetter.newInline("","false","true"))).withDesc(Component.nullToEmpty("Boolean (true or false)"));
         private static final PathInfo SHORT = (new PathInfo(PathType.SHORT,SuggestionGetter.newInline("0s")));
         private static final PathInfo INT = (new PathInfo(PathType.INT,SuggestionGetter.newInline("0")));
         private static final PathInfo LONG = (new PathInfo(PathType.LONG,SuggestionGetter.newInline("0l")));

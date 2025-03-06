@@ -76,8 +76,7 @@ public abstract class GenericScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        boolean superReturn = super.mouseClicked(mouseX, mouseY, button);
-        if(superReturn)
+        if(super.mouseClicked(mouseX, mouseY, button))
             return true;
         unsel();
         return false;
