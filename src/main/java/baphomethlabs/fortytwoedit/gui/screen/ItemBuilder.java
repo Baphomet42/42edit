@@ -1614,9 +1614,14 @@ public class ItemBuilder extends GenericScreen {
         return row;
     }
 
-    protected PosWidget addTabWidgetLocked(int tabNum, PosWidget widget) {
-        TAB_WIDGETS_LOCKED.get(tabNum).add(widget);
-        return widget;
+    protected PosWidget addTabWidgetLocked(int tabNum, PosWidget posWidget) {
+        if(posWidget.w instanceof EditBox || posWidget.w instanceof MultiLineEditBox)
+            ALL_TEXT_WIDGETS.add(posWidget.w);
+        else if(posWidget.w instanceof AbstractSliderButton)
+            ALL_SLIDER_WIDGETS.add(posWidget.w);
+
+        TAB_WIDGETS_LOCKED.get(tabNum).add(posWidget);
+        return posWidget;
     }
 
     protected int getTabWidgetScrollIndex(int tabNum) {
@@ -2545,11 +2550,63 @@ public class ItemBuilder extends GenericScreen {
             addTabWidgetLocked(tabNum, new PosWidget(w,5,5));
         }
         {
-            EditBox w = new EditBox(this.font,x+5+40+5,y+5,(240-5-40)-(5+40+5+15+5)-5,20,Component.nullToEmpty(""));
-            w.setEditable(false);
-            w.setMaxLength(MAX_TEXT_LENGTH);
-            w.setValue(nbtEdit.fullPath());
-            addTabWidgetLocked(tabNum, new PosWidget(widgetCacheAdd(WidgetCacheType.NBT_EDIT_PATH_TXT,w),5+15+5,5));
+            EditBox pathTxt = new EditBox(this.font,x+5+40+5,y+5,(240-5-40)-(5+40+5+15+15)-5,20,Component.nullToEmpty(""));
+            pathTxt.setResponder(value -> {
+                setErrorMsg(null);
+                if(widgetCacheTest(WidgetCacheType.NBT_EDIT_PATH_BTN)) {
+                    Button pathBtn = (Button)widgetCacheGet(WidgetCacheType.NBT_EDIT_PATH_BTN);
+                    pathTxt.setTextColor(LABEL_COLOR);
+                    pathBtn.setTooltip(null);
+                    pathBtn.active = false;
+                    if(!(value.equals(nbtEdit.fullPath()) || (value.equals("{}") && nbtEdit.fullPath().isEmpty()))) {
+                        PathNode[] parsePath = PathNode.parsePath(value);
+                        
+                        if(parsePath != null && !PathNode.resolvePath(parsePath).equals(nbtEdit.fullPath())) {
+                            pathTxt.setTextColor(TEXT_COLOR);
+                            String newPathDisplay = PathNode.resolvePath(parsePath);
+                            if(newPathDisplay.isEmpty())
+                                newPathDisplay = "View path: {}";
+                            else
+                                newPathDisplay = "View path:\n"+newPathDisplay;
+                            pathBtn.setTooltip(Tooltip.create(Component.nullToEmpty(newPathDisplay)));
+                            pathBtn.active = true;
+                        }
+                        else {
+                            pathTxt.setTextColor(ERROR_COLOR);
+                            pathBtn.setTooltip(Tooltip.create(Component.nullToEmpty("Invalid path")));
+                            setErrorMsg("Invalid path: "+value);
+                        }
+                    }
+                }
+            });
+            pathTxt.setMaxLength(MAX_TEXT_LENGTH);
+            pathTxt.setTooltipDelay(TOOLTIP_DELAY);
+            addTabWidgetLocked(tabNum, new PosWidget(widgetCacheAdd(WidgetCacheType.NBT_EDIT_PATH_TXT,pathTxt),5+15,5));
+
+            Button goPathBtn = Button.builder(Component.nullToEmpty(">"),btn -> {
+                String value = pathTxt.getValue();
+                if(!(value.equals(nbtEdit.fullPath()) || (value.equals("{}") && nbtEdit.fullPath().isEmpty()))) {
+                    PathNode[] parsePath = PathNode.parsePath(value);
+                    
+                    if(parsePath != null && !PathNode.resolvePath(parsePath).equals(nbtEdit.fullPath())) {
+                        createBlankTabNbtEdit(nbtEdit.withPath(parsePath));
+                    }
+                }
+                unsel();
+            }).bounds(x+5,y+5,15,20).build();
+            String prevPathDisplay = nbtEdit.getPrevPath();
+            if(prevPathDisplay.isEmpty())
+                prevPathDisplay = "View path: {}";
+            else
+                prevPathDisplay = "View path:\n"+prevPathDisplay;
+            goPathBtn.setTooltip(Tooltip.create(Component.nullToEmpty(prevPathDisplay)));
+            if(nbtEdit.pathNodes().length==0) {
+                goPathBtn.active = false;
+                goPathBtn.setTooltip(null);
+            }
+            addTabWidgetLocked(tabNum, new PosWidget(widgetCacheAdd(WidgetCacheType.NBT_EDIT_PATH_BTN,goPathBtn),240-5-40-5-40-5-15,5));
+
+            pathTxt.setValue(nbtEdit.fullPath());
         }
         {
             Button w = Button.builder(Component.nullToEmpty("Cancel"),btn -> {
@@ -2615,12 +2672,14 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }
                 if(!found) {
-                    //TODO editbox with snbt, btn to set, btn to del
+                    addTabWidgetScroll(tabNum, RowWidgetElement.fallbackElement(this));
+                    addTabWidgetScroll(tabNum, new RowWidget());
                 }
                 break;
             }
             case SNBT: {
                 //TODO multilinebox with snbt, btn to set, btn to del
+                addTabWidgetScroll(tabNum, RowWidgetElement.fallbackElement(this));
                 break;
             }
         }
@@ -2949,18 +3008,19 @@ public class ItemBuilder extends GenericScreen {
             Button cancelBtn = (Button)widgetCacheGet(WidgetCacheType.NBT_EDIT_CANCEL_BTN);
             EditBox pathTxt = (EditBox)widgetCacheGet(WidgetCacheType.NBT_EDIT_PATH_TXT);
 
-            String pathDisplay = nbtEdit.fullPath();
-            if(pathDisplay.isEmpty())
-                pathDisplay = "Path: {}";
+            MutableComponent pathDisplay = Component.empty().append("Path:");
+            if(nbtEdit.fullPath().isEmpty())
+                pathDisplay = pathDisplay.append(" {}");
             else
-                pathDisplay = "Path:\n"+pathDisplay;
-            pathTxt.setTooltip(Tooltip.create(Component.empty().append(pathDisplay+"\n\n")
-                .append(getButtonTooltip(nbtEdit.getEditElement(),null)).append("\n\nValue:\n").append(nbtEdit.getPathChanges())));
+                pathDisplay = pathDisplay.append("\n"+nbtEdit.fullPath());
+            if(nbtEdit.getEditElement() != null)
+                pathDisplay = pathDisplay.append("\n\n").append(getButtonTooltip(nbtEdit.getEditElement(),null));
+            pathTxt.setTooltip(Tooltip.create(pathDisplay.append("\n\nValue:\n").append(nbtEdit.getPathChanges())));
 
             if(nbtEdit.unsaved())
                 cancelBtn.setTooltip(Tooltip.create(Component.empty().append("Revert to:\n").append(nbtEdit.getRevertItemChanges())));
             else
-                cancelBtn.setTooltip(null);
+                cancelBtn.setTooltip(Tooltip.create(Component.empty().append("Keep unchanged:\n").append(nbtEdit.getRevertItemChanges())));
 
             if(inpError == null)
                 setErrorMsg(BlackMagick.getItemCompoundErrors(BlackMagick.nbtToString(nbtEdit.current()),inpError));
@@ -4469,6 +4529,75 @@ public class ItemBuilder extends GenericScreen {
         }
 
         /**
+         * Row to edit any element in base compound.
+         * Contains button to set and txt to input (or others depending on path and key).
+         * Element is removed on set when txt is empty.
+         */
+        public static RowWidgetElement fallbackElement(ItemBuilder context) {
+            RowWidgetElement row = context.new RowWidgetElement();
+
+            Tag currentEl = context.nbtEdit.getEditElement();
+            final String currentVal = BlackMagick.nbtToString(currentEl);
+
+            EditBox elementTxt = new EditBox(context.minecraft.font,0,0,
+                ROW_RIGHT-(ROW_LEFT)-20-(currentEl==null ? 0 : 20), 20, Component.nullToEmpty(""));
+            elementTxt.setMaxLength(MAX_TEXT_LENGTH);
+            elementTxt.setResponder(value -> {
+                if(row.testPosWidget(1)) {
+                    context.setErrorMsg(null);
+                    ((Button)row.getPosWidget(1)).active = false;
+                    ((Button)row.getPosWidget(1)).setTooltip(null);
+
+                    if(!value.isEmpty()) {
+                        Tag el = BlackMagick.nbtFromString(value);
+                        if(el == null) {
+                            ((EditBox)row.getPosWidget(0)).setTextColor(ERROR_COLOR);
+                            context.setErrorMsg("Invalid element");
+                            ((Button)row.getPosWidget(1)).setTooltip(Tooltip.create(Component.nullToEmpty("Invalid element")));
+                        }
+                        else if(BlackMagick.elementsEqual(currentEl,el)) {
+                            ((EditBox)row.getPosWidget(0)).setTextColor(LABEL_COLOR);
+                            ((Button)row.getPosWidget(1)).setTooltip(Tooltip.create(Component.nullToEmpty("Element already set")));
+                        }
+                        else {
+                            ((EditBox)row.getPosWidget(0)).setTextColor(TEXT_COLOR);
+                            ((Button)row.getPosWidget(1)).active = true;
+                            ((Button)row.getPosWidget(1)).setTooltip(Tooltip.create(Component.empty().append(
+                                Component.nullToEmpty("Set value:\n"+BlackMagick.nbtToString(el)))));
+                        }
+                    }
+                }
+            });
+            row.addPosWidget(elementTxt, ROW_LEFT, 0);
+            {
+                Button w = Button.builder(Component.nullToEmpty("+"), btn -> {
+                    if(row.testPosWidget(0)) {
+                        Tag el = BlackMagick.nbtFromString(((EditBox)row.getPosWidget(0)).getValue());
+    
+                        if(el!=null) {
+                            context.nbtEditUpdate(context.nbtEdit.fullPath(),el);
+                        }
+                    }
+                    context.unsel();
+                }).bounds(0,0,20,20).build();
+                row.addPosWidget(w, ROW_RIGHT-20-(currentEl==null ? 0 : 20), 0);
+            }
+            ((EditBox)row.getPosWidget(0)).setValue("");
+            if(currentEl!=null) {
+                Button w = Button.builder(Component.nullToEmpty("X"), btn -> {
+                    context.nbtEditUpdate(context.nbtEdit.fullPath(), null);
+                    context.createBlankTabNbtEdit(context.nbtEdit.backPath());
+                }).bounds(0,0,20,20).build();
+                w.setTooltip(Tooltip.create(Component.nullToEmpty("Delete")));
+                row.addPosWidget(w, ROW_RIGHT-20, 0);
+
+                elementTxt.setValue(currentVal);
+            }
+
+            return row;
+        }
+
+        /**
          * Row to edit any element in base list.
          * Contains button to set and txt to input (or others depending on path and key).
          */
@@ -5413,6 +5542,7 @@ public class ItemBuilder extends GenericScreen {
         NBT_EDIT_SAVE_BTN,      // Button to save NbtEdit
         NBT_EDIT_CANCEL_BTN,    // Button to cancel NbtEdit
         NBT_EDIT_PATH_TXT,      // EditBox to show path
+        NBT_EDIT_PATH_BTN,      // Button to go to custom path
 
         TEXT_COMPONENT_ADD_BTN,                     // Button to add current editor to main text component
         TEXT_COMPONENT_COLOR_BTN,                   // Button for color mode

@@ -212,6 +212,97 @@ public class PathHelper {
             }
             return sb.toString();
         }
+
+        public static PathNode[] parsePath(String path) {
+            if(path == null || path.isEmpty() || path.equals("{}"))
+                return new PathNode[0];
+
+            List<PathNode> nodeList = Lists.newArrayList();
+            String edit = path;
+            boolean valid = true;
+            while(!edit.isEmpty() && valid) {
+                valid = false;
+                if(!nodeList.isEmpty() && edit.charAt(0)=='[') {
+                    if(edit.contains("]")) {
+                        String thisNode = edit.substring(1,edit.indexOf("]"));
+                        edit = edit.substring(edit.indexOf("]")+1);
+                        try {
+                            int index = Integer.parseInt(thisNode);
+                            if(index>=0) {
+                                nodeList.add(PathNode.of(index));
+                                valid = true;
+                                continue;
+                            }
+                        } catch(Exception ex) {}
+                    }
+                }
+                else if(nodeList.isEmpty() || edit.charAt(0)=='.') {
+                    if(nodeList.isEmpty() && edit.charAt(0)=='.') {
+                        valid = false;
+                        break;
+                    }
+                    if(edit.charAt(0)=='.') {
+                        edit = edit.substring(1);
+                        if(edit.isEmpty()) {
+                            valid = true;
+                            break;
+                        }
+                    }
+                    if(edit.charAt(0)=='"' || edit.charAt(0)=='\'') {
+                        char quoteChar = edit.charAt(0);
+                        edit = edit.substring(1);
+                        StringBuilder thisKey = new StringBuilder();
+                        boolean repeatSearch = true;
+                        while(!edit.isEmpty() && repeatSearch) {
+                            repeatSearch = false;
+                            if(edit.charAt(0)=='\\') {
+                                if(edit.length()>1) {
+                                    thisKey.append(edit.substring(0,2));
+                                    edit = edit.substring(2);
+                                    repeatSearch = true;
+                                }
+                            }
+                            else if(edit.charAt(0)==quoteChar) {
+                                if(thisKey.length()>0) {
+                                    nodeList.add(PathNode.of(thisKey.toString()));
+                                    edit = edit.substring(1);
+                                    valid = true;
+                                    repeatSearch = false;
+                                }
+                            }
+                            else {
+                                thisKey.append(edit.charAt(0));
+                                edit = edit.substring(1);
+                                repeatSearch = true;
+                            }
+                        }
+                    }
+                    else {
+                        StringBuilder thisKey = new StringBuilder();
+                        while(!edit.isEmpty() && isAllowedInUnquotedName(edit.charAt(0))) {
+                            thisKey.append(edit.charAt(0));
+                            edit = edit.substring(1);
+                        }
+                        if(thisKey.length()>0) {
+                            nodeList.add(PathNode.of(thisKey.toString()));
+                            valid = true;
+                        }
+                    }
+                }
+            }
+
+            if(valid && !nodeList.isEmpty())
+                return nodeList.toArray(new PathNode[0]);
+            
+            return null;
+        }
+
+        /**
+         * Modified from {@link net.minecraft.commands.arguments.NbtPathArgument#isAllowedInUnquotedName}
+         */
+        private static boolean isAllowedInUnquotedName(char c) {
+            return c != ' ' && c != '"' && c != '\'' && c != '[' && c != ']' && c != '.' && c != '{' && c != '}';
+        }
     }
 
     private static final Map<String, PathInfoGetter> PATH_INFO_REF_MAP = Maps.newHashMap();
