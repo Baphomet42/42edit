@@ -257,7 +257,7 @@ public class PathHelper {
                             repeatSearch = false;
                             if(edit.charAt(0)=='\\') {
                                 if(edit.length()>1) {
-                                    thisKey.append(edit.substring(0,2));
+                                    thisKey.append(edit.charAt(1));
                                     edit = edit.substring(2);
                                     repeatSearch = true;
                                 }

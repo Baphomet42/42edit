@@ -54,30 +54,30 @@ public class LogScreen extends GenericScreen {
 
         logFile = new File(minecraft.gameDirectory.getAbsolutePath()+"\\logs\\latest.log");
 
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new DebugScreen())).bounds(x+5,y+5,40,20).build());
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new DebugScreen())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
         pauseBtn = this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Resume"),
-                Component.literal("Pause")).withInitialValue(paused).displayOnlyValue().create(x+5+40+5,y+5,40,20, Component.nullToEmpty(""), (button, trackOutput) -> {
+                Component.literal("Pause")).withInitialValue(paused).displayOnlyValue().create(x+GUI_SPACE+40+WID_SPACE,y+GUI_SPACE,40,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             paused = (boolean)trackOutput;
             updateBox();
             unsel();
             pauseBtn.setTooltip(paused ? RESUME_TOOLTIP : PAUSE_TOOLTIP);
         }));
         pauseBtn.setTooltip(PAUSE_TOOLTIP);
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Clear"), button -> btnClearLog()).bounds(x+backgroundWidth-5-50-40-5,y+5,40,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Clear"), button -> btnClearLog()).bounds(x+backgroundWidth-GUI_SPACE-50-40-WID_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Clear all logged messages\n\nShift click to restore all cleared messages")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("[42edit]"),
-                Component.literal("[All]")).withInitialValue(onlyMod).displayOnlyValue().create(x+backgroundWidth-5-50,y+5,50,20, Component.nullToEmpty(""), (button, trackOutput) -> {
+                Component.literal("[All]")).withInitialValue(onlyMod).displayOnlyValue().create(x+backgroundWidth-GUI_SPACE-50,y+GUI_SPACE,50,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             onlyMod = (boolean)trackOutput;
             updateBox();
             unsel();
         }));
-        box = this.addRenderableWidget(new MultiLineEditBox(this.minecraft.font, x+15-3, y+35, 240-24, 22*6, Component.nullToEmpty(""), Component.nullToEmpty("")));
-        txtRegex = new EditBox(this.font,x+15-3,y+35+22*6+1,160,20,Component.nullToEmpty(""));
+        box = this.addRenderableWidget(new MultiLineEditBox(this.minecraft.font, x+15-3, y+35, 240-24, ROW_HEIGHT*6, Component.nullToEmpty(""), Component.nullToEmpty("")));
+        txtRegex = new EditBox(this.font,x+15-3,y+35+ROW_HEIGHT*6+1,160,WID_HEIGHT,Component.nullToEmpty(""));
         txtRegex.setMaxLength(MAX_TEXT_LENGTH);
         txtRegex.setValue(""+regexInput);
         txtRegex.setResponder(this::editTxtRegex);
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("[Regex]"),
-                Component.literal("[Search]")).withInitialValue(useRegex).displayOnlyValue().create(x+backgroundWidth-5-50-7,y+35+22*6+1,50,20, Component.nullToEmpty(""), (button, trackOutput) -> {
+                Component.literal("[Search]")).withInitialValue(useRegex).displayOnlyValue().create(x+backgroundWidth-5-50-7,y+35+ROW_HEIGHT*6+1,50,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             useRegex = (boolean)trackOutput;
             updateBox();
             unsel();

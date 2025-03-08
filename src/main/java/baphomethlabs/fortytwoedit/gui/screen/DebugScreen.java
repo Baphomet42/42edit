@@ -17,13 +17,13 @@ public class DebugScreen extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.DEBUG_SCREEN;
 
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new SecretScreen())).bounds(x+5,y+5,40,20).build());
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("View Log..."), button -> changeScreen(new LogScreen())).bounds(x+20,y+22*2+1,80,20).build());
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Reset Misc"), button -> this.btnRefreshRuntime()).bounds(x+20,y+22*3+1,80,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new SecretScreen())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("View Log..."), button -> changeScreen(new LogScreen())).bounds(x+20,y+ROW_HEIGHT*2+1,80,WID_HEIGHT).build());
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Reset Misc"), button -> this.btnRefreshRuntime()).bounds(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Clear various caches, refresh files, etc.")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Copy Hist"), button -> this.btnOutputHist()).bounds(x+20,y+22*4+1,80,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Copy Hist"), button -> this.btnOutputHist()).bounds(x+20,y+ROW_HEIGHT*4+1,80,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Copy item history info and send to log")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Open Dir"), button -> btnOpenDir()).bounds(x+20,y+22*5+1,80,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Open Dir"), button -> btnOpenDir()).bounds(x+20,y+ROW_HEIGHT*5+1,80,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Open 42edit file directory")));
     }
 

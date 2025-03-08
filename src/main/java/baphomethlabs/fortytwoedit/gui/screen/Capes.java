@@ -38,9 +38,9 @@ public class Capes extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.CAPES;
 
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+5,y+5,40,20).build());
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("OptiFine [On]"),
-                Component.literal("OptiFine [Off]")).withInitialValue(FortytwoEdit.opticapesOn).displayOnlyValue().create(x+20,y+22*3+1,80,20,
+                Component.literal("OptiFine [Off]")).withInitialValue(FortytwoEdit.opticapesOn).displayOnlyValue().create(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
 
             FortytwoEdit.readOptions();
@@ -49,12 +49,12 @@ public class Capes extends GenericScreen {
             FortytwoEdit.clearCapes();
             reloadScreen();
         })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle OptiFine capes mode\n\nWhen on: you can see players' OptiFine capes")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Refresh"), button -> this.btnReloadCapes()).bounds(x+20+80+5,y+22*3+1,60,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Refresh"), button -> this.btnReloadCapes()).bounds(x+20+80+WID_SPACE,y+ROW_HEIGHT*3+1,60,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Refresh all OptiFine capes")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Edit"), button -> this.btnEditCape()).bounds(x+20+80+5+60+5,y+22*3+1,40,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Edit"), button -> this.btnEditCape()).bounds(x+20+80+WID_SPACE+60+WID_SPACE,y+ROW_HEIGHT*3+1,40,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Edit your OptiFine cape (requires donation to OptiFine)")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Custom [On]"),
-                Component.literal("Custom [Off]")).withInitialValue(FortytwoEdit.showClientCape).displayOnlyValue().create(x+20,y+22*4+1,80,20,
+                Component.literal("Custom [Off]")).withInitialValue(FortytwoEdit.showClientCape).displayOnlyValue().create(x+20,y+ROW_HEIGHT*4+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
 
             FortytwoEdit.readOptions();
@@ -62,32 +62,32 @@ public class Capes extends GenericScreen {
             FortytwoEdit.updateOptions();
             reloadScreen();
         })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle custom capes mode\n\nWhen on: change your cape (only you can see this)")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("<"), button -> this.btnDecCustom()).bounds(x+20+80+5,y+22*4+1,15,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("<"), button -> this.btnDecCustom()).bounds(x+20+80+WID_SPACE,y+ROW_HEIGHT*4+1,15,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Cycle custom cape left")));
-        this.txtCustom = new EditBox(this.font,x+20+1+80+5+15,y+22*4+1,90-2,20,Component.nullToEmpty(""));
-        this.txtCustom.setMaxLength(256);
+        this.txtCustom = new EditBox(this.font,x+20+1+80+WID_SPACE+15,y+ROW_HEIGHT*4+1,90-2,WID_HEIGHT,Component.nullToEmpty(""));
+        this.txtCustom.setMaxLength(MAX_TEXT_LENGTH);
         this.txtCustom.setValue(FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].name());
         this.txtCustom.moveCursorToStart(false);
         this.txtCustom.setTooltip(buildCapeTooltip());
         this.txtCustom.setEditable(false);
         this.addRenderableWidget(this.txtCustom);
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty(">"), button -> this.btnIncCustom()).bounds(x+20+80+5+15+90,y+22*4+1,15,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty(">"), button -> this.btnIncCustom()).bounds(x+20+80+WID_SPACE+15+90,y+ROW_HEIGHT*4+1,15,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Cycle custom cape right")));
 
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Custom [On]"),
-                Component.literal("Custom [Off]")).withInitialValue(FortytwoEdit.showClientSkin).displayOnlyValue().create(x+20,y+22*6+1,80,20,
+                Component.literal("Custom [Off]")).withInitialValue(FortytwoEdit.showClientSkin).displayOnlyValue().create(x+20,y+ROW_HEIGHT*6+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.showClientSkin = (boolean)trackOutput;
             unsel();
         })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle custom skin mode\n\nWhen on: change your skin (only you can see this)")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("3px"),
-                Component.literal("4px")).withInitialValue(FortytwoEdit.clientSkinSlim).displayOnlyValue().create(x+20+80+5,y+22*6+1,30,20,
+                Component.literal("4px")).withInitialValue(FortytwoEdit.clientSkinSlim).displayOnlyValue().create(x+20+80+WID_SPACE,y+ROW_HEIGHT*6+1,30,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.clientSkinSlim = (boolean)trackOutput;
             unsel();
         })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle skin model between wide/slim (requires custom skin mode)")));
-        this.txtCustomSkin = new EditBox(this.font,x+20+1,y+22*7+1,200-2,20,Component.nullToEmpty(""));
-        this.txtCustomSkin.setMaxLength(2048);
+        this.txtCustomSkin = new EditBox(this.font,x+20,y+ROW_HEIGHT*7+1,200,WID_HEIGHT,Component.nullToEmpty(""));
+        this.txtCustomSkin.setMaxLength(MAX_TEXT_LENGTH);
         this.txtCustomSkin.setValue(FortytwoEdit.customSkinName.equals("") ? "<Drag and drop skin into this window>" : FortytwoEdit.customSkinName);
         this.txtCustomSkin.moveCursorToStart(false);
         this.txtCustomSkin.setTooltip(Tooltip.create(Component.nullToEmpty("Drag and drop a skin into this window to set a custom skin")));
@@ -210,8 +210,8 @@ public class Capes extends GenericScreen {
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         context.drawCenteredString(this.font, Component.nullToEmpty("Client Capes & Skins"), this.width / 2, y+11, TEXT_COLOR);
-        context.drawString(this.font, Component.nullToEmpty("Capes"), x+20,y+7+22*2, LABEL_COLOR);
-        context.drawString(this.font, Component.nullToEmpty("Skin"), x+20,y+7+22*5, LABEL_COLOR);
+        context.drawString(this.font, Component.nullToEmpty("Capes"), x+20,y+7+ROW_HEIGHT*2, LABEL_COLOR);
+        context.drawString(this.font, Component.nullToEmpty("Skin"), x+20,y+7+ROW_HEIGHT*5, LABEL_COLOR);
         drawPlayer(context, playerX, playerY, 60, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.minecraft.player);
     }
 

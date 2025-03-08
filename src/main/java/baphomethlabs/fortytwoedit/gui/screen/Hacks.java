@@ -38,9 +38,9 @@ public class Hacks extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.HACKS;
 
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+5,y+5,40,20).build());
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Mix [On]"),
-                Component.literal("Mix [Off]")).withInitialValue(FortytwoEdit.randoMode).displayOnlyValue().create(x+20,y+22*2+1,80,20,
+                Component.literal("Mix [Off]")).withInitialValue(FortytwoEdit.randoMode).displayOnlyValue().create(x+20,y+ROW_HEIGHT*2+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             setTxtRando();
             if(!(boolean)trackOutput)
@@ -50,7 +50,7 @@ public class Hacks extends GenericScreen {
             unsel();
         })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle mix mode\n\nWhen on: after placing a block, change to a random hotbar slot\n\n"
             +"If numbers are specified, the random slot will be selected from those.\nExample: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)")));
-        this.txtRando = new EditBox(this.font,x+105+1,y+44+1,100-2,20,Component.nullToEmpty(""));
+        this.txtRando = new EditBox(this.font,x+20+80+WID_SPACE,y+44+1,100-2,WID_HEIGHT,Component.nullToEmpty(""));
         this.txtRando.setMaxLength(15);
         if(FortytwoEdit.randoSlots != null) {
             String keys = "";
@@ -61,12 +61,12 @@ public class Hacks extends GenericScreen {
         }
         this.txtRando.setResponder(this::editTxtRando);
         this.addRenderableWidget(this.txtRando);
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Get Entity"), button -> this.btnGetEntity(1)).bounds(x+20,y+22*3+1,80,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Get Entity"), button -> this.btnGetEntity(1)).bounds(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Copy entity data within 2.5 blocks and get a spawn egg for the entities")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Full Data"), button -> this.btnGetEntity(0)).bounds(x+20+80+5,y+22*3+1,60,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Full Data"), button -> this.btnGetEntity(0)).bounds(x+20+80+WID_SPACE,y+ROW_HEIGHT*3+1,60,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Get Entity without removing position, uuid, etc.")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Xray [On]"),
-                Component.literal("Xray [Off]")).withInitialValue(FortytwoEdit.seeInvis).displayOnlyValue().create(x+20,y+22*4+1,100,20,
+                Component.literal("Xray [Off]")).withInitialValue(FortytwoEdit.seeInvis).displayOnlyValue().create(x+20,y+ROW_HEIGHT*4+1,100,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             minecraft.levelRenderer.allChanged();
             FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
@@ -74,28 +74,28 @@ public class Hacks extends GenericScreen {
             unsel();
         })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle xray mode\n\nWhen on: barriers, light blocks, and other invisible blocks will appear as solid blocks")));
         btnWgtFindInvis = this.addRenderableWidget(Button.builder(Component.nullToEmpty("Find Invis Entities"),
-            button -> this.btnFindInvis()).bounds(x+20+100+5,y+22*4+1,100,20).build());
+            button -> this.btnFindInvis()).bounds(x+20+100+WID_SPACE,y+ROW_HEIGHT*4+1,100,WID_HEIGHT).build());
         if(!minecraft.player.getAbilities().instabuild) {
             btnWgtFindInvis.active = false;
             btnWgtFindInvis.setTooltip(TT_CREATIVE);
         }
         else
             btnWgtFindInvis.setTooltip(Tooltip.create(Component.nullToEmpty("Print positions of invisible entities (only you can see this)")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Death Pos"), button -> this.btnDeathPos()).bounds(x+20,y+22*5+1,100,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Death Pos"), button -> this.btnDeathPos()).bounds(x+20,y+ROW_HEIGHT*5+1,100,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Print your last position of death (only you can see this)")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("   Auto Fish [On]"),
-                Component.literal("   Auto Fish [Off]")).withInitialValue(FortytwoEdit.autoFish).displayOnlyValue().create(x+20+100+5,y+22*5+1,100,20,
+                Component.literal("   Auto Fish [Off]")).withInitialValue(FortytwoEdit.autoFish).displayOnlyValue().create(x+20+100+WID_SPACE,y+ROW_HEIGHT*5+1,100,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.autoFish = !FortytwoEdit.autoFish;
             unsel();
         })).setTooltip(Tooltip.create(Component.nullToEmpty("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Look N"), button -> this.btnLookN()).bounds(x+20,y+22*7+1,40,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Look N"), button -> this.btnLookN()).bounds(x+20,y+ROW_HEIGHT*7+1,40,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Set your rotation to straight north")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Rotate"), button -> this.btnLookR()).bounds(x+20+40+5,y+22*7+1,40,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Rotate"), button -> this.btnLookR()).bounds(x+20+40+WID_SPACE,y+ROW_HEIGHT*7+1,40,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Rotate 90\u00b0 clockwise")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Pano"), button -> this.btnPano()).bounds(x+20+40+5+40+5,y+22*7+1,40,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Pano"), button -> this.btnPano()).bounds(x+20+40+WID_SPACE+40+WID_SPACE,y+ROW_HEIGHT*7+1,40,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Take a panorama screenshot")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("View Pano"), button -> this.btnScreenshots()).bounds(x+20+120+15,y+22*7+1,60,20).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("View Pano"), button -> this.btnScreenshots()).bounds(x+20+40+WID_SPACE+40+WID_SPACE+40+WID_SPACE,y+ROW_HEIGHT*7+1,60,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Open screenshots folder to view panorama")));
     }
 
@@ -299,11 +299,11 @@ public class Hacks extends GenericScreen {
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         context.drawCenteredString(this.font, Component.nullToEmpty("Hacks"), this.width / 2, y+11, TEXT_COLOR);
-		context.renderFakeItem(new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+22*2+1+2);
-		context.renderFakeItem(new ItemStack(Items.CREEPER_SPAWN_EGG),x+20+2,y+22*3+1+2);
-		context.renderFakeItem(new ItemStack(Items.BARRIER),x+20+2,y+22*4+1+2);
-		context.renderFakeItem(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+22*5+1+2);
-		context.renderFakeItem(new ItemStack(Items.FISHING_ROD),x+20+2+100+5,y+22*5+1+2);
+		context.renderFakeItem(new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+ROW_HEIGHT*2+1+2);
+		context.renderFakeItem(new ItemStack(Items.CREEPER_SPAWN_EGG),x+20+2,y+ROW_HEIGHT*3+1+2);
+		context.renderFakeItem(new ItemStack(Items.BARRIER),x+20+2,y+ROW_HEIGHT*4+1+2);
+		context.renderFakeItem(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+ROW_HEIGHT*5+1+2);
+		context.renderFakeItem(new ItemStack(Items.FISHING_ROD),x+20+2+100+WID_SPACE,y+ROW_HEIGHT*5+1+2);
     }
 
     @Override

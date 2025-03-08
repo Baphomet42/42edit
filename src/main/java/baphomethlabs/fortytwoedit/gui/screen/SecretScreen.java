@@ -26,10 +26,10 @@ public class SecretScreen extends GenericScreen {
         super.init();
         FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.SECRET_SCREEN;
 
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+5,y+5,40,20).build());
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Debug Tools..."), button -> changeScreen(new DebugScreen())).bounds(x+20,y+22*2+1,80,20).build());
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Upside Down"), button -> flipTextBox()).bounds(x+20,y+22*3+1,80,20).build());
-        this.txtUpsideDown = new EditBox(this.font,x+105+1,y+22*3+1,100-2,20,Component.nullToEmpty(""));
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Debug Tools..."), button -> changeScreen(new DebugScreen())).bounds(x+20,y+ROW_HEIGHT*2+1,80,WID_HEIGHT).build());
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Upside Down"), button -> flipTextBox()).bounds(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT).build());
+        this.txtUpsideDown = new EditBox(this.font,x+20+80+WID_SPACE,y+ROW_HEIGHT*3+1,100,WID_HEIGHT,Component.nullToEmpty(""));
         this.txtUpsideDown.setMaxLength(MAX_TEXT_LENGTH);
         this.addRenderableWidget(this.txtUpsideDown);
     }

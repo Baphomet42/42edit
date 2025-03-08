@@ -22,8 +22,12 @@ public abstract class GenericScreen extends Screen {
     protected static final int LABEL_COLOR_DIM = 0x404040;
     protected static final int ERROR_COLOR = 0xFF5555;
     protected static final int TEXT_COLOR = 0xFFFFFF;
-    protected static final int WID_HEIGHT = 20;
-    protected static final int ROW_HEIGHT = 22;
+    protected static final int WID_HEIGHT = 20; // standard widget height
+    protected static final int ROW_HEIGHT = 22; // standard spacing amounts between rows of widgets
+    protected static final int TOP_OFFSET = (ROW_HEIGHT-WID_HEIGHT)/2;
+    protected static final int WID_SPACE = 5; // standard horizontal spacing between widgets
+    protected static final int GUI_SPACE = 5; // standard starting position for widget in top corner of gui (for both x and y)
+    protected static final int WID_LEFT = 20; // standard spacing before first widget in row
     protected static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
     protected static final Duration TOOLTIP_DELAY_SHORT = Duration.ofMillis(100L);
     protected static final int MAX_TEXT_LENGTH = 131072;

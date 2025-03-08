@@ -44,9 +44,9 @@ public class ItemSlotButton extends Button {
         setItem(item);
 	}
 
-	public ItemSlotButton(int x, int y, int size, Button.OnPress onPress) {
-		this(x, y, size, null, onPress);
-	}
+    public ItemSlotButton(int size, ItemStack item, Button.OnPress onPress) {
+        this(0, 0, size, item, onPress);
+    }
 
     public ItemSlotButton addEmptySlotSprite(ResourceLocation sprite) {
         this.emptySlotSprite = sprite;
@@ -57,8 +57,9 @@ public class ItemSlotButton extends Button {
         this.item = item == null ? ItemStack.EMPTY : item;
     }
 
-    public void showSlot(boolean show) {
+    public ItemSlotButton showSlot(boolean show) {
         this.showSlot = show;
+        return this;
     }
 
     public void setError(ItemError error) {
