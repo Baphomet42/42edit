@@ -32,6 +32,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongArrayTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.ShortTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
@@ -165,6 +166,19 @@ public class BlackMagick {
         }
         else
             return inp.toString();
+    }
+
+    /**
+     * Get SNBT representation of NBT.
+     * A null element will return an empty string.
+     * 
+     * @param inp
+     * @return
+     */
+    public static Component nbtToColorfulText(Tag inp) {
+        if(inp == null)
+            return Component.empty();
+        return NbtUtils.toPrettyComponent(inp);
     }
 
     /**
@@ -920,6 +934,12 @@ public class BlackMagick {
         if(client.level != null)
             return CommandBuildContext.simple(client.level.registryAccess(), FortytwoEdit.FEATURES);
         return CommandBuildContext.simple(RegistryAccess.EMPTY, FortytwoEdit.FEATURES);
+    }
+
+    public static Component getElementDifferencesOrColorfulText(Tag left, Tag right) {
+        if(left!=null && right!=null && elementsEqual(left,right))
+            return nbtToColorfulText(left);
+        return getElementDifferences(left, right);
     }
 
     /**

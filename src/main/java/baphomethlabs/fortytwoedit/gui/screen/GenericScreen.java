@@ -1,6 +1,8 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import java.time.Duration;
+
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
@@ -37,7 +39,7 @@ public abstract class GenericScreen extends Screen {
     public static final String UNICODE_CHECK = "\u2611";
     public static final String UNICODE_X = "\u2612";
     public static final String UNICODE_REFRESH = "🗘";
-    public static final Component ERROR_CREATIVE = Component.nullToEmpty("Creative required");
+    public static final Component ERROR_CREATIVE = Component.empty().append("Creative required").withStyle(ChatFormatting.RED);
     public static final Tooltip TT_CREATIVE = Tooltip.create(ERROR_CREATIVE);
     private boolean unsel = false;
 
