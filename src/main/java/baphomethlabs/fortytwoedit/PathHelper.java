@@ -2,222 +2,383 @@ package baphomethlabs.fortytwoedit;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.apache.commons.compress.utils.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import baphomethlabs.fortytwoedit.ComponentHelper.KeyGetter;
 import baphomethlabs.fortytwoedit.ComponentHelper.SuggestionGetter;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 public class PathHelper {
 
-    public static PathInfoGetter getItemPath(PathNode[] path) {
-        return getPath(PathInfos.ITEM_NODE, path);
+    public static PathInfo getItemPath(Tag element, PathNode[] path) {
+        return getPath(element, PathInfoGetter.of("ITEM_STACK").get(), path);
     }
 
-    public static PathInfoGetter getPath(PathInfoGetter context, PathNode[] path) {
-        if(PATH_INFO_REF_MAP.isEmpty())
-            buildPathInfos();
-
+    public static PathInfo getPath(Tag element, PathInfo context, PathNode[] path) {
         if(path != null) {
             List<PathNode> currentPath = Lists.newArrayList();
             currentPath.addAll(List.of(path));
-            PathInfoGetter currentContext = context;
+            PathInfo currentContext = context;
             while(!currentPath.isEmpty() && currentContext != null) {
-                PathInfo[] pies = currentContext.getAllInfo();
-                currentContext = null;
-                for(PathInfo pi : pies) {
-                    PathInfoGetter pig = pi.getPath(currentPath.get(0));
-                    if(pig != null) {
-                        currentContext = pig;
-                        break;
-                    }
-                }
+                currentContext = currentContext.getNode(element, currentPath.get(0));
                 currentPath.remove(0);
             }
-            if(currentContext != null)
+            if(currentContext != null && currentPath.isEmpty())
                 return currentContext;
         }
-        return PathInfoGetter.empty();
+        return PathInfo.EMPTY;
     }
 
-    public static abstract class PathInfo {
+    public static class PathInfo {
 
-        public final PathType type;
-        public final SuggestionGetter suggs;
+        private ItemStack icon = null;
+        private Component info = null;
+        private PathInfoSupplierCompound compoundSupplier = null;
+        private PathInfoSupplierList listSupplier = null;
+        private PathInfoSupplierElement elementSupplier = null;
+        private SuggestionGetter allSuggs = SuggestionGetter.empty();
+        private boolean cacheSuggs = false;
+        private boolean isEmpty = true;
+        private static final PathInfo EMPTY = create();
 
-        private PathInfo(PathType type) {
-            this(type, null);
+        private PathInfo() {}
+
+        public Component getInfo() {
+            return info;
         }
 
-        private PathInfo(PathType type, SuggestionGetter suggs) {
-            this.type = type;
-            this.suggs = suggs;
+        public ItemStack getIcon() {
+            return icon;
+        }
+
+        public PathInfo getNode(Tag element, PathNode node) {
+            if(node.isKey) {
+                if(element != null && element.getId()==Tag.TAG_COMPOUND)
+                    return getCompoundKeyInfo((CompoundTag)element, node.key());
+                return getCompoundKeyInfo(null, node.key());
+            }
+            else {
+                return getListIndexInfo(node.index());
+            }
+        }
+
+        public PathType getPathType(byte nbtType) {
+            return PathType.ELEMENT;
+        }
+
+        public SuggestionGetter getSuggs() {
+            if(cacheSuggs)
+                return allSuggs;
+            cacheSuggs = true;
+
+            List<SuggestionGetter> suggsList = Lists.newArrayList();
+            if(compoundSupplier != null) {
+                SuggestionGetter thisSuggs = compoundSupplier.getSuggs();
+                if(thisSuggs != null && !thisSuggs.isEmpty())
+                    suggsList.add(thisSuggs);
+            }
+            if(listSupplier != null) {
+                SuggestionGetter thisSuggs = listSupplier.getSuggs();
+                if(thisSuggs != null && !thisSuggs.isEmpty())
+                    suggsList.add(thisSuggs);
+            }
+            if(elementSupplier != null) {
+                SuggestionGetter thisSuggs = elementSupplier.getSuggs();
+                if(thisSuggs != null && !thisSuggs.isEmpty())
+                    suggsList.add(thisSuggs);
+            }
+            if(!suggsList.isEmpty())
+                allSuggs = SuggestionGetter.newJoined(suggsList.toArray(new SuggestionGetter[0]));
+
+            return allSuggs;
+        }
+
+        public KeyGetter getCompoundKeys(CompoundTag compound) {
+            if(compoundSupplier != null)
+                return compoundSupplier.getCompoundKeys(compound);
+            return null;
+        }
+
+        public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
+            if(compoundSupplier != null)
+                return compoundSupplier.getCompoundKeyInfo(compound, key);
+            return PathInfo.EMPTY;
+        }
+
+        public PathInfo getListIndexInfo(int i) {
+            if(listSupplier != null)
+                return listSupplier.getListIndexInfo(i);
+            return PathInfo.EMPTY;
+        }
+
+        public boolean isEmpty() {
+            return isEmpty;
+        }
+
+        public static PathInfo create() {
+            return new PathInfo();
+        }
+
+        public static PathInfo create(PathInfoSupplier... info) {
+            PathInfo newInfo = create();
+            boolean foundCompound = false;
+            boolean foundList = false;
+            boolean foundElement = false;
+            for(PathInfoSupplier pi : info) {
+                if(pi instanceof PathInfoSupplierCompound) {
+                    if(foundCompound)
+                        FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierCompound");
+                    else
+                        newInfo.setCompoundInfo((PathInfoSupplierCompound)pi);
+                }
+                else if(pi instanceof PathInfoSupplierList) {
+                    if(foundList)
+                        FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierList");
+                    else
+                        newInfo.setListInfo((PathInfoSupplierList)pi);
+                }
+                else if(pi instanceof PathInfoSupplierElement) {
+                    if(foundElement)
+                        FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierElement");
+                    else
+                        newInfo.setElementInfo((PathInfoSupplierElement)pi);
+                }
+                else {
+                    FortytwoEdit.logWarn("Tried to add unknown PathInfoSupplier");
+                }
+            }
+            return newInfo;
+        }
+
+        public PathInfo setIcon(ItemStack icon) {
+            this.icon = icon;
+            this.isEmpty = false;
+            return this;
+        }
+
+        public PathInfo setInfo(Component info) {
+            this.info = info;
+            this.isEmpty = false;
+            return this;
+        }
+
+        public PathInfo setCompoundInfo(PathInfoSupplierCompound info) {
+            this.compoundSupplier = info;
+            this.isEmpty = false;
+            return this;
+        }
+
+        public PathInfo setListInfo(PathInfoSupplierList info) {
+            this.listSupplier = info;
+            this.isEmpty = false;
+            return this;
+        }
+
+        public PathInfo setElementInfo(PathInfoSupplierElement info) {
+            this.elementSupplier = info;
+            this.isEmpty = false;
+            return this;
         }
 
         public PathInfoGetter getter() {
             return PathInfoGetter.of(this);
         }
 
-        public PathInfoGetter getPath(PathNode path) {
-            return null;
-        }
+    }
 
-        public abstract Optional<Byte> getNbtType();
+    private interface PathInfoSupplier {
+
+        public SuggestionGetter getSuggs();
+        public PathType getPathType();
 
     }
 
-    public static abstract class PathInfoCompound extends PathInfo {
+    private static abstract class PathInfoSupplierCompound implements PathInfoSupplier {
 
-        public abstract Set<String> getRequired();
-        public abstract Set<String> getOptional();
-        public abstract PathInfoGetter getKeyInfo(String key);
+        private static final SuggestionGetter SUGGS = SuggestionGetter.newInline("{}");
 
-        private PathInfoCompound() {
-            super(PathType.COMPOUND);
+        public SuggestionGetter getSuggs() {
+            return SUGGS;
         }
 
-        @Override
-        public PathInfoGetter getPath(PathNode path) {
-            if(path.isKey())
-                return getKeyInfo(path.key());
+        public PathType getPathType() {
+            return PathType.COMPOUND;
+        }
+
+        public abstract KeyGetter getCompoundKeys(CompoundTag compound);
+
+        public abstract PathInfo getCompoundKeyInfo(CompoundTag compound, String key);
+
+    }
+
+    private static abstract class PathInfoSupplierList implements PathInfoSupplier {
+
+        private static final SuggestionGetter SUGGS = SuggestionGetter.newInline("[]");
+
+        public SuggestionGetter getSuggs() {
+            return SUGGS;
+        }
+
+        public PathType getPathType() {
+            return PathType.LIST;
+        }
+
+        public abstract PathInfo getListIndexInfo(int i);
+
+    }
+
+    private static abstract class PathInfoSupplierElement implements PathInfoSupplier {
+
+        public SuggestionGetter getSuggs() {
             return null;
         }
 
-        public Optional<Byte> getNbtType() {
-            return Optional.of(Tag.TAG_COMPOUND);
+        public PathType getPathType() {
+            return PathType.ELEMENT;
         }
 
     }
 
-    public static class PathInfoCompoundStructured extends PathInfoCompound {
+    private static class PathInfoSuppliers {
 
-        public final Map<String, PathInfoGetter> keys;
-        public final Set<String> requiredKeys;
-        public final Set<String> optionalKeys;
-
-        private PathInfoCompoundStructured(Map<String, PathInfoGetter> required, Map<String, PathInfoGetter> optional) {
-            super();
-            this.keys = Maps.newHashMap();
-            this.requiredKeys = Sets.newHashSet();
-            this.optionalKeys = Sets.newHashSet();
-            if(optional != null)
-                for(String s : optional.keySet()) {
-                    this.keys.put(s, optional.get(s));
-                    this.optionalKeys.add(s);
-                }
-            if(required != null)
-                for(String s : required.keySet()) {
-                    this.keys.put(s, required.get(s));
-                    this.requiredKeys.add(s);
-                    this.optionalKeys.remove(s);
-                }
+        protected static class CompoundStructured extends PathInfoSupplierCompound {
+    
+            private final KeyGetter keyGetter;
+            private final Map<String, PathInfoGetter> keyInfo;
+    
+            private CompoundStructured(Map<String, PathInfoGetter> required, Map<String, PathInfoGetter> optional) {
+                this.keyInfo = Maps.newHashMap();
+                Set<String> requiredKeys = Sets.newHashSet();
+                Set<String> optionalKeys = Sets.newHashSet();
+                if(optional != null)
+                    for(String s : optional.keySet()) {
+                        this.keyInfo.put(s, optional.get(s));
+                        optionalKeys.add(s);
+                    }
+                if(required != null)
+                    for(String s : required.keySet()) {
+                        this.keyInfo.put(s, required.get(s));
+                        requiredKeys.add(s);
+                        if(optionalKeys.contains(s)) {
+                            FortytwoEdit.logWarn("PathInfoComoundStructured tried to create 2 PathInfo's for key: "+s);
+                            optionalKeys.remove(s);
+                        }
+                    }
+                this.keyGetter = KeyGetter.create().withRequired(requiredKeys.toArray(new String[0])).withOptional(optionalKeys.toArray(new String[0]));
+            }
+    
+            public static CompoundStructured of(Map<String, PathInfoGetter> required, Map<String, PathInfoGetter> optional) {
+                return new CompoundStructured(required, optional);
+            }
+    
+            public static CompoundStructured allOptional(Map<String, PathInfoGetter> optional) {
+                return new CompoundStructured(null, optional);
+            }
+    
+            public static CompoundStructured allRequired(Map<String, PathInfoGetter> required) {
+                return new CompoundStructured(required, null);
+            }
+    
+            public KeyGetter getCompoundKeys(CompoundTag compound) {
+                return this.keyGetter;
+            }
+    
+            public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
+                if(this.keyInfo.containsKey(key))
+                    return this.keyInfo.get(key).get();
+                return PathInfo.EMPTY;
+            }
+    
         }
-
-        public static PathInfoCompoundStructured of(Map<String, PathInfoGetter> required, Map<String, PathInfoGetter> optional) {
-            return new PathInfoCompoundStructured(required, optional);
-        }
-
-        public static PathInfoCompoundStructured allOptional(Map<String, PathInfoGetter> optional) {
-            return new PathInfoCompoundStructured(null, optional);
-        }
-
-        public static PathInfoCompoundStructured allRequired(Map<String, PathInfoGetter> required) {
-            return new PathInfoCompoundStructured(required, null);
-        }
-
-        public Set<String> getRequired() {
-            return requiredKeys;
-        }
-
-        public Set<String> getOptional() {
-            return optionalKeys;
-        }
-
-        public PathInfoGetter getKeyInfo(String key) {
-            if(keys.containsKey(key))
-                return keys.get(key);
-            else
+    
+        public static class Unit extends PathInfoSupplierCompound {
+    
+            private Unit() {}
+    
+            public static Unit create() {
+                return new Unit();
+            }
+    
+            @Override
+            public PathType getPathType() {
+                return PathType.UNIT;
+            }
+    
+            public KeyGetter getCompoundKeys(CompoundTag compound) {
                 return null;
+            }
+    
+            public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
+                return PathInfo.EMPTY;
+            }
+    
         }
-
-    }
-
-    public static class PathInfoList extends PathInfo {
-
-        public final PathInfoGetter entryInfo;
-
-        private PathInfoList(PathInfoGetter entry) {
-            super(PathType.LIST);
-            this.entryInfo = entry;
+    
+        public static class ListUnordered extends PathInfoSupplierList {
+    
+            public final PathInfoGetter entryInfo;
+    
+            private ListUnordered(PathInfoGetter entry) {
+                this.entryInfo = entry;
+            }
+    
+            public static ListUnordered of(PathInfoGetter entry) {
+                return new ListUnordered(entry);
+            }
+    
+            public PathInfo getListIndexInfo(int i) {
+                return entryInfo.get();
+            }
+    
         }
-
-        public static PathInfoList of(PathInfoGetter entry) {
-            return new PathInfoList(entry);
+    
+        public static class ElementLiteral extends PathInfoSupplierElement {
+    
+            private final PathType type;
+            private final SuggestionGetter SUGGS;
+    
+            private ElementLiteral(PathType type, SuggestionGetter suggs) {
+                this.type = type;
+                this.SUGGS = suggs;
+            }
+    
+            public static ElementLiteral of(byte nbtType) {
+                return new ElementLiteral(PathType.ELEMENT, SuggestionGetter.newInline(ComponentHelper.defaultNbtType(nbtType)));
+            }
+    
+            public static ElementLiteral of(PathType type, SuggestionGetter suggs) {
+                return new ElementLiteral(type, suggs);
+            }
+    
+            @Override
+            public SuggestionGetter getSuggs() {
+                return SUGGS;
+            }
+    
+            @Override
+            public PathType getPathType() {
+                return type;
+            }
+    
         }
-
-        @Override
-        public PathInfoGetter getPath(PathNode path) {
-            if(!path.isKey())
-                return entryInfo;
-            return null;
-        }
-
-        public Optional<Byte> getNbtType() {
-            return Optional.of(Tag.TAG_LIST);
-        }
-
-    }
-
-    public static class PathInfoLiteral extends PathInfo {
-
-        public final byte nbtType;
-
-        private PathInfoLiteral(byte type, SuggestionGetter suggs) {
-            super(PathType.ELEMENT, suggs);
-            this.nbtType = type;
-        }
-
-        public static PathInfoLiteral of(byte type) {
-            return new PathInfoLiteral(type, null);
-        }
-
-        public static PathInfoLiteral of(byte type, SuggestionGetter suggs) {
-            return new PathInfoLiteral(type, suggs);
-        }
-
-        public Optional<Byte> getNbtType() {
-            return Optional.of(nbtType);
-        }
-
-    }
-
-    public static class PathInfoSpecial extends PathInfo {
-
-        public final Optional<Byte> nbtType;
-
-        private PathInfoSpecial(PathType type, SuggestionGetter suggs, Optional<Byte> nbtType) {
-            super(type, suggs);
-            this.nbtType = nbtType;
-        }
-
-        public static PathInfoSpecial unknown() {
-            return new PathInfoSpecial(PathType.ELEMENT, null, Optional.empty());
-        }
-
-        public static PathInfoSpecial unit() {
-            return new PathInfoSpecial(PathType.UNIT, SuggestionGetter.newInline("{}"), Optional.of(Tag.TAG_COMPOUND));
-        }
-
-        public static PathInfoSpecial bool() {
-            return new PathInfoSpecial(PathType.BOOLEAN, SuggestionGetter.newInline("true","false"), Optional.of(Tag.TAG_BYTE));
-        }
-
-        public Optional<Byte> getNbtType() {
-            return nbtType;
+    
+        public static class Bool extends ElementLiteral {
+    
+            private static final SuggestionGetter BOOLEAN_SUGGS = SuggestionGetter.newInline("true","false");
+    
+            private Bool() {
+                super(PathType.BOOLEAN, BOOLEAN_SUGGS);
+            }
+    
+            public static Bool create() {
+                return new Bool();
+            }
+    
         }
 
     }
@@ -363,113 +524,71 @@ public class PathHelper {
         }
     }
 
-    private static final Map<String, PathInfoGetter> PATH_INFO_REF_MAP = Maps.newHashMap();
+    private static final Map<String, PathInfo> PATH_INFO_REF_MAP = Maps.newHashMap();
 
-    protected static PathInfoGetter registerPathInfo(String refKey, PathInfo pi) {
-        PATH_INFO_REF_MAP.put(refKey, PathInfoGetter.of(pi));
-        return PathInfoGetter.of(refKey);
+    protected static PathInfo getRegisteredPathInfo(String refKey) {
+        if(PATH_INFO_REF_MAP.isEmpty())
+            buildPathInfos();
+        if(PATH_INFO_REF_MAP.containsKey(refKey))
+            return PATH_INFO_REF_MAP.get(refKey);
+        return PathInfo.EMPTY;
     }
 
-    protected static PathInfoGetter registerPathInfo(String refKey, PathInfoGetter pi) {
+    protected static PathInfoGetter registerPathInfo(String refKey, PathInfo pi) {
         PATH_INFO_REF_MAP.put(refKey, pi);
         return PathInfoGetter.of(refKey);
     }
 
-    public record PathInfoGetter(PathInfo[] inlined, String[] refKeys, Component desc, ItemStack icon) {
+    public record PathInfoGetter(PathInfo inlined, String refKey) {
 
-        public static PathInfoGetter of(PathInfo... options) {
-            return new PathInfoGetter(options, null, null, null);
+        public static PathInfoGetter of(PathInfo inlined) {
+            return new PathInfoGetter(inlined, null);
         }
 
-        public static PathInfoGetter of(String... options) {
-            return new PathInfoGetter(null, options, null, null);
+        public static PathInfoGetter of(String refKey) {
+            return new PathInfoGetter(null, refKey);
         }
 
-        public PathInfoGetter withDesc(Component description) {
-            return new PathInfoGetter(this.inlined, this.refKeys, description, this.icon);
-        }
-
-        public PathInfoGetter withIcon(ItemStack icon) {
-            return new PathInfoGetter(this.inlined, this.refKeys, this.desc, icon);
-        }
-
-        public PathInfo getInfo(byte nbtType) {
-            PathInfo[] pies = getAllInfo();
-            for(PathInfo pi : pies) {
-                if(pi.getNbtType().isPresent() && pi.getNbtType().get() == nbtType)
-                    return pi;
-            }
-            return null;
-        }
-
-        public PathInfoCompound getInfoCompound() {
-            PathInfo pi = getInfo(Tag.TAG_COMPOUND);
-            if(pi instanceof PathInfoCompound)
-                return (PathInfoCompound)pi;
-            return null;
-        }
-
-        public PathInfoList getInfoList() {
-            PathInfo pi = getInfo(Tag.TAG_LIST);
-            if(pi instanceof PathInfoList)
-                return (PathInfoList)pi;
-            return null;
-        }
-
-        public PathInfo getInfo() {
-            PathInfo[] pies = getAllInfo();
-            if(pies.length>0)
-                return pies[0];
-            return null;
-        }
-
-        public PathInfo[] getAllInfo() {
-            List<PathInfo> pie = Lists.newArrayList();
+        public PathInfo get() {
             if(inlined != null)
-                for(PathInfo pi : inlined)
-                    pie.add(pi);
-            if(refKeys != null)
-                for(String k : refKeys)
-                    for(PathInfo pi : PATH_INFO_REF_MAP.get(k).getAllInfo())
-                        pie.add(pi);
-            return pie.toArray(new PathInfo[0]);
+                return inlined;
+            return getRegisteredPathInfo(refKey);
         }
 
-        public static PathInfoGetter empty() {
-            return new PathInfoGetter(null, null, null, null);
-        }
-
-    }
-
-    private static class PathInfos {
-        private static final PathInfoGetter UNIT = PathInfoSpecial.unit().getter().withDesc(Component.nullToEmpty("{} represents true"));
-        private static final PathInfoGetter ITEM_NODE = PathInfoCompoundStructured.of(Map.of(
-            "id", PathInfoLiteral.of(Tag.TAG_STRING, ComponentHelper.REGISTRY_ITEM).getter()
-        ),Map.of(
-            "count", PathInfoLiteral.of(Tag.TAG_INT).getter(),
-            "components", (PathInfoGetter.of("COMPONENTS"))
-        )).getter();
     }
 
     private static void buildPathInfos() {
-
         PATH_INFO_REF_MAP.clear();
 
-        registerPathInfo("COMPONENTS", PathInfoCompoundStructured.allOptional(Map.of(
+        registerPathInfo("ITEM_STACK", PathInfo.create(PathInfoSuppliers.CompoundStructured.of(Map.of(
+            "id", PathInfo.create(PathInfoSuppliers.ElementLiteral.of(PathType.STRING, ComponentHelper.REGISTRY_ITEM)).getter()
+        ),Map.of(
+            "count", PathInfo.create(PathInfoSuppliers.ElementLiteral.of(Tag.TAG_INT)).getter(),
+            "components", PathInfoGetter.of("COMPONENTS")
+        ))));
+
+        registerPathInfo("COMPONENTS", PathInfo.create(PathInfoSuppliers.CompoundStructured.allOptional(Map.of(
             "minecraft:custom_name", PathInfoGetter.of("TEXT_COMPONENT"),
             "minecraft:item_name", PathInfoGetter.of("TEXT_COMPONENT"),
-            "minecraft:lore", PathInfoList.of(PathInfoGetter.of("TEXT_COMPONENT")).getter(),
-            "minecraft:unbreakable", PathInfos.UNIT
-        )));
+            "minecraft:lore", PathInfo.create(PathInfoSuppliers.ListUnordered.of(PathInfoGetter.of("TEXT_COMPONENT"))).getter(),
+            "minecraft:unbreakable", PathInfo.create(PathInfoSuppliers.Unit.create()).getter()
+        ))));
 
-        registerPathInfo("TEXT_COMPONENT", PathInfoGetter.of(
-            PathInfoLiteral.of(Tag.TAG_STRING),
-            PathInfoCompoundStructured.of(Map.of(
-                "text", PathInfoLiteral.of(Tag.TAG_STRING).getter()
+        registerPathInfo("TEXT_COMPONENT", PathInfo.create(
+            PathInfoSuppliers.ElementLiteral.of(Tag.TAG_STRING),
+            PathInfoSuppliers.CompoundStructured.of(Map.of(
+                "text", PathInfo.create(PathInfoSuppliers.ElementLiteral.of(Tag.TAG_STRING)).getter()
             ),Map.of(
-                "color", PathInfoLiteral.of(Tag.TAG_STRING).getter()
+                "color", PathInfo.create(PathInfoSuppliers.ElementLiteral.of(PathType.STRING, ComponentHelper.LIST_FORMATTING_COLOR)).getter(),
+                "font", PathInfo.create(PathInfoSuppliers.ElementLiteral.of(PathType.STRING, ComponentHelper.ASSETS_FONT)).getter(),
+                "bold", PathInfo.create(PathInfoSuppliers.Bool.create()).getter(),
+                "italic", PathInfo.create(PathInfoSuppliers.Bool.create()).getter(),
+                "underlined", PathInfo.create(PathInfoSuppliers.Bool.create()).getter(),
+                "strikethrough", PathInfo.create(PathInfoSuppliers.Bool.create()).getter(),
+                "obfuscated", PathInfo.create(PathInfoSuppliers.Bool.create()).getter(),
+                "extra", PathInfo.create(PathInfoSuppliers.ListUnordered.of(PathInfoGetter.of("TEXT_COMPONENT"))).getter()
             )),
-            PathInfoList.of(PathInfoGetter.of("TEXT_COMPONENT"))
+            PathInfoSuppliers.ListUnordered.of(PathInfoGetter.of("TEXT_COMPONENT"))
         ));
 
     }

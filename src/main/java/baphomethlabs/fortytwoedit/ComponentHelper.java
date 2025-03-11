@@ -1205,6 +1205,33 @@ public class ComponentHelper {
         }
     }
 
+    /**
+     * Returns string label for NBT type, or null.
+     * 
+     * @param type from NbtElement.getType()
+     * @return null or String label
+     */
+    public static String defaultNbtType(byte type) {
+        switch(type) {
+            case Tag.TAG_BYTE: return "0b";
+            case Tag.TAG_SHORT: return "0s";
+            case Tag.TAG_INT: return "0";
+            case Tag.TAG_LONG: return "0l";
+            case Tag.TAG_DOUBLE: return "0.0d";
+            case Tag.TAG_FLOAT: return "0.0f";
+            case Tag.TAG_STRING: return "\"\"";
+
+            case Tag.TAG_BYTE_ARRAY: return "[B;]";
+            case Tag.TAG_INT_ARRAY: return "[I;]";
+            case Tag.TAG_LONG_ARRAY: return "[L;]";
+
+            case Tag.TAG_COMPOUND: return "{}";
+            case Tag.TAG_LIST: return "[]";
+
+            default: return null;
+        }
+    }
+
     private class PathInfos {
 
         private static final PathInfo UNKNOWN = (new PathInfo(PathType.UNKNOWN));
@@ -1306,29 +1333,42 @@ public class ComponentHelper {
             return set;
         }
 
+        public Set<String> getKeys() {
+            Set<String> set = Sets.newHashSet();
+            for(SuggestionGetter suggs : requiredKeys)
+                set.addAll(suggs.getList());
+            for(SuggestionGetter suggs : optionalKeys)
+                set.addAll(suggs.getList());
+            return set;
+        }
+
     }
 
-    public record SuggestionGetter(String[] inlinedSuggs, String listMapKey, Format format, SuggestionGetter[] joinedLists) {
+    public record SuggestionGetter(String[] inlinedSuggs, String listMapKey, Format format, SuggestionGetter[] joinedLists, boolean isEmpty) {
 
         public static SuggestionGetter newInline(String... suggs) {
-            return new SuggestionGetter(suggs, null, Format.NONE, null);
+            return new SuggestionGetter(suggs, null, Format.NONE, null, false);
         }
         public static SuggestionGetter newInline(Format format, String... suggs) {
-            return new SuggestionGetter(suggs, null, format, null);
+            return new SuggestionGetter(suggs, null, format, null, false);
         }
 
         public static SuggestionGetter newRef(String key) {
-            return new SuggestionGetter(null, key, Format.NONE, null);
+            return new SuggestionGetter(null, key, Format.NONE, null, false);
         }
 
         public static SuggestionGetter newJoined(SuggestionGetter... lists) {
-            return new SuggestionGetter(null, null, Format.NONE, lists);
+            return new SuggestionGetter(null, null, Format.NONE, lists, false);
+        }
+
+        public static SuggestionGetter empty() {
+            return new SuggestionGetter(null, null, Format.NONE, null, true);
         }
 
         public SuggestionGetter withFormat(Format format) {
             if(joinedLists != null)
                 FortytwoEdit.logWarn("Invalid SuggestionGetter tried to format a 'newJoined' type");
-            return new SuggestionGetter(this.inlinedSuggs, this.listMapKey, format, this.joinedLists);
+            return new SuggestionGetter(this.inlinedSuggs, this.listMapKey, format, this.joinedLists, this.isEmpty);
         }
 
         private void addFormatted(Set<String> set, Format format, String[] toAdd) {
