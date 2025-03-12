@@ -51,7 +51,7 @@ dependencies {
 	//		remove splitEnvironments section from build.gradle
 	//		set fabric api dependency to include
 	//	update FortytwoEdit.FEATURES
-	//	update ComponentHelper (search HARDCODED)
+	//	update SuggestionHelper and PathHelper (search HARDCODED)
 	//	verify ordinals (AbstractScrollAreaMixin/StringUtilMixin)
 
 	//	TOOLS

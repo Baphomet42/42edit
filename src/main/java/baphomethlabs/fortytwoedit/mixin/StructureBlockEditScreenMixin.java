@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import baphomethlabs.fortytwoedit.ComponentHelper;
+import baphomethlabs.fortytwoedit.SuggestionHelper;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -37,13 +37,13 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
         nameEdit.setResponder(value -> {
 
             if(loadButton.visible) {
-                //ComponentHelper.clearDynamicListCaches(); uncomment if list made dynamic
+                //SuggestionHelper.clearDynamicListCaches(); to_do uncomment if list made dynamic
 
                 if(suggs != null)
                     suggs.refresh();
                 else {
                     suggs = new TextSuggestor(minecraft, nameEdit, font);
-                    suggs.setSuggestions(ComponentHelper.DATA_STRUCTURE.getArray());
+                    suggs.setSuggestions(SuggestionHelper.DATA_STRUCTURE.getArray());
                 }
 
             }

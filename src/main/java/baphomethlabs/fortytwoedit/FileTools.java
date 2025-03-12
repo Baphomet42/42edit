@@ -85,7 +85,7 @@ public class FileTools {
                 break;
             }
             default : {
-                fileContents = BlackMagick.nbtToString(nbtCopy);
+                fileContents = BlackMagick.nbtToSnbt(nbtCopy);
             }
         }
 
@@ -99,8 +99,8 @@ public class FileTools {
                 return true;
             else {
                 String errorMsg = "Failed to write compound to file '" + filePath + "'"
-                    + "\nTried to save: " + BlackMagick.nbtToString(nbtCopy)
-                    + "\nCompound loaded: " + (nbtNew==null ? "null" : BlackMagick.nbtToString(nbtNew));
+                    + "\nTried to save: " + BlackMagick.nbtToSnbt(nbtCopy)
+                    + "\nCompound loaded: " + (nbtNew==null ? "null" : BlackMagick.nbtToSnbt(nbtNew));
                 if(oldFile == null) {
                     FortytwoEdit.logError(errorMsg+"\nNo file to revert to.");
                 }

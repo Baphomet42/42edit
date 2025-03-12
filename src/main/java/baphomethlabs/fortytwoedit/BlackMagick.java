@@ -84,7 +84,7 @@ public class BlackMagick {
             // Removing the bundle item in an inventory may result in a ghost item.
             // Emptying the bundle with the use key ingame will spawn the item, and it will not be a ghost.
             if(!item.isEmpty() && !client.player.connection.isFeatureEnabled(item.getItem().requiredFeatures())) {
-                ItemStack newStack = BlackMagick.itemFromString("{id:bundle,components:{bundle_contents:["+BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(item))+"]}}");
+                ItemStack newStack = BlackMagick.itemFromString("{id:bundle,components:{bundle_contents:["+BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(item))+"]}}");
                 if(!newStack.isEmpty()) {
                     item = newStack;
                 }
@@ -147,7 +147,20 @@ public class BlackMagick {
      * @param inp
      * @return
      */
-    public static String nbtToString(Tag inp) {
+    public static String nbtToSnbtOrString(Tag inp) {
+        if(inp != null && inp.getId()==Tag.TAG_STRING)
+            return ((StringTag)inp).asString().get();
+        return nbtToSnbt(inp);
+    }
+
+    /**
+     * Get SNBT representation of NBT.
+     * A null element will return an empty string.
+     * 
+     * @param inp
+     * @return
+     */
+    public static String nbtToSnbt(Tag inp) {
         if(inp == null)
             return "";
         else if(inp.getId()==Tag.TAG_STRING) {
@@ -315,7 +328,7 @@ public class BlackMagick {
                 comps = validCompoundFromString("{"+compsString+"}");
 
             Set<String> unusedComps = Sets.newHashSet();
-            for(String comp : ComponentHelper.LIST_DATA_COMPONENT_TYPE.getList())
+            for(String comp : SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList())
                 unusedComps.add(comp);
             for(String comp : comps.keySet()) {
                 unusedComps.remove(comp);
@@ -362,7 +375,7 @@ public class BlackMagick {
                     if(k.startsWith("!"))
                         cmd += key;
                     else
-                        cmd += key+"="+BlackMagick.nbtToString(components.get(k));
+                        cmd += key+"="+BlackMagick.nbtToSnbt(components.get(k));
 
                     first = false;
                 }
@@ -390,7 +403,7 @@ public class BlackMagick {
                 Optional<Tag> optional = component.encodeValue(dynamicOps).result();
                 if (resourceLocation == null || !optional.isPresent())
                     return Stream.empty();
-                return Stream.of("\"" + resourceLocation.toString() + "\":" + BlackMagick.nbtToString(optional.get()));
+                return Stream.of("\"" + resourceLocation.toString() + "\":" + BlackMagick.nbtToSnbt(optional.get()));
             }).collect(Collectors.joining(String.valueOf(',')));
         }
         return "";
@@ -443,14 +456,6 @@ public class BlackMagick {
                     err = err.replaceFirst(bundleErr,"");
                 if(err.contains(" at position ")) {
                     err = err.substring(0,err.indexOf(" at position "));
-                }
-                if(err.contains("Not a boolean: 1") || err.contains("Not a boolean: 0")) { // to_do remove if booleans are fixed in future snapshot
-                    err = err.replace("Not a boolean: 1;","").replace("Not a boolean: 0;","")
-                        .replace("Not a boolean: 1 ","").replace("Not a boolean: 0 ","")
-                        .replace("Not a boolean: 1'","'").replace("Not a boolean: 0'","'");
-                    if(err.matches("^Malformed '[a-z0-9._-]*:?[a-z0-9/._-]*' component: ''$")
-                    || err.matches("^\\s*'\\s*missed input:.*"))
-                        return inpError;
                 }
                 return err;
             }
@@ -568,7 +573,7 @@ public class BlackMagick {
             if(component.contains("["))
                 component = component.substring(0,component.indexOf("["));
 
-            if(nbtToString(getNbtPath(nbt,"components.!"+component)).equals("{}"))
+            if(nbtToSnbt(getNbtPath(nbt,"components.!"+component)).equals("{}"))
                 nbt = setNbtPath(nbt,"components.!"+component,null);
         }
 
@@ -672,18 +677,18 @@ public class BlackMagick {
         else if(left == null || right == null)
             return false;
 
-        return nbtToString(left).equals(nbtToString(right));
+        return nbtToSnbt(left).equals(nbtToSnbt(right));
     }
 
     public static String validCompoundKey(String key) {
         CompoundTag nbt = new CompoundTag();
         nbt.putInt(key,0);
-        String nbtString = BlackMagick.nbtToString(nbt);
+        String nbtString = BlackMagick.nbtToSnbt(nbt);
         if(nbtString.startsWith("{") && nbtString.endsWith(":0}")) {
             return nbtString.substring(1,nbtString.length()-3);
         }
         FortytwoEdit.logError("Failed to convert key to valid SNBT key: "+key);
-        return nbtToString(StringTag.valueOf(key));
+        return nbtToSnbt(StringTag.valueOf(key));
     }
 
     public static String validPathKey(String key) {
@@ -691,7 +696,7 @@ public class BlackMagick {
             return key;
         String newKey = validCompoundKey(key);
         if(key.contains(".") && !newKey.startsWith("\"") && !newKey.startsWith("'"))
-            return nbtToString(StringTag.valueOf(key));
+            return nbtToSnbt(StringTag.valueOf(key));
         return newKey;
     }
 
@@ -848,7 +853,7 @@ public class BlackMagick {
         List<String> list = Lists.newArrayList();
 
         for(String s : suggs)
-            list.add(nbtToString(StringTag.valueOf(s)));
+            list.add(nbtToSnbt(StringTag.valueOf(s)));
 
         return list;
     }
@@ -953,13 +958,13 @@ public class BlackMagick {
         if(left==null && right==null)
             return Component.nullToEmpty("null").copy().withStyle(ChatFormatting.ITALIC);
         if(left==null)
-            return Component.nullToEmpty(BlackMagick.nbtToString(right)).copy().withStyle(ChatFormatting.GREEN);
+            return Component.nullToEmpty(BlackMagick.nbtToSnbt(right)).copy().withStyle(ChatFormatting.GREEN);
         if(right==null)
-            return Component.nullToEmpty(BlackMagick.nbtToString(left)).copy().withStyle(ChatFormatting.RED);
+            return Component.nullToEmpty(BlackMagick.nbtToSnbt(left)).copy().withStyle(ChatFormatting.RED);
 
         if(left.getId() == right.getId()) {
-            if(BlackMagick.nbtToString(left).equals(BlackMagick.nbtToString(right)))
-                return Component.nullToEmpty(BlackMagick.nbtToString(left));
+            if(BlackMagick.nbtToSnbt(left).equals(BlackMagick.nbtToSnbt(right)))
+                return Component.nullToEmpty(BlackMagick.nbtToSnbt(left));
             if(left.getId() == Tag.TAG_COMPOUND) {
                 CompoundTag leftCmp = (CompoundTag)left;
                 CompoundTag rightCmp = (CompoundTag)right;
@@ -985,10 +990,10 @@ public class BlackMagick {
                         output.append(getElementDifferences(leftCmp.get(k),rightCmp.get(k)));
                     }
                     else if(leftCmp.contains(k)) {
-                        output.append((Component.nullToEmpty(k2+":").copy().append(Component.nullToEmpty(BlackMagick.nbtToString(leftCmp.get(k))))).withStyle(ChatFormatting.RED));
+                        output.append((Component.nullToEmpty(k2+":").copy().append(Component.nullToEmpty(BlackMagick.nbtToSnbt(leftCmp.get(k))))).withStyle(ChatFormatting.RED));
                     }
                     else {
-                        output.append((Component.nullToEmpty(k2+":").copy().append(Component.nullToEmpty(BlackMagick.nbtToString(rightCmp.get(k))))).withStyle(ChatFormatting.GREEN));
+                        output.append((Component.nullToEmpty(k2+":").copy().append(Component.nullToEmpty(BlackMagick.nbtToSnbt(rightCmp.get(k))))).withStyle(ChatFormatting.GREEN));
                     }
                 }
 
@@ -1013,10 +1018,10 @@ public class BlackMagick {
                         output.append(getElementDifferences(leftList.get(i),rightList.get(i)));
                     }
                     else if(leftList.size()>i) {
-                        output.append((Component.nullToEmpty(BlackMagick.nbtToString(leftList.get(i))).copy()).withStyle(ChatFormatting.RED));
+                        output.append((Component.nullToEmpty(BlackMagick.nbtToSnbt(leftList.get(i))).copy()).withStyle(ChatFormatting.RED));
                     }
                     else {
-                        output.append((Component.nullToEmpty(BlackMagick.nbtToString(rightList.get(i))).copy()).withStyle(ChatFormatting.GREEN));
+                        output.append((Component.nullToEmpty(BlackMagick.nbtToSnbt(rightList.get(i))).copy()).withStyle(ChatFormatting.GREEN));
                     }
                 }
 
@@ -1024,7 +1029,7 @@ public class BlackMagick {
                 return output;
             }
         }
-        return Component.empty().append(Component.nullToEmpty(BlackMagick.nbtToString(left)).copy().withStyle(ChatFormatting.RED)).append(Component.nullToEmpty(BlackMagick.nbtToString(right)).copy().withStyle(ChatFormatting.GREEN));
+        return Component.empty().append(Component.nullToEmpty(BlackMagick.nbtToSnbt(left)).copy().withStyle(ChatFormatting.RED)).append(Component.nullToEmpty(BlackMagick.nbtToSnbt(right)).copy().withStyle(ChatFormatting.GREEN));
     }
 
     /**
@@ -1057,7 +1062,7 @@ public class BlackMagick {
                 if(nbt.isEmpty())
                     current.append("{}");
                 else if(collapseItems && nbt.contains("id"))
-                    current.append(BlackMagick.nbtToString(nbt));
+                    current.append(BlackMagick.nbtToSnbt(nbt));
                 else {
                     current.append("{\n");
 
@@ -1095,7 +1100,7 @@ public class BlackMagick {
                 break;
             }
             default: {
-                current.append(BlackMagick.nbtToString(el));
+                current.append(BlackMagick.nbtToSnbt(el));
             }
         }
         return current.toString();

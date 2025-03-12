@@ -34,7 +34,7 @@ public class DebugScreen extends GenericScreen {
     }
 
     protected void btnOutputHist() {
-        String hist = BlackMagick.nbtToString(FortytwoEdit.getItemHist());
+        String hist = BlackMagick.nbtToSnbt(FortytwoEdit.getItemHist());
         FortytwoEdit.setClipboard(hist);
         FortytwoEdit.logInfo("Item History: "+hist);
         FortytwoEdit.showToast("Output Hist", "Item history has been copied and sent to the output log");

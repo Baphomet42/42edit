@@ -19,6 +19,8 @@ import com.google.common.collect.Sets;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
+import baphomethlabs.fortytwoedit.PathHelper.PathInfo;
+import baphomethlabs.fortytwoedit.PathHelper.PathNode;
 import baphomethlabs.fortytwoedit.gui.screen.AutoClick;
 import baphomethlabs.fortytwoedit.gui.screen.Capes;
 import baphomethlabs.fortytwoedit.gui.screen.DebugScreen;
@@ -519,10 +521,16 @@ public class FortytwoEdit implements ClientModInitializer {
 
         FileTools.scanModFiles();
 
-        for(String c : ComponentHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
-            // this will log warnings if ComponentHelper doesnt include a vanilla component
-            ComponentHelper.getPathInfo("components."+c);
+        int foundComponentPaths = 0;
+        for(String c : SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
+            // this will log warnings if PathHelper doesnt include a vanilla component
+            PathInfo pi = PathHelper.getItemPath(null, PathNode.of("components"),PathNode.of(c));
+            if(!pi.isEmpty())
+                foundComponentPaths++;
+            else
+                FortytwoEdit.logWarn("No PathInfo found for component \""+c+"\"");
         }
+        logInfo("Found PathInfo for "+foundComponentPaths+"/"+SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList().size()+" components");
 
         logInfo("Client initialized");
     }
@@ -786,7 +794,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         getSavedItems(); // used to show log errors
 
-        ComponentHelper.runAllListMethods();
+        SuggestionHelper.runAllListMethods();
 
         clearCapes();
         setCustomSkin(null);
@@ -841,7 +849,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     }
                 }
                 if(!added)
-                    logError("Failed to set keybind for binding "+k+" to key "+BlackMagick.nbtToString(c.get(k)));
+                    logError("Failed to set keybind for binding "+k+" to key "+BlackMagick.nbtToSnbt(c.get(k)));
             }
             if(!foundKeys.isEmpty()) {
                 for(String k : foundKeys)
@@ -873,7 +881,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         optionsExtra = null;
         if(!options.isEmpty()) {
-            logWarn("Config file contains unknown keys: "+BlackMagick.nbtToString(options));
+            logWarn("Config file contains unknown keys: "+BlackMagick.nbtToSnbt(options));
             optionsExtra = options.copy();
         }
 
@@ -938,14 +946,14 @@ public class FortytwoEdit implements ClientModInitializer {
                         && itemHolder.getInt("slot").isPresent()) {
                             String itemString = itemHolder.getStringOr("item","");
                             if(itemHolder.get("item").getId()==Tag.TAG_COMPOUND)
-                                itemString = BlackMagick.nbtToString(itemHolder.getCompound("item").get());
+                                itemString = BlackMagick.nbtToSnbt(itemHolder.getCompound("item").get());
                             itemHolder.remove("item");
                             if(itemString.isEmpty() || itemString.equals("{}"))
                                 continue;
                             int slot = itemHolder.getInt("slot").get();
                             itemHolder.remove("slot");
                             if(!itemHolder.isEmpty()) {
-                                FortytwoEdit.logError("Saved item contains unknown keys: "+BlackMagick.nbtToString(itemHolder));
+                                FortytwoEdit.logError("Saved item contains unknown keys: "+BlackMagick.nbtToSnbt(itemHolder));
                             }
                             if(slot<0 || slot>MAX_SAVED_ITEM_SLOT) {
                                 itemsOutOfRange = true;
@@ -971,12 +979,12 @@ public class FortytwoEdit implements ClientModInitializer {
                     FortytwoEdit.logWarn("Saved items file contains slots outside of range 0-"+MAX_SAVED_ITEM_SLOT);
                 }
                 if(!unknownItemHolders.isEmpty()) {
-                    FortytwoEdit.logError("Saved items file contains invalid entries. After saving, the following will be deleted: "+BlackMagick.nbtToString(unknownItemHolders));
+                    FortytwoEdit.logError("Saved items file contains invalid entries. After saving, the following will be deleted: "+BlackMagick.nbtToSnbt(unknownItemHolders));
                 }
             }
         }
         if(!foundItems && !savedItemsNbt.isEmpty()) {
-            logError("Failed to read saved items: " + BlackMagick.nbtToString(savedItemsNbt));
+            logError("Failed to read saved items: " + BlackMagick.nbtToSnbt(savedItemsNbt));
             ItemBuilder.savedItemsError = true;
         }
 
@@ -1105,7 +1113,7 @@ public class FortytwoEdit implements ClientModInitializer {
                         if(itemHolder.getCompound("item").isPresent() || itemHolder.getString("item").isPresent()) {
                             String itemString = itemHolder.getStringOr("item","");
                             if(itemHolder.get("item").getId()==Tag.TAG_COMPOUND)
-                                itemString = BlackMagick.nbtToString(itemHolder.getCompound("item").get());
+                                itemString = BlackMagick.nbtToSnbt(itemHolder.getCompound("item").get());
                             webItems.add(itemString);
                         }
                     }

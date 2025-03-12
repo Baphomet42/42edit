@@ -196,7 +196,7 @@ public class Hacks extends GenericScreen {
             if(items.size()==1)
                 item = BlackMagick.itemFromNbt(BlackMagick.validCompound(bundle.get(0)));
 
-            FortytwoEdit.setClipboard(BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(item)));
+            FortytwoEdit.setClipboard(BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(item)));
             FortytwoEdit.showToast("Get Entity","Entity data copied");
 
             if(minecraft.player.getAbilities().instabuild && !item.isEmpty()) {

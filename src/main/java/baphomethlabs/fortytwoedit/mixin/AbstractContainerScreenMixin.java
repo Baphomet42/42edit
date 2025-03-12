@@ -23,8 +23,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import baphomethlabs.fortytwoedit.ComponentHelper;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.SuggestionHelper;
 import baphomethlabs.fortytwoedit.gui.ContainerTooltipData;
 
 @Mixin(AbstractContainerScreen.class)
@@ -60,7 +60,7 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
                 ItemContainerContents container = components.get(DataComponents.CONTAINER);
                 int rows = 3;
                 int columns = 9;
-                int[] size = ComponentHelper.getContainerSize(stack.getItem());
+                int[] size = SuggestionHelper.getContainerSize(stack.getItem());
                 if(size[0]>0)
                     rows = size[0];
                 if(size[1]>0)

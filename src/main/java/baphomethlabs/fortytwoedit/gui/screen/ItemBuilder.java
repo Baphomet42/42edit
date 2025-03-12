@@ -55,13 +55,12 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import baphomethlabs.fortytwoedit.BlackMagick;
-import baphomethlabs.fortytwoedit.ComponentHelper;
-import baphomethlabs.fortytwoedit.ComponentHelper.PathFlag;
-import baphomethlabs.fortytwoedit.ComponentHelper.PathInfo;
-import baphomethlabs.fortytwoedit.ComponentHelper.PathType;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.PathHelper;
+import baphomethlabs.fortytwoedit.SuggestionHelper;
+import baphomethlabs.fortytwoedit.PathHelper.NbtType;
 import baphomethlabs.fortytwoedit.PathHelper.PathNode;
+import baphomethlabs.fortytwoedit.PathHelper.PathType;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
 
@@ -175,7 +174,7 @@ public class ItemBuilder extends GenericScreen {
     protected NbtEdit nbtEdit = null;
     protected Map<String,Double> nbtEditScroll = Maps.newHashMap();
     protected boolean nbtEditScrollNow = false;
-    protected static NbtEditStyle nbtEditStyle = NbtEditStyle.DESIGN;
+    protected static NbtEditStyle nbtEditStyle = NbtEditStyle.TEMPLATE;
     protected static final ItemStack[] NBT_EDIT_STYLE_ITEMS =
         new ItemStack[]{new ItemStack(Items.KNOWLEDGE_BOOK),new ItemStack(Items.COMMAND_BLOCK),new ItemStack(Items.NAME_TAG)};
     private String textComponentBaseText = "";
@@ -235,14 +234,14 @@ public class ItemBuilder extends GenericScreen {
                     poseSliders.get(poseSliders.size()-1).add(Sets.newHashSet());
             }
 
-            ComponentHelper.clearDynamicListCaches();
+            SuggestionHelper.clearDynamicListCaches();
             firstInit = false;
         }
         pauseSaveScroll = false;
 
         if(runSuggsTest) {
             runSuggsTest = false;
-            ComponentHelper.runAllListMethods();
+            SuggestionHelper.runAllListMethods();
         }
 
         if(!tabs[tab].hideTabs()) {
@@ -439,7 +438,7 @@ public class ItemBuilder extends GenericScreen {
 
     protected void btnCopyItemNbt(ItemStack stack) {
         if(stack != null && !stack.isEmpty()) {
-            String itemData = BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(stack));
+            String itemData = BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(stack));
             FortytwoEdit.setClipboard(itemData);
             FortytwoEdit.showToast("Item Builder","Item NBT copied to clipboard");
         }
@@ -477,7 +476,7 @@ public class ItemBuilder extends GenericScreen {
             if(!cacheStates.isEmpty())
                 cacheStates.clear();
             if(selItem!=null && !selItem.isEmpty())
-                cacheStates = ComponentHelper.getBlockStates(selItem.getItem());
+                cacheStates = SuggestionHelper.getBlockStates(selItem.getItem());
 
             if(selItem.is(Items.ARMOR_STAND)) {
                 updateArmorStand(selItem.copy());
@@ -714,7 +713,7 @@ public class ItemBuilder extends GenericScreen {
                     if(poseCompound.isEmpty())
                         txt.setValue("");
                     else
-                        txt.setValue(BlackMagick.nbtToString(poseCompound));
+                        txt.setValue(BlackMagick.nbtToSnbt(poseCompound));
                     resetSuggs();
                 }
             }
@@ -1454,116 +1453,114 @@ public class ItemBuilder extends GenericScreen {
         }
     }
 
-    private Component getButtonText(String path, Tag el) {
+    private Component getButtonText(String path, Tag el) {//TODO
         if(el==null)
             return Component.empty();
-        String elString = el==null ? "null" : BlackMagick.nbtToString(el);
-        String elStringContent = elString;
-        if(el != null && el.getId() == Tag.TAG_STRING)
-            elStringContent = el.asString().get(); // keep asString
-        PathInfo pi = ComponentHelper.getPathInfo(path);
-        if(pi.type()==PathType.TEXT) {
-            Component btnTxt = BlackMagick.textComponentFromString((el==null) ? "" : BlackMagick.nbtToString(el)).text();
-            if(el != null && el.getId()==Tag.TAG_STRING && BlackMagick.textComponentFromString(elString).isValid()) {
-                if(path.endsWith("custom_name"))
-                    btnTxt = btnTxt.copy().withStyle(ChatFormatting.ITALIC);
-                else if(path.contains("lore["))
-                    btnTxt = btnTxt.copy().withStyle(ChatFormatting.ITALIC,ChatFormatting.DARK_PURPLE);
-            }
-            return btnTxt;
-        }
-        else if(pi.type()==PathType.DECIMAL_COLOR) {
-            if(el!=null && el.getId()!=Tag.TAG_STRING && el.getId()!=Tag.TAG_LIST && el.getId()!=Tag.TAG_COMPOUND) {
-                if(BlackMagick.colorHexFromDec(elStringContent) != null)
-                    return BlackMagick.textComponentFromString("{text:\""+elStringContent+"\",color:\""+BlackMagick.colorHexFromDec(elStringContent)+"\"}").text();
-                return errorText("Invalid color: "+elStringContent);
-            }
-            return errorText("Invalid color");
-        }
-        else if(pi.flag()==PathFlag.ATTRIBUTE) {
-            if(el != null && el.getId()==Tag.TAG_COMPOUND) {
-                ItemStack stack = BlackMagick.itemFromString("{id:stone,components:{attribute_modifiers:{modifiers:["+BlackMagick.nbtToString(el)+"]}}}");
-                if(!stack.isEmpty()) {
-                    List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
-                    if(textList.size()>3)
-                        return Component.nullToEmpty(textList.get(2).getString()).copy().append(Component.nullToEmpty(" ")).append(textList.get(3));
-                }
-            }
-            return errorText("Invalid attribute");
-        }
-        else if(pi.type()==PathType.BANNER) {
-            if(el != null && el.getId()==Tag.TAG_COMPOUND) {
-                ItemStack stack = BlackMagick.itemFromString("{id:white_banner,components:{banner_patterns:["+BlackMagick.nbtToString(el)+"]}}");
-                if(!stack.isEmpty()) {
-                    List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
-                    if(textList.size()>1)
-                        return Component.nullToEmpty(textList.get(1).getString());
-                }
-            }
-            return errorText("Invalid pattern");
-        }
-        else if(pi.flag()==PathFlag.EFFECT) {
-            if(el != null && el.getId()==Tag.TAG_COMPOUND) {
-                ItemStack stack = BlackMagick.itemFromString("{id:potion,components:{potion_contents:{custom_effects:["+BlackMagick.nbtToString(el)+"]}}}");
-                if(!stack.isEmpty()) {
-                    List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
-                    if(textList.size()>1 && !textList.get(1).getString().equals("No Effects"))
-                        return textList.get(1);
-                }
-            }
-            return errorText("Invalid effect");
-        }
-        else if(pi.flag()==PathFlag.PROBABILITY_EFFECT) {
-            if(el != null && el.getId()==Tag.TAG_COMPOUND) {
-                CompoundTag nbt = (CompoundTag)el;
-                if(nbt.getCompound("effect").isPresent()) {
-                    ItemStack stack = BlackMagick.itemFromString("{id:potion,components:{potion_contents:{custom_effects:["+BlackMagick.nbtToString(nbt.getCompoundOrEmpty("effect"))+"]}}}");
-                    if(!stack.isEmpty()) {
-                        List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
-                        if(textList.size()>1 && !textList.get(1).getString().equals("No Effects"))
-                            return textList.get(1);
-                    }
-                }
-            }
-            return errorText("Invalid effect");
-        }
-        else if(pi.flag()==PathFlag.FIREWORK) {
-            if(el != null && el.getId()==Tag.TAG_COMPOUND) {
-                ItemStack stack = BlackMagick.itemFromString("{id:firework_star,components:{firework_explosion:"+BlackMagick.nbtToString(el)+"}}");
-                if(!stack.isEmpty()) {
-                    List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
-                    if(textList.size()>1) {
-                        MutableComponent btnLbl = Component.empty();
-                        for(int i=1; i<textList.size(); i++) {
-                            if(i>1)
-                                btnLbl.append(Component.nullToEmpty(", "));
-                            btnLbl.append(textList.get(i));
-                        }
-                        return Component.nullToEmpty(btnLbl.getString());
-                    }
-                }
-            }
-            return errorText("Invalid explosion");
-        }
+        String elString = el==null ? "null" : BlackMagick.nbtToSnbt(el);
+        String elStringContent = BlackMagick.nbtToSnbtOrString(el);
+        //PathInfo pi = ComponentHelper.getPathInfo(path);
+        // if(pi.type()==PathType.TEXT) {
+        //     Component btnTxt = BlackMagick.textComponentFromString((el==null) ? "" : BlackMagick.nbtToSnbt(el)).text();
+        //     if(el != null && el.getId()==Tag.TAG_STRING && BlackMagick.textComponentFromString(elString).isValid()) {
+        //         if(path.endsWith("custom_name"))
+        //             btnTxt = btnTxt.copy().withStyle(ChatFormatting.ITALIC);
+        //         else if(path.contains("lore["))
+        //             btnTxt = btnTxt.copy().withStyle(ChatFormatting.ITALIC,ChatFormatting.DARK_PURPLE);
+        //     }
+        //     return btnTxt;
+        // }
+        // else if(pi.type()==PathType.DECIMAL_COLOR) {
+        //     if(el!=null && el.getId()!=Tag.TAG_STRING && el.getId()!=Tag.TAG_LIST && el.getId()!=Tag.TAG_COMPOUND) {
+        //         if(BlackMagick.colorHexFromDec(elStringContent) != null)
+        //             return BlackMagick.textComponentFromString("{text:\""+elStringContent+"\",color:\""+BlackMagick.colorHexFromDec(elStringContent)+"\"}").text();
+        //         return errorText("Invalid color: "+elStringContent);
+        //     }
+        //     return errorText("Invalid color");
+        // }
+        // else if(pi.flag()==PathFlag.ATTRIBUTE) {
+        //     if(el != null && el.getId()==Tag.TAG_COMPOUND) {
+        //         ItemStack stack = BlackMagick.itemFromString("{id:stone,components:{attribute_modifiers:{modifiers:["+BlackMagick.nbtToSnbt(el)+"]}}}");
+        //         if(!stack.isEmpty()) {
+        //             List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
+        //             if(textList.size()>3)
+        //                 return Component.nullToEmpty(textList.get(2).getString()).copy().append(Component.nullToEmpty(" ")).append(textList.get(3));
+        //         }
+        //     }
+        //     return errorText("Invalid attribute");
+        // }
+        // else if(pi.type()==PathType.BANNER) {
+        //     if(el != null && el.getId()==Tag.TAG_COMPOUND) {
+        //         ItemStack stack = BlackMagick.itemFromString("{id:white_banner,components:{banner_patterns:["+BlackMagick.nbtToSnbt(el)+"]}}");
+        //         if(!stack.isEmpty()) {
+        //             List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
+        //             if(textList.size()>1)
+        //                 return Component.nullToEmpty(textList.get(1).getString());
+        //         }
+        //     }
+        //     return errorText("Invalid pattern");
+        // }
+        // else if(pi.flag()==PathFlag.EFFECT) {
+        //     if(el != null && el.getId()==Tag.TAG_COMPOUND) {
+        //         ItemStack stack = BlackMagick.itemFromString("{id:potion,components:{potion_contents:{custom_effects:["+BlackMagick.nbtToSnbt(el)+"]}}}");
+        //         if(!stack.isEmpty()) {
+        //             List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
+        //             if(textList.size()>1 && !textList.get(1).getString().equals("No Effects"))
+        //                 return textList.get(1);
+        //         }
+        //     }
+        //     return errorText("Invalid effect");
+        // }
+        // else if(pi.flag()==PathFlag.PROBABILITY_EFFECT) {
+        //     if(el != null && el.getId()==Tag.TAG_COMPOUND) {
+        //         CompoundTag nbt = (CompoundTag)el;
+        //         if(nbt.getCompound("effect").isPresent()) {
+        //             ItemStack stack = BlackMagick.itemFromString("{id:potion,components:{potion_contents:{custom_effects:["+BlackMagick.nbtToSnbt(nbt.getCompoundOrEmpty("effect"))+"]}}}");
+        //             if(!stack.isEmpty()) {
+        //                 List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
+        //                 if(textList.size()>1 && !textList.get(1).getString().equals("No Effects"))
+        //                     return textList.get(1);
+        //             }
+        //         }
+        //     }
+        //     return errorText("Invalid effect");
+        // }
+        // else if(pi.flag()==PathFlag.FIREWORK) {
+        //     if(el != null && el.getId()==Tag.TAG_COMPOUND) {
+        //         ItemStack stack = BlackMagick.itemFromString("{id:firework_star,components:{firework_explosion:"+BlackMagick.nbtToSnbt(el)+"}}");
+        //         if(!stack.isEmpty()) {
+        //             List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
+        //             if(textList.size()>1) {
+        //                 MutableComponent btnLbl = Component.empty();
+        //                 for(int i=1; i<textList.size(); i++) {
+        //                     if(i>1)
+        //                         btnLbl.append(Component.nullToEmpty(", "));
+        //                     btnLbl.append(textList.get(i));
+        //                 }
+        //                 return Component.nullToEmpty(btnLbl.getString());
+        //             }
+        //         }
+        //     }
+        //     return errorText("Invalid explosion");
+        // }
         return BlackMagick.nbtToColorfulText(el);
-    }
-
-    private Component getButtonTooltip(PathInfo pi, String key) {
-        MutableComponent btnTt = grayWhiteText("Key: ",key);
-        if(ComponentHelper.pathTypeToNbtType(pi.type()) != -1)
-            btnTt = btnTt.append(grayWhiteText("\nNBT Type: ",ComponentHelper.formatNbtType(ComponentHelper.pathTypeToNbtType(pi.type()))));
-        if(pi.description() != null)
-            btnTt = btnTt.append(grayWhiteText("\n\nInfo:\n")).append(Component.empty().append(pi.description()).withStyle(ChatFormatting.GRAY));
-        return btnTt;
     }
 
     private Component getButtonTooltip(PathNode node, PathHelper.PathInfo pi) {
         MutableComponent btnTt = Component.empty().append(grayWhiteText(node.isKey() ? "Key: " : "Index: ", node.isKey() ? node.key() : (""+node.index())));
-        // if(pi != null && pi.getNbtType().isPresent()) { to_do
-        //     btnTt = btnTt.append(grayWhiteText("\nNBT Type: ",ComponentHelper.formatNbtType(pi.getNbtType().get())));
-        // }
-        if(pi != null && pi.getInfo() != null) {
-            btnTt = btnTt.append(grayWhiteText("\n\nInfo:\n")).append(Component.empty().append(pi.getInfo()).withStyle(ChatFormatting.GRAY));
+        if(pi != null) {
+            if(!pi.getNbtTypes().isEmpty()) {
+                if(pi.getNbtTypes().size()==1)
+                    btnTt = btnTt.append(grayWhiteText("\n\nValid Type: ",pi.getNbtTypes().get(0).label()));
+                else {
+                    String types = "";
+                    for(NbtType t : pi.getNbtTypes())
+                        types += "\n"+t.label();
+                    btnTt = btnTt.append(grayWhiteText("\n\nValid Types: ",types));
+                }
+            }
+            if(pi.getInfo() != null) {
+                btnTt = btnTt.append(grayWhiteText("\n\nInfo:\n")).append(Component.empty().append(pi.getInfo()).withStyle(ChatFormatting.GRAY));
+            }
         }
         return btnTt;
     }
@@ -1734,7 +1731,7 @@ public class ItemBuilder extends GenericScreen {
                         if(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),"components.minecraft:custom_data.\"\u00a76\u00a7oBaphomethLabs\u00a7r\"")!=null) {
                             ItemStack newStack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
                                 BlackMagick.itemToNbt(selItem),"components.minecraft:custom_data.\"\u00a76\u00a7oBaphomethLabs\u00a7r\"",null)));
-                            if(BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbt(newStack),"components.minecraft:custom_data")).equals("{}")) {
+                            if(BlackMagick.nbtToSnbt(BlackMagick.getNbtPath(BlackMagick.itemToNbt(newStack),"components.minecraft:custom_data")).equals("{}")) {
                                 newStack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
                                     BlackMagick.itemToNbt(selItem),"components.minecraft:custom_data",null)));
                             }
@@ -1823,7 +1820,7 @@ public class ItemBuilder extends GenericScreen {
                         if(soundId != null)
                             minecraft.player.playNotifySound(SoundEvent.createVariableRangeEvent(soundId), SoundSource.MASTER, 1, 1);
                     }
-                }, ComponentHelper.REGISTRY_SOUND_EVENT.getArray(),true));// to_do add registry sounds + dynamic assets sounds
+                }, SuggestionHelper.REGISTRY_SOUND_EVENT.getArray(),true));// to_do add registry sounds + dynamic assets sounds
             }
             {
                 final int i = tabNum; final int j = getTabWidgetScrollIndex(tabNum);
@@ -1854,7 +1851,7 @@ public class ItemBuilder extends GenericScreen {
                 final int i = tabNum; final int j = getTabWidgetScrollIndex(tabNum);
                 addTabWidgetScroll(tabNum, new RowWidget(new Component[]{Component.nullToEmpty("Symbol")},new int[]{40,55,49,55},
                 new String[]{"Create banner(s) with preset designs\n\nChar Color | Chars | Base Color"+"\n\n"+BANNER_PRESET_CHARS},new String[][]
-                {ComponentHelper.LIST_DYE_COLOR.getArray(),BANNER_CHAR_LIST,ComponentHelper.LIST_DYE_COLOR.getArray()},
+                {SuggestionHelper.LIST_DYE_COLOR.getArray(),BANNER_CHAR_LIST,SuggestionHelper.LIST_DYE_COLOR.getArray()},
                 false,btn -> {
                     String[] inps = TAB_WIDGETS_SCROLL.get(i).get(j).btn();
                     if(minecraft.player.getAbilities().instabuild) {
@@ -1887,7 +1884,7 @@ public class ItemBuilder extends GenericScreen {
                             }
                             if(!items.isEmpty())
                                 bannerStack = BlackMagick.itemFromString("{id:bundle,components:{bundle_contents:"
-                                    +BlackMagick.nbtToString(items)+"}}");
+                                    +BlackMagick.nbtToSnbt(items)+"}}");
                         }
 
                         if(!bannerStack.isEmpty()) {
@@ -1949,7 +1946,7 @@ public class ItemBuilder extends GenericScreen {
                             }
                             else if(((inp.startsWith("\"{") && inp.endsWith("}\"")) || (inp.startsWith("'{") && inp.endsWith("}'")))
                             && BlackMagick.nbtFromString(inp,Tag.TAG_STRING) != null) {
-                                String inpString = ((StringTag)BlackMagick.nbtFromString(inp,Tag.TAG_STRING)).asString().get(); // keep asString
+                                String inpString = BlackMagick.nbtToSnbtOrString(BlackMagick.nbtFromString(inp,Tag.TAG_STRING));
                                 if(BlackMagick.nbtFromString(inpString,Tag.TAG_COMPOUND) != null) {
                                     item = BlackMagick.itemFromString(inpString);
                                 }
@@ -2061,7 +2058,7 @@ public class ItemBuilder extends GenericScreen {
                             }
                             else if(((inp.startsWith("\"{") && inp.endsWith("}\"")) || (inp.startsWith("'{") && inp.endsWith("}'")))
                             && BlackMagick.nbtFromString(inp,Tag.TAG_STRING) != null) {
-                                String inpString = ((StringTag)BlackMagick.nbtFromString(inp,Tag.TAG_STRING)).asString().get(); // keep asString
+                                String inpString = BlackMagick.nbtToSnbtOrString(BlackMagick.nbtFromString(inp,Tag.TAG_STRING));
                                 if(BlackMagick.nbtFromString(inpString,Tag.TAG_COMPOUND) != null) {
                                     item = BlackMagick.itemFromString(inpString);
                                 }
@@ -2183,19 +2180,21 @@ public class ItemBuilder extends GenericScreen {
         TAB_WIDGETS_LOCKED.get(tabNum).clear();
 
         if(tabNum == CACHE_TAB_MAIN) {   //createBlock components
+            ItemStack editItemInstance = selItem.copy();
+            CompoundTag editItemStack = BlackMagick.itemToNbt(editItemInstance);
             {
-                addTabWidgetScroll(tabNum, new RowWidgetComponent("id",false));
+                addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,"id",false));
             }
             if(!selItem.isEmpty()) {
                 {
-                    addTabWidgetScroll(tabNum, new RowWidgetComponent("count",false));
+                    addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,"count",false));
                 }
                 Set<String> allSetComponentKeys = Sets.newHashSet();
                 Set<String> modifiedComponentKeys = Sets.newHashSet();
                 Set<String> defaultComponentKeys = Sets.newHashSet();
                 Set<String> removedComponentKeys = Sets.newHashSet();
-                Set<String> storedComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(selItem),"components")).keySet();
-                for(String k : BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),"components")).keySet()) {
+                Set<String> storedComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(editItemInstance),"components")).keySet();
+                for(String k : BlackMagick.validCompound(BlackMagick.getNbtPath(editItemStack,"components")).keySet()) {
                     if(k.startsWith("!"))
                         removedComponentKeys.add(k);
                     else {
@@ -2209,26 +2208,26 @@ public class ItemBuilder extends GenericScreen {
                 if(!modifiedComponentKeys.isEmpty()) {
                     addTabWidgetScroll(tabNum, new RowWidget("Modified Components"));
                     for(String c : modifiedComponentKeys)
-                        addTabWidgetScroll(tabNum, new RowWidgetComponent(c,true));
+                        addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                 }
                 if(!defaultComponentKeys.isEmpty()) {
                     addTabWidgetScroll(tabNum, new RowWidget("Default Components"));
                     for(String c : defaultComponentKeys)
-                        addTabWidgetScroll(tabNum, new RowWidgetComponent(c,true));
+                        addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                 }
                 if(!removedComponentKeys.isEmpty()) {
                     addTabWidgetScroll(tabNum, new RowWidget("Removed Components"));
                     for(String c : removedComponentKeys)
-                        addTabWidgetScroll(tabNum, new RowWidgetComponent(c,true));
+                        addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                 }
                 boolean firstUnset = true;
-                for(String c : ComponentHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
+                for(String c : SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
                     if(!allSetComponentKeys.contains(c)) {
                         if(firstUnset) {
                             addTabWidgetScroll(tabNum, new RowWidget("Unset Components"));
                             firstUnset = false;
                         }
-                        addTabWidgetScroll(tabNum, new RowWidgetComponent(c,true));
+                        addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                     }
                 }
             }
@@ -2247,7 +2246,7 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<2; i++) {
                 ItemStack current = i==0 ? minecraft.player.getMainHandItem() : minecraft.player.getOffhandItem();
                 if(current != null && !current.isEmpty()) {
-                    int[] size = ComponentHelper.getContainerSize(current.getItem());
+                    int[] size = SuggestionHelper.getContainerSize(current.getItem());
 
                     if(current.is(Items.BUNDLE)) {
                         {
@@ -2387,14 +2386,14 @@ public class ItemBuilder extends GenericScreen {
     private enum NbtEditStyle {
         SNBT,
         NBT,
-        DESIGN
+        TEMPLATE
     }
 
     private record NbtEdit(CompoundTag original, CompoundTag current, boolean unsaved, PathNode[] pathNodes, String fullPath, PathHelper.PathInfo pi) {
 
         public static NbtEdit newEdit(CompoundTag startValue) {
             CompoundTag newNbt = startValue==null ? new CompoundTag() : startValue.copy();
-            return new NbtEdit(startValue, newNbt, false, new PathNode[0], "", PathHelper.getItemPath(newNbt, null));
+            return new NbtEdit(startValue, newNbt, false, new PathNode[0], "", PathHelper.getItemPath(newNbt, new PathNode[0]));
         }
 
         public NbtEdit withPath(PathNode[] path) {
@@ -2523,12 +2522,12 @@ public class ItemBuilder extends GenericScreen {
         nbtEditScrollNow = true;
         nbtEdit = newNbtEdit;
 
-        ItemSlotButton btnStyleDesign = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[0], btn -> {
-            nbtEditStyle = NbtEditStyle.DESIGN;
+        ItemSlotButton btnStyleTemplate = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[0], btn -> {
+            nbtEditStyle = NbtEditStyle.TEMPLATE;
             nbtEditRefreshScreen();
         }).showSlot(false);
-        btnStyleDesign.setTooltip(Tooltip.create(grayWhiteText("Style: ","TODO"))); //TODO rename
-        addTabWidgetLocked(tabNum, new PosWidget(btnStyleDesign,0-TAB_SIZE,30+TAB_OFFSET));
+        btnStyleTemplate.setTooltip(Tooltip.create(grayWhiteText("Style: ","Template")));
+        addTabWidgetLocked(tabNum, new PosWidget(btnStyleTemplate,0-TAB_SIZE,30+TAB_OFFSET));
 
         ItemSlotButton btnStyleNbt = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[1], btn -> {
             nbtEditStyle = NbtEditStyle.NBT;
@@ -2545,7 +2544,7 @@ public class ItemBuilder extends GenericScreen {
         addTabWidgetLocked(tabNum, new PosWidget(btnStyleSnbt,0-TAB_SIZE,30+TAB_OFFSET+2*(TAB_SPACING+TAB_SIZE)));
 
         switch(nbtEditStyle) {
-            case DESIGN : btnStyleDesign.active = false; break;
+            case TEMPLATE : btnStyleTemplate.active = false; break;
             case NBT : btnStyleNbt.active = false; break;
             case SNBT : btnStyleSnbt.active = false; break;
         }
@@ -2634,15 +2633,15 @@ public class ItemBuilder extends GenericScreen {
 
         Tag editElement = nbtEdit.getEditElement();
 
-        boolean foundDesignStyle = !nbtEdit.pi().isEmpty(); //to_do only mark foundDesignStyle if info found depending on current element type?
-        if(!foundDesignStyle) {
-            btnStyleDesign.setError(ItemSlotButton.ItemError.WARN);
-            btnStyleDesign.setTooltip(Tooltip.create(grayWhiteText("Style: ","TODO") //TODO rename
+        boolean foundTemplateStyle = !nbtEdit.pi().isEmpty(); //to_do only mark found if info found depending on current element type?
+        if(!foundTemplateStyle) {
+            btnStyleTemplate.setError(ItemSlotButton.ItemError.WARN);
+            btnStyleTemplate.setTooltip(Tooltip.create(grayWhiteText("Style: ","Template")
                 .append(warnText("\nNo info found for current path"))));
         }
 
         switch(nbtEditStyle) { //TODO
-            case DESIGN: {//to_do
+            case TEMPLATE: {
             }
             case NBT: {
                 boolean found = false;
@@ -2687,7 +2686,7 @@ public class ItemBuilder extends GenericScreen {
                 break;
             }
             case SNBT: {
-                final String currentVal = BlackMagick.nbtToString(editElement);
+                final String currentVal = BlackMagick.nbtToSnbt(editElement);
 
                 MultiLineEditBox elementTxt = new MultiLineEditBox(minecraft.font, 0, 0, ROW_WIDTH, ROW_HEIGHT*6,
                     Component.nullToEmpty(""), Component.nullToEmpty(""));
@@ -2800,7 +2799,7 @@ public class ItemBuilder extends GenericScreen {
         //     for(String keySetLbl : keyGroupLbls) {
         //         if(!keyGroups.get(keySetLbl).isEmpty()) {
         //             addTabWidgetScroll(tabNum, new RowWidget(keySetLbl));
-        //             for(String k : BlackMagick.sortSet(keyGroups.get(keySetLbl))) // to_do verify cast below
+        //             for(String k : BlackMagick.sortSet(keyGroups.get(keySetLbl)))
         //                 addTabWidgetScroll(tabNum, new RowWidgetElement(path,path2==null ? null : (ListTag)args.get("path2"),saveBtn,k));
         //         }
         //     }
@@ -2832,7 +2831,7 @@ public class ItemBuilder extends GenericScreen {
         //     if(currentList==null)
         //         currentList = new ListTag();
 
-        //     for(int i=0; i<=currentList.size(); i++) { // to_do verify cast below
+        //     for(int i=0; i<=currentList.size(); i++) {
         //         addTabWidgetScroll(tabNum, new RowWidgetElement(path,path2==null ? null : (ListTag)args.get("path2"),saveBtn,i,currentList.size()-1));
         //     }
 
@@ -2847,7 +2846,7 @@ public class ItemBuilder extends GenericScreen {
             // String startVal = "";
 
             // if(el2 != null)
-            //     startVal = BlackMagick.nbtToString(el2); // keep asString
+            //     startVal = BlackMagick.nbtToSnbt(el2);
             // else
             //     startVal = "{text:\"\"}";
 
@@ -2927,7 +2926,7 @@ public class ItemBuilder extends GenericScreen {
             // }
         // }
         // else if(elType == PathType.DECIMAL_COLOR) { to_do nbt-edit
-        //     editorOutputLocked = true; // to_do verify cast below
+        //     editorOutputLocked = true;
         //     addTabWidgetScroll(tabNum, new RowWidgetElement(path,path2==null ? null : (ListTag)args.get("path2"),saveBtn,WidgetCacheType.TXT_DECIMAL_COLOR));
         //     addTabWidgetScroll(tabNum, new RowWidgetEditor(WidgetCacheType.TXT_DECIMAL_COLOR));
         //     addTabWidgetScroll(tabNum, new RowWidget("Color Editor"));
@@ -2988,12 +2987,12 @@ public class ItemBuilder extends GenericScreen {
         //         bannerShield = true;
         //         showBannerPreview = true;
         //         bannerChangePreview.load(BlackMagick.validCompoundFromString("{equipment:{mainhand:"
-        //             +BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(editItem))+"},Invisible:true,Pose:{RightArm:[-90f,-90f,0f]}}"));
+        //             +BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(editItem))+"},Invisible:true,Pose:{RightArm:[-90f,-90f,0f]}}"));
         //     }
         //     else if(editItem.is(ItemTags.BANNERS)) {
         //         showBannerPreview = true;
         //         bannerChangePreview.load(BlackMagick.validCompoundFromString("{equipment:{head:"
-        //             +BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(editItem))+"},Invisible:true,Pose:{RightArm:[-90f,-90f,0f]}}"));
+        //             +BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(editItem))+"},Invisible:true,Pose:{RightArm:[-90f,-90f,0f]}}"));
         //     }
 
         //     if(bannerNbt.getString("color").isPresent())
@@ -3012,14 +3011,14 @@ public class ItemBuilder extends GenericScreen {
         //         String[] currentVals = new String[Math.min(8,bannerVals.size())];
         //         for(int i=0; i<currentVals.length; i++)
         //             currentVals[i] = bannerVals.remove(0);
-        //         addTabWidgetScroll(tabNum,  // to_do verify cast below
+        //         addTabWidgetScroll(tabNum,
         //             new RowWidgetBannerRow(path,path2==null ? null : (ListTag)args.get("path2"),saveBtn,row<2,currentVals,row<2 ? bannerCol : bannerPat,cancelEl));
         //         row++;
         //     }
 
         // }
         // else if(elType == PathType.POSE) { to_do nbt-edit
-        //     editorOutputLocked = true; // to_do verify cast below
+        //     editorOutputLocked = true;
 
         //     addTabWidgetScroll(tabNum, new RowWidgetElement(path,path2==null ? null : (ListTag)args.get("path2"),saveBtn,WidgetCacheType.TXT_POSE));
         //     addTabWidgetScroll(tabNum, new RowWidgetEditor(WidgetCacheType.TXT_POSE));
@@ -3075,7 +3074,7 @@ public class ItemBuilder extends GenericScreen {
                 cancelBtn.setTooltip(Tooltip.create(grayWhiteText("Keep unchanged:\n").append(nbtEdit.getRevertItemChanges())));
 
             if(inpError == null)
-                setErrorMsg(BlackMagick.getItemCompoundErrors(BlackMagick.nbtToString(nbtEdit.current()),inpError));
+                setErrorMsg(BlackMagick.getItemCompoundErrors(BlackMagick.nbtToSnbt(nbtEdit.current()),inpError));
 
             saveBtn.active = true;
             if(!nbtEdit.unsaved()) {
@@ -3547,7 +3546,7 @@ public class ItemBuilder extends GenericScreen {
                         case 8: suggs.setSuggestions(new String[]
                                 {"{text:\"\"}","{\"id\":\"stone\"}","{\"id\":\"bundle\",\"components\":\"{bundle_content:[{id:\\\"stone\\\"}]}\"}"}); break;
                         case 9: suggs.setSuggestions(new String[]{"0","[0.0,0.0,0.0,0.0]"}); break;
-                        case 10: suggs.setSuggestions(ComponentHelper.ASSETS_FONT.getArray()); break;
+                        case 10: suggs.setSuggestions(SuggestionHelper.ASSETS_FONT.getArray()); break;
                         default: resetSuggs(); break;
                     }
                 }
@@ -3566,7 +3565,7 @@ public class ItemBuilder extends GenericScreen {
                             case 8: suggs.setSuggestions(new String[]
                                 {"{text:\"\"}","{\"id\":\"stone\"}","{\"id\":\"bundle\",\"components\":\"{bundle_content:[{id:\\\"stone\\\"}]}\"}"}); break;
                             case 9: suggs.setSuggestions(new String[]{"0","[0.0,0.0,0.0,0.0]"}); break;
-                            case 10: suggs.setSuggestions(ComponentHelper.ASSETS_FONT.getArray()); break;
+                            case 10: suggs.setSuggestions(SuggestionHelper.ASSETS_FONT.getArray()); break;
                             default: resetSuggs(); break;
                         }
                     }
@@ -3744,16 +3743,18 @@ public class ItemBuilder extends GenericScreen {
          * 
          * @param path nbt path in format: components.minecraft:foo.bar.list[0]
          */
-        public RowWidgetComponent(String key, boolean component) {
+        public RowWidgetComponent(CompoundTag itemStack, String key, boolean isComponent) {
             PathNode[] pathNodes;
-            if(component)
+            if(isComponent)
                 pathNodes = new PathNode[]{PathNode.of("components"),PathNode.of(key)};
             else
                 pathNodes = new PathNode[]{PathNode.of(key)};
             final String path = PathNode.resolvePath(pathNodes);
-            PathInfo pi = ComponentHelper.getPathInfo(path);
-            boolean isString = ComponentHelper.pathTypeToNbtType(pi.type())==Tag.TAG_STRING;
-            Component btnTt = getButtonTooltip(pi,path);
+
+            PathHelper.PathInfo pi = PathHelper.getItemPath(itemStack, pathNodes);
+            Component btnTt = getButtonTooltip(PathNode.of(key), pi);
+
+            Tag startEl = BlackMagick.getNbtPath(itemStack,path);
 
             String keyBtnTxt = cleanKeyBtn(PathNode.of(path));
             // int size = sizeFromName(keyBtnTxt);
@@ -3765,29 +3766,62 @@ public class ItemBuilder extends GenericScreen {
             keyBtn.active = false;
             keyBtn.setTooltip(Tooltip.create(btnTt));
 
-            displayItem = pi.icon() == null ? DEFAULT_COMPONENT_ICON : pi.icon();
+            displayItem = pi.getIcon() == null ? DEFAULT_COMPONENT_ICON : pi.getIcon();
             displayItemXoff = -9;
 
-            if(ComponentHelper.isComplex(pi.type())) {
+            if((startEl != null && pi.hasPathType(PathType.UNIT) && startEl.getId()==Tag.TAG_COMPOUND && ((CompoundTag)startEl).isEmpty())
+            || (startEl == null && pi.getDefaultPathType()==PathType.UNIT)) {
 
-                Tag startEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path);
+                final int startVal = startEl == null ? 0 : 1;
+
+                final int btnSize = 35;
+                final int btnSpacing = 2;
+                this.btns = new Button[]{
+                keyBtn,
+                Button.builder(Component.nullToEmpty("False"), btn -> {
+                    String comp = path.replaceFirst("components\\.","");
+                    if(!comp.startsWith("!"))
+                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
+                            itemStack,path,null),"components.!"+comp,new CompoundTag())));
+                    else
+                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(itemStack,path,null)));
+                    unsel();
+                }).size(btnSize,WID_HEIGHT).build(),
+                Button.builder(Component.nullToEmpty("True"), btn -> {
+                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(itemStack,path,new CompoundTag())));
+                    unsel();
+                }).size(btnSize,WID_HEIGHT).build()};
+                this.btnX = new int[]{(ROW_LEFT_SCROLL+ROW_LEFT_ICON),ROW_RIGHT_SCROLL-(2*btnSize+btnSpacing),ROW_RIGHT_SCROLL-btnSize};
+
+                this.btns[startVal+1].active = false;
+
+                for(int i=0; i<btns.length; i++) {
+                    if(i>0 && this.btns[i].active) {
+                        if(!minecraft.player.getAbilities().instabuild)
+                            this.btns[i].setTooltip(Tooltip.create(ERROR_CREATIVE));
+                        else
+                            this.btns[i].setTooltip(TT_SET);
+                    }
+                }
+            }
+            else if((startEl != null && (startEl.getId()==Tag.TAG_COMPOUND || startEl.getId()==Tag.TAG_LIST))
+            || (startEl == null && pi.getDefaultPathType()==PathType.COMPLEX)) {
 
                 this.btns = new Button[]{
                 keyBtn,
                 Button.builder(getButtonText(path,startEl), btn -> {
-                    createBlankTabNbtEdit(BlackMagick.itemToNbt(selItem),pathNodes);
+                    createBlankTabNbtEdit(itemStack,pathNodes);
                 }).size(ROW_WIDTH-ROW_LEFT_ICON-20-size-WID_SPACE,WID_HEIGHT).build(),
                 Button.builder(Component.nullToEmpty(startEl==null ? "+" : "X"), btn -> {
                     if(startEl==null) {
-                        createBlankTabNbtEdit(BlackMagick.itemToNbt(selItem),pathNodes);
+                        createBlankTabNbtEdit(itemStack,pathNodes);
                     }
-                    else if(path.startsWith("components.")) {
-                        String comp = path.replaceFirst("components\\.","");
-                        if(!comp.startsWith("!"))
+                    else if(isComponent) {
+                        if(!key.startsWith("!"))
                             BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                                BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
+                                itemStack,path,null),"components.!"+key,new CompoundTag())));
                         else
-                            BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null)));
+                            BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(itemStack,path,null)));
                     }
                     unsel();
                 }).size(20,WID_HEIGHT).build()};
@@ -3805,52 +3839,16 @@ public class ItemBuilder extends GenericScreen {
                     this.btns[2].setTooltip(Tooltip.create(ERROR_CREATIVE));
                 }
             }
-            else if(pi.type() == PathType.UNIT) {
+            else if((startEl != null && pi.hasPathType(PathType.BOOLEAN) && startEl.getId()==Tag.TAG_BYTE && (((ByteTag)startEl).asByte().get()==0 || ((ByteTag)startEl).asByte().get()==1))
+            || (startEl == null && pi.getDefaultPathType()==PathType.BOOLEAN)) {
+
                 final int startVal;
-                if(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path) != null) {
-                    startVal = 1;
-                }
-                else
-                    startVal = 0;
-
-                final int btnSize = 35;
-                final int btnSpacing = 2;
-                this.btns = new Button[]{
-                keyBtn,
-                Button.builder(Component.nullToEmpty("False"), btn -> {
-                    String comp = path.replaceFirst("components\\.","");
-                    if(!comp.startsWith("!"))
-                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                            BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
-                    else
-                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null)));
-                    unsel();
-                }).size(btnSize,WID_HEIGHT).build(),
-                Button.builder(Component.nullToEmpty("True"), btn -> {
-                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,new CompoundTag())));
-                    unsel();
-                }).size(btnSize,WID_HEIGHT).build()};
-                this.btnX = new int[]{(ROW_LEFT_SCROLL+ROW_LEFT_ICON),ROW_RIGHT_SCROLL-(2*btnSize+btnSpacing),ROW_RIGHT_SCROLL-btnSize};
-
-                this.btns[startVal+1].active = false;
-
-                for(int i=0; i<btns.length; i++) {
-                    if(i>0 && this.btns[i].active) {
-                        if(!minecraft.player.getAbilities().instabuild)
-                            this.btns[i].setTooltip(Tooltip.create(ERROR_CREATIVE));
-                        else
-                            this.btns[i].setTooltip(TT_SET);
-                    }
-                }
-            }
-            else if(pi.type() == PathType.TRINARY) {
-                final int startVal;
-                if(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path) != null) {
-                    String tempVal = BlackMagick.nbtToString(BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path));
-                    if(tempVal.equals("1b") || tempVal.equals("1") || tempVal.equals("true"))
-                        startVal = 2;
-                    else
+                if(startEl != null) {
+                    String tempVal = BlackMagick.nbtToSnbt(startEl);
+                    if(tempVal.equals("0b") || tempVal.equals("0") || tempVal.equals("false"))
                         startVal = 1;
+                    else
+                        startVal = 2;
                 }
                 else
                     startVal = 0;
@@ -3863,17 +3861,17 @@ public class ItemBuilder extends GenericScreen {
                     String comp = path.replaceFirst("components\\.","");
                     if(!comp.startsWith("!"))
                         BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                            BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
+                            itemStack,path,null),"components.!"+comp,new CompoundTag())));
                     else
-                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null)));
+                        BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(itemStack,path,null)));
                     unsel();
                 }).size(btnSize,WID_HEIGHT).build(),
                 Button.builder(Component.nullToEmpty("False"), btn -> {
-                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,ByteTag.ZERO)));
+                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(itemStack,path,ByteTag.ZERO)));
                     unsel();
                 }).size(btnSize,WID_HEIGHT).build(),
                 Button.builder(Component.nullToEmpty("True"), btn -> {
-                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,ByteTag.ONE)));
+                    BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(itemStack,path,ByteTag.ONE)));
                     unsel();
                 }).size(btnSize,WID_HEIGHT).build()};
                 this.btnX = new int[]{(ROW_LEFT_SCROLL+ROW_LEFT_ICON),ROW_RIGHT_SCROLL-(3*btnSize+2*btnSpacing),ROW_RIGHT_SCROLL-(2*btnSize+btnSpacing),ROW_RIGHT_SCROLL-btnSize};
@@ -3890,13 +3888,14 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
             else { // inline component
-                String[] baseSuggestions = pi.suggs() == null ? null : pi.suggs().getArray();
+                String[] baseSuggestions = pi.getSuggs().getArray();
 
-                Tag tempEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),path);
-                final String startVal = (isString && tempEl != null && tempEl.getId() == Tag.TAG_STRING) ? tempEl.asString().get() : BlackMagick.nbtToString(tempEl); // keep asString
+                boolean isString = ((startEl != null && pi.hasPathType(PathType.STRING) && startEl.getId()==Tag.TAG_STRING)
+                    || (startEl == null && pi.getDefaultPathType()==PathType.STRING));
+                final String startVal = isString ? BlackMagick.nbtToSnbtOrString(startEl) : BlackMagick.nbtToSnbt(startEl);
 
                 int deleteBtnSize = 20;
-                if(tempEl == null)
+                if(startEl == null)
                     deleteBtnSize = 0;
 
                 {
@@ -3929,7 +3928,7 @@ public class ItemBuilder extends GenericScreen {
         
                                 if(path.startsWith("components.")) {
                                     if(el != null)
-                                        setErrorMsg(BlackMagick.getItemCompoundErrors(BlackMagick.nbtToString(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,el)),inpError));
+                                        setErrorMsg(BlackMagick.getItemCompoundErrors(BlackMagick.nbtToSnbt(BlackMagick.setNbtPath(itemStack,path,el)),inpError));
                                     else {
                                         try {
                                             ItemArgument.item(BlackMagick.getCommandRegistries()).parse(
@@ -3965,7 +3964,7 @@ public class ItemBuilder extends GenericScreen {
                                 else if(path.equals("count")) {
                                     keyType = "count";
                                     try {
-                                        IntegerArgumentType.integer(1,selItem.getMaxStackSize()).parse(new StringReader(value));
+                                        IntegerArgumentType.integer(1,selItem.getMaxStackSize()).parse(new StringReader(value));//to_do get from itemStack param
                                     } catch(Exception ex) {
                                         if(ex instanceof CommandSyntaxException) {
                                             setErrorMsg(((CommandSyntaxException)ex).getMessage());
@@ -3995,11 +3994,11 @@ public class ItemBuilder extends GenericScreen {
                                             Component.empty().append(ERROR_CREATIVE).append("\n\n").append(tempLbl)));
 
                                     if(
-                                        (tempEl != null && BlackMagick.elementsEqual(tempEl,
-                                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,el))),path)
+                                        (startEl != null && BlackMagick.elementsEqual(startEl,
+                                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(itemStack,path,el))),path)
                                         ))
                                         || (
-                                            tempEl == null && path.equals("id") && (value.equals("air") || value.equals("minecraft:air"))
+                                            startEl == null && path.equals("id") && (value.equals("air") || value.equals("minecraft:air"))
                                         )
                                     ) {
                                         unsaved = false;
@@ -4022,8 +4021,8 @@ public class ItemBuilder extends GenericScreen {
                             suggsOnChanged(w,baseSuggestions,startVal);
                         }
                     });
-                    if(tempEl != null) {
-                        w.setTooltip(Tooltip.create(grayWhiteText("Edit component:\n").append(BlackMagick.nbtToColorfulText(tempEl))));
+                    if(startEl != null) {
+                        w.setTooltip(Tooltip.create(grayWhiteText("Edit component:\n").append(BlackMagick.nbtToColorfulText(startEl))));
                         w.setTooltipDelay(TOOLTIP_DELAY);
                     }
                     addPosWidget(w, ROW_LEFT_SCROLL+ROW_LEFT_ICON+5+size, 0);
@@ -4042,7 +4041,7 @@ public class ItemBuilder extends GenericScreen {
                                 else {
                                     Tag el = isString ? StringTag.valueOf(inp) : BlackMagick.nbtFromString(inp);
                                     if(el != null) {
-                                        ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtExclusive(selItem),path,el));
+                                        ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtExclusive(selItem),path,el));//to_do get from itemStack param
                                         if(!newItem.isEmpty())
                                             BlackMagick.setItemMain(newItem);
                                     }
@@ -4051,7 +4050,7 @@ public class ItemBuilder extends GenericScreen {
                             else {
                                 Tag el = isString ? StringTag.valueOf(inp) : BlackMagick.nbtFromString(inp);
                                 if(el != null) {
-                                    ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,el));
+                                    ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(itemStack,path,el));
                                     if(!newItem.isEmpty())
                                         BlackMagick.setItemMain(newItem);
                                 }
@@ -4062,20 +4061,19 @@ public class ItemBuilder extends GenericScreen {
                     }).size(20,WID_HEIGHT).build();
                     addPosWidget(w, ROW_RIGHT_SCROLL-20-deleteBtnSize, 0);
                 }
-                if(tempEl != null) {
+                if(startEl != null) {
                     Button w = Button.builder(Component.nullToEmpty("X"), btn -> {
-                        if(tempEl != null) {
-                            String comp = path.replaceFirst("components\\.","");
-                            if(component && !comp.startsWith("!"))
+                        if(startEl != null) {
+                            if(isComponent && !key.startsWith("!"))
                                 BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.setNbtPath(
-                                    BlackMagick.itemToNbt(selItem),path,null),"components.!"+comp,new CompoundTag())));
+                                    itemStack,path,null),"components.!"+key,new CompoundTag())));
                             else
-                                BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),path,null)));
+                                BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(itemStack,path,null)));
                         }
                         unsel();
                     }).size(20,WID_HEIGHT).build();
                     w.active = true;
-                    w.setTooltip(Tooltip.create(Component.nullToEmpty("Delete "+(component ? "component" : path))));
+                    w.setTooltip(Tooltip.create(Component.nullToEmpty("Delete "+(isComponent ? "component" : path))));
                     if(!minecraft.player.getAbilities().instabuild) {
                         w.active = false;
                         w.setTooltip(Tooltip.create(ERROR_CREATIVE));
@@ -4111,7 +4109,7 @@ public class ItemBuilder extends GenericScreen {
 
         //     final String startVal = "";
         //     Tag currentEl = thisNbtEdit.getEditElement();
-        //     final String currentVal = BlackMagick.nbtToString(currentEl);
+        //     final String currentVal = BlackMagick.nbtToSnbt(currentEl);
 
         //     String keyBtnTxt = cleanKeyBtn(PathNode.of(key));
         //     int size = sizeFromName(keyBtnTxt);
@@ -4338,7 +4336,7 @@ public class ItemBuilder extends GenericScreen {
             PathHelper.PathInfo pi = nbtEdit.pi().getCompoundKeyInfo(baseCompound, key);
 
             Tag currentEl = thisNbtEdit.getEditElement();
-            final String currentVal = BlackMagick.nbtToString(currentEl);
+            final String currentVal = BlackMagick.nbtToSnbt(currentEl);
 
             String keyBtnTxt = cleanKeyBtn(PathNode.of(key));
             //int size = sizeFromName(keyBtnTxt);
@@ -4613,7 +4611,7 @@ public class ItemBuilder extends GenericScreen {
             RowWidgetElement row = context.new RowWidgetElement();
 
             Tag currentEl = context.nbtEdit.getEditElement();
-            final String currentVal = BlackMagick.nbtToString(currentEl);
+            final String currentVal = BlackMagick.nbtToSnbt(currentEl);
 
             PathHelper.PathInfo pi = context.nbtEdit.pi();
             String[] baseSuggestions = pi == null ? null : pi.getSuggs().getArray();
@@ -4688,7 +4686,7 @@ public class ItemBuilder extends GenericScreen {
             PathHelper.PathInfo pi = nbtEdit.pi().getListIndexInfo(index);
 
             Tag currentEl = thisNbtEdit.getEditElement();
-            final String currentVal = BlackMagick.nbtToString(currentEl);
+            final String currentVal = BlackMagick.nbtToSnbt(currentEl);
 
             int keyBtnSize = 30;
             int listBtnSize = 15;
@@ -4805,122 +4803,122 @@ public class ItemBuilder extends GenericScreen {
          * Contains button to delete, clone, move, and edit the element in the list.
          * Add one of these for each index of the list, and also for index = NbtList.size()
          */
-        public RowWidgetElement(String blankElPath, ListTag path2, Button saveBtn, int index, int maxIndex) {
-            // String currentPath2;
-            // if(path2==null)
-            //     currentPath2 = "";
-            // else
-            //     currentPath2 = path2.get(0).asString().get(); // keep asString
-            // String pagePath = blankElPath+currentPath2;
-            // String fullPath = pagePath+"["+index+"]";
+        // public RowWidgetElement(String blankElPath, ListTag path2, Button saveBtn, int index, int maxIndex) {
+        //     // String currentPath2;
+        //     // if(path2==null)
+        //     //     currentPath2 = "";
+        //     // else
+        //     //     currentPath2 = path2.get(0).asString().get();
+        //     // String pagePath = blankElPath+currentPath2;
+        //     // String fullPath = pagePath+"["+index+"]";
 
-            { // add new element to list
-                Component btnTxt = Component.nullToEmpty("Add Element");
-                // PathInfo pi = ComponentHelper.getPathInfo(pagePath);
-                // PathInfo pie = ComponentHelper.getPathInfo(pagePath+"[0]");
+        //     { // add new element to list
+        //         Component btnTxt = Component.nullToEmpty("Add Element");
+        //         // PathInfo pi = ComponentHelper.getPathInfo(pagePath);
+        //         // PathInfo pie = ComponentHelper.getPathInfo(pagePath+"[0]");
 
-                this.btns = new Button[]{
-                Button.builder(btnTxt, btn -> {
-                    // Tag el = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),pagePath); to_do nbt-edit
-                    // ListTag list;
-                    // if(el != null && el.getId()==Tag.TAG_LIST) {
-                    //     list = (ListTag)el;
-                    // }
-                    // else
-                    //     list = new ListTag();
+        //         this.btns = new Button[]{
+        //         Button.builder(btnTxt, btn -> {
+        //             // Tag el = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),pagePath); to_do nbt-edit
+        //             // ListTag list;
+        //             // if(el != null && el.getId()==Tag.TAG_LIST) {
+        //             //     list = (ListTag)el;
+        //             // }
+        //             // else
+        //             //     list = new ListTag();
 
-                    // if(!list.isEmpty()) {
-                    //     Tag newEl = BlackMagick.getDefaultNbt(list.get(0).getId());
-                    //     if(newEl != null)
-                    //         list.add(newEl);
-                    // }
-                    // else {
-                    //     if(pi.type()==PathType.LIST && pi.listType()>=0) {
-                    //         Tag newEl = BlackMagick.getDefaultNbt(pi.listType());
-                    //         if(newEl != null)
-                    //             list.add(newEl);
-                    //     }
-                    //     else {
-                    //         FortytwoEdit.logWarn("Failed to add element to unknown list at path: "+pagePath);
-                    //     }
-                    // }
+        //             // if(!list.isEmpty()) {
+        //             //     Tag newEl = BlackMagick.getDefaultNbt(list.get(0).getId());
+        //             //     if(newEl != null)
+        //             //         list.add(newEl);
+        //             // }
+        //             // else {
+        //             //     if(pi.type()==PathType.LIST && pi.listType()>=0) {
+        //             //         Tag newEl = BlackMagick.getDefaultNbt(pi.listType());
+        //             //         if(newEl != null)
+        //             //             list.add(newEl);
+        //             //     }
+        //             //     else {
+        //             //         FortytwoEdit.logWarn("Failed to add element to unknown list at path: "+pagePath);
+        //             //     }
+        //             // }
 
-                    // if(!list.isEmpty()) {
-                    //     nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-                    //         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),pagePath,list),blankElPath),saveBtn,
-                    //         path2==null ? null : pagePath);
-                    // }
+        //             // if(!list.isEmpty()) {
+        //             //     nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
+        //             //         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),pagePath,list),blankElPath),saveBtn,
+        //             //         path2==null ? null : pagePath);
+        //             // }
 
-                    // CompoundTag newArgs = BlackMagick.validCompoundFromString("{path:\""+blankElPath+"\"}");
-                    // if(path2 != null) {
-                    //     newArgs.put("path2",path2);
-                    // }
-                    // if(blankTabEl != null)
-                    //     newArgs.put("overrideEl",blankTabEl);
-                    // createBlankTab(BlankTabMode.NBT_EDIT,newArgs);
-                }).size(80,WID_HEIGHT).build()};
-                this.btnX = new int[]{ROW_LEFT_SCROLL};
-                this.btns[0].setTooltip(Tooltip.create(Component.nullToEmpty("Add a default element to the list")));
-            }
+        //             // CompoundTag newArgs = BlackMagick.validCompoundFromString("{path:\""+blankElPath+"\"}");
+        //             // if(path2 != null) {
+        //             //     newArgs.put("path2",path2);
+        //             // }
+        //             // if(blankTabEl != null)
+        //             //     newArgs.put("overrideEl",blankTabEl);
+        //             // createBlankTab(BlankTabMode.NBT_EDIT,newArgs);
+        //         }).size(80,WID_HEIGHT).build()};
+        //         this.btnX = new int[]{ROW_LEFT_SCROLL};
+        //         this.btns[0].setTooltip(Tooltip.create(Component.nullToEmpty("Add a default element to the list")));
+        //     }
 
-            initChildren();
-        }
+        //     initChildren();
+        // }
 
         /**
          * Used for elements with specialized editors.
          */
-        public RowWidgetElement(String blankElPath, ListTag path2, Button saveBtn, WidgetCacheType cacheType) {
-            String currentPath2;
-            if(path2==null)
-                currentPath2 = "";
-            else
-                currentPath2 = path2.get(0).asString().get(); // keep asString
-            String fullPath = blankElPath+currentPath2;
+        // public RowWidgetElement(String blankElPath, ListTag path2, Button saveBtn, WidgetCacheType cacheType) {
+        //     String currentPath2;
+        //     if(path2==null)
+        //         currentPath2 = "";
+        //     else
+        //         currentPath2 = path2.get(0).asString().get();
+        //     String fullPath = blankElPath+currentPath2;
 
-            PathInfo pi = ComponentHelper.getPathInfo(fullPath);
-            boolean isString = ComponentHelper.pathTypeToNbtType(pi.type())==Tag.TAG_STRING;
+        //     //PathInfo pi = ComponentHelper.getPathInfo(fullPath);
+        //     boolean isString = ComponentHelper.pathTypeToNbtType(pi.type())==Tag.TAG_STRING;
 
-            Tag tempEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),fullPath);
-            final String startVal = (isString && tempEl != null && tempEl.getId() == Tag.TAG_STRING) ? tempEl.asString().get() : BlackMagick.nbtToString(tempEl); // keep asString
-            // tempEl = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath); to_do nbt-edit
-            final String currentVal = (isString && tempEl != null && tempEl.getId() == Tag.TAG_STRING) ? tempEl.asString().get() : BlackMagick.nbtToString(tempEl); // keep asString
+        //     Tag tempEl = BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),fullPath);
+        //     final String startVal = (isString && tempEl != null && tempEl.getId() == Tag.TAG_STRING) ? tempEl.asString().get() : BlackMagick.nbtToSnbt(tempEl);
+        //     // tempEl = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath); to_do nbt-edit
+        //     final String currentVal = (isString && tempEl != null && tempEl.getId() == Tag.TAG_STRING) ? tempEl.asString().get() : BlackMagick.nbtToSnbt(tempEl);
 
-            String[] baseSuggestions = pi.suggs() == null ? null : pi.suggs().getArray();
+        //     String[] baseSuggestions = pi.suggs() == null ? null : pi.suggs().getArray();
 
-            this.txts = new EditBox[]{new EditBox(((ItemBuilder)ItemBuilder.this).minecraft.font,0,0, ROW_WIDTH, WID_HEIGHT, Component.nullToEmpty(""))};
-            this.txtX = new int[]{ROW_LEFT_SCROLL};
-            this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
+        //     this.txts = new EditBox[]{new EditBox(((ItemBuilder)ItemBuilder.this).minecraft.font,0,0, ROW_WIDTH, WID_HEIGHT, Component.nullToEmpty(""))};
+        //     this.txtX = new int[]{ROW_LEFT_SCROLL};
+        //     this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
 
-            this.txts[0].setResponder(value -> {
-                setErrorMsg(null);
-                // Tag el = isString ? StringTag.valueOf(value) : BlackMagick.nbtFromString(value);
+        //     this.txts[0].setResponder(value -> {
+        //         setErrorMsg(null);
+        //         // Tag el = isString ? StringTag.valueOf(value) : BlackMagick.nbtFromString(value);
 
-                // if(el != null || value.isEmpty()) to_do nbt-edit
-                //     nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-                //         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,el),blankElPath),saveBtn,
-                //         path2==null ? null : fullPath);
-                // else
-                //     setErrorMsg("Invalid element");
-                //
-                // if((value != null && !value.equals(startVal))) {
-                //     this.txts[0].setTextColor(TEXT_COLOR);
-                //     if(inpError == null)
-                //         setErrorMsg(BlackMagick.getItemCompoundErrors(BlackMagick.nbtToString(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl)),inpError));
-                // }
-                // else {
-                //     this.txts[0].setTextColor(LABEL_COLOR);
-                // }
+        //         // if(el != null || value.isEmpty()) to_do nbt-edit
+        //         //     nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
+        //         //         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,el),blankElPath),saveBtn,
+        //         //         path2==null ? null : fullPath);
+        //         // else
+        //         //     setErrorMsg("Invalid element");
+        //         //
+        //         // if((value != null && !value.equals(startVal))) {
+        //         //     this.txts[0].setTextColor(TEXT_COLOR);
+        //         //     if(inpError == null)
+        //         //         setErrorMsg(BlackMagick.getItemCompoundErrors(BlackMagick.nbtToSnbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl)),inpError));
+        //         // }
+        //         // else {
+        //         //     this.txts[0].setTextColor(LABEL_COLOR);
+        //         // }
 
-                if(inpError != null)
-                    this.txts[0].setTextColor(ERROR_COLOR);
+        //         if(inpError != null)
+        //             this.txts[0].setTextColor(ERROR_COLOR);
 
-                suggsOnChanged(this.txts[0],baseSuggestions,startVal);
-            });
+        //         suggsOnChanged(this.txts[0],baseSuggestions,startVal);
+        //     });
 
-            this.txts[0].setValue(currentVal);
-            widgetCacheAdd(cacheType, this.txts[0]);
-            initChildren();
-        }
+        //     this.txts[0].setValue(currentVal);
+        //     widgetCacheAdd(cacheType, this.txts[0]);
+        //     initChildren();
+        // }
 
     }
 
@@ -4953,7 +4951,7 @@ public class ItemBuilder extends GenericScreen {
                         String itemString = "";
                         ItemStack savedItem = minecraft.player.getMainHandItem().copy();
                         if(!savedItem.isEmpty()) {
-                            itemString = BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(savedItem));
+                            itemString = BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(savedItem));
                         }
 
                         if(FortytwoEdit.testSavedItems(savedItems)) {
@@ -5068,7 +5066,7 @@ public class ItemBuilder extends GenericScreen {
             // if(path2==null)
             //     currentPath2 = "";
             // else
-            //     currentPath2 = path2.get(0).asString().get(); // keep asString
+            //     currentPath2 = path2.get(0).asString().get();
             // String pagePath = blankElPath+currentPath2;
             // String fullPath = pagePath+"."+(isDye ? "color" : "pattern");
 
@@ -5371,7 +5369,7 @@ public class ItemBuilder extends GenericScreen {
                             if(poseCompound.isEmpty())
                                 txt.setValue("");
                             else
-                                txt.setValue(BlackMagick.nbtToString(poseCompound));
+                                txt.setValue(BlackMagick.nbtToSnbt(poseCompound));
                             resetSuggs();
                             updatePose();
                         }
@@ -5405,7 +5403,7 @@ public class ItemBuilder extends GenericScreen {
                 case TXT_POSE: {
                     if(widgetCacheTest(cacheType)) {
                         EditBox txt = (EditBox)widgetCacheGet(cacheType);
-                        if(txt.getValue().equals(""+BlackMagick.nbtToString(poseCompound)))
+                        if(txt.getValue().equals(""+BlackMagick.nbtToSnbt(poseCompound)))
                             editorEqual = true;
                         else if(txt.getValue().isEmpty() && poseCompound.isEmpty())
                             editorEqual = true;
@@ -5646,7 +5644,7 @@ public class ItemBuilder extends GenericScreen {
         public static SavedItem build(String itemString) {
             ItemStack stack = BlackMagick.itemFromString(itemString);
             if(!stack.isEmpty()) {
-                String newItemString = BlackMagick.nbtToString(BlackMagick.itemToNbtStorage(stack));
+                String newItemString = BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(stack));
                 if(newItemString.equals(itemString)) {
                     return new SavedItem(itemString,stack,false);
                 }
