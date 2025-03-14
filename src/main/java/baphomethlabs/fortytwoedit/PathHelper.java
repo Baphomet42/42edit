@@ -30,7 +30,7 @@ import net.minecraft.world.item.Items;
 public class PathHelper {
 
     public static PathInfo getItemPath(Tag element, PathNode... path) {
-        return getPath(element, PathInfoGetter.of("ITEM_STACK").get(), path);
+        return getPath(element, PathInfoGetter.of("item_stack").get(), path);
     }
 
     public static PathInfo getPath(Tag element, PathInfo context, PathNode... path) {
@@ -50,15 +50,16 @@ public class PathHelper {
     private static void buildPathInfos() {
         PATH_INFO_REF_MAP.clear();
 
-        registerPathInfo("ITEM_STACK", PathInfo.create(DataType.CompoundStructured.of(Map.of(
-            "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.REGISTRY_ITEM)).getter()
+        registerPathInfo("item_stack", PathInfo.create(DataType.CompoundStructured.of(Map.of(
+            "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.REGISTRY_ITEM)).setIcon(Items.STONE).getter()
             ),Map.of(
-            "count", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).getter(),//to_do suggs
-            "components", PathInfoGetter.of("COMPONENTS")
+            "count", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).setIcon(Items.STONE).getter(),//to_do suggs
+            "components", PathInfoGetter.of("components")
         ))).setIcon(Items.STONE));//to_do info
 
-        registerPathInfo("COMPONENTS", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
-            "minecraft:attribute_modifiers", PathInfo.create(DataType.ListUnordered.of(
+        registerPathInfo("components", PathInfo.create(DataType.CompoundStructured.allOptional(Map.ofEntries(
+
+            Map.entry("minecraft:attribute_modifiers", registerPathInfo("components/attribute_modifiers", PathInfo.create(DataType.ListUnordered.of(
                 PathInfo.create(DataType.CompoundStructured.of(Map.of(
                     "type", PathInfo.create().getter(),
                     "id", PathInfo.create().getter(),
@@ -67,20 +68,203 @@ public class PathHelper {
                     ),Map.of(
                     "slot", PathInfo.create().getter()
                 ))).getter()
-            )).setIcon(Items.DIAMOND_SWORD).getter(),//to_do info
-            "minecraft:banner_patterns", PathInfo.create(DataType.ListUnordered.of(
+            )).setIcon(Items.DIAMOND_SWORD))),//to_do info
+
+            Map.entry("minecraft:banner_patterns", registerPathInfo("components/banner_patterns", PathInfo.create(DataType.ListUnordered.of(
                 PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
                     "color", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_DYE_COLOR)).getter(),//to_do info
                     "pattern", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_BANNER_PATTERN)).getter()//to_do info
                 ))).getter()
-            )).setIcon(Items.WHITE_BANNER).getter(),//to_do info
-            "minecraft:custom_name", PathInfoGetter.of("TEXT_COMPONENT"),//to_do info
-            "minecraft:item_name", PathInfoGetter.of("TEXT_COMPONENT"),//to_do info
-            "minecraft:lore", PathInfo.create(DataType.ListUnordered.of(PathInfoGetter.of("TEXT_COMPONENT"))).setIcon(Items.NAME_TAG).getter(),//to_do info
-            "minecraft:unbreakable", PathInfo.create(DataType.Unit.create()).setIcon(Items.DIAMOND_PICKAXE).getter()//to_do info
-        ))));
+            )).setIcon(Items.WHITE_BANNER))),//to_do info
 
-        registerPathInfo("TEXT_COMPONENT", PathInfo.create(//to_do add fields, suggs, infos, etc
+            Map.entry("minecraft:base_color", registerPathInfo("components/base_color", PathInfo.create().setIcon(Items.SHIELD))),//to_do
+
+            Map.entry("minecraft:bees", registerPathInfo("components/bees", PathInfo.create().setIcon(Items.BEE_NEST))),//to_do
+
+            Map.entry("minecraft:block_entity_data", registerPathInfo("components/block_entity_data", PathInfo.create().setIcon(Items.SPAWNER))),//to_do
+
+            Map.entry("minecraft:block_state", registerPathInfo("components/block_state", PathInfo.create().setIcon(Items.PALE_OAK_STAIRS))),//to_do
+
+            Map.entry("minecraft:blocks_attacks", registerPathInfo("components/blocks_attacks", PathInfo.create().setIcon(Items.SHIELD))),//to_do
+
+            Map.entry("minecraft:break_sound", registerPathInfo("components/break_sound", PathInfo.create().setIcon(Items.SHIELD))),//to_do
+
+            Map.entry("minecraft:bucket_entity_data", registerPathInfo("components/bucket_entity_data", PathInfo.create().setIcon(Items.TROPICAL_FISH_BUCKET))),//to_do
+
+            Map.entry("minecraft:bundle_contents", registerPathInfo("components/bundle_contents", PathInfo.create().setIcon(Items.BUNDLE))),//to_do
+
+            Map.entry("minecraft:can_break", registerPathInfo("components/can_break", PathInfo.create().setIcon(Items.COMMAND_BLOCK))),//to_do
+
+            Map.entry("minecraft:can_place_on", registerPathInfo("components/can_place_on", PathInfo.create().setIcon(Items.COMMAND_BLOCK))),//to_do
+
+            Map.entry("minecraft:charged_projectiles", registerPathInfo("components/charged_projectiles", PathInfo.create().setIcon(Items.CROSSBOW))),//to_do
+
+            Map.entry("minecraft:consumable", registerPathInfo("components/consumable", PathInfo.create().setIcon(Items.GOLDEN_APPLE))),//to_do
+
+            Map.entry("minecraft:container", registerPathInfo("components/container", PathInfo.create().setIcon(Items.SHULKER_BOX))),//to_do
+
+            Map.entry("minecraft:container_loot", registerPathInfo("components/container_loot", PathInfo.create().setIcon(Items.CHEST))),//to_do
+
+            Map.entry("minecraft:custom_data", registerPathInfo("components/custom_data", PathInfo.create().setIcon(Items.COMMAND_BLOCK))),//to_do
+
+            Map.entry("minecraft:custom_model_data", registerPathInfo("components/custom_model_data", PathInfo.create().setIcon(Items.COMMAND_BLOCK))),//to_do
+
+            Map.entry("minecraft:custom_name", PathInfoGetter.of("text_component")),//to_do info
+
+            Map.entry("minecraft:damage", registerPathInfo("components/damage", PathInfo.create().setIcon(Items.DIAMOND_PICKAXE))),//to_do
+
+            Map.entry("minecraft:damage_resistant", registerPathInfo("components/damage_resistant", PathInfo.create().setIcon(Items.NETHERITE_INGOT))),//to_do
+
+            Map.entry("minecraft:debug_stick_state", registerPathInfo("components/debug_stick_state", PathInfo.create().setIcon(Items.DEBUG_STICK))),//to_do
+
+            Map.entry("minecraft:death_protection", registerPathInfo("components/death_protection", PathInfo.create().setIcon(Items.TOTEM_OF_UNDYING))),//to_do
+
+            Map.entry("minecraft:dyed_color", registerPathInfo("components/dyed_color", PathInfo.create().setIcon(Items.LEATHER_CHESTPLATE))),//to_do
+
+            Map.entry("minecraft:enchantable", registerPathInfo("components/enchantable", PathInfo.create().setIcon(Items.DIAMOND_CHESTPLATE))),//to_do
+
+            Map.entry("minecraft:enchantment_glint_override", registerPathInfo("components/enchantment_glint_override", PathInfo.create().setIcon(Items.ENCHANTED_GOLDEN_APPLE))),//to_do
+
+            Map.entry("minecraft:enchantments", registerPathInfo("components/enchantments", PathInfo.create().setIcon(Items.ENCHANTED_BOOK))),//to_do
+
+            Map.entry("minecraft:entity_data", registerPathInfo("components/entity_data", PathInfo.create().setIcon(Items.ARMOR_STAND))),//to_do
+
+            Map.entry("minecraft:equippable", registerPathInfo("components/equippable", PathInfo.create().setIcon(Items.DIAMOND_CHESTPLATE))),//to_do
+
+            Map.entry("minecraft:firework_explosion", registerPathInfo("components/firework_explosion", PathInfo.create().setIcon(Items.FIREWORK_STAR))),//to_do
+
+            Map.entry("minecraft:fireworks", registerPathInfo("components/fireworks", PathInfo.create().setIcon(Items.FIREWORK_ROCKET))),//to_do
+
+            Map.entry("minecraft:food", registerPathInfo("components/food", PathInfo.create().setIcon(Items.APPLE))),//to_do
+
+            Map.entry("minecraft:glider", registerPathInfo("components/glider", PathInfo.create().setIcon(Items.ELYTRA))),//to_do
+
+            Map.entry("minecraft:instrument", registerPathInfo("components/instrument", PathInfo.create().setIcon(Items.GOAT_HORN))),//to_do
+
+            Map.entry("minecraft:intangible_projectile", registerPathInfo("components/intangible_projectile", PathInfo.create().setIcon(Items.ARROW))),//to_do
+
+            Map.entry("minecraft:item_model", registerPathInfo("components/item_model", PathInfo.create().setIcon(Items.STONE))),//to_do
+
+            Map.entry("minecraft:item_name", PathInfoGetter.of("text_component")),//to_do info
+
+            Map.entry("minecraft:jukebox_playable", registerPathInfo("components/jukebox_playable", PathInfo.create().setIcon(Items.MUSIC_DISC_13))),//to_do
+
+            Map.entry("minecraft:lock", registerPathInfo("components/lock", PathInfo.create().setIcon(Items.CHEST))),//to_do
+
+            Map.entry("minecraft:lodestone_tracker", registerPathInfo("components/lodestone_tracker", PathInfo.create().setIcon(Items.COMPASS))),//to_do
+
+            Map.entry("minecraft:lore", registerPathInfo("components/lore", PathInfo.create(DataType.ListUnordered.of(PathInfoGetter.of("text_component"))).setIcon(Items.NAME_TAG))),//to_do info
+
+            Map.entry("minecraft:map_color", registerPathInfo("components/map_color", PathInfo.create().setIcon(Items.FILLED_MAP))),//to_do
+
+            Map.entry("minecraft:map_decorations", registerPathInfo("components/map_decorations", PathInfo.create().setIcon(Items.FILLED_MAP))),//to_do
+
+            Map.entry("minecraft:map_id", registerPathInfo("components/map_id", PathInfo.create().setIcon(Items.FILLED_MAP))),//to_do
+
+            Map.entry("minecraft:max_damage", registerPathInfo("components/max_damage", PathInfo.create().setIcon(Items.DIAMOND_PICKAXE))),//to_do
+
+            Map.entry("minecraft:max_stack_size", registerPathInfo("components/max_stack_size", PathInfo.create().setIcon(Items.STONE))),//to_do
+
+            Map.entry("minecraft:note_block_sound", registerPathInfo("components/note_block_sound", PathInfo.create().setIcon(Items.PLAYER_HEAD))),//to_do
+
+            Map.entry("minecraft:ominous_bottle_amplifier", registerPathInfo("components/ominous_bottle_amplifier", PathInfo.create().setIcon(Items.OMINOUS_BOTTLE))),//to_do
+
+            Map.entry("minecraft:pot_decorations", registerPathInfo("components/pot_decorations", PathInfo.create().setIcon(Items.DECORATED_POT))),//to_do
+
+            Map.entry("minecraft:potion_contents", registerPathInfo("components/potion_contents", PathInfo.create().setIcon(Items.POTION))),//to_do
+
+            Map.entry("minecraft:potion_duration_scale", registerPathInfo("components/potion_duration_scale", PathInfo.create().setIcon(Items.SPLASH_POTION))),//to_do
+
+            Map.entry("minecraft:profile", registerPathInfo("components/profile", PathInfo.create().setIcon(Items.PLAYER_HEAD))),//to_do
+
+            Map.entry("minecraft:provides_banner_patterns", registerPathInfo("components/provides_banner_patterns", PathInfo.create().setIcon(Items.CREEPER_BANNER_PATTERN))),//to_do
+
+            Map.entry("minecraft:provides_trim_material", registerPathInfo("components/provides_trim_material", PathInfo.create().setIcon(Items.SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE))),//to_do
+
+            Map.entry("minecraft:rarity", registerPathInfo("components/rarity", PathInfo.create().setIcon(Items.STONE))),//to_do
+
+            Map.entry("minecraft:recipes", registerPathInfo("components/recipes", PathInfo.create().setIcon(Items.KNOWLEDGE_BOOK))),//to_do
+
+            Map.entry("minecraft:repairable", registerPathInfo("components/repairable", PathInfo.create().setIcon(Items.DIAMOND_PICKAXE))),//to_do
+
+            Map.entry("minecraft:repair_cost", registerPathInfo("components/repair_cost", PathInfo.create().setIcon(Items.DIAMOND_PICKAXE))),//to_do
+
+            Map.entry("minecraft:stored_enchantments", registerPathInfo("components/stored_enchantments", PathInfo.create().setIcon(Items.ENCHANTED_BOOK))),//to_do
+
+            Map.entry("minecraft:suspicious_stew_effects", registerPathInfo("components/suspicious_stew_effects", PathInfo.create().setIcon(Items.SUSPICIOUS_STEW))),//to_do
+
+            Map.entry("minecraft:tool", registerPathInfo("components/tool", PathInfo.create().setIcon(Items.DIAMOND_PICKAXE))),//to_do
+
+            Map.entry("minecraft:tooltip_display", registerPathInfo("components/tooltip_display", PathInfo.create().setIcon(Items.COMMAND_BLOCK))),//to_do
+
+            Map.entry("minecraft:tooltip_style", registerPathInfo("components/tooltip_style", PathInfo.create().setIcon(Items.COMMAND_BLOCK))),//to_do
+
+            Map.entry("minecraft:trim", registerPathInfo("components/trim", PathInfo.create().setIcon(Items.SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE))),//to_do
+
+            Map.entry("minecraft:unbreakable", registerPathInfo("components/unbreakable", PathInfo.create(DataType.Unit.create()).setIcon(Items.DIAMOND_PICKAXE))),//to_do info
+
+            Map.entry("minecraft:use_cooldown", registerPathInfo("components/use_cooldown", PathInfo.create().setIcon(Items.ENDER_PEARL))),//to_do
+
+            Map.entry("minecraft:use_remainder", registerPathInfo("components/use_remainder", PathInfo.create().setIcon(Items.MUSHROOM_STEW))),//to_do
+
+            Map.entry("minecraft:weapon", registerPathInfo("components/weapon", PathInfo.create().setIcon(Items.GOLDEN_SWORD))),//to_do
+
+            Map.entry("minecraft:writable_book_content", registerPathInfo("components/writable_book_content", PathInfo.create().setIcon(Items.WRITABLE_BOOK))),//to_do
+
+            Map.entry("minecraft:written_book_content", registerPathInfo("components/written_book_content", PathInfo.create().setIcon(Items.WRITTEN_BOOK))),//to_do
+
+
+            Map.entry("minecraft:axolotl/variant", registerPathInfo("components/axolotl/variant", PathInfo.create().setIcon(Items.AXOLOTL_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:cat/collar", registerPathInfo("components/cat/collar", PathInfo.create().setIcon(Items.CAT_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:cat/variant", registerPathInfo("components/cat/variant", PathInfo.create().setIcon(Items.CAT_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:chicken/variant", registerPathInfo("components/chicken/variant", PathInfo.create().setIcon(Items.CHICKEN_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:cow/variant", registerPathInfo("components/cow/variant", PathInfo.create().setIcon(Items.COW_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:fox/variant", registerPathInfo("components/fox/variant", PathInfo.create().setIcon(Items.FOX_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:frog/variant", registerPathInfo("components/frog/variant", PathInfo.create().setIcon(Items.FROG_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:horse/variant", registerPathInfo("components/horse/variant", PathInfo.create().setIcon(Items.HORSE_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:llama/variant", registerPathInfo("components/llama/variant", PathInfo.create().setIcon(Items.LLAMA_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:mooshroom/variant", registerPathInfo("components/mooshroom/variant", PathInfo.create().setIcon(Items.MOOSHROOM_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:parrot/variant", registerPathInfo("components/parrot/variant", PathInfo.create().setIcon(Items.PARROT_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:painting/variant", registerPathInfo("components/painting/variant", PathInfo.create().setIcon(Items.PAINTING))),//to_do
+
+            Map.entry("minecraft:pig/variant", registerPathInfo("components/pig/variant", PathInfo.create().setIcon(Items.PIG_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:rabbit/variant", registerPathInfo("components/rabbit/variant", PathInfo.create().setIcon(Items.RABBIT_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:salmon/size", registerPathInfo("components/salmon/size", PathInfo.create().setIcon(Items.SALMON_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:sheep/color", registerPathInfo("components/sheep/color", PathInfo.create().setIcon(Items.SHEEP_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:shulker/color", registerPathInfo("components/shulker/color", PathInfo.create().setIcon(Items.SHULKER_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:tropical_fish/base_color", registerPathInfo("components/tropical_fish/base_color", PathInfo.create().setIcon(Items.TROPICAL_FISH_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:tropical_fish/pattern", registerPathInfo("components/tropical_fish/pattern", PathInfo.create().setIcon(Items.TROPICAL_FISH_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:tropical_fish/pattern_color", registerPathInfo("components/tropical_fish/pattern_color", PathInfo.create().setIcon(Items.TROPICAL_FISH_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:villager/variant", registerPathInfo("components/villager/variant", PathInfo.create().setIcon(Items.VILLAGER_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:wolf/collar", registerPathInfo("components/wolf/collar", PathInfo.create().setIcon(Items.WOLF_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:wolf/sound_variant", registerPathInfo("components/wolf/sound_variant", PathInfo.create().setIcon(Items.WOLF_SPAWN_EGG))),//to_do
+
+            Map.entry("minecraft:wolf/variant", registerPathInfo("components/wolf/variant", PathInfo.create().setIcon(Items.WOLF_SPAWN_EGG)))//to_do
+
+        ))).setIcon(Items.STONE));
+
+        registerPathInfo("text_component", PathInfo.create(//to_do add fields, suggs, infos, etc
             DataType.ElementLiteral.of(NbtType.STRING),
             DataType.CompoundStructured.of(Map.of(
                 "text", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).getter()
@@ -92,9 +276,9 @@ public class PathHelper {
                 "underlined", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
                 "strikethrough", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
                 "obfuscated", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
-                "extra", PathInfo.create(DataType.ListUnordered.of(PathInfoGetter.of("TEXT_COMPONENT"))).getter()
+                "extra", PathInfo.create(DataType.ListUnordered.of(PathInfoGetter.of("text_component"))).getter()
             )),
-            DataType.ListUnordered.of(PathInfoGetter.of("TEXT_COMPONENT"))
+            DataType.ListUnordered.of(PathInfoGetter.of("text_component"))
         ).setIcon(Items.NAME_TAG));
 
     }
@@ -110,6 +294,8 @@ public class PathHelper {
     }
 
     protected static PathInfoGetter registerPathInfo(String refKey, PathInfo pi) {
+        if(PATH_INFO_REF_MAP.containsKey(refKey))
+            FortytwoEdit.logWarn("Duplicate PathInfo registry key detected: "+refKey);
         PATH_INFO_REF_MAP.put(refKey, pi);
         return PathInfoGetter.of(refKey);
     }
