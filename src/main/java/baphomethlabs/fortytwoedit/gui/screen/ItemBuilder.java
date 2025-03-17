@@ -55,10 +55,14 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import baphomethlabs.fortytwoedit.BlackMagick;
+import baphomethlabs.fortytwoedit.BlackMagick.ParsedText;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.PathHelper;
 import baphomethlabs.fortytwoedit.SuggestionHelper;
+import baphomethlabs.fortytwoedit.SuggestionHelper.KeyGetter;
 import baphomethlabs.fortytwoedit.PathHelper.NbtType;
+import baphomethlabs.fortytwoedit.PathHelper.PathFlag;
+import baphomethlabs.fortytwoedit.PathHelper.PathInfo;
 import baphomethlabs.fortytwoedit.PathHelper.PathNode;
 import baphomethlabs.fortytwoedit.PathHelper.PathType;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
@@ -164,8 +168,8 @@ public class ItemBuilder extends GenericScreen {
     private Component textComponentPreview = Component.nullToEmpty("");
     private boolean textComponentPreviewBook = false;
     private int textComponentEffectMode = -1;
-    private String textComponentEffectPath = null;
-    private String textComponentEffectBase = null;
+    // private String textComponentEffectPath = null;
+    // private String textComponentEffectBase = null;
     private static int[] textComponentEffects = new int[8];//bold,italic,underlined,strikethrough,obfuscated,radgrad,colmode,elmode
     private static String textComponentShadowColor = "";
     private static String textComponentFont = "";
@@ -177,11 +181,11 @@ public class ItemBuilder extends GenericScreen {
     protected static NbtEditStyle nbtEditStyle = NbtEditStyle.TEMPLATE;
     protected static final ItemStack[] NBT_EDIT_STYLE_ITEMS =
         new ItemStack[]{new ItemStack(Items.KNOWLEDGE_BOOK),new ItemStack(Items.COMMAND_BLOCK),new ItemStack(Items.NAME_TAG)};
-    private String textComponentBaseText = "";
-    private boolean textComponentBaseValid = false;
-    private boolean textComponentEffectValid = false;
-    private String textComponentEffectFull = "";
-    private static String textComponentLastColor = "white";
+    // private String textComponentBaseText = "";
+    // private boolean textComponentBaseValid = false;
+    // private boolean textComponentEffectValid = false;
+    // private String textComponentEffectFull = "";
+    // private static String textComponentLastColor = "white";
     private boolean bannerShield = false;
     private static ArmorStand bannerChangePreview = null;
     protected boolean showBannerPreview = false;
@@ -841,8 +845,8 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
 
-            if(textComponentEffectMode>=0)
-                updateTextComponentEffect();
+            // if(textComponentEffectMode>=0)
+            //     updateTextComponentEffect();
 
             if(!editorOutputLocked) {
                 if(widgetCacheTest(WidgetCacheType.TXT_DECIMAL_COLOR)) {
@@ -903,12 +907,12 @@ public class ItemBuilder extends GenericScreen {
         trySetColorHex(rgbNum, BlackMagick.colorHexFromDec(inp), w);
     }
 
-    private void swapColorSets(int left, int right) {
-        int[] temp = colorSets[left];
-        colorSets[left] = colorSets[right];
-        colorSets[right] = temp;
-        updateColorSets();
-    }
+    // private void swapColorSets(int left, int right) {
+    //     int[] temp = colorSets[left];
+    //     colorSets[left] = colorSets[right];
+    //     colorSets[right] = temp;
+    //     updateColorSets();
+    // }
 
     private void setHsv(int num, float val) {
         if(!editorLocked && !editorOutputLocked) {
@@ -1008,376 +1012,376 @@ public class ItemBuilder extends GenericScreen {
         context.renderItemDecorations(this.font,item,x,y);
     }
 
-    private void updateTextComponentPreview(String path, String textComponentBase) {
-        updateTextComponentPreview(path,textComponentBase,null);
-    }
-    private void updateTextComponentPreview(String path, String textComponentBase, String textComponentEffect) {
-        textComponentBaseText = textComponentBase;
-        textComponentBaseValid = false;
-        textComponentEffectValid = false;
-        textComponentPreviewBook = false;
-        textComponentPreview = BlackMagick.textComponentFromString(textComponentBase).text();
-        if(BlackMagick.textComponentFromString(textComponentBase).isValid()) {
-            textComponentBaseValid = true;
-            if(textComponentEffect != null && BlackMagick.textComponentFromString(appendTextComponentEffect(textComponentBase,textComponentEffect)).isValid()) {
-                textComponentPreview = BlackMagick.textComponentFromString(appendTextComponentEffect(textComponentBase,textComponentEffect)).text();
-                if(textComponentEffect.length()>0 && !textComponentEffect.equals("{text:\"\"}"))
-                    textComponentEffectValid = true;
-                textComponentEffectFull = appendTextComponentEffect(textComponentBase,textComponentEffect);
-            }
-            if(path != null) {
-                if(path.endsWith("custom_name"))
-                    textComponentPreview = textComponentPreview.copy().withStyle(ChatFormatting.ITALIC);
-                else if(path.contains("lore[")) {
-                    textComponentPreview = textComponentPreview.copy().withStyle(ChatFormatting.ITALIC,ChatFormatting.DARK_PURPLE);
-                }
-                else if(path.contains("written_book_content.pages["))
-                    textComponentPreviewBook = true;
-            }
-        }
-        if(textComponentEffectMode>=0 && widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_ADD_BTN)) {
-            Button btnAdd = (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_ADD_BTN);
-            if(textComponentEffectValid && textComponentEffect != null && textComponentEffect.length()>0) {
-                btnAdd.active = true;
-                btnAdd.setTooltip(Tooltip.create(grayWhiteText("Set text to:\n",textComponentEffectFull)));
-            }
-            else {
-                btnAdd.active = false;
-                btnAdd.setTooltip(Tooltip.create(errorText("Invalid Text Component")));
-            }
-        }
-    }
+    // private void updateTextComponentPreview(String path, String textComponentBase) {
+    //     updateTextComponentPreview(path,textComponentBase,null);
+    // }
+    // private void updateTextComponentPreview(String path, String textComponentBase, String textComponentEffect) {
+    //     textComponentBaseText = textComponentBase;
+    //     textComponentBaseValid = false;
+    //     textComponentEffectValid = false;
+    //     textComponentPreviewBook = false;
+    //     textComponentPreview = BlackMagick.textComponentFromString(textComponentBase).text();
+    //     if(BlackMagick.textComponentFromString(textComponentBase).isValid()) {
+    //         textComponentBaseValid = true;
+    //         if(textComponentEffect != null && BlackMagick.textComponentFromString(appendTextComponentEffect(textComponentBase,textComponentEffect)).isValid()) {
+    //             textComponentPreview = BlackMagick.textComponentFromString(appendTextComponentEffect(textComponentBase,textComponentEffect)).text();
+    //             if(textComponentEffect.length()>0 && !textComponentEffect.equals("{text:\"\"}"))
+    //                 textComponentEffectValid = true;
+    //             textComponentEffectFull = appendTextComponentEffect(textComponentBase,textComponentEffect);
+    //         }
+    //         if(path != null) {
+    //             if(path.endsWith("custom_name"))
+    //                 textComponentPreview = textComponentPreview.copy().withStyle(ChatFormatting.ITALIC);
+    //             else if(path.contains("lore[")) {
+    //                 textComponentPreview = textComponentPreview.copy().withStyle(ChatFormatting.ITALIC,ChatFormatting.DARK_PURPLE);
+    //             }
+    //             else if(path.contains("written_book_content.pages["))
+    //                 textComponentPreviewBook = true;
+    //         }
+    //     }
+    //     if(textComponentEffectMode>=0 && widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_ADD_BTN)) {
+    //         Button btnAdd = (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_ADD_BTN);
+    //         if(textComponentEffectValid && textComponentEffect != null && textComponentEffect.length()>0) {
+    //             btnAdd.active = true;
+    //             btnAdd.setTooltip(Tooltip.create(grayWhiteText("Set text to:\n",textComponentEffectFull)));
+    //         }
+    //         else {
+    //             btnAdd.active = false;
+    //             btnAdd.setTooltip(Tooltip.create(errorText("Invalid Text Component")));
+    //         }
+    //     }
+    // }
 
-    private String appendTextComponentEffect(String textComponentBase, String textComponentEffect) {
-        if(textComponentBase.length()>1 && textComponentBase.startsWith("\"") && textComponentBase.endsWith("\""))
-            textComponentBase = "{text:"+textComponentBase+"}";
-        else if(textComponentBase.length()>1 && textComponentBase.startsWith("'") && textComponentBase.endsWith("'"))
-            textComponentBase = "{text:\""+textComponentBase.substring(0,textComponentBase.length()-1)+"\"}";
-        else if(!(textComponentBase.startsWith("{") && textComponentBase.endsWith("}"))
-        && !(textComponentBase.startsWith("[") && textComponentBase.endsWith("]")) && !textComponentBase.contains("\"") && !textComponentBase.contains("'"))
-            textComponentBase = "{text:\""+textComponentBase+"\"}";
+    // private String appendTextComponentEffect(String textComponentBase, String textComponentEffect) {
+    //     if(textComponentBase.length()>1 && textComponentBase.startsWith("\"") && textComponentBase.endsWith("\""))
+    //         textComponentBase = "{text:"+textComponentBase+"}";
+    //     else if(textComponentBase.length()>1 && textComponentBase.startsWith("'") && textComponentBase.endsWith("'"))
+    //         textComponentBase = "{text:\""+textComponentBase.substring(0,textComponentBase.length()-1)+"\"}";
+    //     else if(!(textComponentBase.startsWith("{") && textComponentBase.endsWith("}"))
+    //     && !(textComponentBase.startsWith("[") && textComponentBase.endsWith("]")) && !textComponentBase.contains("\"") && !textComponentBase.contains("'"))
+    //         textComponentBase = "{text:\""+textComponentBase+"\"}";
 
-        if(textComponentEffectMode == 0 || textComponentEffectMode == 1) {
-            if(textComponentBase.isEmpty() || textComponentBase.equals("{}") || textComponentBase.equals("[]")
-                    || textComponentBase.equals("[{}]") || textComponentBase.equals("{text:\"\"}") || textComponentBase.equals("[{text:\"\"}]"))
-                return textComponentEffect;
-            else if(textComponentBase.length()>=4 && textComponentBase.charAt(0)=='[' && textComponentBase.charAt(textComponentBase.length()-1)==']'
-            && textComponentBase.charAt(1)=='{' && textComponentBase.charAt(textComponentBase.length()-2)=='}')
-                return textComponentBase.substring(0,textComponentBase.length()-1) +","+ textComponentEffect +"]";
-            else if(textComponentBase.length()>=2 && textComponentBase.charAt(0)=='{' && textComponentBase.charAt(textComponentBase.length()-1)=='}')
-                return "["+textComponentBase+","+textComponentEffect+"]";
-            return null;
-        }
-        else if(textComponentEffectMode == 2) {
-            if(textComponentBase.length()>4 && textComponentBase.charAt(0)=='[' && textComponentBase.charAt(textComponentBase.length()-1)==']'
-            && textComponentBase.charAt(1)=='{' && textComponentBase.charAt(textComponentBase.length()-2)=='}')
-                return textComponentBase.substring(0,textComponentBase.length()-2) + textComponentEffect +"}]";
-            else if(textComponentBase.length()>2 && textComponentBase.charAt(0)=='{' && textComponentBase.charAt(textComponentBase.length()-1)=='}')
-                return textComponentBase.substring(0,textComponentBase.length()-1) + textComponentEffect +"}";
-            return null;
-        }
-        else
-            return null;
-    }
+    //     if(textComponentEffectMode == 0 || textComponentEffectMode == 1) {
+    //         if(textComponentBase.isEmpty() || textComponentBase.equals("{}") || textComponentBase.equals("[]")
+    //                 || textComponentBase.equals("[{}]") || textComponentBase.equals("{text:\"\"}") || textComponentBase.equals("[{text:\"\"}]"))
+    //             return textComponentEffect;
+    //         else if(textComponentBase.length()>=4 && textComponentBase.charAt(0)=='[' && textComponentBase.charAt(textComponentBase.length()-1)==']'
+    //         && textComponentBase.charAt(1)=='{' && textComponentBase.charAt(textComponentBase.length()-2)=='}')
+    //             return textComponentBase.substring(0,textComponentBase.length()-1) +","+ textComponentEffect +"]";
+    //         else if(textComponentBase.length()>=2 && textComponentBase.charAt(0)=='{' && textComponentBase.charAt(textComponentBase.length()-1)=='}')
+    //             return "["+textComponentBase+","+textComponentEffect+"]";
+    //         return null;
+    //     }
+    //     else if(textComponentEffectMode == 2) {
+    //         if(textComponentBase.length()>4 && textComponentBase.charAt(0)=='[' && textComponentBase.charAt(textComponentBase.length()-1)==']'
+    //         && textComponentBase.charAt(1)=='{' && textComponentBase.charAt(textComponentBase.length()-2)=='}')
+    //             return textComponentBase.substring(0,textComponentBase.length()-2) + textComponentEffect +"}]";
+    //         else if(textComponentBase.length()>2 && textComponentBase.charAt(0)=='{' && textComponentBase.charAt(textComponentBase.length()-1)=='}')
+    //             return textComponentBase.substring(0,textComponentBase.length()-1) + textComponentEffect +"}";
+    //         return null;
+    //     }
+    //     else
+    //         return null;
+    // }
 
-    private void updateTextComponentEffectBtns() {
-        if((textComponentEffectMode == 0 || textComponentEffectMode == 1)
-        && widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_BOLD, WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_ITALIC,
-        WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_UNDERLINED, WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_STRIKETHROUGH,
-        WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_OBFUSCATED)) {
-            Button[] effectBtns = new Button[]{
-                (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_BOLD),
-                (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_ITALIC),
-                (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_UNDERLINED),
-                (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_STRIKETHROUGH),
-                (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_OBFUSCATED)
-            };
-            int num = 0;
-            String col = "";
-            if(textComponentEffects[num]==1)
-                col = "\u00a7a";
-            else if(textComponentEffects[num]==2)
-                col = "\u00a7c";
-            effectBtns[num].setMessage(Component.nullToEmpty(col+"\u00a7ll"));
-            num++;
-            col = "";
-            if(textComponentEffects[num]==1)
-                col = "\u00a7a";
-            else if(textComponentEffects[num]==2)
-                col = "\u00a7c";
-            effectBtns[num].setMessage(Component.nullToEmpty(col+"\u00a7oo"));
-            num++;
-            col = "";
-            if(textComponentEffects[num]==1)
-                col = "\u00a7a";
-            else if(textComponentEffects[num]==2)
-                col = "\u00a7c";
-            effectBtns[num].setMessage(Component.nullToEmpty(col+"\u00a7nn"));
-            num++;
-            col = "";
-            if(textComponentEffects[num]==1)
-                col = "\u00a7a";
-            else if(textComponentEffects[num]==2)
-                col = "\u00a7c";
-            effectBtns[num].setMessage(Component.nullToEmpty(col+"\u00a7mm"));
-            num++;
-            col = "";
-            if(textComponentEffects[num]==1)
-                col = "\u00a7a";
-            else if(textComponentEffects[num]==2)
-                col = "\u00a7c";
-            effectBtns[num].setMessage(Component.nullToEmpty(col+"\u00a7kk"));
-            switch(textComponentEffectMode) {
-                case 0: {
-                    if(widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_RADIAL)) {
-                        Button w = (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_RADIAL);
-                        if(textComponentEffects[5]==0)
-                            w.setMessage(Component.nullToEmpty("[Radial]"));
-                        else
-                            w.setMessage(Component.nullToEmpty("[Linear]"));
-                    }
-                    break;
-                }
-                case 1: {
-                    if(widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_COLOR_BTN, WidgetCacheType.TEXT_COMPONENT_COLOR_TXT,
-                    WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_MODE)) {
+    // private void updateTextComponentEffectBtns() {
+    //     if((textComponentEffectMode == 0 || textComponentEffectMode == 1)
+    //     && widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_BOLD, WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_ITALIC,
+    //     WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_UNDERLINED, WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_STRIKETHROUGH,
+    //     WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_OBFUSCATED)) {
+    //         Button[] effectBtns = new Button[]{
+    //             (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_BOLD),
+    //             (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_ITALIC),
+    //             (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_UNDERLINED),
+    //             (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_STRIKETHROUGH),
+    //             (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_BTN_OBFUSCATED)
+    //         };
+    //         int num = 0;
+    //         String col = "";
+    //         if(textComponentEffects[num]==1)
+    //             col = "\u00a7a";
+    //         else if(textComponentEffects[num]==2)
+    //             col = "\u00a7c";
+    //         effectBtns[num].setMessage(Component.nullToEmpty(col+"\u00a7ll"));
+    //         num++;
+    //         col = "";
+    //         if(textComponentEffects[num]==1)
+    //             col = "\u00a7a";
+    //         else if(textComponentEffects[num]==2)
+    //             col = "\u00a7c";
+    //         effectBtns[num].setMessage(Component.nullToEmpty(col+"\u00a7oo"));
+    //         num++;
+    //         col = "";
+    //         if(textComponentEffects[num]==1)
+    //             col = "\u00a7a";
+    //         else if(textComponentEffects[num]==2)
+    //             col = "\u00a7c";
+    //         effectBtns[num].setMessage(Component.nullToEmpty(col+"\u00a7nn"));
+    //         num++;
+    //         col = "";
+    //         if(textComponentEffects[num]==1)
+    //             col = "\u00a7a";
+    //         else if(textComponentEffects[num]==2)
+    //             col = "\u00a7c";
+    //         effectBtns[num].setMessage(Component.nullToEmpty(col+"\u00a7mm"));
+    //         num++;
+    //         col = "";
+    //         if(textComponentEffects[num]==1)
+    //             col = "\u00a7a";
+    //         else if(textComponentEffects[num]==2)
+    //             col = "\u00a7c";
+    //         effectBtns[num].setMessage(Component.nullToEmpty(col+"\u00a7kk"));
+    //         switch(textComponentEffectMode) {
+    //             case 0: {
+    //                 if(widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_RADIAL)) {
+    //                     Button w = (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_RADIAL);
+    //                     if(textComponentEffects[5]==0)
+    //                         w.setMessage(Component.nullToEmpty("[Radial]"));
+    //                     else
+    //                         w.setMessage(Component.nullToEmpty("[Linear]"));
+    //                 }
+    //                 break;
+    //             }
+    //             case 1: {
+    //                 if(widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_COLOR_BTN, WidgetCacheType.TEXT_COMPONENT_COLOR_TXT,
+    //                 WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_MODE)) {
 
-                        Button btnColor = (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_COLOR_BTN);
-                        EditBox txtColor = (EditBox)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_COLOR_TXT);
+    //                     Button btnColor = (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_COLOR_BTN);
+    //                     EditBox txtColor = (EditBox)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_COLOR_TXT);
 
-                        txtColor.setTextColor(TEXT_COLOR);
-                        txtColor.setEditable(true);
-                        txtColor.setTooltip(null);
+    //                     txtColor.setTextColor(TEXT_COLOR);
+    //                     txtColor.setEditable(true);
+    //                     txtColor.setTooltip(null);
 
-                        if(textComponentEffects[6]==2) {
-                            btnColor.setMessage(Component.nullToEmpty("Color [RGB]"));
-                            txtColor.setValue(getRgbHex(0));
-                            txtColor.setTextColor(getRgbDec(0));
-                            txtColor.setTooltip(Tooltip.create(Component.nullToEmpty(getRgbHex(0))));
-                        }
-                        else if(textComponentEffects[6]==1) {
-                            btnColor.setMessage(Component.nullToEmpty("Color [Vanilla]"));
-                            txtColor.setValue(textComponentLastColor);
-                        }
-                        else if(textComponentEffects[6]==0) {
-                            btnColor.setMessage(Component.nullToEmpty("Color [None]"));
-                            txtColor.setValue("<None>");
-                            txtColor.setEditable(false);
-                        }
+    //                     if(textComponentEffects[6]==2) {
+    //                         btnColor.setMessage(Component.nullToEmpty("Color [RGB]"));
+    //                         txtColor.setValue(getRgbHex(0));
+    //                         txtColor.setTextColor(getRgbDec(0));
+    //                         txtColor.setTooltip(Tooltip.create(Component.nullToEmpty(getRgbHex(0))));
+    //                     }
+    //                     else if(textComponentEffects[6]==1) {
+    //                         btnColor.setMessage(Component.nullToEmpty("Color [Vanilla]"));
+    //                         txtColor.setValue(textComponentLastColor);
+    //                     }
+    //                     else if(textComponentEffects[6]==0) {
+    //                         btnColor.setMessage(Component.nullToEmpty("Color [None]"));
+    //                         txtColor.setValue("<None>");
+    //                         txtColor.setEditable(false);
+    //                     }
 
-                        Button btnTextMode = (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_MODE);
+    //                     Button btnTextMode = (Button)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_MODE);
         
-                        btnTextMode.setMessage(Component.nullToEmpty("[Text]"));
-                        if(textComponentEffects[7]==1)
-                            btnTextMode.setMessage(Component.nullToEmpty("[Keybind]"));
-                        else if(textComponentEffects[7]==2)
-                            btnTextMode.setMessage(Component.nullToEmpty("[Translate]"));
-                    }
-                    break;
-                }
-                default: break;
-            }
-        }
-    }
+    //                     btnTextMode.setMessage(Component.nullToEmpty("[Text]"));
+    //                     if(textComponentEffects[7]==1)
+    //                         btnTextMode.setMessage(Component.nullToEmpty("[Keybind]"));
+    //                     else if(textComponentEffects[7]==2)
+    //                         btnTextMode.setMessage(Component.nullToEmpty("[Translate]"));
+    //                 }
+    //                 break;
+    //             }
+    //             default: break;
+    //         }
+    //     }
+    // }
 
-    private void updateTextComponentEffect() {
-        if(textComponentEffectPath == null || textComponentEffectBase == null)
-            return;
-        switch(textComponentEffectMode) {
-            case 0: {
-                if(widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_ENTRY)) {
-                    String value = ((EditBox)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_ENTRY)).getValue();
-                    String val = "";
-                    if(value.length()==1 || (colorSets[0][0]==colorSets[1][0] && colorSets[0][1]==colorSets[1][1] && colorSets[0][2]==colorSets[1][2])) {
-                        val+="{text:\"";
-                        for(int i=0; i<value.length(); i++) { // to_do handle escapes
-                            String thisChar = ""+value.charAt(i);
-                            if(thisChar.equals("\\") || thisChar.equals("\""))
-                                thisChar = "\\"+thisChar;
-                            val+=thisChar;
-                        }
-                        val+="\",color:\""+getRgbHex(0)+"\"";
-                        if(textComponentShadowColor.length()>0)
-                            val+=",shadow_color:"+textComponentShadowColor;
-                        if(textComponentFont.length()>0)
-                            val+=",font:\""+textComponentFont+"\"";
-                        if(textComponentEffects[0]==1)
-                            val+=",bold:true";
-                        else if(textComponentEffects[0]==2)
-                            val+=",bold:false";
-                        if(textComponentEffects[1]==1)
-                            val+=",italic:true";
-                        else if(textComponentEffects[1]==2)
-                            val+=",italic:false";
-                        if(textComponentEffects[2]==1)
-                            val+=",underlined:true";
-                        else if(textComponentEffects[2]==2)
-                            val+=",underlined:false";
-                        if(textComponentEffects[3]==1)
-                            val+=",strikethrough:true";
-                        else if(textComponentEffects[3]==2)
-                            val+=",strikethrough:false";
-                        if(textComponentEffects[4]==1)
-                            val+=",obfuscated:true";
-                        else if(textComponentEffects[4]==2)
-                            val+=",obfuscated:false";
-                        val+="}";
-                    }
-                    else if(value.length() > 1) {
-                        val+="{text:\"";
-                        for(int i=0; i<1; i++) { // to_do handle escapes
-                            String thisChar = ""+value.charAt(i);
-                            if(thisChar.equals("\\") || thisChar.equals("\""))
-                                thisChar = "\\"+thisChar;
-                            val+=thisChar;
-                        }
-                        val+="\",color:\"#";
-                        for(int c=0; c<3; c++) {
-                            int col = 0;
-                            if(textComponentEffects[5]==1)
-                                col = colorSets[0][c];
-                            else {
-                                col = colorSets[1][c];
-                            }
-                            String current = Integer.toHexString(col).toUpperCase();
-                            if(current.length()==1)
-                                current = "0" + current;
-                            val += current;
-                        }
-                        val+="\"";
-                        if(textComponentShadowColor.length()>0)
-                            val+=",shadow_color:"+textComponentShadowColor;
-                        if(textComponentFont.length()>0)
-                            val+=",font:\""+textComponentFont+"\"";
-                        if(textComponentEffects[0]==1)
-                            val+=",bold:true";
-                        else if(textComponentEffects[0]==2)
-                            val+=",bold:false";
-                        if(textComponentEffects[1]==1)
-                            val+=",italic:true";
-                        else if(textComponentEffects[1]==2)
-                            val+=",italic:false";
-                        if(textComponentEffects[2]==1)
-                            val+=",underlined:true";
-                        else if(textComponentEffects[2]==2)
-                            val+=",underlined:false";
-                        if(textComponentEffects[3]==1)
-                            val+=",strikethrough:true";
-                        else if(textComponentEffects[3]==2)
-                            val+=",strikethrough:false";
-                        if(textComponentEffects[4]==1)
-                            val+=",obfuscated:true";
-                        else if(textComponentEffects[4]==2)
-                            val+=",obfuscated:false";
-                        val+=",\"extra\":[";
-                        boolean firstPart = true;
-                        for(int i=1; i<value.length(); i++) { // to_do handle escapes
-                            if(!firstPart)
-                                val+=",";
-                            String thisChar = ""+value.charAt(i);
-                            if(thisChar.equals("\\") || thisChar.equals("\""))
-                                thisChar = "\\"+thisChar;
-                            val+="{text:\""+thisChar+"\",color:\"#";
-                            for(int c=0; c<3; c++) {
-                                int col = 0;
-                                if(textComponentEffects[5]==1)
-                                    col = colorSets[0][c] + (int)((colorSets[1][c]-colorSets[0][c])*i/((double)(value.length()-1)));
-                                else {
-                                    if(value.length()%2==0) {
-                                        if(i<value.length()/2)
-                                            col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*i/((double)(value.length()/2-1)));
-                                        else
-                                            col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*(value.length()-i-1)/((double)(value.length()/2-1)));
-                                    }
-                                    else {
-                                        if(i<=value.length()/2)
-                                            col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*i/((double)(value.length()/2)));
-                                        else
-                                            col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*(value.length()-i-1)/((double)(value.length()/2)));
-                                    }
-                                }
+    // private void updateTextComponentEffect() {
+    //     if(textComponentEffectPath == null || textComponentEffectBase == null)
+    //         return;
+    //     switch(textComponentEffectMode) {
+    //         case 0: {
+    //             if(widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_ENTRY)) {
+    //                 String value = ((EditBox)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_ENTRY)).getValue();
+    //                 String val = "";
+    //                 if(value.length()==1 || (colorSets[0][0]==colorSets[1][0] && colorSets[0][1]==colorSets[1][1] && colorSets[0][2]==colorSets[1][2])) {
+    //                     val+="{text:\"";
+    //                     for(int i=0; i<value.length(); i++) { // to_do handle escapes
+    //                         String thisChar = ""+value.charAt(i);
+    //                         if(thisChar.equals("\\") || thisChar.equals("\""))
+    //                             thisChar = "\\"+thisChar;
+    //                         val+=thisChar;
+    //                     }
+    //                     val+="\",color:\""+getRgbHex(0)+"\"";
+    //                     if(textComponentShadowColor.length()>0)
+    //                         val+=",shadow_color:"+textComponentShadowColor;
+    //                     if(textComponentFont.length()>0)
+    //                         val+=",font:\""+textComponentFont+"\"";
+    //                     if(textComponentEffects[0]==1)
+    //                         val+=",bold:true";
+    //                     else if(textComponentEffects[0]==2)
+    //                         val+=",bold:false";
+    //                     if(textComponentEffects[1]==1)
+    //                         val+=",italic:true";
+    //                     else if(textComponentEffects[1]==2)
+    //                         val+=",italic:false";
+    //                     if(textComponentEffects[2]==1)
+    //                         val+=",underlined:true";
+    //                     else if(textComponentEffects[2]==2)
+    //                         val+=",underlined:false";
+    //                     if(textComponentEffects[3]==1)
+    //                         val+=",strikethrough:true";
+    //                     else if(textComponentEffects[3]==2)
+    //                         val+=",strikethrough:false";
+    //                     if(textComponentEffects[4]==1)
+    //                         val+=",obfuscated:true";
+    //                     else if(textComponentEffects[4]==2)
+    //                         val+=",obfuscated:false";
+    //                     val+="}";
+    //                 }
+    //                 else if(value.length() > 1) {
+    //                     val+="{text:\"";
+    //                     for(int i=0; i<1; i++) { // to_do handle escapes
+    //                         String thisChar = ""+value.charAt(i);
+    //                         if(thisChar.equals("\\") || thisChar.equals("\""))
+    //                             thisChar = "\\"+thisChar;
+    //                         val+=thisChar;
+    //                     }
+    //                     val+="\",color:\"#";
+    //                     for(int c=0; c<3; c++) {
+    //                         int col = 0;
+    //                         if(textComponentEffects[5]==1)
+    //                             col = colorSets[0][c];
+    //                         else {
+    //                             col = colorSets[1][c];
+    //                         }
+    //                         String current = Integer.toHexString(col).toUpperCase();
+    //                         if(current.length()==1)
+    //                             current = "0" + current;
+    //                         val += current;
+    //                     }
+    //                     val+="\"";
+    //                     if(textComponentShadowColor.length()>0)
+    //                         val+=",shadow_color:"+textComponentShadowColor;
+    //                     if(textComponentFont.length()>0)
+    //                         val+=",font:\""+textComponentFont+"\"";
+    //                     if(textComponentEffects[0]==1)
+    //                         val+=",bold:true";
+    //                     else if(textComponentEffects[0]==2)
+    //                         val+=",bold:false";
+    //                     if(textComponentEffects[1]==1)
+    //                         val+=",italic:true";
+    //                     else if(textComponentEffects[1]==2)
+    //                         val+=",italic:false";
+    //                     if(textComponentEffects[2]==1)
+    //                         val+=",underlined:true";
+    //                     else if(textComponentEffects[2]==2)
+    //                         val+=",underlined:false";
+    //                     if(textComponentEffects[3]==1)
+    //                         val+=",strikethrough:true";
+    //                     else if(textComponentEffects[3]==2)
+    //                         val+=",strikethrough:false";
+    //                     if(textComponentEffects[4]==1)
+    //                         val+=",obfuscated:true";
+    //                     else if(textComponentEffects[4]==2)
+    //                         val+=",obfuscated:false";
+    //                     val+=",\"extra\":[";
+    //                     boolean firstPart = true;
+    //                     for(int i=1; i<value.length(); i++) { // to_do handle escapes
+    //                         if(!firstPart)
+    //                             val+=",";
+    //                         String thisChar = ""+value.charAt(i);
+    //                         if(thisChar.equals("\\") || thisChar.equals("\""))
+    //                             thisChar = "\\"+thisChar;
+    //                         val+="{text:\""+thisChar+"\",color:\"#";
+    //                         for(int c=0; c<3; c++) {
+    //                             int col = 0;
+    //                             if(textComponentEffects[5]==1)
+    //                                 col = colorSets[0][c] + (int)((colorSets[1][c]-colorSets[0][c])*i/((double)(value.length()-1)));
+    //                             else {
+    //                                 if(value.length()%2==0) {
+    //                                     if(i<value.length()/2)
+    //                                         col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*i/((double)(value.length()/2-1)));
+    //                                     else
+    //                                         col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*(value.length()-i-1)/((double)(value.length()/2-1)));
+    //                                 }
+    //                                 else {
+    //                                     if(i<=value.length()/2)
+    //                                         col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*i/((double)(value.length()/2)));
+    //                                     else
+    //                                         col = colorSets[1][c] + (int)((colorSets[0][c]-colorSets[1][c])*(value.length()-i-1)/((double)(value.length()/2)));
+    //                                 }
+    //                             }
         
-                                String current = Integer.toHexString(col).toUpperCase();
-                                if(current.length()==1)
-                                    current = "0" + current;
-                                val += current;
-                            }
-                            val+="\"}";
-                            firstPart = false;
-                        }
-                        val+="]}";
-                    }
-                    if(value == null || value.equals(""))
-                        val = "{text:\"\"}";
-                    updateTextComponentPreview(textComponentEffectPath,textComponentEffectBase,val);
-                }
-                break;
-            }
-            case 1: {
-                if(widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_ENTRY)) {
-                    String value = ((EditBox)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_ENTRY)).getValue();
-                    String val = "{";
-                    if(textComponentEffects[7] == 0) { // to_do handle escapes
-                        val+="text:\"";
-                        for(int i=0; i<value.length(); i++) {
-                            String thisChar = ""+value.charAt(i);
-                            if(thisChar.equals("\\") || thisChar.equals("\""))
-                                thisChar = "\\"+thisChar;
-                            val+=thisChar;
-                        }
-                        val+="\"";
-                    }
-                    else if(textComponentEffects[7] == 1) {
-                        val+="\"keybind\":\""+value+"\"";
-                    }
-                    else if(textComponentEffects[7] == 2) {
-                        if(widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_TRANSLATION_WITH, WidgetCacheType.TEXT_COMPONENT_TRANSLATION_FALLBACK)) {
-                            EditBox txtWith = (EditBox)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_TRANSLATION_WITH);
-                            EditBox txtFallback = (EditBox)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_TRANSLATION_FALLBACK);
-                            val+="\"translate\":\""+value+"\"";
-                            if(txtWith.getValue().length()>0)
-                                val+=",\"with\":"+txtWith.getValue();
-                            if(txtFallback.getValue().length()>0)
-                                val+=",\"fallback\":\""+txtFallback.getValue()+"\"";
-                        }
-                    }
-                    if(textComponentEffects[6]==2)
-                        val+=",color:\""+getRgbHex(0)+"\"";
-                    else if(textComponentEffects[6]==1)
-                        val+=",color:\""+textComponentLastColor+"\"";
-                    if(textComponentShadowColor.length()>0)
-                        val+=",shadow_color:"+textComponentShadowColor;
-                    if(textComponentFont.length()>0)
-                        val+=",font:\""+textComponentFont+"\"";
-                    if(textComponentEffects[0]==1)
-                        val+=",bold:true";
-                    else if(textComponentEffects[0]==2)
-                        val+=",bold:false";
-                    if(textComponentEffects[1]==1)
-                        val+=",italic:true";
-                    else if(textComponentEffects[1]==2)
-                        val+=",italic:false";
-                    if(textComponentEffects[2]==1)
-                        val+=",underlined:true";
-                    else if(textComponentEffects[2]==2)
-                        val+=",underlined:false";
-                    if(textComponentEffects[3]==1)
-                        val+=",strikethrough:true";
-                    else if(textComponentEffects[3]==2)
-                        val+=",strikethrough:false";
-                    if(textComponentEffects[4]==1)
-                        val+=",obfuscated:true";
-                    else if(textComponentEffects[4]==2)
-                        val+=",obfuscated:false";
-                    val+="}";
-                    if(value == null || value.equals(""))
-                        val = "{text:\"\"}";
-                    updateTextComponentPreview(textComponentEffectPath,textComponentEffectBase,val);
-                }
-                break;
-            }
-        }
-    }
+    //                             String current = Integer.toHexString(col).toUpperCase();
+    //                             if(current.length()==1)
+    //                                 current = "0" + current;
+    //                             val += current;
+    //                         }
+    //                         val+="\"}";
+    //                         firstPart = false;
+    //                     }
+    //                     val+="]}";
+    //                 }
+    //                 if(value == null || value.equals(""))
+    //                     val = "{text:\"\"}";
+    //                 updateTextComponentPreview(textComponentEffectPath,textComponentEffectBase,val);
+    //             }
+    //             break;
+    //         }
+    //         case 1: {
+    //             if(widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_ENTRY)) {
+    //                 String value = ((EditBox)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_EFFECT_TEXT_ENTRY)).getValue();
+    //                 String val = "{";
+    //                 if(textComponentEffects[7] == 0) { // to_do handle escapes
+    //                     val+="text:\"";
+    //                     for(int i=0; i<value.length(); i++) {
+    //                         String thisChar = ""+value.charAt(i);
+    //                         if(thisChar.equals("\\") || thisChar.equals("\""))
+    //                             thisChar = "\\"+thisChar;
+    //                         val+=thisChar;
+    //                     }
+    //                     val+="\"";
+    //                 }
+    //                 else if(textComponentEffects[7] == 1) {
+    //                     val+="\"keybind\":\""+value+"\"";
+    //                 }
+    //                 else if(textComponentEffects[7] == 2) {
+    //                     if(widgetCacheTest(WidgetCacheType.TEXT_COMPONENT_TRANSLATION_WITH, WidgetCacheType.TEXT_COMPONENT_TRANSLATION_FALLBACK)) {
+    //                         EditBox txtWith = (EditBox)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_TRANSLATION_WITH);
+    //                         EditBox txtFallback = (EditBox)widgetCacheGet(WidgetCacheType.TEXT_COMPONENT_TRANSLATION_FALLBACK);
+    //                         val+="\"translate\":\""+value+"\"";
+    //                         if(txtWith.getValue().length()>0)
+    //                             val+=",\"with\":"+txtWith.getValue();
+    //                         if(txtFallback.getValue().length()>0)
+    //                             val+=",\"fallback\":\""+txtFallback.getValue()+"\"";
+    //                     }
+    //                 }
+    //                 if(textComponentEffects[6]==2)
+    //                     val+=",color:\""+getRgbHex(0)+"\"";
+    //                 else if(textComponentEffects[6]==1)
+    //                     val+=",color:\""+textComponentLastColor+"\"";
+    //                 if(textComponentShadowColor.length()>0)
+    //                     val+=",shadow_color:"+textComponentShadowColor;
+    //                 if(textComponentFont.length()>0)
+    //                     val+=",font:\""+textComponentFont+"\"";
+    //                 if(textComponentEffects[0]==1)
+    //                     val+=",bold:true";
+    //                 else if(textComponentEffects[0]==2)
+    //                     val+=",bold:false";
+    //                 if(textComponentEffects[1]==1)
+    //                     val+=",italic:true";
+    //                 else if(textComponentEffects[1]==2)
+    //                     val+=",italic:false";
+    //                 if(textComponentEffects[2]==1)
+    //                     val+=",underlined:true";
+    //                 else if(textComponentEffects[2]==2)
+    //                     val+=",underlined:false";
+    //                 if(textComponentEffects[3]==1)
+    //                     val+=",strikethrough:true";
+    //                 else if(textComponentEffects[3]==2)
+    //                     val+=",strikethrough:false";
+    //                 if(textComponentEffects[4]==1)
+    //                     val+=",obfuscated:true";
+    //                 else if(textComponentEffects[4]==2)
+    //                     val+=",obfuscated:false";
+    //                 val+="}";
+    //                 if(value == null || value.equals(""))
+    //                     val = "{text:\"\"}";
+    //                 updateTextComponentPreview(textComponentEffectPath,textComponentEffectBase,val);
+    //             }
+    //             break;
+    //         }
+    //     }
+    // }
 
     /**
      * Modified from {@link net.minecraft.client.gui.screens.inventory.BookViewScreen#getClickedComponentStyleAt}
@@ -1453,12 +1457,38 @@ public class ItemBuilder extends GenericScreen {
         }
     }
 
-    private Component getButtonText(String path, Tag el) {//TODO
+    private Component getComplexButtonText(Tag el) {
+        return getComplexButtonText(el, null);
+    }
+
+    private Component getComplexButtonText(Tag el, PathFlag flag) {
         if(el==null)
             return Component.empty();
-        String elString = el==null ? "null" : BlackMagick.nbtToSnbt(el);
-        String elStringContent = BlackMagick.nbtToSnbtOrString(el);
-        //PathInfo pi = ComponentHelper.getPathInfo(path);
+        if(flag!=null)
+            switch(flag) {
+                case NONE: break;
+
+                case TEXT_COMPONENT:
+                case TEXT_COMPONENT_ITALIC:
+                case TEXT_COMPONENT_LORE:
+                {
+                    ParsedText text = BlackMagick.textComponentFromString(BlackMagick.nbtToSnbt(el));
+                    if(text.isValid()) {
+                        Component btnTxt = text.text();
+                        if(flag==PathFlag.TEXT_COMPONENT_ITALIC)
+                            btnTxt = btnTxt.copy().withStyle(ChatFormatting.ITALIC);
+                        else if(flag==PathFlag.TEXT_COMPONENT_LORE)
+                            btnTxt = btnTxt.copy().withStyle(ChatFormatting.ITALIC,ChatFormatting.DARK_PURPLE);
+                        return btnTxt;
+                    }
+                    break;
+                }
+            }
+        return BlackMagick.nbtToColorfulText(el);
+        // to_do other path flags
+        // String elString = el==null ? "null" : BlackMagick.nbtToSnbt(el);
+        // String elStringContent = BlackMagick.nbtToSnbtOrString(el);
+        // PathInfo pi = ComponentHelper.getPathInfo(path);
         // if(pi.type()==PathType.TEXT) {
         //     Component btnTxt = BlackMagick.textComponentFromString((el==null) ? "" : BlackMagick.nbtToSnbt(el)).text();
         //     if(el != null && el.getId()==Tag.TAG_STRING && BlackMagick.textComponentFromString(elString).isValid()) {
@@ -1542,10 +1572,9 @@ public class ItemBuilder extends GenericScreen {
         //     }
         //     return errorText("Invalid explosion");
         // }
-        return BlackMagick.nbtToColorfulText(el);
     }
 
-    private Component getButtonTooltip(PathNode node, PathHelper.PathInfo pi) {
+    private Component getKeyButtonTooltip(PathNode node, PathInfo pi) {
         MutableComponent btnTt = Component.empty().append(grayWhiteText(node.isKey() ? "Key: " : "Index: ", node.isKey() ? node.key() : (""+node.index())));
         if(pi != null) {
             if(!pi.getNbtTypes().isEmpty()) {
@@ -2389,7 +2418,7 @@ public class ItemBuilder extends GenericScreen {
         TEMPLATE
     }
 
-    private record NbtEdit(CompoundTag original, CompoundTag current, boolean unsaved, PathNode[] pathNodes, String fullPath, PathHelper.PathInfo pi) {
+    private record NbtEdit(CompoundTag original, CompoundTag current, boolean unsaved, PathNode[] pathNodes, String fullPath, PathInfo pi) {
 
         public static NbtEdit newEdit(CompoundTag startValue) {
             CompoundTag newNbt = startValue==null ? new CompoundTag() : startValue.copy();
@@ -2633,15 +2662,68 @@ public class ItemBuilder extends GenericScreen {
 
         Tag editElement = nbtEdit.getEditElement();
 
-        boolean foundTemplateStyle = !nbtEdit.pi().isEmpty(); //to_do only mark found if info found depending on current element type?
+        boolean foundTemplateStyle = (
+                (editElement != null && nbtEdit.pi().hasPathType(PathType.COMPOUND) && editElement.getId() == Tag.TAG_COMPOUND)
+            ||
+                (editElement != null && nbtEdit.pi().hasPathType(PathType.LIST) && editElement.getId() == Tag.TAG_LIST)
+            );
+
         if(!foundTemplateStyle) {
             btnStyleTemplate.setError(ItemSlotButton.ItemError.WARN);
             btnStyleTemplate.setTooltip(Tooltip.create(grayWhiteText("Style: ","Template")
-                .append(warnText("\nNo info found for current path"))));
+                .append(warnText("\nNo template found for current path and element"))));
         }
 
-        switch(nbtEditStyle) { //TODO
+        switch(nbtEditStyle) {
             case TEMPLATE: {
+                if(editElement != null && nbtEdit.pi().hasPathType(PathType.COMPOUND) && editElement.getId() == Tag.TAG_COMPOUND) {
+
+                    CompoundTag thisCompound = (editElement != null && editElement.getId() == Tag.TAG_COMPOUND) ? (CompoundTag)editElement : new CompoundTag();
+                    KeyGetter keyGetter = nbtEdit.pi().getCompoundKeys(thisCompound);
+                    Set<String> requiredKeys = Sets.newHashSet();
+                    Set<String> optionalKeys = Sets.newHashSet();
+                    Set<String> unknownKeys = Sets.newHashSet();
+
+                    requiredKeys.addAll(keyGetter.getRequired());
+                    optionalKeys.addAll(keyGetter.getOptional());
+                    unknownKeys.addAll(thisCompound.keySet());
+                    unknownKeys.removeAll(keyGetter.getKeys());
+
+                    if(!unknownKeys.isEmpty()) {
+                        addTabWidgetScroll(tabNum, new RowWidget("Unknown"));
+                        for(String k : BlackMagick.sortSet(unknownKeys))
+                            addTabWidgetScroll(tabNum, RowWidgetElement.compoundTemplateElement(this, thisCompound, k));
+                    }
+                    if(!requiredKeys.isEmpty()) {
+                        addTabWidgetScroll(tabNum, new RowWidget("Required"));
+                        for(String k : BlackMagick.sortSet(requiredKeys))
+                            addTabWidgetScroll(tabNum, RowWidgetElement.compoundTemplateElement(this, thisCompound, k));
+                    }
+                    if(!optionalKeys.isEmpty()) {
+                        addTabWidgetScroll(tabNum, new RowWidget("Optional"));
+                        for(String k : BlackMagick.sortSet(optionalKeys))
+                            addTabWidgetScroll(tabNum, RowWidgetElement.compoundTemplateElement(this, thisCompound, k));
+                    }
+
+                    addTabWidgetScroll(tabNum, new RowWidget());
+
+                }
+                else if(editElement != null && nbtEdit.pi().hasPathType(PathType.LIST) && editElement.getId() == Tag.TAG_LIST) {
+
+                    ListTag thisList = (editElement != null && editElement.getId() == Tag.TAG_LIST) ? (ListTag)editElement : new ListTag();
+                    int listSize = thisList.size();
+
+                    for(int i=0; i<listSize; i++)
+                        addTabWidgetScroll(tabNum, RowWidgetElement.listTemplateElement(this, thisList, i));
+
+                    addTabWidgetScroll(tabNum, new RowWidget("Append Element"));
+                    addTabWidgetScroll(tabNum, RowWidgetElement.customListElement(this, thisList));
+
+                    addTabWidgetScroll(tabNum, new RowWidget());
+
+                }
+                if(foundTemplateStyle)
+                    break;
             }
             case NBT: {
                 boolean found = false;
@@ -2824,7 +2906,7 @@ public class ItemBuilder extends GenericScreen {
         //             key = key.substring(key.lastIndexOf("]")+1);
         //         if(key.startsWith("minecraft:"))
         //             key = key.replaceFirst("minecraft:","");
-        //         keyBtn.setTooltip(Tooltip.create(getButtonTooltip(ComponentHelper.getPathInfo(fullPath),key)));
+        //         keyBtn.setTooltip(Tooltip.create(getKeyButtonTooltip(ComponentHelper.getPathInfo(fullPath),key)));
         //         addTabWidgetScroll(tabNum, new RowWidget(new PosWidget[]{new PosWidget(keyBtn,(width/2)-40-x,0)}));
         //     }
 
@@ -2854,7 +2936,7 @@ public class ItemBuilder extends GenericScreen {
             //     startVal = args.getString("textComponentOverride").get();
 
             // {
-            //     MultiLineEditBox w = new MultiLineEditBox(((ItemBuilder)ItemBuilder.this).minecraft.font, x+15-3, y+ROW_TOP, 240-36, ROW_HEIGHT*6,
+            //     MultiLineEditBox w = new MultiLineEditBox(minecraft.font, x+15-3, y+ROW_TOP, 240-36, ROW_HEIGHT*6,
             //         Component.nullToEmpty(""), Component.nullToEmpty(""));
             //     w.setValueListener(value -> {
             //         setErrorMsg(null);
@@ -3484,7 +3566,7 @@ public class ItemBuilder extends GenericScreen {
                 this.btns[0].setTooltip(Tooltip.create(Component.nullToEmpty(tooltip)));
             if(!minecraft.player.getAbilities().instabuild && !survival)
                 this.btns[0].active = false;
-            this.txts = new EditBox[]{new EditBox(((ItemBuilder)ItemBuilder.this).minecraft.font,0,0, ROW_WIDTH-WID_SPACE-size, WID_HEIGHT, Component.nullToEmpty(""))};
+            this.txts = new EditBox[]{new EditBox(minecraft.font,0,0, ROW_WIDTH-WID_SPACE-size, WID_HEIGHT, Component.nullToEmpty(""))};
             this.txtX = new int[]{ROW_LEFT_SCROLL+5+size};
             this.txts[0].setResponder(value -> {
                 if(value != null && !value.equals("")) {
@@ -3516,7 +3598,7 @@ public class ItemBuilder extends GenericScreen {
         public RowWidget(String name, int suggsNum) { // to_do remove and replace with real solution
             int size = sizeFromName(name);
 
-            this.txts = new EditBox[]{new EditBox(((ItemBuilder)ItemBuilder.this).minecraft.font,0,0, ROW_WIDTH-WID_SPACE-size, WID_HEIGHT, Component.nullToEmpty(""))};
+            this.txts = new EditBox[]{new EditBox(minecraft.font,0,0, ROW_WIDTH-WID_SPACE-size, WID_HEIGHT, Component.nullToEmpty(""))};
             this.txtX = new int[]{ROW_LEFT_SCROLL+5+size};
 
             if(suggsNum==9)
@@ -3576,9 +3658,9 @@ public class ItemBuilder extends GenericScreen {
                 else if(suggsNum==10)
                     textComponentFont = value;
 
-                if(suggsNum >= 3 && suggsNum <= 10) {
-                    updateTextComponentEffect();
-                }
+                // if(suggsNum >= 3 && suggsNum <= 10) {
+                //     updateTextComponentEffect();
+                // }
             });
             this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
             initChildren();
@@ -3608,7 +3690,7 @@ public class ItemBuilder extends GenericScreen {
                 }
                 for(int i=0; i<this.txts.length; i++) {
                     this.txtX[i] = currentX;
-                    this.txts[i] = new EditBox(((ItemBuilder)ItemBuilder.this).minecraft.font,0,0,
+                    this.txts[i] = new EditBox(minecraft.font,0,0,
                         sizes[this.btns.length+i], WID_HEIGHT, Component.nullToEmpty(""));
                     currentX += sizes[this.btns.length+i];
 
@@ -3751,8 +3833,8 @@ public class ItemBuilder extends GenericScreen {
                 pathNodes = new PathNode[]{PathNode.of(key)};
             final String path = PathNode.resolvePath(pathNodes);
 
-            PathHelper.PathInfo pi = PathHelper.getItemPath(itemStack, pathNodes);
-            Component btnTt = getButtonTooltip(PathNode.of(key), pi);
+            PathInfo pi = PathHelper.getItemPath(itemStack, pathNodes);
+            Component btnTt = getKeyButtonTooltip(PathNode.of(key), pi);
 
             Tag startEl = BlackMagick.getNbtPath(itemStack,path);
 
@@ -3805,11 +3887,11 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
             else if((startEl != null && (startEl.getId()==Tag.TAG_COMPOUND || startEl.getId()==Tag.TAG_LIST))
-            || (startEl == null && pi.getDefaultPathType()==PathType.COMPLEX)) {
+            || (startEl == null && pi.getDefaultPathType().isComplex())) {
 
                 this.btns = new Button[]{
                 keyBtn,
-                Button.builder(getButtonText(path,startEl), btn -> {
+                Button.builder(getComplexButtonText(startEl, pi.getFlag()), btn -> {
                     createBlankTabNbtEdit(itemStack,pathNodes);
                 }).size(ROW_WIDTH-ROW_LEFT_ICON-20-size-WID_SPACE,WID_HEIGHT).build(),
                 Button.builder(Component.nullToEmpty(startEl==null ? "+" : "X"), btn -> {
@@ -3888,24 +3970,18 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
             else { // inline component
-                String[] baseSuggestions = pi.getSuggs().getArray();
-
                 boolean isString = ((startEl != null && pi.hasPathType(PathType.STRING) && startEl.getId()==Tag.TAG_STRING)
                     || (startEl == null && pi.getDefaultPathType()==PathType.STRING));
                 final String startVal = isString ? BlackMagick.nbtToSnbtOrString(startEl) : BlackMagick.nbtToSnbt(startEl);
+                String[] baseSuggestions = isString ? pi.getSuggs().getArray() : pi.getSuggs().getArraySnbt();
 
                 int deleteBtnSize = 20;
                 if(startEl == null)
                     deleteBtnSize = 0;
 
+                addPosWidget(keyBtn, ROW_LEFT_SCROLL+ROW_LEFT_ICON, 0);
                 {
-                    Button w = Button.builder(Component.nullToEmpty(keyBtnTxt), btn -> {}).size(size,WID_HEIGHT).build();
-                    w.setTooltip(Tooltip.create(btnTt));
-                    w.active = false;
-                    addPosWidget(w, ROW_LEFT_SCROLL+ROW_LEFT_ICON, 0);
-                }
-                {
-                    EditBox w = new EditBox(((ItemBuilder)ItemBuilder.this).minecraft.font,0,0,
+                    EditBox w = new EditBox(minecraft.font,0,0,
                         ROW_WIDTH-ROW_LEFT_ICON-size-5-20-deleteBtnSize, WID_HEIGHT, Component.nullToEmpty(""));
                     w.setMaxLength(MAX_TEXT_LENGTH);
                     w.setResponder(value -> {
@@ -4092,248 +4168,15 @@ public class ItemBuilder extends GenericScreen {
 
         private static final Tooltip TT_SET = Tooltip.create(Component.nullToEmpty("Set element"));
         private String cacheNode = null;
-        private PathHelper.PathInfo cachePathInfo = null;
+        private PathInfo cachePathInfo = null;
         private String[] cacheSuggs = null;
-
-        /**
-         * Row to edit any element in base compound.
-         * Contains button to set and txt to input (or others depending on path and key).
-         * Element is removed on set when txt is empty.
-         */
-        // public RowWidgetElement(String key) {
-        //     NbtEdit thisNbtEdit = nbtEdit.addPath(PathNode.of(key));
-        //     String fullPath = thisNbtEdit.fullPath();
-
-        //     PathInfo pi = ComponentHelper.getPathInfo(fullPath);
-        //     // boolean isString = ComponentHelper.pathTypeToNbtType(pi.type())==Tag.TAG_STRING; to_do nbt-edit
-
-        //     final String startVal = "";
-        //     Tag currentEl = thisNbtEdit.getEditElement();
-        //     final String currentVal = BlackMagick.nbtToSnbt(currentEl);
-
-        //     String keyBtnTxt = cleanKeyBtn(PathNode.of(key));
-        //     int size = sizeFromName(keyBtnTxt);
-        //     if(size>80 && pi.type() == PathType.TRINARY)
-        //         size = 80;
-        //     Button keyBtn = Button.builder(Component.nullToEmpty(keyBtnTxt), btn -> {})
-        //         .size(size,WID_HEIGHT).build();
-        //     keyBtn.active = false;
-        //     keyBtn.setTooltip(Tooltip.create(getButtonTooltip(pi,key)));
-
-        //     if(ComponentHelper.isComplex(pi.type())) {
-        //         this.btns = new Button[]{
-        //         keyBtn,
-        //         Button.builder(getButtonText(fullPath,currentEl), btn -> {
-        //             // CompoundTag newArgs = BlackMagick.validCompoundFromString("{path:\""+blankElPath+"\"}"); to_do nbt-edit
-        //             // ListTag newPath2 = new ListTag();
-        //             // newPath2.add(StringTag.valueOf(currentPath2+"."+key));
-        //             // if(path2 != null) {
-        //             //     for(int i=0; i<path2.size(); i++)
-        //             //         newPath2.add(path2.get(i));
-        //             // }
-        //             // newArgs.put("path2",newPath2);
-        //             // if(blankTabEl != null)
-        //             //     newArgs.put("overrideEl",blankTabEl);
-        //             // createBlankTab(BlankTabMode.NBT_EDIT,newArgs);
-        //             unsel();
-        //         }).size(ROW_WIDTH-20-size-WID_SPACE,WID_HEIGHT).build(),
-        //         Button.builder(Component.nullToEmpty(currentVal.equals("") ? "+" : "X"), btn -> {
-        //             // if(currentVal.equals("")) { to_do nbt-edit
-        //             //     CompoundTag newArgs = BlackMagick.validCompoundFromString("{path:\""+blankElPath+"\"}");
-        //             //     ListTag newPath2 = new ListTag();
-        //             //     newPath2.add(StringTag.valueOf(currentPath2+"."+key));
-        //             //     if(path2 != null) {
-        //             //         for(int i=0; i<path2.size(); i++)
-        //             //             newPath2.add(path2.get(i));
-        //             //     }
-        //             //     newArgs.put("path2",newPath2);
-        //             //     if(blankTabEl != null)
-        //             //         newArgs.put("overrideEl",blankTabEl);
-        //             //     createBlankTab(BlankTabMode.NBT_EDIT,newArgs);
-        //             // }
-        //             // else {
-        //             //     nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-        //             //         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,null),blankElPath),saveBtn,
-        //             //         path2==null ? null : pagePath);
-        //             //     CompoundTag newArgs = BlackMagick.validCompoundFromString("{path:\""+blankElPath+"\"}");
-        //             //     if(path2 != null) {
-        //             //         newArgs.put("path2",path2);
-        //             //     }
-        //             //     if(blankTabEl != null)
-        //             //         newArgs.put("overrideEl",blankTabEl);
-        //             //     createBlankTab(BlankTabMode.NBT_EDIT,newArgs);
-        //             // }
-        //             unsel();
-        //         }).size(20,WID_HEIGHT).build()};
-        //         this.btnX = new int[]{ROW_LEFT_SCROLL,ROW_LEFT_SCROLL+size+WID_SPACE,ROW_RIGHT_SCROLL-20};
-        //         if(!currentVal.equals("")) {
-        //             //this.btns[1].setTooltip();
-        //             this.btns[1].setTooltipDelay(TOOLTIP_DELAY);
-        //         }
-        //         else
-        //             this.btns[1].active = false;
-        //         this.btns[2].setTooltip(Tooltip.create(Component.nullToEmpty(currentVal.equals("") ? "Create" : "Delete")));
-        //     }
-        //     else if(pi.type()==PathType.TRINARY) {
-        //         int selBtn;
-        //         if(currentVal != null && currentVal.length()>0) {
-        //             if(currentVal.equals("1b") || currentVal.equals("1") || currentVal.equals("true"))
-        //                 selBtn = 2;
-        //             else
-        //                 selBtn = 1;
-        //         }
-        //         else
-        //             selBtn = 0;
-
-        //         final int btnSize = 35;
-        //         final int btnSpacing = 2;
-        //         this.btns = new Button[]{
-        //         keyBtn,
-        //         Button.builder(Component.nullToEmpty("Unset"), btn -> {
-        //             // nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath( to_do nbt-edit
-        //             //     BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,null),blankElPath),saveBtn,
-        //             //     path2==null ? null : pagePath);
-        //             // CompoundTag newArgs = BlackMagick.validCompoundFromString("{path:\""+blankElPath+"\"}");
-        //             // if(path2 != null) {
-        //             //     newArgs.put("path2",path2);
-        //             // }
-        //             // if(blankTabEl != null)
-        //             //     newArgs.put("overrideEl",blankTabEl);
-        //             // createBlankTab(BlankTabMode.NBT_EDIT,newArgs);
-        //         }).size(btnSize,WID_HEIGHT).build(),
-        //         Button.builder(Component.nullToEmpty("False"), btn -> {
-        //             // nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath( to_do nbt-edit
-        //             //     BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,ByteTag.ZERO),blankElPath),saveBtn,
-        //             //     path2==null ? null : pagePath);
-        //             // CompoundTag newArgs = BlackMagick.validCompoundFromString("{path:\""+blankElPath+"\"}");
-        //             // if(path2 != null) {
-        //             //     newArgs.put("path2",path2);
-        //             // }
-        //             // if(blankTabEl != null)
-        //             //     newArgs.put("overrideEl",blankTabEl);
-        //             // createBlankTab(BlankTabMode.NBT_EDIT,newArgs);
-        //         }).size(btnSize,WID_HEIGHT).build(),
-        //         Button.builder(Component.nullToEmpty("True"), btn -> {
-        //             // nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath( to_do nbt-edit
-        //             //     BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,ByteTag.ONE),blankElPath),saveBtn,
-        //             //     path2==null ? null : pagePath);
-        //             // CompoundTag newArgs = BlackMagick.validCompoundFromString("{path:\""+blankElPath+"\"}");
-        //             // if(path2 != null) {
-        //             //     newArgs.put("path2",path2);
-        //             // }
-        //             // if(blankTabEl != null)
-        //             //     newArgs.put("overrideEl",blankTabEl);
-        //             // createBlankTab(BlankTabMode.NBT_EDIT,newArgs);
-        //         }).size(btnSize,WID_HEIGHT).build()};
-        //         this.btnX = new int[]{ROW_LEFT_SCROLL,ROW_RIGHT_SCROLL-(3*btnSize+2*btnSpacing),ROW_RIGHT_SCROLL-(2*btnSize+btnSpacing),ROW_RIGHT_SCROLL-btnSize};
-
-        //         for(int i=0; i<btns.length; i++) {
-        //             if(i==selBtn+1)
-        //                 this.btns[i].active = false;
-        //             else if(i>0)
-        //                 this.btns[i].setTooltip(TT_SET);
-        //         }
-        //     }
-        //     else if(pi.type()==PathType.UNIT) {
-        //         int selBtn;
-        //         if(currentVal != null && currentVal.length()>0) {
-        //             selBtn = 1;
-        //         }
-        //         else
-        //             selBtn = 0;
-
-        //         final int btnSize = 35;
-        //         final int btnSpacing = 2;
-        //         this.btns = new Button[]{
-        //         keyBtn,
-        //         Button.builder(Component.nullToEmpty("False"), btn -> {
-        //             // nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath( to_do nbt-edit
-        //             //     BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,null),blankElPath),saveBtn,
-        //             //     path2==null ? null : pagePath);
-        //             // CompoundTag newArgs = BlackMagick.validCompoundFromString("{path:\""+blankElPath+"\"}");
-        //             // if(path2 != null) {
-        //             //     newArgs.put("path2",path2);
-        //             // }
-        //             // if(blankTabEl != null)
-        //             //     newArgs.put("overrideEl",blankTabEl);
-        //             // createBlankTab(BlankTabMode.NBT_EDIT,newArgs);
-        //         }).size(btnSize,WID_HEIGHT).build(),
-        //         Button.builder(Component.nullToEmpty("True"), btn -> {
-        //             // nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath( to_do nbt-edit
-        //             //     BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,new CompoundTag()),blankElPath),saveBtn,
-        //             //     path2==null ? null : pagePath);
-        //             // CompoundTag newArgs = BlackMagick.validCompoundFromString("{path:\""+blankElPath+"\"}");
-        //             // if(path2 != null) {
-        //             //     newArgs.put("path2",path2);
-        //             // }
-        //             // if(blankTabEl != null)
-        //             //     newArgs.put("overrideEl",blankTabEl);
-        //             // createBlankTab(BlankTabMode.NBT_EDIT,newArgs);
-        //         }).size(btnSize,WID_HEIGHT).build()};
-        //         this.btnX = new int[]{ROW_LEFT_SCROLL,ROW_RIGHT_SCROLL-(2*btnSize+btnSpacing),ROW_RIGHT_SCROLL-btnSize};
-
-        //         for(int i=0; i<btns.length; i++) {
-        //             if(i==selBtn+1)
-        //                 this.btns[i].active = false;
-        //             else if(i>0)
-        //                 this.btns[i].setTooltip(TT_SET);
-        //         }
-        //     }
-        //     else {
-        //         String[] baseSuggestions = pi.suggs() == null ? null : pi.suggs().getArray();
-
-        //         this.btns = new Button[]{keyBtn};
-        //         this.btnX = new int[]{ROW_LEFT_SCROLL};
-
-        //         this.txts = new EditBox[]{new EditBox(((ItemBuilder)ItemBuilder.this).minecraft.font,0,0, ROW_WIDTH-size-5, WID_HEIGHT, Component.nullToEmpty(""))};
-        //         this.txtX = new int[]{ROW_LEFT_SCROLL+WID_SPACE+size};
-        //         this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
-
-        //         this.txts[0].setResponder(value -> {
-        //             setErrorMsg(null);
-
-        //             Tag el = BlackMagick.nbtFromString(value);
-        //             if(value.isEmpty())
-        //                 el = null;
-
-        //             if((value != null && !value.equals(startVal))) {
-        //                 this.txts[0].setTextColor(TEXT_COLOR);
-
-        //                 if(value.length()>0 && el==null) {
-        //                     setErrorMsg("Invalid element");
-        //                     this.txts[0].setTextColor(ERROR_COLOR);
-        //                     el = StringTag.valueOf(value);
-        //                 }
-        //             }
-        //             else {
-        //                 this.txts[0].setTextColor(LABEL_COLOR);
-        //             }
-
-        //             // nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-        //             //     BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,el),blankElPath),saveBtn,
-        //             //     path2==null ? null : pagePath); to_do nbt-edit
-
-        //             suggsOnChanged(this.txts[0],baseSuggestions,startVal);
-
-        //         });
-
-        //         this.txts[0].setValue(currentVal);
-        //     }
-
-        //     initChildren();
-        // }
 
         private RowWidgetElement() {}
 
-        /**
-         * Row to edit any element in base compound.
-         * Contains button to set and txt to input (or others depending on path and key).
-         * Element is removed on set when txt is empty.
-         */
-        public RowWidgetElement(CompoundTag baseCompound, String key) {//TODO
+        public RowWidgetElement(CompoundTag baseCompound, String key) {
             NbtEdit thisNbtEdit = nbtEdit.addPath(PathNode.of(key));
             String fullPath = thisNbtEdit.fullPath();
-            PathHelper.PathInfo pi = nbtEdit.pi().getCompoundKeyInfo(baseCompound, key);
+            PathInfo pi = nbtEdit.pi().getCompoundKeyInfo(baseCompound, key);
 
             Tag currentEl = thisNbtEdit.getEditElement();
             final String currentVal = BlackMagick.nbtToSnbt(currentEl);
@@ -4343,7 +4186,7 @@ public class ItemBuilder extends GenericScreen {
             int size = 70;
             Button keyBtn = Button.builder(Component.nullToEmpty(keyBtnTxt), btn -> {}).size(size,WID_HEIGHT).build();
             keyBtn.active = false;
-            keyBtn.setTooltip(Tooltip.create(getButtonTooltip(PathNode.of(key), pi)));
+            keyBtn.setTooltip(Tooltip.create(getKeyButtonTooltip(PathNode.of(key), pi)));
 
             if(currentEl == null) {
                 throw new IllegalArgumentException("Tried to create RowWidgetElement for nonexistent key");
@@ -4351,7 +4194,7 @@ public class ItemBuilder extends GenericScreen {
             else if(currentEl.getId()==Tag.TAG_COMPOUND || currentEl.getId()==Tag.TAG_LIST) {
                 this.btns = new Button[]{
                     keyBtn,
-                    Button.builder(getButtonText(fullPath,currentEl), btn -> {
+                    Button.builder(getComplexButtonText(currentEl), btn -> {
                         createBlankTabNbtEdit(nbtEdit.addPath(PathNode.of(key)));
                     }).size(ROW_WIDTH-20-size-WID_SPACE,WID_HEIGHT).build(),
                     Button.builder(Component.nullToEmpty("X"), btn -> {
@@ -4366,9 +4209,9 @@ public class ItemBuilder extends GenericScreen {
             else {
                 int deleteBtnSize = 20;
                 addPosWidget(keyBtn, ROW_LEFT_SCROLL, 0);
-                String[] baseSuggestions = pi == null ? null : pi.getSuggs().getArray();
+                String[] baseSuggestions = pi.getSuggs().getArraySnbt();
                 {
-                    EditBox w = new EditBox(((ItemBuilder)ItemBuilder.this).minecraft.font,0,0,
+                    EditBox w = new EditBox(minecraft.font,0,0,
                         ROW_WIDTH-size-WID_SPACE-20-deleteBtnSize, WID_HEIGHT, Component.nullToEmpty(""));
                     w.setMaxLength(MAX_TEXT_LENGTH);
                     w.setResponder(value -> {
@@ -4429,11 +4272,214 @@ public class ItemBuilder extends GenericScreen {
             initChildren();
         }
 
-        /**
-         * Row to edit any element in base compound.
-         * Contains button to set and txt to input (or others depending on path and key).
-         * Element is removed on set when txt is empty.
-         */
+        public static RowWidgetElement compoundTemplateElement(ItemBuilder context, CompoundTag baseCompound, String key) {
+            RowWidgetElement row = context.new RowWidgetElement();
+
+            NbtEdit thisNbtEdit = context.nbtEdit.addPath(PathNode.of(key));
+            String fullPath = thisNbtEdit.fullPath();
+            PathInfo pi = context.nbtEdit.pi().getCompoundKeyInfo(baseCompound, key);
+
+            Tag currentEl = thisNbtEdit.getEditElement();
+
+            String keyBtnTxt = row.cleanKeyBtn(PathNode.of(key));
+            //int size = sizeFromName(keyBtnTxt);
+            int size = 70;
+            Button keyBtn = Button.builder(Component.nullToEmpty(keyBtnTxt), btn -> {}).size(size,WID_HEIGHT).build();
+            keyBtn.active = false;
+            keyBtn.setTooltip(Tooltip.create(context.getKeyButtonTooltip(PathNode.of(key), pi)));
+
+            if((currentEl != null && pi.hasPathType(PathType.UNIT) && currentEl.getId()==Tag.TAG_COMPOUND && ((CompoundTag)currentEl).isEmpty())
+            || (currentEl == null && pi.getDefaultPathType()==PathType.UNIT)) {
+
+                final int startVal = currentEl == null ? 0 : 1;
+                final int btnSize = 35;
+                final int btnSpacing = 2;
+
+                row.addPosWidget(context.new PosWidget(keyBtn, ROW_LEFT_SCROLL, 0));
+                {
+                    Button w = Button.builder(Component.nullToEmpty("False"), btn -> {
+                        context.nbtEditUpdate(fullPath, null);
+                        context.unsel();
+                    }).size(btnSize,WID_HEIGHT).build();
+                    if(startVal == 0)
+                        w.active = false;
+                    else
+                        w.setTooltip(TT_SET);
+                    row.addPosWidget(w, ROW_RIGHT_SCROLL-(2*btnSize+btnSpacing), 0);
+                }
+                {
+                    Button w = Button.builder(Component.nullToEmpty("True"), btn -> {
+                        context.nbtEditUpdate(fullPath, new CompoundTag());
+                        context.unsel();
+                    }).size(btnSize,WID_HEIGHT).build();
+                    if(startVal == 1)
+                        w.active = false;
+                    else
+                        w.setTooltip(TT_SET);
+                    row.addPosWidget(w, ROW_RIGHT_SCROLL-btnSize, 0);
+                }
+            }
+            else if((currentEl != null && (currentEl.getId()==Tag.TAG_COMPOUND || currentEl.getId()==Tag.TAG_LIST))
+            || (currentEl == null && pi.getDefaultPathType().isComplex())) {
+
+                row.addPosWidget(context.new PosWidget(keyBtn, ROW_LEFT_SCROLL, 0));
+                {
+                    Button w = Button.builder(context.getComplexButtonText(currentEl, pi.getFlag()), btn -> {
+                        context.createBlankTabNbtEdit(context.nbtEdit.addPath(PathNode.of(key)));
+                    }).size(ROW_WIDTH-20-size-WID_SPACE,WID_HEIGHT).build();
+                    if(currentEl!=null) {
+                        w.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                        w.setTooltipDelay(TOOLTIP_DELAY);
+                    }
+                    else
+                        w.active = false;
+                    row.addPosWidget(w, ROW_LEFT_SCROLL+size+5, 0);
+                }
+                {
+                    Button w = Button.builder(Component.nullToEmpty(currentEl==null ? "+" : "X"), btn -> {
+                        if(currentEl==null) {
+                            context.createBlankTabNbtEdit(context.nbtEdit.addPath(PathNode.of(key)));
+                        }
+                        else {
+                            context.nbtEditUpdate(fullPath, null);
+                        }
+                        context.unsel();
+                    }).size(20,WID_HEIGHT).build();
+                    w.setTooltip(Tooltip.create(Component.nullToEmpty(currentEl==null ? "Create element" : "Delete")));
+                    row.addPosWidget(w, ROW_RIGHT_SCROLL-20, 0);
+                }
+            }
+            else if((currentEl != null && pi.hasPathType(PathType.BOOLEAN) && currentEl.getId()==Tag.TAG_BYTE && (((ByteTag)currentEl).asByte().get()==0 || ((ByteTag)currentEl).asByte().get()==1))
+            || (currentEl == null && pi.getDefaultPathType()==PathType.BOOLEAN)) {
+
+                final int startVal;
+                if(currentEl != null) {
+                    String tempVal = BlackMagick.nbtToSnbt(currentEl);
+                    if(tempVal.equals("0b") || tempVal.equals("0") || tempVal.equals("false"))
+                        startVal = 1;
+                    else
+                        startVal = 2;
+                }
+                else
+                    startVal = 0;
+
+                final int btnSize = 35;
+                final int btnSpacing = 2;
+
+                row.addPosWidget(context.new PosWidget(keyBtn, ROW_LEFT_SCROLL, 0));
+                {
+                    Button w = Button.builder(Component.nullToEmpty("Unset"), btn -> {
+                        context.nbtEditUpdate(fullPath, null);
+                        context.unsel();
+                    }).size(btnSize,WID_HEIGHT).build();
+                    if(startVal == 0)
+                        w.active = false;
+                    else
+                        w.setTooltip(TT_SET);
+                    row.addPosWidget(w, ROW_RIGHT_SCROLL-(3*btnSize+2*btnSpacing), 0);
+                }
+                {
+                    Button w = Button.builder(Component.nullToEmpty("False"), btn -> {
+                        context.nbtEditUpdate(fullPath, ByteTag.ZERO);
+                        context.unsel();
+                    }).size(btnSize,WID_HEIGHT).build();
+                    if(startVal == 1)
+                        w.active = false;
+                    else
+                        w.setTooltip(TT_SET);
+                    row.addPosWidget(w, ROW_RIGHT_SCROLL-(2*btnSize+btnSpacing), 0);
+                }
+                {
+                    Button w = Button.builder(Component.nullToEmpty("True"), btn -> {
+                        context.nbtEditUpdate(fullPath, ByteTag.ONE);
+                        context.unsel();
+                    }).size(btnSize,WID_HEIGHT).build();
+                    if(startVal == 2)
+                        w.active = false;
+                    else
+                        w.setTooltip(TT_SET);
+                    row.addPosWidget(w, ROW_RIGHT_SCROLL-btnSize, 0);
+                }
+            }
+            else { // inline component
+
+                boolean isString = ((currentEl != null && pi.hasPathType(PathType.STRING) && currentEl.getId()==Tag.TAG_STRING)
+                    || (currentEl == null && pi.getDefaultPathType()==PathType.STRING));
+                final String startVal = isString ? BlackMagick.nbtToSnbtOrString(currentEl) : BlackMagick.nbtToSnbt(currentEl);
+                String[] baseSuggestions = isString ? pi.getSuggs().getArray() : pi.getSuggs().getArraySnbt();
+
+                int deleteBtnSize = 20;
+                if(currentEl == null)
+                    deleteBtnSize = 0;
+
+                row.addPosWidget(keyBtn, ROW_LEFT_SCROLL, 0);
+                {
+                    EditBox w = new EditBox(context.minecraft.font,0,0,
+                        ROW_WIDTH-size-5-20-deleteBtnSize, WID_HEIGHT, Component.nullToEmpty(""));
+                    w.setMaxLength(MAX_TEXT_LENGTH);
+                    w.setResponder(value -> {
+                        if(row.testPosWidget(2)) {
+                            context.setErrorMsg(null);
+                            ((Button)row.getPosWidget(2)).active = false;
+                            ((Button)row.getPosWidget(2)).setTooltip(null);
+                            ((EditBox)row.getPosWidget(1)).setTextColor(TEXT_COLOR);
+
+                            Tag el = isString ? StringTag.valueOf(value) : BlackMagick.nbtFromString(value);
+
+                            if(currentEl == null && value.isEmpty() && !isString) {
+                                ((EditBox)row.getPosWidget(1)).setTextColor(LABEL_COLOR);
+                            }
+                            else if(el == null) {
+                                ((EditBox)row.getPosWidget(1)).setTextColor(ERROR_COLOR);
+                                context.setErrorMsg("Invalid element");
+                                ((Button)row.getPosWidget(2)).setTooltip(Tooltip.create(errorText("Invalid element")));
+                            }
+                            else if(BlackMagick.elementsEqual(currentEl,el)) {
+                                ((EditBox)row.getPosWidget(1)).setTextColor(LABEL_COLOR);
+                                ((Button)row.getPosWidget(2)).setTooltip(Tooltip.create(Component.nullToEmpty("Element already set")));
+                            }
+                            else {
+                                ((Button)row.getPosWidget(2)).active = true;
+                                ((Button)row.getPosWidget(2)).setTooltip(Tooltip.create(grayWhiteText(
+                                    "Set key ",BlackMagick.validCompoundKey(key)," to:\n").append(BlackMagick.nbtToColorfulText(el))));
+                            }
+
+                            context.suggsOnChanged(w, baseSuggestions, startVal);
+                        }
+                    });
+                    if(currentEl != null) {
+                        w.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                        w.setTooltipDelay(TOOLTIP_DELAY);
+                    }
+                    row.addPosWidget(w, ROW_LEFT_SCROLL+5+size, 0);
+                }
+                {
+                    Button w = Button.builder(Component.nullToEmpty("+"), btn -> {
+                        if(row.testPosWidget(1)) {
+                            String inp = ((EditBox)row.getPosWidget(1)).getValue();
+                            Tag el = isString ? StringTag.valueOf(inp) : BlackMagick.nbtFromString(inp);
+                            if(el != null) {
+                                context.nbtEditUpdate(fullPath,el);
+                            }
+                        }
+                        context.unsel();
+                    }).size(20,WID_HEIGHT).build();
+                    row.addPosWidget(w, ROW_RIGHT_SCROLL-20-deleteBtnSize, 0);
+                }
+                if(currentEl != null) {
+                    Button w = Button.builder(Component.nullToEmpty("X"), btn -> {
+                        context.nbtEditUpdate(fullPath, null);
+                        context.unsel();
+                    }).size(20,WID_HEIGHT).build();
+                    w.setTooltip(Tooltip.create(Component.nullToEmpty("Delete")));
+                    row.addPosWidget(w, ROW_RIGHT_SCROLL-deleteBtnSize, 0);
+                }
+                ((EditBox)row.getPosWidget(1)).setValue(startVal);
+            }
+
+            return row;
+        }
+
         public static RowWidgetElement customCompoundKey(ItemBuilder context, CompoundTag baseCompound) {
             RowWidgetElement row = context.new RowWidgetElement();
 
@@ -4456,7 +4502,7 @@ public class ItemBuilder extends GenericScreen {
                         if(row.cacheNode == null || !row.cacheNode.equals(key)) {
                             row.cacheNode = key;
                             row.cachePathInfo = context.nbtEdit.pi().getCompoundKeyInfo(baseCompound, key);
-                            row.cacheSuggs = row.cachePathInfo.getSuggs().getArray();
+                            row.cacheSuggs = row.cachePathInfo.getSuggs().getArraySnbt();
                         }
                         String element = ((EditBox)row.getPosWidget(1)).getValue();
                         if(!key.isEmpty() || !element.isEmpty()) {
@@ -4543,16 +4589,11 @@ public class ItemBuilder extends GenericScreen {
             return row;
         }
 
-        /**
-         * Row to edit any element in base compound.
-         * Contains button to set and txt to input (or others depending on path and key).
-         * Element is removed on set when txt is empty.
-         */
         public static RowWidgetElement customListElement(ItemBuilder context, ListTag baseList) {
             RowWidgetElement row = context.new RowWidgetElement();
 
             row.cachePathInfo = context.nbtEdit.pi().getListIndexInfo(baseList.size());
-            row.cacheSuggs = row.cachePathInfo.getSuggs().getArray();
+            row.cacheSuggs = row.cachePathInfo.getSuggs().getArraySnbt();
             {
                 EditBox w = new EditBox(context.minecraft.font,0,0,
                     ROW_WIDTH-20, WID_HEIGHT, Component.nullToEmpty(""));
@@ -4602,19 +4643,185 @@ public class ItemBuilder extends GenericScreen {
             return row;
         }
 
-        /**
-         * Row to edit any element in base compound.
-         * Contains button to set and txt to input (or others depending on path and key).
-         * Element is removed on set when txt is empty.
-         */
-        public static RowWidgetElement fallbackElement(ItemBuilder context) {//TODO
+        public static RowWidgetElement listTemplateElement(ItemBuilder context, ListTag baseList, int index) {
+            if(index<0 || index>=baseList.size())
+                throw new IllegalArgumentException("Tried to create RowWidgetElement with index or listSize out of bounds");
+
+            RowWidgetElement row = context.new RowWidgetElement();
+
+            NbtEdit thisNbtEdit = context.nbtEdit.addPath(PathNode.of(index));
+            String fullPath = thisNbtEdit.fullPath();
+            PathInfo pi = context.nbtEdit.pi().getListIndexInfo(index);
+
+            Tag currentEl = thisNbtEdit.getEditElement();
+
+            int keyBtnSize = 30;
+            int listBtnSize = 15;
+            int delBtnSize = 20;
+            String keyBtnTxt = row.cleanKeyBtn(PathNode.of(index));
+            Button keyBtn = Button.builder(Component.nullToEmpty(keyBtnTxt), btn -> {})
+                .size(keyBtnSize,WID_HEIGHT).build();
+            keyBtn.active = false;
+            keyBtn.setTooltip(Tooltip.create(context.getKeyButtonTooltip(PathNode.of(index), pi)));
+
+            int listElWidth = ROW_WIDTH-keyBtnSize-5-listBtnSize-listBtnSize-delBtnSize;
+
+            row.addPosWidget(keyBtn, ROW_LEFT_SCROLL, 0);
+            {
+                if(currentEl == null) {
+                    throw new IllegalArgumentException("Tried to create RowWidgetElement for nonexistent index");
+                }
+                else if(pi.hasPathType(PathType.UNIT) && currentEl.getId()==Tag.TAG_COMPOUND && ((CompoundTag)currentEl).isEmpty()) {
+                    final int btnSize = 35;
+
+                    Button w = Button.builder(Component.nullToEmpty("True"), btn -> {
+                        context.nbtEditUpdate(fullPath, new CompoundTag());
+                        context.unsel();
+                    }).size(btnSize,WID_HEIGHT).build();
+                    w.active = false;
+                    row.addPosWidget(w, ROW_LEFT_SCROLL+keyBtnSize+WID_SPACE+listElWidth-btnSize, 0);
+                }
+                else if(currentEl.getId()==Tag.TAG_COMPOUND || currentEl.getId()==Tag.TAG_LIST) {
+                    Button w = Button.builder(context.getComplexButtonText(currentEl, pi.getFlag()), btn -> {
+                        context.createBlankTabNbtEdit(context.nbtEdit.addPath(PathNode.of(index)));
+                    }).size(listElWidth,WID_HEIGHT).build();
+                    w.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                    w.setTooltipDelay(TOOLTIP_DELAY);
+                    row.addPosWidget(w, ROW_LEFT_SCROLL+keyBtnSize+WID_SPACE, 0);
+                }
+                else if(pi.hasPathType(PathType.BOOLEAN) && currentEl.getId()==Tag.TAG_BYTE && (((ByteTag)currentEl).asByte().get()==0 || ((ByteTag)currentEl).asByte().get()==1)) {
+                    final int startVal;
+                    String tempVal = BlackMagick.nbtToSnbt(currentEl);
+                    if(tempVal.equals("0b") || tempVal.equals("0") || tempVal.equals("false"))
+                        startVal = 1;
+                    else
+                        startVal = 2;
+                    final int btnSize = 35;
+                    final int btnSpacing = 2;
+                    {
+                        Button w = Button.builder(Component.nullToEmpty("False"), btn -> {
+                            context.nbtEditUpdate(fullPath, ByteTag.ZERO);
+                            context.unsel();
+                        }).size(btnSize,WID_HEIGHT).build();
+                        if(startVal == 1)
+                            w.active = false;
+                        else
+                            w.setTooltip(TT_SET);
+                        row.addPosWidget(w, ROW_LEFT_SCROLL+keyBtnSize+WID_SPACE+listElWidth-btnSize-btnSize-btnSpacing, 0);
+                    }
+                    {
+                        Button w = Button.builder(Component.nullToEmpty("True"), btn -> {
+                            context.nbtEditUpdate(fullPath, ByteTag.ONE);
+                            context.unsel();
+                        }).size(btnSize,WID_HEIGHT).build();
+                        if(startVal == 2)
+                            w.active = false;
+                        else
+                            w.setTooltip(TT_SET);
+                        row.addPosWidget(w, ROW_LEFT_SCROLL+keyBtnSize+WID_SPACE+listElWidth-btnSize, 0);
+                    }
+                }
+                else { // inline component
+
+                    boolean isString = ((currentEl != null && pi.hasPathType(PathType.STRING) && currentEl.getId()==Tag.TAG_STRING)
+                        || (currentEl == null && pi.getDefaultPathType()==PathType.STRING));
+                    final String startVal = isString ? BlackMagick.nbtToSnbtOrString(currentEl) : BlackMagick.nbtToSnbt(currentEl);
+                    String[] baseSuggestions = isString ? pi.getSuggs().getArray() : pi.getSuggs().getArraySnbt();
+
+                    int addBtnSize = 20;
+                    final int btnIndex = row.getPosWidgetSize()+1;
+                    EditBox txtElement = new EditBox(context.minecraft.font,0,0,listElWidth-addBtnSize,WID_HEIGHT,Component.nullToEmpty(""));
+                    txtElement.setMaxLength(MAX_TEXT_LENGTH);
+                    txtElement.setResponder(value -> {
+                        if(row.testPosWidget(btnIndex)) {
+                            context.setErrorMsg(null);
+                            ((Button)row.getPosWidget(btnIndex)).active = false;
+                            ((Button)row.getPosWidget(btnIndex)).setTooltip(null);
+                            txtElement.setTextColor(TEXT_COLOR);
+
+                            Tag el = isString ? StringTag.valueOf(value) : BlackMagick.nbtFromString(value);
+
+                            if(el == null) {
+                                txtElement.setTextColor(ERROR_COLOR);
+                                context.setErrorMsg("Invalid element");
+                                ((Button)row.getPosWidget(btnIndex)).setTooltip(Tooltip.create(errorText("Invalid element")));
+                            }
+                            else if(BlackMagick.elementsEqual(currentEl,el)) {
+                                txtElement.setTextColor(LABEL_COLOR);
+                                ((Button)row.getPosWidget(btnIndex)).setTooltip(Tooltip.create(Component.nullToEmpty("Element already set")));
+                            }
+                            else {
+                                ((Button)row.getPosWidget(btnIndex)).active = true;
+                                ((Button)row.getPosWidget(btnIndex)).setTooltip(Tooltip.create(grayWhiteText(
+                                    "Set index ",""+index," to:\n").append(BlackMagick.nbtToColorfulText(el))));
+                            }
+
+                            context.suggsOnChanged(txtElement, baseSuggestions, startVal);
+                        }
+                    });
+                    txtElement.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                    txtElement.setTooltipDelay(TOOLTIP_DELAY);
+                    row.addPosWidget(txtElement, ROW_LEFT_SCROLL+keyBtnSize+WID_SPACE, 0);
+
+                    Button btnSet = Button.builder(Component.nullToEmpty("+"), btn -> {
+                        String inp = txtElement.getValue();
+                        Tag el = isString ? StringTag.valueOf(inp) : BlackMagick.nbtFromString(inp);
+                        if(el != null) {
+                            context.nbtEditUpdate(fullPath,el);
+                        }
+                        context.unsel();
+                    }).size(20,WID_HEIGHT).build();
+                    row.addPosWidget(btnSet, ROW_RIGHT_SCROLL-listBtnSize-listBtnSize-delBtnSize-addBtnSize, 0);
+
+                    txtElement.setValue(startVal);
+                }
+            }
+            {
+                Button w = Button.builder(Component.nullToEmpty("X"), btn -> {
+                    context.nbtEditUpdate(fullPath, null);
+                }).size(delBtnSize,WID_HEIGHT).build();
+                w.setTooltip(Tooltip.create(Component.nullToEmpty("Delete")));
+                row.addPosWidget(w, ROW_RIGHT_SCROLL-listBtnSize-listBtnSize-delBtnSize, 0);
+            }
+            {
+                Button w = Button.builder(Component.nullToEmpty("*"), btn -> {
+                    context.nbtEditUpdate(BlackMagick.cloneListElement(context.nbtEdit.current(),context.nbtEdit.fullPath(),index));
+                }).size(listBtnSize,WID_HEIGHT).build();
+                w.setTooltip(Tooltip.create(Component.nullToEmpty("Clone")));
+                row.addPosWidget(w, ROW_RIGHT_SCROLL-listBtnSize-listBtnSize, 0);
+            }
+            {
+                Button w = Button.builder(Component.nullToEmpty(UNICODE_UP_ARROW), btn -> {
+                    context.nbtEditUpdate(BlackMagick.moveListElement(context.nbtEdit.current(),context.nbtEdit.fullPath(),index,true));
+                }).size(listBtnSize,10).build();
+                if(index>0)
+                    w.setTooltip(Tooltip.create(Component.nullToEmpty("Move Up")));
+                else
+                    w.active = false;
+                row.addPosWidget(w, ROW_RIGHT_SCROLL-listBtnSize, 0);
+            }
+            {
+                Button w = Button.builder(Component.nullToEmpty(UNICODE_DOWN_ARROW), btn -> {
+                    context.nbtEditUpdate(BlackMagick.moveListElement(context.nbtEdit.current(),context.nbtEdit.fullPath(),index,false));
+                }).size(listBtnSize,10).build();
+                if(index<baseList.size()-1)
+                    w.setTooltip(Tooltip.create(Component.nullToEmpty("Move Down")));
+                else
+                    w.active = false;
+                row.addPosWidget(w, ROW_RIGHT_SCROLL-listBtnSize, 10);
+            }
+
+            return row;
+        }
+
+        public static RowWidgetElement fallbackElement(ItemBuilder context) {
             RowWidgetElement row = context.new RowWidgetElement();
 
             Tag currentEl = context.nbtEdit.getEditElement();
             final String currentVal = BlackMagick.nbtToSnbt(currentEl);
 
-            PathHelper.PathInfo pi = context.nbtEdit.pi();
-            String[] baseSuggestions = pi == null ? null : pi.getSuggs().getArray();
+            PathInfo pi = context.nbtEdit.pi();
+            String[] baseSuggestions = pi.getSuggs().getArraySnbt();
 
             EditBox elementTxt = new EditBox(context.minecraft.font,0,0,
                 ROW_WIDTH-20-(currentEl==null ? 0 : 20), WID_HEIGHT, Component.nullToEmpty(""));
@@ -4673,17 +4880,13 @@ public class ItemBuilder extends GenericScreen {
             return row;
         }
 
-        /**
-         * Row to edit any element in base list.
-         * Contains button to set and txt to input (or others depending on path and key).
-         */
-        public RowWidgetElement(ListTag baseList, int index) {//TODO
+        public RowWidgetElement(ListTag baseList, int index) {
             if(index<0 || index>=baseList.size())
                 throw new IllegalArgumentException("Tried to create RowWidgetElement with index or listSize out of bounds");
 
             NbtEdit thisNbtEdit = nbtEdit.addPath(PathNode.of(index));
             String fullPath = thisNbtEdit.fullPath();
-            PathHelper.PathInfo pi = nbtEdit.pi().getListIndexInfo(index);
+            PathInfo pi = nbtEdit.pi().getListIndexInfo(index);
 
             Tag currentEl = thisNbtEdit.getEditElement();
             final String currentVal = BlackMagick.nbtToSnbt(currentEl);
@@ -4695,7 +4898,7 @@ public class ItemBuilder extends GenericScreen {
             Button keyBtn = Button.builder(Component.nullToEmpty(keyBtnTxt), btn -> {})
                 .size(keyBtnSize,WID_HEIGHT).build();
             keyBtn.active = false;
-            keyBtn.setTooltip(Tooltip.create(getButtonTooltip(PathNode.of(index), pi)));
+            keyBtn.setTooltip(Tooltip.create(getKeyButtonTooltip(PathNode.of(index), pi)));
 
             int listElWidth = ROW_WIDTH-keyBtnSize-5-listBtnSize-listBtnSize-delBtnSize;
 
@@ -4705,7 +4908,7 @@ public class ItemBuilder extends GenericScreen {
                     throw new IllegalArgumentException("Tried to create RowWidgetElement for nonexistent index");
                 }
                 else if(currentEl.getId()==Tag.TAG_COMPOUND || currentEl.getId()==Tag.TAG_LIST) {
-                    Button w = Button.builder(getButtonText(fullPath,currentEl), btn -> {
+                    Button w = Button.builder(getComplexButtonText(currentEl), btn -> {
                         createBlankTabNbtEdit(nbtEdit.addPath(PathNode.of(index)));
                     }).size(listElWidth,WID_HEIGHT).build();
                     w.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
@@ -4713,11 +4916,11 @@ public class ItemBuilder extends GenericScreen {
                     addPosWidget(w, ROW_LEFT_SCROLL+keyBtnSize+WID_SPACE, 0);
                 }
                 else {
-                    String[] baseSuggestions = pi == null ? null : pi.getSuggs().getArray();
+                    String[] baseSuggestions = pi.getSuggs().getArraySnbt();
 
                     int addBtnSize = 20;
                     final int btnIndex = getPosWidgetSize()+1;
-                    EditBox txtElement = new EditBox(((ItemBuilder)ItemBuilder.this).minecraft.font,0,0,listElWidth-addBtnSize,WID_HEIGHT,Component.nullToEmpty(""));
+                    EditBox txtElement = new EditBox(minecraft.font,0,0,listElWidth-addBtnSize,WID_HEIGHT,Component.nullToEmpty(""));
                     txtElement.setMaxLength(MAX_TEXT_LENGTH);
                     txtElement.setResponder(value -> {
                         if(testPosWidget(btnIndex)) {
@@ -4799,72 +5002,6 @@ public class ItemBuilder extends GenericScreen {
         }
 
         /**
-         * Row to edit any element in a list.
-         * Contains button to delete, clone, move, and edit the element in the list.
-         * Add one of these for each index of the list, and also for index = NbtList.size()
-         */
-        // public RowWidgetElement(String blankElPath, ListTag path2, Button saveBtn, int index, int maxIndex) {
-        //     // String currentPath2;
-        //     // if(path2==null)
-        //     //     currentPath2 = "";
-        //     // else
-        //     //     currentPath2 = path2.get(0).asString().get();
-        //     // String pagePath = blankElPath+currentPath2;
-        //     // String fullPath = pagePath+"["+index+"]";
-
-        //     { // add new element to list
-        //         Component btnTxt = Component.nullToEmpty("Add Element");
-        //         // PathInfo pi = ComponentHelper.getPathInfo(pagePath);
-        //         // PathInfo pie = ComponentHelper.getPathInfo(pagePath+"[0]");
-
-        //         this.btns = new Button[]{
-        //         Button.builder(btnTxt, btn -> {
-        //             // Tag el = BlackMagick.getNbtPath(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),pagePath); to_do nbt-edit
-        //             // ListTag list;
-        //             // if(el != null && el.getId()==Tag.TAG_LIST) {
-        //             //     list = (ListTag)el;
-        //             // }
-        //             // else
-        //             //     list = new ListTag();
-
-        //             // if(!list.isEmpty()) {
-        //             //     Tag newEl = BlackMagick.getDefaultNbt(list.get(0).getId());
-        //             //     if(newEl != null)
-        //             //         list.add(newEl);
-        //             // }
-        //             // else {
-        //             //     if(pi.type()==PathType.LIST && pi.listType()>=0) {
-        //             //         Tag newEl = BlackMagick.getDefaultNbt(pi.listType());
-        //             //         if(newEl != null)
-        //             //             list.add(newEl);
-        //             //     }
-        //             //     else {
-        //             //         FortytwoEdit.logWarn("Failed to add element to unknown list at path: "+pagePath);
-        //             //     }
-        //             // }
-
-        //             // if(!list.isEmpty()) {
-        //             //     nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
-        //             //         BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),pagePath,list),blankElPath),saveBtn,
-        //             //         path2==null ? null : pagePath);
-        //             // }
-
-        //             // CompoundTag newArgs = BlackMagick.validCompoundFromString("{path:\""+blankElPath+"\"}");
-        //             // if(path2 != null) {
-        //             //     newArgs.put("path2",path2);
-        //             // }
-        //             // if(blankTabEl != null)
-        //             //     newArgs.put("overrideEl",blankTabEl);
-        //             // createBlankTab(BlankTabMode.NBT_EDIT,newArgs);
-        //         }).size(80,WID_HEIGHT).build()};
-        //         this.btnX = new int[]{ROW_LEFT_SCROLL};
-        //         this.btns[0].setTooltip(Tooltip.create(Component.nullToEmpty("Add a default element to the list")));
-        //     }
-
-        //     initChildren();
-        // }
-
-        /**
          * Used for elements with specialized editors.
          */
         // public RowWidgetElement(String blankElPath, ListTag path2, Button saveBtn, WidgetCacheType cacheType) {
@@ -4885,7 +5022,7 @@ public class ItemBuilder extends GenericScreen {
 
         //     String[] baseSuggestions = pi.suggs() == null ? null : pi.suggs().getArray();
 
-        //     this.txts = new EditBox[]{new EditBox(((ItemBuilder)ItemBuilder.this).minecraft.font,0,0, ROW_WIDTH, WID_HEIGHT, Component.nullToEmpty(""))};
+        //     this.txts = new EditBox[]{new EditBox(minecraft.font,0,0, ROW_WIDTH, WID_HEIGHT, Component.nullToEmpty(""))};
         //     this.txtX = new int[]{ROW_LEFT_SCROLL};
         //     this.txts[0].setMaxLength(MAX_TEXT_LENGTH);
 

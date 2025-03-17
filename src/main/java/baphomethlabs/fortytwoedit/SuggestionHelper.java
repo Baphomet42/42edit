@@ -14,7 +14,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
-import net.minecraft.nbt.StringTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
@@ -972,76 +971,67 @@ public class SuggestionHelper {
 
     }
 
-    public record SuggestionGetter(String[] inlinedSuggs, String listMapKey, Format format, SuggestionGetter[] joinedLists, boolean isEmpty) {
+    public record SuggestionGetter(String[] inlinedSuggs, String listMapKey, boolean isSnbt, SuggestionGetter[] joinedLists, boolean isEmpty) {
 
         public static SuggestionGetter newInline(String... suggs) {
-            return new SuggestionGetter(suggs, null, Format.NONE, null, false);
+            return new SuggestionGetter(suggs, null, false, null, false);
         }
-        public static SuggestionGetter newInline(Format format, String... suggs) {
-            return new SuggestionGetter(suggs, null, format, null, false);
+        public static SuggestionGetter newInlineSnbt(String... suggs) {
+            return new SuggestionGetter(suggs, null, true, null, false);
         }
 
         public static SuggestionGetter newRef(String key) {
-            return new SuggestionGetter(null, key, Format.NONE, null, false);
+            return new SuggestionGetter(null, key, false, null, false);
         }
 
         public static SuggestionGetter newJoined(SuggestionGetter... lists) {
-            return new SuggestionGetter(null, null, Format.NONE, lists, false);
+            return new SuggestionGetter(null, null, false, lists, false);
         }
 
         public static SuggestionGetter empty() {
-            return new SuggestionGetter(null, null, Format.NONE, null, true);
+            return new SuggestionGetter(null, null, false, null, true);
         }
 
-        public SuggestionGetter withFormat(Format format) {
-            if(joinedLists != null)
-                FortytwoEdit.logWarn("Invalid SuggestionGetter tried to format a 'newJoined' type");
-            return new SuggestionGetter(this.inlinedSuggs, this.listMapKey, format, this.joinedLists, this.isEmpty);
-        }
-
-        private void addFormatted(Set<String> set, Format format, String[] toAdd) {
-            switch(format) {
-                case NONE : {
-                    for(String s : toAdd)
-                        set.add(s);
-                    break;
-                }
-                case NBT_STRING : {
-                    for(String s : toAdd)
-                        set.add(BlackMagick.nbtToSnbt(StringTag.valueOf(s)));
-                    break;
-                }
-                case INVERTED : {
-                    for(String s : toAdd)
-                        set.add("!"+s);
-                    break;
-                }
-            }
-        }
-
-        public List<String> getList() {
+        public List<String> getList(boolean snbt) {
             Set<String> set = Sets.newHashSet();
-            if(inlinedSuggs != null)
-                addFormatted(set, format, inlinedSuggs);
-            if(listMapKey != null && SUGGS_LIST_METHODS.containsKey(listMapKey))
-                addFormatted(set, format, SUGGS_LIST_METHODS.get(listMapKey).get().toArray(new String[0]));
-            if(joinedLists != null)
-                for(SuggestionGetter s : joinedLists)
-                    set.addAll(s.getList());
+            if(snbt) {
+                if(inlinedSuggs != null) {
+                    if(isSnbt)
+                        set.addAll(Set.of(inlinedSuggs));
+                    else
+                        set.addAll(BlackMagick.formatStringSuggs(List.of(inlinedSuggs)));
+                }
+                if(listMapKey != null && SUGGS_LIST_METHODS.containsKey(listMapKey))
+                    set.addAll(BlackMagick.formatStringSuggs(SUGGS_LIST_METHODS.get(listMapKey).get()));
+                if(joinedLists != null)
+                    for(SuggestionGetter s : joinedLists)
+                        set.addAll(s.getList(true));
+            }
+            else {
+                if(inlinedSuggs != null && !isSnbt)
+                    set.addAll(Set.of(inlinedSuggs));
+                if(listMapKey != null && SUGGS_LIST_METHODS.containsKey(listMapKey))
+                    set.addAll(SUGGS_LIST_METHODS.get(listMapKey).get());
+                if(joinedLists != null)
+                    for(SuggestionGetter s : joinedLists)
+                        set.addAll(s.getList());
+            }
             List<String> list = Lists.newArrayList();
             list.addAll(set);
             Collections.sort(list);
             return list;
         }
 
-        public String[] getArray() {
-            return getList().toArray(new String[0]);
+        public List<String> getList() {
+            return getList(false);
         }
 
-        public enum Format {
-            NONE,                   // suggs sent as-is
-            NBT_STRING,             // suggs formatted inside valid NBT string (double or single quotes)
-            INVERTED,               // suggs prefixed with !
+        public String[] getArray() {
+            return getList(false).toArray(new String[0]);
+        }
+
+        public String[] getArraySnbt() {
+            return getList(true).toArray(new String[0]);
         }
 
     }
@@ -1139,7 +1129,7 @@ public class SuggestionHelper {
      * @param item
      * @return int array with [rows,columns] or [-1,-1] depending on storage size of blockentity for item
      */
-    public static int[] getContainerSize(Item item) {
+    public static int[] getContainerSize(Item item) {//to_do move classes?
 
         ResourceLocation identifier = BlackMagick.identifierOrNull(item.toString());
         if(identifier != null) {

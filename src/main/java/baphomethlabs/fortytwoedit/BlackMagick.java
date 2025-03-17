@@ -69,6 +69,15 @@ public class BlackMagick {
     }
 
     /**
+     * Set a copy of the item to the head equipment slot
+     * 
+     * @param item
+     */
+    public static void setItemHead(ItemStack item) {
+        setItem(item,39,5);
+    }
+
+    /**
      * Set a copy of the item to the specified inventory slot
      * 
      * @param item

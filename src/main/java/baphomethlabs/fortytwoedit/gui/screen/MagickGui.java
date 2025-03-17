@@ -53,7 +53,7 @@ public class MagickGui extends GenericScreen {
         if(minecraft.player.getAbilities().instabuild) {
             ItemStack hand = minecraft.player.getMainHandItem().copy();
             ItemStack head = minecraft.player.getItemBySlot(EquipmentSlot.HEAD).copy();
-            BlackMagick.setItem(hand,39,5);//TODO use BlackMagick constants to target head slot
+            BlackMagick.setItemHead(hand);
             BlackMagick.setItemMain(head);
         }
         unsel();
