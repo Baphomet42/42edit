@@ -168,7 +168,7 @@ public class PathHelper {
                 )).getter()
             ))).setIcon(Items.COMMAND_BLOCK))),
 
-            Map.entry("minecraft:custom_name", PathInfoGetter.of("text_component")),
+            Map.entry("minecraft:custom_name", PathInfo.copyOf("text_component").setFlag(PathFlag.TEXT_COMPONENT_ITALIC).getter()),
 
             Map.entry("minecraft:damage", registerPathInfo("components/damage", PathInfo.create().setIcon(Items.DIAMOND_PICKAXE))),
 
@@ -188,7 +188,7 @@ public class PathHelper {
                 "value", PathInfo.create().getter()
             ))).setIcon(Items.ENCHANTED_BOOK))),
 
-            Map.entry("minecraft:enchantment_glint_override", registerPathInfo("components/enchantment_glint_override", PathInfo.create().setIcon(Items.ENCHANTED_BOOK))),
+            Map.entry("minecraft:enchantment_glint_override", registerPathInfo("components/enchantment_glint_override", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setIcon(Items.ENCHANTED_BOOK))),
 
             Map.entry("minecraft:enchantments", registerPathInfo("components/enchantments", PathInfo.create().setIcon(Items.ENCHANTED_BOOK))),
 
@@ -258,7 +258,9 @@ public class PathHelper {
                 "tracked", PathInfo.create().getter()
             ))).setIcon(Items.COMPASS))),
 
-            Map.entry("minecraft:lore", registerPathInfo("components/lore", PathInfo.create(DataType.ListUnordered.of(PathInfoGetter.of("text_component"))).setIcon(Items.NAME_TAG))),
+            Map.entry("minecraft:lore", registerPathInfo("components/lore", PathInfo.create(DataType.ListUnordered.of(
+                PathInfo.copyOf("text_component").setFlag(PathFlag.TEXT_COMPONENT_LORE).getter()
+            )).setIcon(Items.NAME_TAG))),
 
             Map.entry("minecraft:map_color", registerPathInfo("components/map_color", PathInfo.create().setIcon(Items.FILLED_MAP))),
 
@@ -425,7 +427,6 @@ public class PathHelper {
             Map.entry("minecraft:parrot/variant", registerPathInfo("components/parrot/variant", PathInfo.create().setIcon(Items.PARROT_SPAWN_EGG))),
 
             Map.entry("minecraft:painting/variant", registerPathInfo("components/painting/variant", PathInfo.create(
-                DataType.ElementLiteral.of(NbtType.STRING),
                 DataType.CompoundStructured.of(Map.of(
                     "asset_id", PathInfo.create().getter(),
                     "width", PathInfo.create().getter(),
@@ -433,7 +434,8 @@ public class PathHelper {
                     ),Map.of(
                     "title", PathInfoGetter.of("text_component"),
                     "author", PathInfoGetter.of("text_component")
-                ))
+                )),
+                DataType.ElementLiteral.of(NbtType.STRING)
             ).setIcon(Items.PAINTING))),
 
             Map.entry("minecraft:pig/variant", registerPathInfo("components/pig/variant", PathInfo.create().setIcon(Items.PIG_SPAWN_EGG))),
@@ -463,7 +465,6 @@ public class PathHelper {
         ))).setIcon(Items.STONE));
 
         registerPathInfo("text_component", PathInfo.create(
-            DataType.ElementLiteral.of(NbtType.STRING),
             DataType.CompoundStructured.of(Map.of(
                 "text", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).getter()
                 ),Map.of(
@@ -476,6 +477,7 @@ public class PathHelper {
                 "obfuscated", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
                 "extra", PathInfo.create(DataType.ListUnordered.of(PathInfoGetter.of("text_component"))).getter()
             )),
+            DataType.ElementLiteral.of(NbtType.STRING),
             DataType.ListUnordered.of(PathInfoGetter.of("text_component"))
         ).setIcon(Items.NAME_TAG).setFlag(PathFlag.TEXT_COMPONENT));
         
@@ -534,25 +536,14 @@ public class PathHelper {
 
     }
 
-    public static class PathInfo {
+    public static abstract class PathInfo {
 
-        private ItemStack icon = null;
-        private Component info = null;
-        private PathFlag flag = PathFlag.NONE;
+        protected ItemStack icon = null;
+        protected Component info = null;
+        protected PathFlag flag = PathFlag.NONE;
+        protected boolean isEmpty = true;
 
-        private PathInfoSupplierCompound compoundSupplier = null;
-        private PathInfoSupplierList listSupplier = null;
-        private PathInfoSupplierElement elementSupplier = null;
-        private boolean isEmpty = true;
-        private PathType defaultPathType = PathType.ELEMENT;
-        private boolean setDefaultPathType = false;
-
-        private SuggestionGetter allSuggs = SuggestionGetter.empty();
-        private boolean cacheAllSuggs = false;
-        private List<NbtType> allNbtTypes = Lists.newArrayList();
-        private boolean cacheAllNbtTypes = false;
-
-        private static final PathInfo EMPTY = create();
+        private static final PathInfo EMPTY = PathInfoDefinition.create();
 
         private PathInfo() {}
 
@@ -566,6 +557,210 @@ public class PathHelper {
 
         public PathFlag getFlag() {
             return flag;
+        }
+
+        public PathInfo setIcon(ItemStack icon) {
+            this.icon = icon;
+            this.isEmpty = false;
+            return this;
+        }
+
+        public PathInfo setIcon(Item icon) {
+            return setIcon(new ItemStack(icon));
+        }
+
+        public PathInfo setInfo(Component info) {
+            this.info = info;
+            this.isEmpty = false;
+            return this;
+        }
+
+        public PathInfo setFlag(PathFlag flag) {
+            if(flag != null)
+                this.flag = flag;
+            this.isEmpty = false;
+            return this;
+        }
+
+        public boolean isEmpty() {
+            return this.isEmpty;
+        }
+
+        public PathInfoGetter getter() {
+            return PathInfoGetter.of(this);
+        }
+
+        public abstract PathInfo getNode(Tag element, PathNode node);
+
+        public abstract List<NbtType> getNbtTypes();
+
+        public abstract PathType getDefaultPathType();
+
+        public abstract boolean hasPathType(PathType type);
+
+        public abstract SuggestionGetter getSuggs();
+
+        public abstract KeyGetter getCompoundKeys(CompoundTag compound);
+
+        public abstract PathInfo getCompoundKeyInfo(CompoundTag compound, String key);
+
+        public abstract PathInfo getListIndexInfo(int i);
+
+        public static PathInfoDefinition create() {
+            return PathInfoDefinition.create();
+        }
+
+        public static PathInfoDefinition create(PathInfoSupplier... info) {
+            return PathInfoDefinition.create(info);
+        }
+
+        public static PathInfo copyOf(PathInfoGetter pi) {
+            return PathInfoCopy.of(pi);
+        }
+
+        public static PathInfo copyOf(String refKey) {
+            return PathInfoCopy.of(refKey);
+        }
+
+    }
+
+    public static class PathInfoCopy extends PathInfo {
+
+        private final PathInfoGetter pi;
+
+        private PathInfoCopy(PathInfoGetter pi) {
+            this.pi = pi;
+            this.flag = null;
+        }
+
+        public static PathInfo of(PathInfoGetter pi) {
+            return new PathInfoCopy(pi);
+        }
+
+        public static PathInfo of(String refKey) {
+            return new PathInfoCopy(PathInfoGetter.of(refKey));
+        }
+
+        public PathInfo getNode(Tag element, PathNode node) {
+            return pi.get().getNode(element, node);
+        }
+
+        public List<NbtType> getNbtTypes() {
+            return pi.get().getNbtTypes();
+        }
+
+        public PathType getDefaultPathType() {
+            return pi.get().getDefaultPathType();
+        }
+
+        public boolean hasPathType(PathType type) {
+            return pi.get().hasPathType(type);
+        }
+
+        public SuggestionGetter getSuggs() {
+            return pi.get().getSuggs();
+        }
+
+        public KeyGetter getCompoundKeys(CompoundTag compound) {
+            return pi.get().getCompoundKeys(compound);
+        }
+
+        public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
+            return pi.get().getCompoundKeyInfo(compound, key);
+        }
+
+        public PathInfo getListIndexInfo(int i) {
+            return pi.get().getListIndexInfo(i);
+        }
+
+        @Override
+        public Component getInfo() {
+            return this.info != null ? this.info : pi.get().getInfo();
+        }
+
+        @Override
+        public ItemStack getIcon() {
+            return this.icon != null ? this.icon : pi.get().getIcon();
+        }
+
+        @Override
+        public PathFlag getFlag() {
+            return this.flag != null ? this.flag : pi.get().getFlag();
+        }
+
+    }
+
+    public static class PathInfoDefinition extends PathInfo {
+
+        private PathInfoSupplierCompound compoundSupplier = null;
+        private PathInfoSupplierList listSupplier = null;
+        private PathInfoSupplierElement elementSupplier = null;
+        private PathType defaultPathType = PathType.ELEMENT;
+        private boolean setDefaultPathType = false;
+
+        private SuggestionGetter allSuggs = SuggestionGetter.empty();
+        private boolean cacheAllSuggs = false;
+        private List<NbtType> allNbtTypes = Lists.newArrayList();
+        private boolean cacheAllNbtTypes = false;
+
+        private PathInfoDefinition() {}
+
+        public static PathInfoDefinition create() {
+            return new PathInfoDefinition();
+        }
+
+        public static PathInfoDefinition create(PathInfoSupplier... info) {
+            PathInfoDefinition newInfo = create();
+            boolean foundCompound = false;
+            boolean foundList = false;
+            boolean foundElement = false;
+            for(PathInfoSupplier pi : info) {
+                if(pi instanceof PathInfoSupplierCompound) {
+                    if(foundCompound)
+                        FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierCompound");
+                    else
+                        newInfo.setCompoundInfo((PathInfoSupplierCompound)pi);
+                }
+                else if(pi instanceof PathInfoSupplierList) {
+                    if(foundList)
+                        FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierList");
+                    else
+                        newInfo.setListInfo((PathInfoSupplierList)pi);
+                }
+                else if(pi instanceof PathInfoSupplierElement) {
+                    if(foundElement)
+                        FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierElement");
+                    else
+                        newInfo.setElementInfo((PathInfoSupplierElement)pi);
+                }
+                else {
+                    FortytwoEdit.logWarn("Tried to add unknown PathInfoSupplier");
+                }
+            }
+            return newInfo;
+        }
+
+        private void setCompoundInfo(PathInfoSupplierCompound info) {
+            this.compoundSupplier = info;
+            setSupplierInfo(info);
+        }
+
+        private void setListInfo(PathInfoSupplierList info) {
+            this.listSupplier = info;
+            setSupplierInfo(info);
+        }
+
+        private void setElementInfo(PathInfoSupplierElement info) {
+            this.elementSupplier = info;
+            setSupplierInfo(info);
+        }
+
+        private void setSupplierInfo(PathInfoSupplier info) {
+            if(!this.setDefaultPathType) {
+                this.defaultPathType = info.getPathType();
+                this.setDefaultPathType = true;
+            }
+            this.isEmpty = false;
         }
 
         public PathInfo getNode(Tag element, PathNode node) {
@@ -640,7 +835,7 @@ public class PathHelper {
         public KeyGetter getCompoundKeys(CompoundTag compound) {
             if(compoundSupplier != null)
                 return compoundSupplier.getCompoundKeys(compound);
-            return null;
+            return KeyGetter.create();
         }
 
         public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
@@ -653,98 +848,6 @@ public class PathHelper {
             if(listSupplier != null)
                 return listSupplier.getListIndexInfo(i);
             return PathInfo.EMPTY;
-        }
-
-        public boolean isEmpty() {
-            return isEmpty;
-        }
-
-        public static PathInfo create() {
-            return new PathInfo();
-        }
-
-        public static PathInfo create(PathInfoSupplier... info) {
-            PathInfo newInfo = create();
-            boolean foundCompound = false;
-            boolean foundList = false;
-            boolean foundElement = false;
-            for(PathInfoSupplier pi : info) {
-                if(pi instanceof PathInfoSupplierCompound) {
-                    if(foundCompound)
-                        FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierCompound");
-                    else
-                        newInfo.setCompoundInfo((PathInfoSupplierCompound)pi);
-                }
-                else if(pi instanceof PathInfoSupplierList) {
-                    if(foundList)
-                        FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierList");
-                    else
-                        newInfo.setListInfo((PathInfoSupplierList)pi);
-                }
-                else if(pi instanceof PathInfoSupplierElement) {
-                    if(foundElement)
-                        FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierElement");
-                    else
-                        newInfo.setElementInfo((PathInfoSupplierElement)pi);
-                }
-                else {
-                    FortytwoEdit.logWarn("Tried to add unknown PathInfoSupplier");
-                }
-            }
-            return newInfo;
-        }
-
-        public PathInfo setIcon(ItemStack icon) {
-            this.icon = icon;
-            this.isEmpty = false;
-            return this;
-        }
-
-        public PathInfo setIcon(Item icon) {
-            return setIcon(new ItemStack(icon));
-        }
-
-        public PathInfo setInfo(Component info) {
-            this.info = info;
-            this.isEmpty = false;
-            return this;
-        }
-
-        public PathInfo setFlag(PathFlag flag) {
-            if(flag != null)
-                this.flag = flag;
-            this.isEmpty = false;
-            return this;
-        }
-
-        private PathInfo setCompoundInfo(PathInfoSupplierCompound info) {
-            this.compoundSupplier = info;
-            setSupplierInfo(info);
-            return this;
-        }
-
-        private PathInfo setListInfo(PathInfoSupplierList info) {
-            this.listSupplier = info;
-            setSupplierInfo(info);
-            return this;
-        }
-
-        private PathInfo setElementInfo(PathInfoSupplierElement info) {
-            this.elementSupplier = info;
-            setSupplierInfo(info);
-            return this;
-        }
-
-        private void setSupplierInfo(PathInfoSupplier info) {
-            if(!this.setDefaultPathType) {
-                this.defaultPathType = info.getPathType();
-                this.setDefaultPathType = true;
-            }
-            this.isEmpty = false;
-        }
-
-        public PathInfoGetter getter() {
-            return PathInfoGetter.of(this);
         }
 
     }
@@ -870,7 +973,7 @@ public class PathHelper {
             }
     
             public KeyGetter getCompoundKeys(CompoundTag compound) {
-                return null;
+                return KeyGetter.create();
             }
     
             public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {

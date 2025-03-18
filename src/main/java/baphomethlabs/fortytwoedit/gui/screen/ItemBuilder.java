@@ -1476,9 +1476,9 @@ public class ItemBuilder extends GenericScreen {
                     if(text.isValid()) {
                         Component btnTxt = text.text();
                         if(flag==PathFlag.TEXT_COMPONENT_ITALIC)
-                            btnTxt = btnTxt.copy().withStyle(ChatFormatting.ITALIC);
+                            btnTxt = Component.empty().withStyle(ChatFormatting.ITALIC).append(btnTxt);
                         else if(flag==PathFlag.TEXT_COMPONENT_LORE)
-                            btnTxt = btnTxt.copy().withStyle(ChatFormatting.ITALIC,ChatFormatting.DARK_PURPLE);
+                            btnTxt = Component.empty().withStyle(ChatFormatting.ITALIC,ChatFormatting.DARK_PURPLE).append(btnTxt);
                         return btnTxt;
                     }
                     break;
@@ -3989,6 +3989,7 @@ public class ItemBuilder extends GenericScreen {
                             setErrorMsg(null);
                             ((Button)getPosWidget(2)).active = false;
                             ((Button)getPosWidget(2)).setTooltip(null);
+                            ((Button)getPosWidget(2)).setTooltip(Tooltip.create(Component.nullToEmpty("Component already set")));
 
                             String keyType = "component";
 
@@ -4058,6 +4059,7 @@ public class ItemBuilder extends GenericScreen {
         
                                 if(inpError != null) {
                                     w.setTextColor(ERROR_COLOR);
+                                    ((Button)getPosWidget(2)).setTooltip(Tooltip.create(errorText("Invalid component")));
                                 }
                                 else {
                                     Component tempLbl = grayWhiteText("Set "+keyType+" to:\n").append(BlackMagick.nbtToColorfulText(el));
@@ -4149,7 +4151,7 @@ public class ItemBuilder extends GenericScreen {
                         unsel();
                     }).size(20,WID_HEIGHT).build();
                     w.active = true;
-                    w.setTooltip(Tooltip.create(Component.nullToEmpty("Delete "+(isComponent ? "component" : path))));
+                    w.setTooltip(Tooltip.create(Component.nullToEmpty("Delete")));
                     if(!minecraft.player.getAbilities().instabuild) {
                         w.active = false;
                         w.setTooltip(Tooltip.create(ERROR_CREATIVE));
