@@ -95,7 +95,7 @@ public abstract class GenericScreen extends Screen {
         }
         if(FortytwoEdit.keyMagickGui.matches(keyCode,scanCode) || minecraft.options.keyInventory.matches(keyCode,scanCode)) {
             if(shouldCloseOnKeybind()) {
-                this.onCloseAction();
+                this.onClose();
                 return true;
             }
         }

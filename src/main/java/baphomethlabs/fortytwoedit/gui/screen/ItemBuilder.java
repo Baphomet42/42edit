@@ -1866,7 +1866,7 @@ public class ItemBuilder extends GenericScreen {
                                 "\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDov"+
                                 "L3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80Y2VlYjc3ZDRkMjU3MjRhOWNhZjJjN2NkZjJkODgzOTliMTQxN2M2YjlmZjUyMTM2NTliNjUzYmU0Mz"+
                                 "c2ZTMiDQogICAgfQ0KICB9DQp9\"}]},\"minecraft:note_block_sound\":\""+soundId.toString()+"\","+
-                                "\"minecraft:custom_name\":{italic:false,text:\""+soundDisplay+"\"}}}"); //to_do use nbt methods instead of string appending
+                                "\"minecraft:custom_name\":{italic:false,text:\""+soundDisplay+"\"},\"minecraft:max_stack_size\":1}}");
                             if(!item.isEmpty())
                                 BlackMagick.setItemMain(item);
                         }
@@ -2236,17 +2236,17 @@ public class ItemBuilder extends GenericScreen {
                 }
                 if(!modifiedComponentKeys.isEmpty()) {
                     addTabWidgetScroll(tabNum, new RowWidget("Modified Components"));
-                    for(String c : modifiedComponentKeys)
+                    for(String c : BlackMagick.sortSet(modifiedComponentKeys))
                         addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                 }
                 if(!defaultComponentKeys.isEmpty()) {
                     addTabWidgetScroll(tabNum, new RowWidget("Default Components"));
-                    for(String c : defaultComponentKeys)
+                    for(String c : BlackMagick.sortSet(defaultComponentKeys))
                         addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                 }
                 if(!removedComponentKeys.isEmpty()) {
                     addTabWidgetScroll(tabNum, new RowWidget("Removed Components"));
-                    for(String c : removedComponentKeys)
+                    for(String c : BlackMagick.sortSet(removedComponentKeys))
                         addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                 }
                 boolean firstUnset = true;
@@ -3147,8 +3147,10 @@ public class ItemBuilder extends GenericScreen {
 
             MutableComponent pathDisplay = nbtEdit.fullPath().isEmpty() ? grayWhiteText("Path: ","{}")
                 : grayWhiteText("Path:\n",nbtEdit.fullPath());
-            
-            pathTxt.setTooltip(Tooltip.create(pathDisplay.append(grayWhiteText("\n\nValue:\n")).append(nbtEdit.getPathChanges())));
+            pathDisplay = pathDisplay.append(grayWhiteText("\n\nValue:\n")).append(nbtEdit.getPathChanges());
+            if(nbtEdit.pi().getInfo()!=null)
+                pathDisplay = pathDisplay.append(grayWhiteText("\n\nInfo:\n")).append(Component.empty().append(nbtEdit.pi().getInfo()).withStyle(ChatFormatting.GRAY));
+            pathTxt.setTooltip(Tooltip.create(pathDisplay));
 
             if(nbtEdit.unsaved())
                 cancelBtn.setTooltip(Tooltip.create(grayWhiteText("Revert to:\n").append(nbtEdit.getRevertItemChanges())));
