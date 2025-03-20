@@ -21,6 +21,15 @@ import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.animal.Fox;
+import net.minecraft.world.entity.animal.MushroomCow;
+import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.entity.animal.Rabbit;
+import net.minecraft.world.entity.animal.Salmon;
+import net.minecraft.world.entity.animal.TropicalFish;
+import net.minecraft.world.entity.animal.axolotl.Axolotl;
+import net.minecraft.world.entity.animal.horse.Llama;
+import net.minecraft.world.entity.animal.horse.Variant;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemUseAnimation;
@@ -38,7 +47,7 @@ import baphomethlabs.fortytwoedit.mixin.ClientLanguageAccessor;
 
 public class SuggestionHelper {
 
-    // private static PathInfo getNewPathInfo(String path) {
+    // to_do upgrade old commented PathHelpers
 
     //     if(path.contains("components.consumable")) {
     //         if(path.endsWith("components.consumable.on_consume_effects"))
@@ -269,265 +278,6 @@ public class SuggestionHelper {
     //             return PathInfos.INT.withGroup(lbl);
     //         if(path.endsWith(".entity_data.WaitTime"))
     //             return PathInfos.INT.withDesc(Component.nullToEmpty("Time before cloud can have a radius and effect (particles will still appear in the center)")).withGroup(lbl);
-
-    //         // when adding new paths, also add keys to entity_data compound
-    //         // if a key is already used for another entity, move it to common category
-    //     }
-
-    //     if(path.endsWith("components.max_stack_size"))
-    //         return PathInfos.ITEM_COUNT.withIcon(Items.STONE);
-
-    //     if(path.endsWith("components.note_block_sound"))
-    //         return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Component.nullToEmpty("Used for player heads on a note block")).withIcon(Items.PLAYER_HEAD);
-
-    //     if(path.endsWith("components.ominous_bottle_amplifier"))
-    //         return (new PathInfo(PathType.INT,SuggestionGetter.newInline("0","1","2","3","4"))).withIcon(Items.OMINOUS_BOTTLE);
-
-    //     if(path.contains("components.pot_decorations")) {
-    //         if(path.endsWith("components.pot_decorations"))
-    //             return PathInfos.LIST_STRING.withIcon(Items.DECORATED_POT);
-    //         if(path.endsWith("components.pot_decorations[0]"))
-    //             return (new PathInfo(PathType.STRING,LIST_DECORATED_POT_PATTERN_ITEMS));
-    //     }
-
-    //     if(path.contains(".potion_contents")) {
-    //         if(path.endsWith(".potion_contents"))
-    //             return PathInfos.POTION_CONTENTS.withIcon(Items.SPLASH_POTION);
-    //         if(path.endsWith(".potion_contents.potion"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_POTION)).withDesc(Component.nullToEmpty("Potion base before custom_color and custom_effects"));
-    //         if(path.endsWith(".potion_contents.custom_color"))
-    //             return PathInfos.DECIMAL_COLOR;
-    //         if(path.endsWith(".potion_contents.custom_effects"))
-    //             return PathInfos.LIST_COMPOUND;
-    //         if(path.endsWith(".potion_contents.custom_effects[0]"))
-    //             return PathInfos.EFFECT_NODE;
-    //         if(path.endsWith(".potion_contents.custom_effects[0].id"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT));
-    //         if(path.endsWith(".potion_contents.custom_effects[0].amplifier"))
-    //             return PathInfos.EFFECT_AMPLIFIER;
-    //         if(path.endsWith(".potion_contents.custom_effects[0].duration"))
-    //             return PathInfos.EFFECT_DURATION;
-    //         if(path.endsWith(".potion_contents.custom_effects[0].ambient"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".potion_contents.custom_effects[0].show_particles"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".potion_contents.custom_effects[0].show_icon"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".potion_contents.custom_name"))
-    //             return (new PathInfo(PathType.STRING));//to_do set of different strings based on item id translation key plus potion base name, or "empty"
-    //     }
-
-    //     if(path.contains("components.profile")) {
-    //         if(path.endsWith("components.profile"))
-    //             return (new PathInfo(KeyGetter.create().withOptional("name","id","properties"))).withIcon(Items.PLAYER_HEAD);
-    //         if(path.endsWith("components.profile.name"))
-    //             return PathInfos.STRING.withDesc(Component.nullToEmpty("Player name used to update skin"));
-    //         if(path.endsWith("components.profile.id"))
-    //             return PathInfos.UUID.withDesc(Component.nullToEmpty("Player UUID used to update skin"));
-    //         if(path.endsWith("components.profile.properties"))
-    //             return PathInfos.LIST_COMPOUND;
-    //         if(path.endsWith("components.profile.properties[0]"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("name","value").withOptional("signature")));
-    //         if(path.endsWith("components.profile.properties[0].name"))
-    //             return (new PathInfo(PathType.STRING,SuggestionGetter.newInline("textures"))).withDesc(Component.nullToEmpty("Currently only used for textures"));
-    //         if(path.endsWith("components.profile.properties[0].value"))
-    //             return PathInfos.STRING;
-    //         if(path.endsWith("components.profile.properties[0].signature"))
-    //             return PathInfos.STRING;
-    //     }
-
-    //     if(path.endsWith("components.rarity"))
-    //         return (new PathInfo(PathType.STRING,SuggestionGetter.newInline("common","uncommon","rare","epic"))).withDesc(Component.nullToEmpty("Used for item name color:\n  \u00a7fcommon\n  \u00a7euncommon\n  \u00a7brare\n  \u00a7depic\u00a7r")).withIcon(Items.STONE); // hardcoded list
-
-    //     if(path.contains("components.recipes")) {
-    //         if(path.endsWith("components.recipes"))
-    //             return PathInfos.LIST_STRING.withIcon(Items.KNOWLEDGE_BOOK);
-    //         if(path.endsWith("components.recipes[0]"))
-    //             return (new PathInfo(PathType.STRING,DATA_RECIPE));
-    //     }
-
-    //     if(path.endsWith("components.repair_cost"))
-    //         return (new PathInfo(PathType.INT,SuggestionGetter.newInline("0",""+Integer.MAX_VALUE))).withIcon(Items.ENCHANTED_BOOK);
-
-    //     if(path.contains("components.repairable")) {
-    //         if(path.endsWith("components.repairable"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("items"))).withIcon(Items.ANVIL);
-    //         if(path.endsWith("components.repairable.items"))
-    //             return PathInfos.ITEM_PREDICATE_ITEMS;
-    //     }
-
-    //     if(path.endsWith("components.stored_enchantments"))
-    //         return (new PathInfo(KeyGetter.create().withOptional(DATA_ENCHANTMENT))).withIcon(Items.ENCHANTED_BOOK);
-
-    //     if(path.contains("components.suspicious_stew_effects")) {
-    //         if(path.endsWith("components.suspicious_stew_effects"))
-    //             return PathInfos.LIST_COMPOUND.withIcon(Items.SUSPICIOUS_STEW);
-    //         if(path.endsWith("components.suspicious_stew_effects[0]"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("id").withOptional("duration"))).withFlag(PathFlag.EFFECT);
-    //         if(path.endsWith("components.suspicious_stew_effects[0].id"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT));
-    //         if(path.endsWith("components.suspicious_stew_effects[0].duration"))
-    //             return PathInfos.EFFECT_DURATION;
-    //     }
-
-    //     if(path.contains("components.tool")) {
-    //         if(path.endsWith("components.tool"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("rules").withOptional("default_mining_speed","damage_per_block"))).withIcon(Items.DIAMOND_PICKAXE);
-    //         if(path.endsWith("components.tool.default_mining_speed"))
-    //             return PathInfos.DEFAULT;
-    //         if(path.endsWith("components.tool.damage_per_block"))
-    //             return PathInfos.INT;
-    //         if(path.endsWith("components.tool.rules"))
-    //             return PathInfos.LIST_COMPOUND;
-    //         if(path.endsWith("components.tool.rules[0]"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("blocks").withOptional("speed","correct_for_drops")));
-    //         if(path.endsWith("components.tool.rules[0].blocks"))
-    //             return PathInfos.LIST_STRING;
-    //         if(path.endsWith("components.tool.rules[0].blocks[0]"))
-    //             return PathInfos.BLOCK_PREDICATE_BLOCKS;
-    //         if(path.endsWith("components.tool.rules[0].speed"))
-    //             return PathInfos.DEFAULT;
-    //         if(path.endsWith("components.tool.rules[0].correct_for_drops"))
-    //             return PathInfos.TRINARY;
-    //     }
-
-    //     if(path.endsWith("components.tooltip_style"))
-    //         return (new PathInfo(PathType.STRING)).withDesc(Component.nullToEmpty("References tooltip sprites at \"assets/<namespace>/textures/gui/sprites/tooltip/<id>_background\" and \"assets/<namespace>/textures/gui/sprites/tooltip/<id>_frame\"")).withIcon(Items.COMMAND_BLOCK);
-
-    //     if(path.contains("components.trim")) {
-    //         if(path.endsWith("components.trim"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("pattern","material"))).withIcon(Items.DIAMOND_CHESTPLATE);
-    //         if(path.endsWith("components.trim.pattern"))
-    //             return (new PathInfo(PathType.STRING,DATA_TRIM_PATTERN));
-    //         if(path.endsWith("components.trim.material"))
-    //             return (new PathInfo(PathType.STRING,DATA_TRIM_MATERIAL));
-    //     }
-
-    //     if(path.endsWith("components.unbreakable"))
-    //         return PathInfos.UNIT.withIcon(Items.COMMAND_BLOCK);
-
-    //     if(path.contains("components.use_cooldown")) {
-    //         if(path.endsWith("components.use_cooldown"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("seconds").withOptional("cooldown_group"))).withIcon(Items.ENDER_PEARL);
-    //         if(path.endsWith("components.use_cooldown.seconds"))
-    //             return (new PathInfo(PathType.FLOAT,SuggestionGetter.newInline("1.0f")));
-    //         if(path.endsWith("components.use_cooldown.cooldown_group"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_ITEM)).withDesc(Component.nullToEmpty("Custom namespaced ID or namespaced item ID"));
-    //     }
-
-    //     if(path.endsWith("components.use_remainder"))
-    //         return PathInfos.ITEM_NODE.withIcon(Items.MUSHROOM_STEW);
-
-    //     if(path.contains("components.writable_book_content")) {
-    //         if(path.endsWith("components.writable_book_content"))
-    //             return (new PathInfo(KeyGetter.create().withOptional("pages"))).withIcon(Items.WRITABLE_BOOK);
-    //         if(path.endsWith("components.writable_book_content.pages"))
-    //             return PathInfos.LIST_COMPOUND;
-    //         if(path.endsWith("components.writable_book_content.pages[0]"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("raw").withOptional("filtered")));
-    //         if(path.endsWith("components.writable_book_content.pages[0].raw"))
-    //             return PathInfos.STRING.withDesc(Component.nullToEmpty("Literal string of page text"));
-    //         if(path.endsWith("components.writable_book_content.pages[0].filtered"))
-    //             return PathInfos.STRING;
-    //     }
-
-    //     if(path.contains("components.written_book_content")) {
-    //         if(path.endsWith("components.written_book_content"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("author","title").withOptional("pages","generation","resolved"))).withIcon(Items.WRITTEN_BOOK);
-    //         if(path.endsWith("components.written_book_content.pages"))
-    //             return PathInfos.LIST_COMPOUND;
-    //         if(path.endsWith("components.written_book_content.pages[0]"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("raw").withOptional("filtered")));
-    //         if(path.endsWith("components.written_book_content.pages[0].raw"))
-    //             return PathInfos.TEXT;
-    //         if(path.endsWith("components.written_book_content.pages[0].filtered"))
-    //             return PathInfos.TEXT;
-    //         if(path.endsWith("components.written_book_content.title"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("raw").withOptional("filtered")));
-    //         if(path.endsWith("components.written_book_content.title.raw"))
-    //             return PathInfos.STRING.withDesc(Component.nullToEmpty("Literal string of title"));
-    //         if(path.endsWith("components.written_book_content.title.filtered"))
-    //             return PathInfos.STRING;
-    //         if(path.endsWith("components.written_book_content.author"))
-    //             return PathInfos.STRING.withDesc(Component.nullToEmpty("Literal string of author"));
-    //         if(path.endsWith("components.written_book_content.generation"))
-    //             return (new PathInfo(PathType.INT,SuggestionGetter.newInline("0","1","2","3"))).withDesc(Component.nullToEmpty("0 - Original\n1 - Copy of original\n2 - Copy of copy\n3 - Tattered")); // hardcoded list
-    //         if(path.endsWith("components.written_book_content.resolved"))
-    //             return PathInfos.TRINARY.withDesc(Component.nullToEmpty("Whether or not text component is resolved (for selectors/scores/etc)"));
-    //     }
-
-    //     if(path.contains("components.!")) {
-    //         for(String c : LIST_DATA_COMPONENT_TYPE.getList()) {
-    //             if(path.endsWith("components.!"+c.replace("minecraft:",""))) {
-    //                 return PathInfos.UNIT.withGroup("Inverted Components").withIcon(getPathInfo("components."+c).icon());
-    //             }
-    //         }
-    //     }
-
-    //     if(path.equals("id") || path.endsWith(".id"))
-    //         return (new PathInfo(PathType.STRING,REGISTRY_ITEM)).withIcon(Items.STONE);
-
-    //     if(path.equals("count") || path.endsWith(".count"))
-    //         return PathInfos.ITEM_COUNT.withIcon(Items.STONE);
-
-    //     if(path.equals("components") || path.endsWith(".components"))
-    //         return PathInfos.COMPONENTS_OR_INVERTED;
-
-    //     FortytwoEdit.logWarn("No PathInfo found for path: "+path);
-    //     return PathInfos.UNKNOWN;
-    // }
-
-    // private class PathInfos {
-
-    //     private static final PathInfo UNKNOWN = (new PathInfo(PathType.UNKNOWN));
-    //     private static final PathInfo DEFAULT = (new PathInfo(PathType.DEFAULT));
-    //     private static final PathInfo UNIT = (new PathInfo(PathType.UNIT,SuggestionGetter.newInline("","{}"))).withDesc(Component.nullToEmpty("{} represents true"));
-    //     private static final PathInfo TRINARY = (new PathInfo(PathType.TRINARY,SuggestionGetter.newInline("","false","true"))).withDesc(Component.nullToEmpty("Boolean (true or false)"));
-    //     private static final PathInfo SHORT = (new PathInfo(PathType.SHORT,SuggestionGetter.newInline("0s")));
-    //     private static final PathInfo INT = (new PathInfo(PathType.INT,SuggestionGetter.newInline("0")));
-    //     private static final PathInfo LONG = (new PathInfo(PathType.LONG,SuggestionGetter.newInline("0l")));
-    //     private static final PathInfo DOUBLE = (new PathInfo(PathType.DOUBLE,SuggestionGetter.newInline("0.0d")));
-    //     private static final PathInfo FLOAT = (new PathInfo(PathType.FLOAT,SuggestionGetter.newInline("0.0f")));
-    //     private static final PathInfo STRING = (new PathInfo(PathType.STRING));
-    //     private static final PathInfo BYTE_ARRAY = (new PathInfo(PathType.BYTE_ARRAY,SuggestionGetter.newInline("[B;]")));
-    //     private static final PathInfo LIST_COMPOUND = (new PathInfo(Tag.TAG_COMPOUND));
-    //     private static final PathInfo LIST_FLOAT = (new PathInfo(Tag.TAG_FLOAT));
-    //     private static final PathInfo LIST_STRING = (new PathInfo(Tag.TAG_STRING));
-    //     private static final PathInfo INLINE_COMPOUND = (new PathInfo(PathType.INLINE_COMPOUND,SuggestionGetter.newInline("{}")));
-
-    //     private static final PathInfo TEXT = (new PathInfo(PathType.TEXT,SuggestionGetter.newInline("\"\"","{text:\"\"}","[\"\"]"))).withDesc(Component.nullToEmpty("Text component"));
-    //     private static final PathInfo DECIMAL_COLOR = (new PathInfo(PathType.DECIMAL_COLOR,SuggestionGetter.newInline("0","16777215"))).withDesc(Component.nullToEmpty("0xRRGGBB hex color converted to integer"));
-    //     private static final PathInfo UUID = (new PathInfo(PathType.UUID,SuggestionGetter.newInline("[I;0,0,0,0]")));
-    //     private static final PathInfo INT_ARRAY_POS = (new PathInfo(PathType.INT_ARRAY,SuggestionGetter.newInline("[I;0,0,0]"))).withDesc(Component.nullToEmpty("[I; X, Y, Z] block coordinates"));
-
-    //     private static final PathInfo ITEM_NODE = (new PathInfo(KeyGetter.create().withRequired("id").withOptional("count","components")));
-    //     private static final PathInfo ITEM_COUNT = (new PathInfo(PathType.INT,SuggestionGetter.newInline("1","16","64","99")));
-
-    //     private static final PathInfo COMPONENTS_NODE = (new PathInfo(KeyGetter.create().withOptional(LIST_DATA_COMPONENT_TYPE)));
-    //     private static final PathInfo COMPONENTS_OR_INVERTED = (new PathInfo(KeyGetter.create().withOptional(LIST_DATA_COMPONENT_TYPE,LIST_DATA_COMPONENT_TYPE.withFormat(SuggestionGetter.Format.INVERTED))));
-
-    //     private static final PathInfo POTION_CONTENTS = (new PathInfo(KeyGetter.create().withOptional("potion","custom_color","custom_effects","custom_name")));
-    //     private static final PathInfo EFFECT_NODE = (new PathInfo(KeyGetter.create().withRequired("id").withOptional("amplifier","duration","ambient","show_particles","show_icon"))).withFlag(PathFlag.EFFECT);
-    //     private static final PathInfo EFFECT_DURATION = (new PathInfo(PathType.INT,SuggestionGetter.newInline("-1","1"))).withDesc(Component.nullToEmpty("Duration in ticks or -1 for infinity"));
-    //     private static final PathInfo EFFECT_AMPLIFIER = (new PathInfo(PathType.BYTE,SuggestionGetter.newInline("0","255"))).withDesc(Component.nullToEmpty("Amplifier 0-255 gives effect level 1-256"));
-
-    //     private static final PathInfo BLOCK_PREDICATE_BLOCKS = (new PathInfo(PathType.DEFAULT,SuggestionGetter.newJoined(
-    //         REGISTRY_BLOCK.withFormat(SuggestionGetter.Format.NBT_STRING),
-    //         DATA_TAG_BLOCK.withFormat(SuggestionGetter.Format.NBT_STRING),
-    //         SuggestionGetter.newInline("[\"dirt\",\"stone\"]"))))
-    //         .withDesc(Component.nullToEmpty("Can be either:\na) NbtString of an block ID or block tag\nb) NbtList of block ID NbtStrings"));
-    //     private static final PathInfo ITEM_PREDICATE_ITEMS = (new PathInfo(PathType.DEFAULT,SuggestionGetter.newJoined(
-    //         REGISTRY_ITEM.withFormat(SuggestionGetter.Format.NBT_STRING),
-    //         DATA_TAG_ITEM.withFormat(SuggestionGetter.Format.NBT_STRING),
-    //         SuggestionGetter.newInline("[\"diamond\",\"gold_ingot\"]"))))
-    //         .withDesc(Component.nullToEmpty("Can be either:\na) NbtString of an item ID or item tag\nb) NbtList of item ID NbtStrings"));
-    //     private static final PathInfo ENTITY_PREDICATE_ENTITIES = (new PathInfo(PathType.DEFAULT,SuggestionGetter.newJoined(
-    //         REGISTRY_ENTITY_TYPE.withFormat(SuggestionGetter.Format.NBT_STRING),
-    //         DATA_TAG_ENTITY_TYPE.withFormat(SuggestionGetter.Format.NBT_STRING),
-    //         SuggestionGetter.newInline("[\"skeleton\",\"zombie\"]"))))
-    //         .withDesc(Component.nullToEmpty("Can be either:\na) NbtString of an entity ID or entity tag\nb) NbtList of entity ID NbtStrings"));
-
-    // }
 
     public record KeyGetter(SuggestionGetter[] requiredKeys, SuggestionGetter[] optionalKeys) {
 
@@ -798,6 +548,16 @@ public class SuggestionHelper {
         return list;
     });
 
+    public static final SuggestionGetter LIST_AXOLOTL_VARIANT = registerSuggsList("LIST_AXOLOTL_VARIANT", () -> {
+        List<String> list = createOrGetCacheList("LIST_AXOLOTL_VARIANT",false);
+        if(list.isEmpty()) {
+            for(Axolotl.Variant i : Axolotl.Variant.values())
+                list.add(i.getSerializedName());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
     /**
      * Contains components that can be serialized
      */
@@ -867,12 +627,92 @@ public class SuggestionHelper {
         return list;
     });
 
+    public static final SuggestionGetter LIST_FOX_VARIANT = registerSuggsList("LIST_FOX_VARIANT", () -> {
+        List<String> list = createOrGetCacheList("LIST_FOX_VARIANT",false);
+        if(list.isEmpty()) {
+            for(Fox.Variant i : Fox.Variant.values())
+                list.add(i.getSerializedName());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final SuggestionGetter LIST_HORSE_VARIANT = registerSuggsList("LIST_HORSE_VARIANT", () -> {
+        List<String> list = createOrGetCacheList("LIST_HORSE_VARIANT",false);
+        if(list.isEmpty()) {
+            for(Variant i : Variant.values())
+                list.add(i.getSerializedName());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
     public static final SuggestionGetter LIST_KEYBIND = registerSuggsList("LIST_KEYBIND", () -> {
         List<String> list = createOrGetCacheList("LIST_KEYBIND",false);
         if(list.isEmpty()) {
             for(String i : KeyMappingAccessor.getKeysList().keySet())
                 if(!i.startsWith("42edit."))
                     list.add(i);
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final SuggestionGetter LIST_LLAMA_VARIANT = registerSuggsList("LIST_LLAMA_VARIANT", () -> {
+        List<String> list = createOrGetCacheList("LIST_LLAMA_VARIANT",false);
+        if(list.isEmpty()) {
+            for(Llama.Variant i : Llama.Variant.values())
+                list.add(i.getSerializedName());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final SuggestionGetter LIST_MOOSHROOM_VARIANT = registerSuggsList("LIST_MOOSHROOM_VARIANT", () -> {
+        List<String> list = createOrGetCacheList("LIST_MOOSHROOM_VARIANT",false);
+        if(list.isEmpty()) {
+            for(MushroomCow.Variant i : MushroomCow.Variant.values())
+                list.add(i.getSerializedName());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final SuggestionGetter LIST_PARROT_VARIANT = registerSuggsList("LIST_PARROT_VARIANT", () -> {
+        List<String> list = createOrGetCacheList("LIST_PARROT_VARIANT",false);
+        if(list.isEmpty()) {
+            for(Parrot.Variant i : Parrot.Variant.values())
+                list.add(i.getSerializedName());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final SuggestionGetter LIST_RABBIT_VARIANT = registerSuggsList("LIST_RABBIT_VARIANT", () -> {
+        List<String> list = createOrGetCacheList("LIST_RABBIT_VARIANT",false);
+        if(list.isEmpty()) {
+            for(Rabbit.Variant i : Rabbit.Variant.values())
+                list.add(i.getSerializedName());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final SuggestionGetter LIST_SALMON_VARIANT = registerSuggsList("LIST_SALMON_VARIANT", () -> {
+        List<String> list = createOrGetCacheList("LIST_SALMON_VARIANT",false);
+        if(list.isEmpty()) {
+            for(Salmon.Variant i : Salmon.Variant.values())
+                list.add(i.getSerializedName());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final SuggestionGetter LIST_TROPICAL_FISH_VARIANT = registerSuggsList("LIST_TROPICAL_FISH_VARIANT", () -> {
+        List<String> list = createOrGetCacheList("LIST_TROPICAL_FISH_VARIANT",false);
+        if(list.isEmpty()) {
+            for(TropicalFish.Pattern i : TropicalFish.Pattern.values())
+                list.add(i.getSerializedName());
             Collections.sort(list);
         }
         return list;
@@ -950,6 +790,9 @@ public class SuggestionHelper {
     public static final SuggestionGetter REGISTRY_POTION = registerSuggsList("REGISTRY_POTION", () ->
         getRegistryIfEmpty(createOrGetCacheList("REGISTRY_POTION",false),BuiltInRegistries.POTION));
 
+    public static final SuggestionGetter REGISTRY_VILLAGER_TYPE = registerSuggsList("REGISTRY_VILLAGER_TYPE", () ->
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_VILLAGER_TYPE",false),BuiltInRegistries.VILLAGER_TYPE));
+
 
     // dynamic data lists
 
@@ -969,11 +812,23 @@ public class SuggestionHelper {
     public static final SuggestionGetter DATA_BANNER_PATTERN = registerSuggsList("DATA_BANNER_PATTERN", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_BANNER_PATTERN",true),Registries.BANNER_PATTERN));
 
+    public static final SuggestionGetter DATA_CAT_VARIANT = registerSuggsList("DATA_CAT_VARIANT", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_CAT_VARIANT",true),Registries.CAT_VARIANT));
+
+    public static final SuggestionGetter DATA_CHICKEN_VARIANT = registerSuggsList("DATA_CHICKEN_VARIANT", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_CHICKEN_VARIANT",true),Registries.CHICKEN_VARIANT));
+
+    public static final SuggestionGetter DATA_COW_VARIANT = registerSuggsList("DATA_COW_VARIANT", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_COW_VARIANT",true),Registries.COW_VARIANT));
+
     public static final SuggestionGetter DATA_DAMAGE_TYPE = registerSuggsList("DATA_DAMAGE_TYPE", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_DAMAGE_TYPE",true),Registries.DAMAGE_TYPE));
 
     public static final SuggestionGetter DATA_ENCHANTMENT = registerSuggsList("DATA_ENCHANTMENT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_ENCHANTMENT",true),Registries.ENCHANTMENT));
+
+    public static final SuggestionGetter DATA_FROG_VARIANT = registerSuggsList("DATA_FROG_VARIANT", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_FROG_VARIANT",true),Registries.FROG_VARIANT));
 
     public static final SuggestionGetter DATA_INSTRUMENT = registerSuggsList("DATA_INSTRUMENT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_INSTRUMENT",true),Registries.INSTRUMENT));
@@ -984,11 +839,17 @@ public class SuggestionHelper {
     public static final SuggestionGetter DATA_PAINTING_VARIANT = registerSuggsList("DATA_PAINTING_VARIANT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_PAINTING_VARIANT",true),Registries.PAINTING_VARIANT));
 
+    public static final SuggestionGetter DATA_PIG_VARIANT = registerSuggsList("DATA_PIG_VARIANT", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_PIG_VARIANT",true),Registries.PIG_VARIANT));
+
     public static final SuggestionGetter DATA_TRIM_MATERIAL = registerSuggsList("DATA_TRIM_MATERIAL", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_TRIM_MATERIAL",true),Registries.TRIM_MATERIAL));
 
     public static final SuggestionGetter DATA_TRIM_PATTERN = registerSuggsList("DATA_TRIM_PATTERN", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_TRIM_PATTERN",true),Registries.TRIM_PATTERN));
+
+    public static final SuggestionGetter DATA_WOLF_SOUND_VARIANT = registerSuggsList("DATA_WOLF_SOUND_VARIANT", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_WOLF_SOUND_VARIANT",true),Registries.WOLF_SOUND_VARIANT));
 
     public static final SuggestionGetter DATA_WOLF_VARIANT = registerSuggsList("DATA_WOLF_VARIANT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_WOLF_VARIANT",true),Registries.WOLF_VARIANT));

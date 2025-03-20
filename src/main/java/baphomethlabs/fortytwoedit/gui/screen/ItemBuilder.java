@@ -118,13 +118,11 @@ public class ItemBuilder extends GenericScreen {
     private String inpErrorTrim = null;
     private static boolean viewBlackMarket = false;
     private static final Tooltip TOOLTIP_BLACK_MARKET =
-        Tooltip.create(Component.empty().append("Black Market Items").append(Component.empty()
-        .append("\n\nGet custom items produced by ").withStyle(ChatFormatting.GRAY)).append(Component.empty()
-        .append("BaphomethLabs").withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC)).append(Component.empty()
-        .append("\n(Mostly Harmless)").withStyle(ChatFormatting.GRAY)));
+        Tooltip.create(grayWhiteText("Black Market Items","\n\nGet custom items produced by ")
+        .append(Component.empty().append("BaphomethLabs").withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC))
+        .append(grayWhiteText("","\n(Mostly Harmless)")));
     private static final Tooltip TOOLTIP_LOCAL_ITEMS =
-        Tooltip.create(Component.empty().append("Local Items").append(Component.empty()
-        .append("\n\nSave items for later without using up your saved hotbars").withStyle(ChatFormatting.GRAY)));
+        Tooltip.create(grayWhiteText("Local Items","\n\nSave items for later without using up your saved hotbars"));
     private static final ItemStack[] SAVED_TAB_MODE_ITEMS = new ItemStack[]{BlackMagick.itemFromNbtStatic(BlackMagick.validCompoundFromString(
         "{id:player_head,components:{profile:{properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQ"
         +"iIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pb"
@@ -1576,22 +1574,35 @@ public class ItemBuilder extends GenericScreen {
 
     private Component getKeyButtonTooltip(PathNode node, PathInfo pi) {
         MutableComponent btnTt = Component.empty().append(grayWhiteText(node.isKey() ? "Key: " : "Index: ", node.isKey() ? node.key() : (""+node.index())));
+        appendPathInfo(btnTt, pi);
+
+        return btnTt;
+    }
+
+    private Component getPathBoxTooltip() {
+        MutableComponent pathTt = nbtEdit.fullPath().isEmpty() ? grayWhiteText("Path: ","{}")
+            : grayWhiteText("Path:\n",nbtEdit.fullPath());
+        pathTt = pathTt.append(grayWhiteText("\n\nValue:\n")).append(nbtEdit.getPathChanges());
+        appendPathInfo(pathTt, nbtEdit.pi());
+
+        return pathTt;
+    }
+
+    private void appendPathInfo(MutableComponent currentText, PathInfo pi) {
         if(pi != null) {
             if(!pi.getNbtTypes().isEmpty()) {
                 if(pi.getNbtTypes().size()==1)
-                    btnTt = btnTt.append(grayWhiteText("\n\nValid Type: ",pi.getNbtTypes().get(0).label()));
+                    currentText = currentText.append(grayWhiteText("\n\nValid Type: ",pi.getNbtTypes().get(0).label()));
                 else {
                     String types = "";
                     for(NbtType t : pi.getNbtTypes())
                         types += "\n"+t.label();
-                    btnTt = btnTt.append(grayWhiteText("\n\nValid Types: ",types));
+                    currentText = currentText.append(grayWhiteText("\n\nValid Types: ",types));
                 }
             }
-            if(pi.getInfo() != null) {
-                btnTt = btnTt.append(grayWhiteText("\n\nInfo:\n")).append(Component.empty().append(pi.getInfo()).withStyle(ChatFormatting.GRAY));
-            }
+            if(pi.getInfo() != null)
+                currentText = currentText.append(grayWhiteText("\n\nInfo:\n")).append(Component.empty().append(pi.getInfo()).withStyle(ChatFormatting.GRAY));
         }
-        return btnTt;
     }
 
     private void suggsOnChanged(EditBox w, String[] suggestions, String startVal) {
@@ -2717,7 +2728,7 @@ public class ItemBuilder extends GenericScreen {
                         addTabWidgetScroll(tabNum, RowWidgetElement.listTemplateElement(this, thisList, i));
 
                     addTabWidgetScroll(tabNum, new RowWidget("Append Element"));
-                    addTabWidgetScroll(tabNum, RowWidgetElement.customListElement(this, thisList));
+                    addTabWidgetScroll(tabNum, RowWidgetElement.customListElement(this, thisList, true));
 
                     addTabWidgetScroll(tabNum, new RowWidget());
 
@@ -2752,7 +2763,7 @@ public class ItemBuilder extends GenericScreen {
                                 addTabWidgetScroll(tabNum, new RowWidgetElement(thisList, i));
 
                             addTabWidgetScroll(tabNum, new RowWidget("Append Element"));
-                            addTabWidgetScroll(tabNum, RowWidgetElement.customListElement(this, thisList));
+                            addTabWidgetScroll(tabNum, RowWidgetElement.customListElement(this, thisList, false));
 
                             addTabWidgetScroll(tabNum, new RowWidget());
 
@@ -3145,12 +3156,7 @@ public class ItemBuilder extends GenericScreen {
             Button cancelBtn = (Button)widgetCacheGet(WidgetCacheType.NBT_EDIT_CANCEL_BTN);
             EditBox pathTxt = (EditBox)widgetCacheGet(WidgetCacheType.NBT_EDIT_PATH_TXT);
 
-            MutableComponent pathDisplay = nbtEdit.fullPath().isEmpty() ? grayWhiteText("Path: ","{}")
-                : grayWhiteText("Path:\n",nbtEdit.fullPath());
-            pathDisplay = pathDisplay.append(grayWhiteText("\n\nValue:\n")).append(nbtEdit.getPathChanges());
-            if(nbtEdit.pi().getInfo()!=null)
-                pathDisplay = pathDisplay.append(grayWhiteText("\n\nInfo:\n")).append(Component.empty().append(nbtEdit.pi().getInfo()).withStyle(ChatFormatting.GRAY));
-            pathTxt.setTooltip(Tooltip.create(pathDisplay));
+            pathTxt.setTooltip(Tooltip.create(getPathBoxTooltip()));
 
             if(nbtEdit.unsaved())
                 cancelBtn.setTooltip(Tooltip.create(grayWhiteText("Revert to:\n").append(nbtEdit.getRevertItemChanges())));
@@ -4593,11 +4599,13 @@ public class ItemBuilder extends GenericScreen {
             return row;
         }
 
-        public static RowWidgetElement customListElement(ItemBuilder context, ListTag baseList) {
+        public static RowWidgetElement customListElement(ItemBuilder context, ListTag baseList, boolean isTemplate) {
             RowWidgetElement row = context.new RowWidgetElement();
 
-            row.cachePathInfo = context.nbtEdit.pi().getListIndexInfo(baseList.size());
-            row.cacheSuggs = row.cachePathInfo.getSuggs().getArraySnbt();
+            PathInfo pi = context.nbtEdit.pi().getListIndexInfo(baseList.size());
+            boolean isString = isTemplate && pi.getDefaultPathType()==PathType.STRING;
+            String[] baseSuggestions = isString ? pi.getSuggs().getArray() : pi.getSuggs().getArraySnbt();
+
             {
                 EditBox w = new EditBox(context.minecraft.font,0,0,
                     ROW_WIDTH-20, WID_HEIGHT, Component.nullToEmpty(""));
@@ -4609,8 +4617,8 @@ public class ItemBuilder extends GenericScreen {
                         ((Button)row.getPosWidget(1)).setTooltip(null);
                         ((EditBox)row.getPosWidget(0)).setTextColor(LABEL_COLOR);
 
-                        if(!value.isEmpty()) {
-                            Tag el = BlackMagick.nbtFromString(value);
+                        if(!value.isEmpty() || isString) {
+                            Tag el = isString ? StringTag.valueOf(value) : BlackMagick.nbtFromString(value);
                             if(el == null) {
                                 ((EditBox)row.getPosWidget(0)).setTextColor(ERROR_COLOR);
                                 context.setErrorMsg("Invalid element");
@@ -4624,7 +4632,7 @@ public class ItemBuilder extends GenericScreen {
                             }
                         }
 
-                        context.suggsOnChanged(w, row.cacheSuggs, null);
+                        context.suggsOnChanged(w, baseSuggestions, null);
                     }
                 });
                 row.addPosWidget(w, ROW_LEFT_SCROLL, 0);
@@ -4632,8 +4640,8 @@ public class ItemBuilder extends GenericScreen {
             {
                 Button w = Button.builder(Component.nullToEmpty("+"), btn -> {
                     if(row.testPosWidget(0)) {
-                        Tag el = BlackMagick.nbtFromString(((EditBox)row.getPosWidget(0)).getValue());
-    
+                        String inp = ((EditBox)row.getPosWidget(0)).getValue();
+                        Tag el = isString ? StringTag.valueOf(inp) : BlackMagick.nbtFromString(inp);
                         if(el!=null) {
                             context.nbtEditUpdate(BlackMagick.appendListElement(context.nbtEdit.current(),context.nbtEdit.fullPath(),el));
                         }
