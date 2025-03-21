@@ -34,10 +34,12 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.component.FireworkExplosion;
+import net.minecraft.world.item.component.MapItemColor;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -349,7 +351,11 @@ public class SuggestionHelper {
         }
 
         public static SuggestionGetter newRef(String key) {
-            return new SuggestionGetter(null, key, false, null, false);
+            return newRef(key, false);
+        }
+
+        public static SuggestionGetter newRef(String key, boolean isSnbt) {
+            return new SuggestionGetter(null, key, isSnbt, null, false);
         }
 
         public static SuggestionGetter newJoined(SuggestionGetter... lists) {
@@ -369,21 +375,22 @@ public class SuggestionHelper {
                     else
                         set.addAll(BlackMagick.formatStringSuggs(List.of(inlinedSuggs)));
                 }
-                if(listMapKey != null && SUGGS_LIST_METHODS.containsKey(listMapKey))
-                    set.addAll(BlackMagick.formatStringSuggs(SUGGS_LIST_METHODS.get(listMapKey).get()));
-                if(joinedLists != null)
-                    for(SuggestionGetter s : joinedLists)
-                        set.addAll(s.getList(true));
+                if(listMapKey != null && SUGGS_LIST_METHODS.containsKey(listMapKey)) {
+                    if(isSnbt)
+                        set.addAll(SUGGS_LIST_METHODS.get(listMapKey).get());
+                    else
+                        set.addAll(BlackMagick.formatStringSuggs(SUGGS_LIST_METHODS.get(listMapKey).get()));
+                }
             }
             else {
                 if(inlinedSuggs != null && !isSnbt)
                     set.addAll(Set.of(inlinedSuggs));
-                if(listMapKey != null && SUGGS_LIST_METHODS.containsKey(listMapKey))
+                if(listMapKey != null && !isSnbt && SUGGS_LIST_METHODS.containsKey(listMapKey))
                     set.addAll(SUGGS_LIST_METHODS.get(listMapKey).get());
-                if(joinedLists != null)
-                    for(SuggestionGetter s : joinedLists)
-                        set.addAll(s.getList());
             }
+            if(joinedLists != null)
+                for(SuggestionGetter s : joinedLists)
+                    set.addAll(s.getList(snbt));
             List<String> list = Lists.newArrayList();
             list.addAll(set);
             Collections.sort(list);
@@ -447,6 +454,11 @@ public class SuggestionHelper {
     protected static SuggestionGetter registerSuggsList(String listName, Supplier<List<String>> method) {
         SUGGS_LIST_METHODS.put(listName, method);
         return SuggestionGetter.newRef(listName);
+    }
+
+    protected static SuggestionGetter registerSuggsListSnbt(String listName, Supplier<List<String>> method) {
+        SUGGS_LIST_METHODS.put(listName, method);
+        return SuggestionGetter.newRef(listName, true);
     }
 
 
@@ -668,6 +680,23 @@ public class SuggestionHelper {
         return list;
     });
 
+    public static final SuggestionGetter LIST_MAP_COLOR = registerSuggsListSnbt("LIST_MAP_COLOR", () -> {
+        List<String> list = createOrGetCacheList("LIST_MAP_COLOR",false);
+        if(list.isEmpty()) {
+            Set<String> tempSet = Sets.newHashSet();
+            tempSet.add(""+MapItemColor.DEFAULT.rgb());
+            for(ResourceLocation i : BuiltInRegistries.MAP_DECORATION_TYPE.keySet()) {
+                MapDecorationType t = BuiltInRegistries.MAP_DECORATION_TYPE.get(i).get().value();
+                if(t.hasMapColor()) {
+                    tempSet.add(""+t.mapColor());
+                }
+            }
+            list.addAll(tempSet);
+            Collections.sort(list);
+        }
+        return list;
+    });
+
     public static final SuggestionGetter LIST_MOOSHROOM_VARIANT = registerSuggsList("LIST_MOOSHROOM_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_MOOSHROOM_VARIANT",false);
         if(list.isEmpty()) {
@@ -683,6 +712,19 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(Parrot.Variant i : Parrot.Variant.values())
                 list.add(i.getSerializedName());
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    public static final SuggestionGetter LIST_POTION_CUSTOM_NAME = registerSuggsList("LIST_POTION_CUSTOM_NAME", () -> {
+        List<String> list = createOrGetCacheList("LIST_POTION_CUSTOM_NAME",false);
+        if(list.isEmpty()) {
+            Set<String> tempSet = Sets.newHashSet();
+            tempSet.add("empty");
+            for(ResourceLocation i : BuiltInRegistries.POTION.keySet())
+                tempSet.add(BuiltInRegistries.POTION.get(i).get().value().name());
+            list.addAll(tempSet);
             Collections.sort(list);
         }
         return list;

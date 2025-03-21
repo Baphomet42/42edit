@@ -191,6 +191,26 @@ public class BlackMagick {
     }
 
     /**
+     * 
+     * @param inp
+     * @return true if inp is any of the 4 integer types or any of the 2 decimal types
+     */
+    public static boolean nbtIsNumber(Tag inp) {
+        if(inp == null)
+            return false;
+        switch(inp.getId()) {
+            case Tag.TAG_BYTE:
+            case Tag.TAG_SHORT:
+            case Tag.TAG_INT:
+            case Tag.TAG_LONG:
+            case Tag.TAG_FLOAT:
+            case Tag.TAG_DOUBLE:
+                return true;
+            default: return false;
+        }
+    }
+
+    /**
      * Get SNBT representation of NBT.
      * A null element will return an empty string.
      * 
@@ -199,7 +219,7 @@ public class BlackMagick {
      */
     public static Component nbtToColorfulText(Tag inp) {
         if(inp == null)
-            return Component.empty();
+            return Component.empty().append("null").withStyle(ChatFormatting.ITALIC);
         return NbtUtils.toPrettyComponent(inp);
     }
 
@@ -890,7 +910,11 @@ public class BlackMagick {
             for(List<String> l : joinLists)
                 if(l != null)
                     for(String s : l)
-                        set.add(s);
+                        if(!s.isEmpty())
+                            set.add(s);
+
+        if(startVals != null)
+            set.removeAll(startVals);
 
         list.addAll(set);
         Collections.sort(list);
@@ -941,6 +965,15 @@ public class BlackMagick {
 
     /**
      * 
+     * @param dec int like 4327014
+     * @return hex String like 0x420666
+     */
+    public static String hexFromInt(int dec) {
+        return "0x"+Integer.toHexString(dec);
+    }
+
+    /**
+     * 
      * @return vanilla command registries with all features enabled
      */
     public static CommandBuildContext getCommandRegistries() {
@@ -965,7 +998,7 @@ public class BlackMagick {
      */
     public static Component getElementDifferences(Tag left, Tag right) {
         if(left==null && right==null)
-            return Component.nullToEmpty("null").copy().withStyle(ChatFormatting.ITALIC);
+            return Component.empty().append("null").withStyle(ChatFormatting.ITALIC);
         if(left==null)
             return Component.nullToEmpty(BlackMagick.nbtToSnbt(right)).copy().withStyle(ChatFormatting.GREEN);
         if(right==null)

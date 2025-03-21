@@ -23,11 +23,14 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.ByteArrayTag;
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.FloatTag;
+import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongArrayTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -772,6 +775,11 @@ public class ItemBuilder extends GenericScreen {
         return alternatingText(ChatFormatting.WHITE, ChatFormatting.GRAY, parts);
     }
 
+    public static MutableComponent grayWhiteText(String label, Component text) {
+        return Component.empty().append(Component.empty().append(label).withStyle(ChatFormatting.WHITE))
+            .append(Component.empty().append(text).withStyle(ChatFormatting.GRAY));
+    }
+
     public static MutableComponent alternatingText(ChatFormatting even, ChatFormatting odd, String... parts) {
         MutableComponent text = Component.empty();
         for(int i=0; i<parts.length; i++) {
@@ -1455,121 +1463,181 @@ public class ItemBuilder extends GenericScreen {
         }
     }
 
-    private Component getComplexButtonText(Tag el) {
+    private static Component getComplexButtonText(Tag el) {
         return getComplexButtonText(el, null);
     }
 
-    private Component getComplexButtonText(Tag el, PathFlag flag) {
+    private static Component getComplexButtonText(Tag el, PathFlag flag) {
         if(el==null)
             return Component.empty();
-        if(flag!=null)
+        Component flagText = getSpecialElementPreview(el, flag, false);
+        if(flagText != null)
+            return flagText;
+        return BlackMagick.nbtToColorfulText(el);
+    }
+
+    private static MutableComponent getElementTooltipInfo(Tag el, PathFlag flag) {
+        MutableComponent text = Component.empty();
+        Component flagText = getSpecialElementPreview(el, flag, true);
+        if(flagText != null)
+            text = text.append("\n\n").append(flagText);
+        return text.append(grayWhiteText("\n\nNBT: ", BlackMagick.nbtToColorfulText(el)));
+    }
+
+    private static Component getSpecialElementPreview(Tag el, PathFlag flag, boolean showLabel) {
+        if(el != null && flag != null) {
+            String elSnbt = BlackMagick.nbtToSnbt(el);
             switch(flag) {
                 case NONE: break;
+
+                case ATTRIBUTE_MODIFIER:
+                {
+                    if(el != null && el.getId()==Tag.TAG_COMPOUND) {
+                        ItemStack stack = BlackMagick.itemFromString("{id:'minecraft:stone',components:{'minecraft:attribute_modifiers':["+BlackMagick.nbtToSnbt(el)+"]}}");
+                        if(!stack.isEmpty()) {
+                            List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
+                            if(textList.size()>3) {
+                                Component btnTxt = Component.nullToEmpty(textList.get(2).getString()).copy()
+                                    .append(Component.nullToEmpty(" ")).append(textList.get(3));
+                                return showLabel ? Component.empty().append(grayWhiteText("Modifier:\n",btnTxt)) : btnTxt;
+                            }
+                            if(BlackMagick.elementsEqual(el, BlackMagick.getNbtPath(BlackMagick.itemToNbt(stack),"components.minecraft:attribute_modifiers[0]"))) {
+                                return showLabel ? Component.empty().append(grayWhiteText("Modifier: ","No effect")) : Component.empty().append("No effect");
+                            }
+                        }
+                    }
+                    return errorText("Invalid attribute modifier");
+                }
+
+                case BANNER_PATTERN:
+                {
+                    if(el != null && el.getId()==Tag.TAG_COMPOUND) {
+                        ItemStack stack = BlackMagick.itemFromString("{id:'minecraft:white_banner',components:{banner_patterns:["+BlackMagick.nbtToSnbt(el)+"]}}");
+                        if(!stack.isEmpty()) {
+                            List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
+                            if(textList.size()>1) {
+                                Component btnTxt = Component.nullToEmpty(textList.get(1).getString());
+                                return showLabel ? Component.empty().append(grayWhiteText("Pattern:\n",btnTxt)) : btnTxt;
+                            }
+                        }
+                    }
+                    return errorText("Invalid banner pattern");
+                }
+
+                case COLOR_RGB_INT:
+                {
+                    if(el.getId()==Tag.TAG_INT) {
+                        int colorInt = ((IntTag)el).intValue();
+                        Component btnTxt = Component.empty().append(BlackMagick.hexFromInt(colorInt)).withColor(colorInt);
+                        return showLabel ? Component.empty().append(grayWhiteText("Color: ",btnTxt)) : btnTxt;
+                    }
+                    return errorText("Invalid color");
+                }
+                case COLOR_RGB_INT_OR_LIST:
+                {
+                    boolean valid = el.getId()==Tag.TAG_INT;
+                    if(!valid) {
+                        if(el.getId()==Tag.TAG_LIST) {
+                            ListTag elList = (ListTag)el;
+                            if(elList.size()==3) {
+                                valid = true;
+                                for(int i=0; i<elList.size(); i++)
+                                    if(!BlackMagick.nbtIsNumber(elList.get(i)))
+                                        valid = false;
+                            }
+                        }
+                        else if(
+                            (el.getId()==Tag.TAG_BYTE_ARRAY && ((ByteArrayTag)el).size()==3)
+                            || (el.getId()==Tag.TAG_INT_ARRAY && ((IntArrayTag)el).size()==3)
+                            || (el.getId()==Tag.TAG_LONG_ARRAY && ((LongArrayTag)el).size()==3)
+                        )
+                            valid = true;
+                    }
+                    if(!valid)
+                        return errorText("Invalid color");
+
+                    Tag color = BlackMagick.getNbtPath(BlackMagick.itemToNbt(
+                        BlackMagick.itemFromString("{id:\"stone\",components:{\"minecraft:dyed_color\":"+elSnbt+"}}")),
+                        "components.minecraft:dyed_color");
+                    if(color!=null && color.getId()==Tag.TAG_INT) {
+                        int colorInt = ((IntTag)color).intValue();
+                        Component btnTxt = Component.empty().append(BlackMagick.hexFromInt(colorInt)).withColor(colorInt);
+                        return showLabel ? Component.empty().append(grayWhiteText("Color: ",btnTxt)) : btnTxt;
+                    }
+
+                    return errorText("Invalid color");
+                }
+                case COLOR_ARGB_INT_OR_LIST:
+                {
+                    boolean valid = el.getId()==Tag.TAG_INT;
+                    if(!valid) {
+                        if(el.getId()==Tag.TAG_LIST) {
+                            ListTag elList = (ListTag)el;
+                            if(elList.size()==4) {
+                                valid = true;
+                                for(int i=0; i<elList.size(); i++)
+                                    if(!BlackMagick.nbtIsNumber(elList.get(i)))
+                                        valid = false;
+                            }
+                        }
+                        else if(
+                            (el.getId()==Tag.TAG_BYTE_ARRAY && ((ByteArrayTag)el).size()==4)
+                            || (el.getId()==Tag.TAG_INT_ARRAY && ((IntArrayTag)el).size()==4)
+                            || (el.getId()==Tag.TAG_LONG_ARRAY && ((LongArrayTag)el).size()==4)
+                        )
+                            valid = true;
+                    }
+                    if(!valid)
+                        return errorText("Invalid color");
+
+                    Tag color = BlackMagick.getNbtPath(BlackMagick.itemToNbt(
+                        BlackMagick.itemFromString("{id:\"stone\",components:{\"minecraft:custom_name\":{text:\"\",shadow_color:"+elSnbt+"}}}")),
+                        "components.minecraft:custom_name.shadow_color");
+                    if(color!=null && color.getId()==Tag.TAG_INT) {
+                        int colorInt = ((IntTag)color).intValue();
+                        Component btnTxt = Component.empty().append(BlackMagick.hexFromInt(colorInt)).withColor(colorInt);
+                        return showLabel ? Component.empty().append(grayWhiteText("Color: ",btnTxt)) : btnTxt;
+                    }
+
+                    return errorText("Invalid color");
+                }
+
+                case RARITY:
+                {
+                    if(el.getId()==Tag.TAG_STRING) {
+                        String rarity = BlackMagick.nbtToSnbtOrString(el);
+                        MutableComponent btnTxt = Component.empty();
+                        switch(rarity) {
+                            case "common": btnTxt = btnTxt.append(rarity).withStyle(ChatFormatting.WHITE); break;
+                            case "uncommon": btnTxt = btnTxt.append(rarity).withStyle(ChatFormatting.YELLOW); break;
+                            case "rare": btnTxt = btnTxt.append(rarity).withStyle(ChatFormatting.AQUA); break;
+                            case "epic": btnTxt = btnTxt.append(rarity).withStyle(ChatFormatting.LIGHT_PURPLE); break;
+                            default: return errorText("Invalid rarity");
+                        }
+                        return showLabel ? Component.empty().append(grayWhiteText("Rarity: ",btnTxt)) : btnTxt;
+                    }
+                    return errorText("Invalid rarity");
+                }
 
                 case TEXT_COMPONENT:
                 case TEXT_COMPONENT_ITALIC:
                 case TEXT_COMPONENT_LORE:
                 {
-                    ParsedText text = BlackMagick.textComponentFromString(BlackMagick.nbtToSnbt(el));
+                    ParsedText text = BlackMagick.textComponentFromString(elSnbt);
                     if(text.isValid()) {
                         Component btnTxt = text.text();
                         if(flag==PathFlag.TEXT_COMPONENT_ITALIC)
                             btnTxt = Component.empty().withStyle(ChatFormatting.ITALIC).append(btnTxt);
                         else if(flag==PathFlag.TEXT_COMPONENT_LORE)
                             btnTxt = Component.empty().withStyle(ChatFormatting.ITALIC,ChatFormatting.DARK_PURPLE).append(btnTxt);
-                        return btnTxt;
+                        return showLabel ? Component.empty().append(grayWhiteText("Text component:\n")).append(btnTxt) : btnTxt;
                     }
-                    break;
+                    return errorText("Invalid text component");
                 }
+
             }
-        return BlackMagick.nbtToColorfulText(el);
-        // to_do other path flags
-        // String elString = el==null ? "null" : BlackMagick.nbtToSnbt(el);
-        // String elStringContent = BlackMagick.nbtToSnbtOrString(el);
-        // PathInfo pi = ComponentHelper.getPathInfo(path);
-        // if(pi.type()==PathType.TEXT) {
-        //     Component btnTxt = BlackMagick.textComponentFromString((el==null) ? "" : BlackMagick.nbtToSnbt(el)).text();
-        //     if(el != null && el.getId()==Tag.TAG_STRING && BlackMagick.textComponentFromString(elString).isValid()) {
-        //         if(path.endsWith("custom_name"))
-        //             btnTxt = btnTxt.copy().withStyle(ChatFormatting.ITALIC);
-        //         else if(path.contains("lore["))
-        //             btnTxt = btnTxt.copy().withStyle(ChatFormatting.ITALIC,ChatFormatting.DARK_PURPLE);
-        //     }
-        //     return btnTxt;
-        // }
-        // else if(pi.type()==PathType.DECIMAL_COLOR) {
-        //     if(el!=null && el.getId()!=Tag.TAG_STRING && el.getId()!=Tag.TAG_LIST && el.getId()!=Tag.TAG_COMPOUND) {
-        //         if(BlackMagick.colorHexFromDec(elStringContent) != null)
-        //             return BlackMagick.textComponentFromString("{text:\""+elStringContent+"\",color:\""+BlackMagick.colorHexFromDec(elStringContent)+"\"}").text();
-        //         return errorText("Invalid color: "+elStringContent);
-        //     }
-        //     return errorText("Invalid color");
-        // }
-        // else if(pi.flag()==PathFlag.ATTRIBUTE) {
-        //     if(el != null && el.getId()==Tag.TAG_COMPOUND) {
-        //         ItemStack stack = BlackMagick.itemFromString("{id:stone,components:{attribute_modifiers:{modifiers:["+BlackMagick.nbtToSnbt(el)+"]}}}");
-        //         if(!stack.isEmpty()) {
-        //             List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
-        //             if(textList.size()>3)
-        //                 return Component.nullToEmpty(textList.get(2).getString()).copy().append(Component.nullToEmpty(" ")).append(textList.get(3));
-        //         }
-        //     }
-        //     return errorText("Invalid attribute");
-        // }
-        // else if(pi.type()==PathType.BANNER) {
-        //     if(el != null && el.getId()==Tag.TAG_COMPOUND) {
-        //         ItemStack stack = BlackMagick.itemFromString("{id:white_banner,components:{banner_patterns:["+BlackMagick.nbtToSnbt(el)+"]}}");
-        //         if(!stack.isEmpty()) {
-        //             List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
-        //             if(textList.size()>1)
-        //                 return Component.nullToEmpty(textList.get(1).getString());
-        //         }
-        //     }
-        //     return errorText("Invalid pattern");
-        // }
-        // else if(pi.flag()==PathFlag.EFFECT) {
-        //     if(el != null && el.getId()==Tag.TAG_COMPOUND) {
-        //         ItemStack stack = BlackMagick.itemFromString("{id:potion,components:{potion_contents:{custom_effects:["+BlackMagick.nbtToSnbt(el)+"]}}}");
-        //         if(!stack.isEmpty()) {
-        //             List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
-        //             if(textList.size()>1 && !textList.get(1).getString().equals("No Effects"))
-        //                 return textList.get(1);
-        //         }
-        //     }
-        //     return errorText("Invalid effect");
-        // }
-        // else if(pi.flag()==PathFlag.PROBABILITY_EFFECT) {
-        //     if(el != null && el.getId()==Tag.TAG_COMPOUND) {
-        //         CompoundTag nbt = (CompoundTag)el;
-        //         if(nbt.getCompound("effect").isPresent()) {
-        //             ItemStack stack = BlackMagick.itemFromString("{id:potion,components:{potion_contents:{custom_effects:["+BlackMagick.nbtToSnbt(nbt.getCompoundOrEmpty("effect"))+"]}}}");
-        //             if(!stack.isEmpty()) {
-        //                 List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
-        //                 if(textList.size()>1 && !textList.get(1).getString().equals("No Effects"))
-        //                     return textList.get(1);
-        //             }
-        //         }
-        //     }
-        //     return errorText("Invalid effect");
-        // }
-        // else if(pi.flag()==PathFlag.FIREWORK) {
-        //     if(el != null && el.getId()==Tag.TAG_COMPOUND) {
-        //         ItemStack stack = BlackMagick.itemFromString("{id:firework_star,components:{firework_explosion:"+BlackMagick.nbtToSnbt(el)+"}}");
-        //         if(!stack.isEmpty()) {
-        //             List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
-        //             if(textList.size()>1) {
-        //                 MutableComponent btnLbl = Component.empty();
-        //                 for(int i=1; i<textList.size(); i++) {
-        //                     if(i>1)
-        //                         btnLbl.append(Component.nullToEmpty(", "));
-        //                     btnLbl.append(textList.get(i));
-        //                 }
-        //                 return Component.nullToEmpty(btnLbl.getString());
-        //             }
-        //         }
-        //     }
-        //     return errorText("Invalid explosion");
-        // }
+        }
+        return null;
     }
 
     private Component getKeyButtonTooltip(PathNode node, PathInfo pi) {
@@ -1582,8 +1650,15 @@ public class ItemBuilder extends GenericScreen {
     private Component getPathBoxTooltip() {
         MutableComponent pathTt = nbtEdit.fullPath().isEmpty() ? grayWhiteText("Path: ","{}")
             : grayWhiteText("Path:\n",nbtEdit.fullPath());
-        pathTt = pathTt.append(grayWhiteText("\n\nValue:\n")).append(nbtEdit.getPathChanges());
         appendPathInfo(pathTt, nbtEdit.pi());
+
+        pathTt = pathTt.append(grayWhiteText("\n\nCurrent element:"));
+
+        Component flagText = getSpecialElementPreview(nbtEdit.getEditElement(), nbtEdit.pi().getFlag(), true);
+        if(flagText != null)
+            pathTt = pathTt.append("\n\n").append(flagText);
+
+        pathTt = pathTt.append(grayWhiteText("\n\nNBT:\n",nbtEdit.getPathChanges()));
 
         return pathTt;
     }
@@ -1601,7 +1676,9 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
             if(pi.getInfo() != null)
-                currentText = currentText.append(grayWhiteText("\n\nInfo:\n")).append(Component.empty().append(pi.getInfo()).withStyle(ChatFormatting.GRAY));
+                currentText = currentText.append(grayWhiteText("\n\nInfo:\n",pi.getInfo()));
+            if(pi.getUnsetInfo() != null)
+                currentText = currentText.append(grayWhiteText("\n\nWhen unset:\n",pi.getUnsetInfo()));
         }
     }
 
@@ -1981,7 +2058,7 @@ public class ItemBuilder extends GenericScreen {
                                 if(!item.isEmpty() && inpError == null) {
                                     btnGive.active = true;
                                     btnGive.setTooltip(Tooltip.create(
-                                        grayWhiteText("Set current item to:\n").append(BlackMagick.nbtToColorfulText(BlackMagick.itemToNbtStorage(item)))));
+                                        grayWhiteText("Set current item to:\n",BlackMagick.nbtToColorfulText(BlackMagick.itemToNbtStorage(item)))));
                                 }
                             }
                             else if(((inp.startsWith("\"{") && inp.endsWith("}\"")) || (inp.startsWith("'{") && inp.endsWith("}'")))
@@ -1998,7 +2075,7 @@ public class ItemBuilder extends GenericScreen {
                                 if(!item.isEmpty() && inpError == null) {
                                     btnGive.active = true;
                                     btnGive.setTooltip(Tooltip.create(
-                                        grayWhiteText("Set current item to:\n").append(BlackMagick.nbtToColorfulText(BlackMagick.itemToNbtStorage(item)))));
+                                        grayWhiteText("Set current item to:\n",BlackMagick.nbtToColorfulText(BlackMagick.itemToNbtStorage(item)))));
                                 }
                             }
                             else {
@@ -2026,7 +2103,7 @@ public class ItemBuilder extends GenericScreen {
                                     item.setCount(count);
                                     btnGive.active = true;
                                     btnGive.setTooltip(Tooltip.create(
-                                        grayWhiteText("Set current item to:\n").append(BlackMagick.nbtToColorfulText(BlackMagick.itemToNbtStorage(item)))));
+                                        grayWhiteText("Set current item to:\n",BlackMagick.nbtToColorfulText(BlackMagick.itemToNbtStorage(item)))));
                                 }
                             }
 
@@ -2716,6 +2793,11 @@ public class ItemBuilder extends GenericScreen {
                             addTabWidgetScroll(tabNum, RowWidgetElement.compoundTemplateElement(this, thisCompound, k));
                     }
 
+                    if(nbtEdit.pi().showCompoundNewKeyRow()) {
+                        addTabWidgetScroll(tabNum, new RowWidget("Set Key"));
+                        addTabWidgetScroll(tabNum, RowWidgetElement.customCompoundKey(this, thisCompound, true));
+                    }
+
                     addTabWidgetScroll(tabNum, new RowWidget());
 
                 }
@@ -2748,7 +2830,7 @@ public class ItemBuilder extends GenericScreen {
                                 addTabWidgetScroll(tabNum, new RowWidgetElement(thisCompound, k));
 
                             addTabWidgetScroll(tabNum, new RowWidget("Set Key"));
-                            addTabWidgetScroll(tabNum, RowWidgetElement.customCompoundKey(this, thisCompound));
+                            addTabWidgetScroll(tabNum, RowWidgetElement.customCompoundKey(this, thisCompound, false));
 
                             addTabWidgetScroll(tabNum, new RowWidget());
 
@@ -2783,6 +2865,7 @@ public class ItemBuilder extends GenericScreen {
 
                 MultiLineEditBox elementTxt = new MultiLineEditBox(minecraft.font, 0, 0, ROW_WIDTH, ROW_HEIGHT*6,
                     Component.nullToEmpty(""), Component.nullToEmpty(""));
+                final PathFlag pathFlag = nbtEdit.pi().getFlag();
                 elementTxt.setValueListener(value -> {
                     if(widgetCacheTest(WidgetCacheType.NBT_EDIT_SNBT_ADD_BTN)) {
                         Button addBtn = (Button)widgetCacheGet(WidgetCacheType.NBT_EDIT_SNBT_ADD_BTN);
@@ -2801,7 +2884,7 @@ public class ItemBuilder extends GenericScreen {
                             }
                             else {
                                 addBtn.active = true;
-                                addBtn.setTooltip(Tooltip.create(grayWhiteText("Set value:\n").append(BlackMagick.nbtToColorfulText(el))));
+                                addBtn.setTooltip(Tooltip.create(grayWhiteText("Set value:").append(getElementTooltipInfo(el,pathFlag))));
                             }
                         }
                     }
@@ -3159,9 +3242,9 @@ public class ItemBuilder extends GenericScreen {
             pathTxt.setTooltip(Tooltip.create(getPathBoxTooltip()));
 
             if(nbtEdit.unsaved())
-                cancelBtn.setTooltip(Tooltip.create(grayWhiteText("Revert to:\n").append(nbtEdit.getRevertItemChanges())));
+                cancelBtn.setTooltip(Tooltip.create(grayWhiteText("Revert to:\n",nbtEdit.getRevertItemChanges())));
             else
-                cancelBtn.setTooltip(Tooltip.create(grayWhiteText("Keep unchanged:\n").append(nbtEdit.getRevertItemChanges())));
+                cancelBtn.setTooltip(Tooltip.create(grayWhiteText("Keep unchanged:\n",nbtEdit.getRevertItemChanges())));
 
             if(inpError == null)
                 setErrorMsg(BlackMagick.getItemCompoundErrors(BlackMagick.nbtToSnbt(nbtEdit.current()),inpError));
@@ -3172,7 +3255,7 @@ public class ItemBuilder extends GenericScreen {
                 saveBtn.active = false;
             }
             else if(nbtEdit.current() != null && !nbtEdit.getItem().isEmpty()) {
-                Component tempText = grayWhiteText("Set item:\n").append(nbtEdit.getNewItemDiff());
+                Component tempText = grayWhiteText("Set item:\n",nbtEdit.getNewItemDiff());
                 if(minecraft.player.getAbilities().instabuild) {
                     saveBtn.setTooltip(Tooltip.create(tempText));
                 }
@@ -3843,6 +3926,7 @@ public class ItemBuilder extends GenericScreen {
 
             PathInfo pi = PathHelper.getItemPath(itemStack, pathNodes);
             Component btnTt = getKeyButtonTooltip(PathNode.of(key), pi);
+            final PathFlag pathFlag = pi.getFlag();
 
             Tag startEl = BlackMagick.getNbtPath(itemStack,path);
 
@@ -3917,7 +4001,7 @@ public class ItemBuilder extends GenericScreen {
                 }).size(20,WID_HEIGHT).build()};
                 this.btnX = new int[]{(ROW_LEFT_SCROLL+ROW_LEFT_ICON),(ROW_LEFT_SCROLL+ROW_LEFT_ICON)+size+5,ROW_RIGHT_SCROLL-20};
                 if(startEl!=null) {
-                    this.btns[1].setTooltip(Tooltip.create(grayWhiteText("Edit component:\n").append(BlackMagick.nbtToColorfulText(startEl))));
+                    this.btns[1].setTooltip(Tooltip.create(grayWhiteText("Edit component:").append(getElementTooltipInfo(startEl,pathFlag))));
                     this.btns[1].setTooltipDelay(TOOLTIP_DELAY);
                 }
                 else
@@ -4070,7 +4154,7 @@ public class ItemBuilder extends GenericScreen {
                                     ((Button)getPosWidget(2)).setTooltip(Tooltip.create(errorText("Invalid component")));
                                 }
                                 else {
-                                    Component tempLbl = grayWhiteText("Set "+keyType+" to:\n").append(BlackMagick.nbtToColorfulText(el));
+                                    Component tempLbl = grayWhiteText("Set "+keyType+" to:").append(getElementTooltipInfo(el,pathFlag));
                                     if(minecraft.player.getAbilities().instabuild) {
                                         ((Button)getPosWidget(2)).setTooltip(Tooltip.create(tempLbl));
                                         ((Button)getPosWidget(2)).active = true;
@@ -4108,7 +4192,7 @@ public class ItemBuilder extends GenericScreen {
                         }
                     });
                     if(startEl != null) {
-                        w.setTooltip(Tooltip.create(grayWhiteText("Edit component:\n").append(BlackMagick.nbtToColorfulText(startEl))));
+                        w.setTooltip(Tooltip.create(grayWhiteText("Edit component:").append(getElementTooltipInfo(startEl,pathFlag))));
                         w.setTooltipDelay(TOOLTIP_DELAY);
                     }
                     addPosWidget(w, ROW_LEFT_SCROLL+ROW_LEFT_ICON+5+size, 0);
@@ -4187,6 +4271,7 @@ public class ItemBuilder extends GenericScreen {
             NbtEdit thisNbtEdit = nbtEdit.addPath(PathNode.of(key));
             String fullPath = thisNbtEdit.fullPath();
             PathInfo pi = nbtEdit.pi().getCompoundKeyInfo(baseCompound, key);
+            final PathFlag pathFlag = pi.getFlag();
 
             Tag currentEl = thisNbtEdit.getEditElement();
             final String currentVal = BlackMagick.nbtToSnbt(currentEl);
@@ -4212,7 +4297,7 @@ public class ItemBuilder extends GenericScreen {
                     }).size(20,WID_HEIGHT).build()
                 };
                 this.btnX = new int[]{ROW_LEFT_SCROLL,ROW_LEFT_SCROLL+size+5,ROW_RIGHT_SCROLL-20};
-                this.btns[1].setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                this.btns[1].setTooltip(Tooltip.create(grayWhiteText("Edit element:").append(getElementTooltipInfo(currentEl,pathFlag))));
                 this.btns[1].setTooltipDelay(TOOLTIP_DELAY);
                 this.btns[2].setTooltip(Tooltip.create(Component.nullToEmpty("Delete")));
             }
@@ -4245,14 +4330,14 @@ public class ItemBuilder extends GenericScreen {
                             else {
                                 ((Button)getPosWidget(2)).active = true;
                                 ((Button)getPosWidget(2)).setTooltip(Tooltip.create(grayWhiteText(
-                                    "Set key ",BlackMagick.validCompoundKey(key)," to:\n").append(BlackMagick.nbtToColorfulText(el))));
+                                    "Set key ",BlackMagick.validCompoundKey(key)," to:").append(getElementTooltipInfo(el,pathFlag))));
                                 
                             }
 
                             suggsOnChanged(w, baseSuggestions, currentVal);
                         }
                     });
-                    w.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                    w.setTooltip(Tooltip.create(grayWhiteText("Edit element:").append(getElementTooltipInfo(currentEl,pathFlag))));
                     w.setTooltipDelay(TOOLTIP_DELAY);
                     addPosWidget(w, ROW_LEFT_SCROLL+WID_SPACE+size, 0);
                 }
@@ -4288,6 +4373,7 @@ public class ItemBuilder extends GenericScreen {
             NbtEdit thisNbtEdit = context.nbtEdit.addPath(PathNode.of(key));
             String fullPath = thisNbtEdit.fullPath();
             PathInfo pi = context.nbtEdit.pi().getCompoundKeyInfo(baseCompound, key);
+            final PathFlag pathFlag = pi.getFlag();
 
             Tag currentEl = thisNbtEdit.getEditElement();
 
@@ -4334,11 +4420,11 @@ public class ItemBuilder extends GenericScreen {
 
                 row.addPosWidget(context.new PosWidget(keyBtn, ROW_LEFT_SCROLL, 0));
                 {
-                    Button w = Button.builder(context.getComplexButtonText(currentEl, pi.getFlag()), btn -> {
+                    Button w = Button.builder(getComplexButtonText(currentEl, pi.getFlag()), btn -> {
                         context.createBlankTabNbtEdit(context.nbtEdit.addPath(PathNode.of(key)));
                     }).size(ROW_WIDTH-20-size-WID_SPACE,WID_HEIGHT).build();
                     if(currentEl!=null) {
-                        w.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                        w.setTooltip(Tooltip.create(grayWhiteText("Edit element:").append(getElementTooltipInfo(currentEl,pathFlag))));
                         w.setTooltipDelay(TOOLTIP_DELAY);
                     }
                     else
@@ -4451,14 +4537,14 @@ public class ItemBuilder extends GenericScreen {
                             else {
                                 ((Button)row.getPosWidget(2)).active = true;
                                 ((Button)row.getPosWidget(2)).setTooltip(Tooltip.create(grayWhiteText(
-                                    "Set key ",BlackMagick.validCompoundKey(key)," to:\n").append(BlackMagick.nbtToColorfulText(el))));
+                                    "Set key ",BlackMagick.validCompoundKey(key)," to:").append(getElementTooltipInfo(el,pathFlag))));
                             }
 
                             context.suggsOnChanged(w, baseSuggestions, startVal);
                         }
                     });
                     if(currentEl != null) {
-                        w.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                        w.setTooltip(Tooltip.create(grayWhiteText("Edit element:").append(getElementTooltipInfo(currentEl,pathFlag))));
                         w.setTooltipDelay(TOOLTIP_DELAY);
                     }
                     row.addPosWidget(w, ROW_LEFT_SCROLL+5+size, 0);
@@ -4490,7 +4576,7 @@ public class ItemBuilder extends GenericScreen {
             return row;
         }
 
-        public static RowWidgetElement customCompoundKey(ItemBuilder context, CompoundTag baseCompound) {
+        public static RowWidgetElement customCompoundKey(ItemBuilder context, CompoundTag baseCompound, boolean isTemplate) {//TODO use isTemplate for isString
             RowWidgetElement row = context.new RowWidgetElement();
 
             int size = 70;
@@ -4529,7 +4615,7 @@ public class ItemBuilder extends GenericScreen {
                                 else {
                                     ((Button)row.getPosWidget(2)).active = true;
                                     ((Button)row.getPosWidget(2)).setTooltip(Tooltip.create(grayWhiteText(
-                                        "Set key ",BlackMagick.validCompoundKey(key)," to:\n").append(BlackMagick.nbtToColorfulText(el))));
+                                        "Set key ",BlackMagick.validCompoundKey(key)," to:").append(getElementTooltipInfo(el,row.cachePathInfo.getFlag()))));
                                 }
                             }
                         }
@@ -4568,7 +4654,7 @@ public class ItemBuilder extends GenericScreen {
                                 else {
                                     ((Button)row.getPosWidget(2)).active = true;
                                     ((Button)row.getPosWidget(2)).setTooltip(Tooltip.create(grayWhiteText(
-                                        "Set key ",BlackMagick.validCompoundKey(key)," to:\n").append(BlackMagick.nbtToColorfulText(el))));
+                                        "Set key ",BlackMagick.validCompoundKey(key)," to:").append(getElementTooltipInfo(el,row.cachePathInfo.getFlag()))));
                                 }
                             }
                         }
@@ -4605,6 +4691,7 @@ public class ItemBuilder extends GenericScreen {
             PathInfo pi = context.nbtEdit.pi().getListIndexInfo(baseList.size());
             boolean isString = isTemplate && pi.getDefaultPathType()==PathType.STRING;
             String[] baseSuggestions = isString ? pi.getSuggs().getArray() : pi.getSuggs().getArraySnbt();
+            final PathFlag pathFlag = pi.getFlag();
 
             {
                 EditBox w = new EditBox(context.minecraft.font,0,0,
@@ -4628,7 +4715,7 @@ public class ItemBuilder extends GenericScreen {
                                 ((EditBox)row.getPosWidget(0)).setTextColor(TEXT_COLOR);
                                 ((Button)row.getPosWidget(1)).active = true;
                                 ((Button)row.getPosWidget(1)).setTooltip(Tooltip.create(grayWhiteText(
-                                    "Append value:\n").append(BlackMagick.nbtToColorfulText(el))));
+                                    "Append value:").append(getElementTooltipInfo(el,pathFlag))));
                             }
                         }
 
@@ -4664,6 +4751,7 @@ public class ItemBuilder extends GenericScreen {
             NbtEdit thisNbtEdit = context.nbtEdit.addPath(PathNode.of(index));
             String fullPath = thisNbtEdit.fullPath();
             PathInfo pi = context.nbtEdit.pi().getListIndexInfo(index);
+            final PathFlag pathFlag = pi.getFlag();
 
             Tag currentEl = thisNbtEdit.getEditElement();
 
@@ -4694,10 +4782,10 @@ public class ItemBuilder extends GenericScreen {
                     row.addPosWidget(w, ROW_LEFT_SCROLL+keyBtnSize+WID_SPACE+listElWidth-btnSize, 0);
                 }
                 else if(currentEl.getId()==Tag.TAG_COMPOUND || currentEl.getId()==Tag.TAG_LIST) {
-                    Button w = Button.builder(context.getComplexButtonText(currentEl, pi.getFlag()), btn -> {
+                    Button w = Button.builder(getComplexButtonText(currentEl, pi.getFlag()), btn -> {
                         context.createBlankTabNbtEdit(context.nbtEdit.addPath(PathNode.of(index)));
                     }).size(listElWidth,WID_HEIGHT).build();
-                    w.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                    w.setTooltip(Tooltip.create(grayWhiteText("Edit element:").append(getElementTooltipInfo(currentEl,pathFlag))));
                     w.setTooltipDelay(TOOLTIP_DELAY);
                     row.addPosWidget(w, ROW_LEFT_SCROLL+keyBtnSize+WID_SPACE, 0);
                 }
@@ -4765,13 +4853,13 @@ public class ItemBuilder extends GenericScreen {
                             else {
                                 ((Button)row.getPosWidget(btnIndex)).active = true;
                                 ((Button)row.getPosWidget(btnIndex)).setTooltip(Tooltip.create(grayWhiteText(
-                                    "Set index ",""+index," to:\n").append(BlackMagick.nbtToColorfulText(el))));
+                                    "Set index ",""+index," to:").append(getElementTooltipInfo(el,pathFlag))));
                             }
 
                             context.suggsOnChanged(txtElement, baseSuggestions, startVal);
                         }
                     });
-                    txtElement.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                    txtElement.setTooltip(Tooltip.create(grayWhiteText("Edit element:").append(getElementTooltipInfo(currentEl,pathFlag))));
                     txtElement.setTooltipDelay(TOOLTIP_DELAY);
                     row.addPosWidget(txtElement, ROW_LEFT_SCROLL+keyBtnSize+WID_SPACE, 0);
 
@@ -4834,6 +4922,7 @@ public class ItemBuilder extends GenericScreen {
 
             PathInfo pi = context.nbtEdit.pi();
             String[] baseSuggestions = pi.getSuggs().getArraySnbt();
+            final PathFlag pathFlag = pi.getFlag();
 
             EditBox elementTxt = new EditBox(context.minecraft.font,0,0,
                 ROW_WIDTH-20-(currentEl==null ? 0 : 20), WID_HEIGHT, Component.nullToEmpty(""));
@@ -4858,7 +4947,7 @@ public class ItemBuilder extends GenericScreen {
                         }
                         else {
                             ((Button)row.getPosWidget(1)).active = true;
-                            ((Button)row.getPosWidget(1)).setTooltip(Tooltip.create(grayWhiteText("Set value:\n").append(BlackMagick.nbtToColorfulText(el))));
+                            ((Button)row.getPosWidget(1)).setTooltip(Tooltip.create(grayWhiteText("Set value:").append(getElementTooltipInfo(el,pathFlag))));
                         }
                     }
 
@@ -4899,6 +4988,7 @@ public class ItemBuilder extends GenericScreen {
             NbtEdit thisNbtEdit = nbtEdit.addPath(PathNode.of(index));
             String fullPath = thisNbtEdit.fullPath();
             PathInfo pi = nbtEdit.pi().getListIndexInfo(index);
+            final PathFlag pathFlag = pi.getFlag();
 
             Tag currentEl = thisNbtEdit.getEditElement();
             final String currentVal = BlackMagick.nbtToSnbt(currentEl);
@@ -4923,7 +5013,7 @@ public class ItemBuilder extends GenericScreen {
                     Button w = Button.builder(getComplexButtonText(currentEl), btn -> {
                         createBlankTabNbtEdit(nbtEdit.addPath(PathNode.of(index)));
                     }).size(listElWidth,WID_HEIGHT).build();
-                    w.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                    w.setTooltip(Tooltip.create(grayWhiteText("Edit element:").append(getElementTooltipInfo(currentEl,pathFlag))));
                     w.setTooltipDelay(TOOLTIP_DELAY);
                     addPosWidget(w, ROW_LEFT_SCROLL+keyBtnSize+WID_SPACE, 0);
                 }
@@ -4955,13 +5045,13 @@ public class ItemBuilder extends GenericScreen {
                             else {
                                 ((Button)getPosWidget(btnIndex)).active = true;
                                 ((Button)getPosWidget(btnIndex)).setTooltip(Tooltip.create(grayWhiteText(
-                                    "Set index ",""+index," to:\n").append(BlackMagick.nbtToColorfulText(el))));
+                                    "Set index ",""+index," to:").append(getElementTooltipInfo(el,pathFlag))));
                             }
 
                             suggsOnChanged(txtElement, baseSuggestions, currentVal);
                         }
                     });
-                    txtElement.setTooltip(Tooltip.create(grayWhiteText("Edit element:\n").append(BlackMagick.nbtToColorfulText(currentEl))));
+                    txtElement.setTooltip(Tooltip.create(grayWhiteText("Edit element:").append(getElementTooltipInfo(currentEl,pathFlag))));
                     txtElement.setTooltipDelay(TOOLTIP_DELAY);
                     addPosWidget(txtElement, ROW_LEFT_SCROLL+keyBtnSize+WID_SPACE, 0);
 

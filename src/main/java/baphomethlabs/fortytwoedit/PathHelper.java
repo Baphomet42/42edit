@@ -6,28 +6,24 @@ import java.util.Set;
 import org.apache.commons.compress.utils.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import baphomethlabs.fortytwoedit.SuggestionHelper.KeyGetter;
 import baphomethlabs.fortytwoedit.SuggestionHelper.SuggestionGetter;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.FloatTag;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.component.MapItemColor;
 
-/**
- * <p> Class containing static methods related to nbt data structures </p>
- * <p> These often change every update and must be kept up to date manually </p>
- * <p> Check the following for help: </p>
- * <ul>
- *  <li> {@link net.minecraft.core.component.DataComponents} </li>
- *  <li> https://minecraft.wiki/w/Item_format </li>
- *  <li> https://minecraft.wiki/w/Entity_format </li>
- *  <li> https://minecraft.wiki/w/Chunk_format#Block_entity_format </li>
- * </ul>
- */
 public class PathHelper {
 
     public static PathInfo getItemPath(Tag element, PathNode... path) {
@@ -48,6 +44,21 @@ public class PathHelper {
         return PathInfo.EMPTY;
     }
 
+    /**
+     * <p> These often change every update and must be kept up to date manually </p>
+     * <p> Check the following for help: </p>
+     * <ul>
+     *  <li> {@link net.minecraft.core.component.DataComponents} </li>
+     *  <li> https://minecraft.wiki/w/Item_format </li>
+     *  <li> https://minecraft.wiki/w/Entity_format </li>
+     *  <li> https://minecraft.wiki/w/Chunk_format#Block_entity_format </li>
+     * </ul>
+     * <p> Helpful search terms to find hardcoded data: </p>
+     * <ul>
+     *  <li> `newInline(` </li>
+     *  <li> `newInlineSnbt(` </li>
+     * </ul>
+     */
     private static void buildPathInfos() {
         PATH_INFO_REF_MAP.clear();
 
@@ -67,16 +78,16 @@ public class PathHelper {
                     "amount", PathInfo.create(DataType.ElementLiteral.of(NbtType.DOUBLE)).getter(),
                     "operation", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("add_value","add_multiplied_base","add_multiplied_total"))).setInfo("add_value: base + amount1 + amount2\n\nadd_multiplied_base: base * (1 + amount1 + amount2)\n\nadd_multiplied_total: base * (1 + amount1) * (1 + amount2)").getter()
                     ),Map.of(
-                    "slot", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_ATTRIBUTE_MODIFIER_SLOT)).setInfo("Defaults to \"any\"").getter()
-                ))).getter()
+                    "slot", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_ATTRIBUTE_MODIFIER_SLOT)).setUnsetInfo(StringTag.valueOf("any")).getter()
+                ))).setFlag(PathFlag.ATTRIBUTE_MODIFIER).getter()
             )).setIcon(Items.DIAMOND_SWORD))),
 
             Map.entry("minecraft:banner_patterns", registerPathInfo("components/banner_patterns", PathInfo.create(DataType.ListUnordered.of(
                 PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
                     "color", PathInfoGetter.of("dye_color"),
                     "pattern", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_BANNER_PATTERN)).getter()
-                ))).getter()
-            )).setIcon(Items.WHITE_BANNER))),
+                ))).setFlag(PathFlag.BANNER_PATTERN).getter()
+            )).setIcon(Items.LIGHT_GRAY_BANNER))),
 
             Map.entry("minecraft:base_color", registerPathInfo("components/base_color", PathInfo.copyOf("dye_color").setIcon(Items.SHIELD).setInfo("Used for the banner color of a shield"))),
 
@@ -105,8 +116,8 @@ public class PathHelper {
                         "base", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).getter(),
                         "factor", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).getter()
                         ),Map.of(
-                        "types", PathInfo.copyOf("damage_type_id_tag_or_list").setInfo("Defaults to all damage types").getter(),
-                        "horizontal_blocking_angle", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("90.0f"))).setInfo("Defaults to 90.0f").getter()
+                        "types", PathInfo.copyOf("damage_type_id_tag_or_list").setUnsetInfo("Applies to all damage types").getter(),
+                        "horizontal_blocking_angle", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("90.0f"))).setUnsetInfo(FloatTag.valueOf(90f)).getter()
                     ))).getter()
                 )).getter(),
                 "item_damage", PathInfo.create(DataType.CompoundStructured.allRequired(Map.ofEntries(
@@ -145,10 +156,10 @@ public class PathHelper {
             )).setIcon(Items.CROSSBOW))),
 
             Map.entry("minecraft:consumable", registerPathInfo("components/consumable", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
-                "consume_seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("1.6f"))).setInfo("Defaults to 1.6f").getter(),
-                "animation", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_USE_ACTION)).setInfo("Defaults to \"eat\"").getter(),
-                "sound", PathInfo.copyOf("sound_event_or_definition").setInfo("Defaults to \"minecraft:entity.generic.eat\"").getter(),
-                "has_consume_particles", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("Defaults to true").getter(),
+                "consume_seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("1.6f"))).setUnsetInfo(FloatTag.valueOf(1.6f)).getter(),
+                "animation", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_USE_ACTION)).setUnsetInfo(StringTag.valueOf("eat")).getter(),
+                "sound", PathInfo.copyOf("sound_event_or_definition").setUnsetInfo(StringTag.valueOf("minecraft:entity.generic.eat")).getter(),
+                "has_consume_particles", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter(),
                 "on_consume_effects", PathInfo.create().getter()
             ))).setIcon(Items.GOLDEN_APPLE))),
 
@@ -165,7 +176,7 @@ public class PathHelper {
                 "seed", PathInfo.create(DataType.ElementLiteral.of(NbtType.LONG)).getter()
             ))).setIcon(Items.CHEST))),
 
-            Map.entry("minecraft:custom_data", registerPathInfo("components/custom_data", PathInfo.create().setIcon(Items.COMMAND_BLOCK))),//to_do compound or stringified compound
+            Map.entry("minecraft:custom_data", registerPathInfo("components/custom_data", PathInfo.create(DataType.CompoundUnstructured.create()).setInfo("Compound containing unstructured NBT").setIcon(Items.COMMAND_BLOCK))),//to_do compound or stringified compound
 
             Map.entry("minecraft:custom_model_data", registerPathInfo("components/custom_model_data", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
                 "floats", PathInfo.create(DataType.ListUnordered.of(
@@ -215,13 +226,13 @@ public class PathHelper {
             Map.entry("minecraft:equippable", registerPathInfo("components/equippable", PathInfo.create(DataType.CompoundStructured.of(Map.of(
                 "slot", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_EQUIPMENT_SLOT)).getter()
                 ),Map.of(
-                "equip_sound", PathInfo.copyOf("sound_event_or_definition").setInfo("Defaults to \"minecraft:item.armor.equip_generic\"").getter(),
+                "equip_sound", PathInfo.copyOf("sound_event_or_definition").setUnsetInfo(StringTag.valueOf("minecraft:item.armor.equip_generic")).getter(),
                 "asset_id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_EQUIPMENT)).setInfo("Resource location of an equipment model at `assets/<namespace>/equipment/<id>`").getter(),
-                "allowed_entities", PathInfo.copyOf("entity_id_tag_or_list").setInfo("Defaults to all entities").getter(),
-                "dispensable", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("Defaults to true").getter(),
-                "swappable", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("If the item can be equipped when interacting\n\nDefaults to true").getter(),
-                "damage_on_hurt", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("Defaults to true").getter(),
-                "equip_on_interact", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("If the item can be equipped on a mob when interacting\n\nDefaults to true").getter(),
+                "allowed_entities", PathInfo.copyOf("entity_id_tag_or_list").setUnsetInfo("Applies to all entity types").getter(),
+                "dispensable", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter(),
+                "swappable", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("If the item can be equipped when interacting").setUnsetInfo(true).getter(),
+                "damage_on_hurt", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter(),
+                "equip_on_interact", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("If the item can be equipped on a mob when interacting").setUnsetInfo(true).getter(),
                 "camera_overlay", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Resource location of a texture at `assets/<namespace>/textures/<id>`").getter()
             ))).setIcon(Items.DIAMOND_CHESTPLATE))),
 
@@ -242,7 +253,7 @@ public class PathHelper {
                 "explosions", PathInfo.create(DataType.ListUnordered.of(
                     PathInfoGetter.of("components/firework_explosion")
                 )).getter(),
-                "flight_duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.BYTE,SuggestionGetter.newInlineSnbt("1b"))).setInfo("Byte representing a value of 0-255\n\nDefaults to 1b").getter()
+                "flight_duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.BYTE,SuggestionGetter.newInlineSnbt("1b"))).setInfo("Byte representing a value of 0-255").setUnsetInfo(ByteTag.valueOf((byte)1)).getter()
             ))).setIcon(Items.FIREWORK_ROCKET))),
 
             Map.entry("minecraft:food", registerPathInfo("components/food", PathInfo.create(DataType.CompoundStructured.of(Map.of(
@@ -290,14 +301,14 @@ public class PathHelper {
                     "pos", PathInfoGetter.of("pos_int_array"),
                     "dimension", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("overworld","the_nether","the_end"))).getter()
                 ))).getter(),
-                "tracked", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("When `true`, the component is removed if the lodestone is broken\n\nDefaults to true").getter()
+                "tracked", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("When true, the component is removed if the lodestone is broken").setUnsetInfo(true).getter()
             ))).setIcon(Items.COMPASS))),
 
             Map.entry("minecraft:lore", registerPathInfo("components/lore", PathInfo.create(DataType.ListUnordered.of(
                 PathInfo.copyOf("text_component").setFlag(PathFlag.TEXT_COMPONENT_LORE).getter()
             )).setIcon(Items.NAME_TAG))),
 
-            Map.entry("minecraft:map_color", registerPathInfo("components/map_color", PathInfo.copyOf("color_rgb_int").setIcon(Items.FILLED_MAP))),
+            Map.entry("minecraft:map_color", registerPathInfo("components/map_color", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionHelper.LIST_MAP_COLOR)).setUnsetInfo(IntTag.valueOf(MapItemColor.DEFAULT.rgb())).setFlag(PathFlag.COLOR_RGB_INT).setIcon(Items.FILLED_MAP))),
 
             Map.entry("minecraft:map_decorations", registerPathInfo("components/map_decorations", PathInfo.create().setIcon(Items.FILLED_MAP))),
 
@@ -319,23 +330,23 @@ public class PathHelper {
                 DataType.CompoundStructured.allOptional(Map.of(
                     "potion", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_POTION)).setInfo("Potion ID").getter(),
                     "custom_color", PathInfo.copyOf("color_rgb_int").getter(),
-                    "custom_name", PathInfo.create().getter(),
+                    "custom_name", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_POTION_CUSTOM_NAME)).setInfo("Corresponds to the translation key\n`<default item translation key>.effect.<custom_name>`\n\nOnly used for the following items:\n  minecraft:potion\n  minecraft:splash_potion\n  minecraft:lingering_potion\n  minecraft:tipped_arrow").getter(),
                     "custom_effects", PathInfo.create(DataType.ListUnordered.of(
                         PathInfo.create(DataType.CompoundStructured.of(Map.of(
                             "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_STATUS_EFFECT)).setInfo("Effect ID").getter()
                             ),Map.of(
-                            "amplifier", PathInfo.create(DataType.ElementLiteral.of(NbtType.BYTE,SuggestionGetter.newInlineSnbt("0b"))).setInfo("Byte representing a value of 0-255\n\nDefaults to 0b").getter(),
-                            "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("-1","1"))).setInfo("Duration in ticks, or -1 for infinite\n\nDefaults to 1").getter(),
-                            "ambient", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
-                            "show_particles", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
-                            "show_icon", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter()
+                            "amplifier", PathInfo.create(DataType.ElementLiteral.of(NbtType.BYTE,SuggestionGetter.newInlineSnbt("0b"))).setInfo("Byte representing a value of 0-255").setUnsetInfo(ByteTag.valueOf((byte)0)).getter(),
+                            "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("-1","1"))).setInfo("Duration in ticks, or -1 for infinite").setUnsetInfo(IntTag.valueOf(1)).getter(),
+                            "ambient", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).getter(),
+                            "show_particles", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter(),
+                            "show_icon", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter()
                         ))).getter()
                     )).getter()
                 )),
                 DataType.ElementLiteral.of(NbtType.STRING)
             ).setIcon(Items.POTION))),
 
-            Map.entry("minecraft:potion_duration_scale", registerPathInfo("components/potion_duration_scale", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.25f","1.0f"))).setInfo("Lingering potions use 0.25f\n\nDefaults to 1.0f").setIcon(Items.LINGERING_POTION))),
+            Map.entry("minecraft:potion_duration_scale", registerPathInfo("components/potion_duration_scale", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.25f","1.0f"))).setInfo("Lingering potions use 0.25f").setUnsetInfo(FloatTag.valueOf(1f)).setIcon(Items.LINGERING_POTION))),
 
             Map.entry("minecraft:profile", registerPathInfo("components/profile", PathInfo.create(
                 DataType.CompoundStructured.allOptional(Map.of(
@@ -357,7 +368,13 @@ public class PathHelper {
 
             Map.entry("minecraft:provides_trim_material", registerPathInfo("components/provides_trim_material", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_TRIM_MATERIAL)).setIcon(Items.SMITHING_TABLE))),
 
-            Map.entry("minecraft:rarity", registerPathInfo("components/rarity", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("common","uncommon","rare","epic"))).setInfo(Component.nullToEmpty("Used for item name color:\n  \u00a7fcommon\n  \u00a7euncommon\n  \u00a7brare\n  \u00a7depic\u00a7r")).setIcon(Items.STONE))),
+            Map.entry("minecraft:rarity", registerPathInfo("components/rarity", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("common","uncommon","rare","epic")))
+                .setInfo(Component.empty().append("Used for item name color:")
+                .append(Component.empty().append("\n  common").withStyle(ChatFormatting.WHITE))
+                .append(Component.empty().append("\n  uncommon").withStyle(ChatFormatting.YELLOW))
+                .append(Component.empty().append("\n  rare").withStyle(ChatFormatting.AQUA))
+                .append(Component.empty().append("\n  epic").withStyle(ChatFormatting.LIGHT_PURPLE))
+                ).setFlag(PathFlag.RARITY).setIcon(Items.STONE))),
 
             Map.entry("minecraft:recipes", registerPathInfo("components/recipes", PathInfo.create(DataType.ListUnordered.of(
                 PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_RECIPE)).getter()
@@ -375,7 +392,7 @@ public class PathHelper {
                 PathInfo.create(DataType.CompoundStructured.of(Map.of(
                     "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_STATUS_EFFECT)).setInfo("Effect ID").getter()
                     ),Map.of(
-                    "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("-1","160"))).setInfo("Duration in ticks, or -1 for infinite\n\nDefaults to 160").getter()
+                    "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("-1","160"))).setInfo("Duration in ticks, or -1 for infinite").setUnsetInfo(IntTag.valueOf(160)).getter()
                 ))).getter()
             )).setIcon(Items.SUSPICIOUS_STEW))),
 
@@ -384,14 +401,14 @@ public class PathHelper {
                     PathInfo.create(DataType.CompoundStructured.of(Map.of(
                         "blocks", PathInfoGetter.of("block_id_tag_or_list")
                         ),Map.of(
-                        "correct_for_drops", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("Defaults to false").getter(),
+                        "correct_for_drops", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).getter(),
                         "speed", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.0f","1.0f"))).setInfo("Overrides default_mining_speed when set").getter()
                     ))).getter()
                 )).getter()
                 ),Map.of(
-                "default_mining_speed", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.0f","1.0f"))).setInfo("Defaults to 1.0f").getter(),
-                "damage_per_block", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0","1",""+Integer.MAX_VALUE))).setInfo("Defaults to 1").getter(),
-                "can_destroy_blocks_in_creative", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("Defaults to true").getter()
+                "default_mining_speed", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.0f","1.0f"))).setUnsetInfo(FloatTag.valueOf(1f)).getter(),
+                "damage_per_block", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0","1",""+Integer.MAX_VALUE))).setUnsetInfo(IntTag.valueOf(1)).getter(),
+                "can_destroy_blocks_in_creative", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter()
             ))).setIcon(Items.DIAMOND_PICKAXE))),
 
             Map.entry("minecraft:tooltip_display", registerPathInfo("components/tooltip_display", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
@@ -413,14 +430,14 @@ public class PathHelper {
             Map.entry("minecraft:use_cooldown", registerPathInfo("components/use_cooldown", PathInfo.create(DataType.CompoundStructured.of(Map.of(
                 "seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).getter()
                 ),Map.of(
-                "cooldown_group", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Resource location of an item ID or a custom identifier\n\nDefaults to the current item ID").getter()
+                "cooldown_group", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Resource location of an item ID or a custom identifier").setUnsetInfo("Current item ID is used").getter()
             ))).setIcon(Items.ENDER_PEARL))),
 
             Map.entry("minecraft:use_remainder", PathInfoGetter.of("item_stack")),
 
             Map.entry("minecraft:weapon", registerPathInfo("components/weapon", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
-                "item_damage_per_attack", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("1"))).setInfo("Defaults to 1").getter(),
-                "disable_blocking_for_seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.0f"))).setInfo("Defaults to 0.0f").getter()
+                "item_damage_per_attack", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("1"))).setUnsetInfo(IntTag.valueOf(1)).getter(),
+                "disable_blocking_for_seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.0f"))).setUnsetInfo(FloatTag.valueOf(0f)).getter()
             ))).setIcon(Items.GOLDEN_SWORD))),
 
             Map.entry("minecraft:writable_book_content", registerPathInfo("components/writable_book_content", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
@@ -523,16 +540,96 @@ public class PathHelper {
 
         registerPathInfo("text_component", PathInfo.create(
             DataType.CompoundStructured.of(Map.of(
-                "text", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).getter()
-                ),Map.of(
-                "color", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_FORMATTING_COLOR)).getter(),
-                "font", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.ASSETS_FONT)).getter(),
-                "bold", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
-                "italic", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
-                "underlined", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
-                "strikethrough", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
-                "obfuscated", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
-                "extra", PathInfo.create(DataType.ListUnordered.of(PathInfoGetter.of("text_component"))).getter()
+                "text", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'text' type - string text").getter(),
+                "keybind", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_KEYBIND)).setInfo("For 'keybind' type - string keybinding ID").getter(),
+                "translate", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_TRANSLATION_KEY)).setInfo("For 'translatable' type - string translation key").getter()
+                ),Map.ofEntries(
+                Map.entry("type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("text","keybind","translatable","score","selector","nbt")))
+                    .setInfo("The text component type to use. If unset, chooses based on the order:\n  text\n  translatable\n  keybind\n  score\n  selector\n  nbt")
+                    .getter()),
+
+                Map.entry("color", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionGetter.newJoined(SuggestionHelper.LIST_FORMATTING_COLOR,SuggestionGetter.newInline("#000000"))))
+                    .setInfo(Component.empty().append("Text color preset or RGB hex like '#000000'\n\nPresets:")
+                    .append(Component.empty().append("\n  aqua").withStyle(ChatFormatting.AQUA))
+                    .append(Component.empty().append("    black").withStyle(ChatFormatting.BLACK))
+                    .append(Component.empty().append("    blue").withStyle(ChatFormatting.BLUE))
+                    .append(Component.empty().append("    dark_aqua").withStyle(ChatFormatting.DARK_AQUA))
+                    .append(Component.empty().append("\n  dark_blue").withStyle(ChatFormatting.DARK_BLUE))
+                    .append(Component.empty().append("    dark_gray").withStyle(ChatFormatting.DARK_GRAY))
+                    .append(Component.empty().append("    dark_green").withStyle(ChatFormatting.DARK_GREEN))
+                    .append(Component.empty().append("    dark_purple").withStyle(ChatFormatting.DARK_PURPLE))
+                    .append(Component.empty().append("\n  dark_red").withStyle(ChatFormatting.DARK_RED))
+                    .append(Component.empty().append("    gold").withStyle(ChatFormatting.GOLD))
+                    .append(Component.empty().append("    gray").withStyle(ChatFormatting.GRAY))
+                    .append(Component.empty().append("    green").withStyle(ChatFormatting.GREEN))
+                    .append(Component.empty().append("\n  light_purple").withStyle(ChatFormatting.LIGHT_PURPLE))
+                    .append(Component.empty().append("    red").withStyle(ChatFormatting.RED))
+                    .append(Component.empty().append("    white").withStyle(ChatFormatting.WHITE))
+                    .append(Component.empty().append("    yellow").withStyle(ChatFormatting.YELLOW))
+                    ).setUnsetInfo("Inherit from parent text").getter()),
+                Map.entry("shadow_color", PathInfo.copyOf("color_argb_int_or_list").getter()),
+                Map.entry("font", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.ASSETS_FONT))
+                    .setInfo(Component.empty().append("Resource location of a font at `assets/<namespace>/font/<id>`\n\nVanilla fonts:")
+                    .append(Component.empty().append("\n  default - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(ResourceLocation.withDefaultNamespace("default")))))
+                    .append(Component.empty().append("\n  uniform - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(ResourceLocation.withDefaultNamespace("uniform")))))
+                    .append(Component.empty().append("\n  alt - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ").withStyle(Style.EMPTY.withFont(ResourceLocation.withDefaultNamespace("alt")))))
+                    .append(Component.empty().append("\n  illageralt - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(ResourceLocation.withDefaultNamespace("illageralt")))))
+                    ).setUnsetInfo("Inherit from parent text").getter()),
+                Map.entry("bold", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN))
+                    .setInfo(Component.empty().append(Component.empty().append("true").withStyle(ChatFormatting.BOLD)).append("\nfalse")).setUnsetInfo("Inherit from parent text").getter()),
+                Map.entry("italic", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN))
+                    .setInfo(Component.empty().append(Component.empty().append("true").withStyle(ChatFormatting.ITALIC)).append("\nfalse")).setUnsetInfo("Inherit from parent text").getter()),
+                Map.entry("underlined", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN))
+                    .setInfo(Component.empty().append(Component.empty().append("true").withStyle(ChatFormatting.UNDERLINE)).append("\nfalse")).setUnsetInfo("Inherit from parent text").getter()),
+                Map.entry("strikethrough", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN))
+                    .setInfo(Component.empty().append(Component.empty().append("true").withStyle(ChatFormatting.STRIKETHROUGH)).append("\nfalse")).setUnsetInfo("Inherit from parent text").getter()),
+                Map.entry("obfuscated", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN))
+                    .setInfo(Component.empty().append(Component.empty().append("true").withStyle(ChatFormatting.OBFUSCATED)).append("\nfalse")).setUnsetInfo("Inherit from parent text").getter()),
+
+                Map.entry("extra", PathInfo.create(DataType.ListUnordered.of(
+                    PathInfoGetter.of("text_component")
+                )).setInfo("List of text components to append and inherit the style of this one").getter()),
+                Map.entry("insertion", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("String to be inserted into chat when shift-clicked (only works in chat)").getter()),
+                Map.entry("click_event", PathInfo.create(DataType.CompoundStructured.of(Map.of(
+                    "action", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("run_command","suggest_command","copy_to_clipboard","open_url","change_page"))).setInfo("Action when clicked (only works in chat and written books)").getter() // open_file isn't listed as it is never represented in NBT and only used internally
+                    ),Map.of(
+                    "command", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'run_command' and 'suggest_command' actions - string command with or without a starting slash\n\nFor 'run_command', it will suggest a command regardless if a slash was used\n\nFor 'suggest_command', it will suggest either a command or a chat depending if a slash was used").getter(),
+                    "value", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'copy_to_clipboard' action - string to copy").getter(),
+                    "url", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'open_url' action - url to open").getter(),
+                    "page", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).setInfo("For 'change_page' action - written book page to jump to").getter()
+                ))).setInfo("Action when clicked (only works in chat and written books)").getter()),
+                Map.entry("hover_event", PathInfo.create(DataType.CompoundStructured.of(Map.of(
+                    "action", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("show_text","show_item","show_entity"))).setInfo("Action when hovered (only works in chat and written books)").getter()
+                    ),Map.of(
+                    "value", PathInfo.copyOf("text_component").setInfo("For 'show_text' action - text component to show").getter(),
+                    "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newJoined(SuggestionHelper.REGISTRY_ITEM,SuggestionHelper.REGISTRY_ENTITY_TYPE))).setInfo("For 'show_item' and 'show_entity' actions - ID of an item or entity type").getter(),
+                    "count", PathInfo.copyOf("item_count").setInfo("For 'show_item' action - int count of the item").getter(),
+                    "components", PathInfo.copyOf("components").setInfo("For 'show_item' action - components on the item").getter(),
+                    "name", PathInfo.copyOf("text_component").setInfo("For 'show_entity' action - custom name of the entity").getter(),
+                    "uuid", PathInfo.create().setInfo("For 'show_entity' action - UUID of the entity (either in string hex form or int array form)").getter()
+                ))).setInfo("Action when hovered (only works in chat and written books)").getter()),
+
+                Map.entry("fallback", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'translatable' type - string to display when translation key not found").getter()),
+                Map.entry("with", PathInfo.create(DataType.ListUnordered.of(
+                    PathInfoGetter.of("text_component")
+                )).setInfo("For 'translatable' type - list of text components for translate arguments").getter()),
+
+                Map.entry("separator", PathInfo.copyOf("text_component").setInfo("For 'selector' and 'nbt' types - text components to display between entries").setUnsetInfo(StringTag.valueOf(", ")).getter()),
+
+                Map.entry("score", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
+                    "name", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("@s","*",FortytwoEdit.USERNAME))).setInfo("Name, selector, or * to show each player their own score").getter(),
+                    "objective", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Scoreboard objective").getter()
+                ))).setInfo("For 'score' type - scoreboard entry to display (text component must be resolved)").getter()),
+
+                Map.entry("selector", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("@s","@p","@r","@a","@e"))).setInfo("For 'selector' type - entity selector to display (text component must be resolved)").getter()),
+
+                Map.entry("source", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("block","entity","storage"))).setInfo("For 'nbt' type - data source to use. If unset, chooses based on the order:\n  entity\n  block\n  storage").getter()),
+                Map.entry("storage", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("foo:bar"))).setInfo("For 'nbt' type - resource location of storage to read data of").getter()),
+                Map.entry("block", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("0 0 0","~ ~ ~","^ ^ ^"))).setInfo("For 'nbt' type - coordinates of block to read data of (can be absolute, relative, or local)").getter()),
+                Map.entry("entity", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("@s","@p","@r","@a","@e"))).setInfo("For 'nbt' type - entity selector to read data of").getter()),
+                Map.entry("nbt", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("foo.bar[0]"))).setInfo("For 'nbt' type - NBT path of the data to display (text component must be resolved)").getter()),
+                Map.entry("interpret", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("For 'nbt' type - if the data should be interpreted as a text component instead of displaying the NBT directly").getter())
+
             )),
             DataType.ElementLiteral.of(NbtType.STRING),
             DataType.ListUnordered.of(
@@ -555,14 +652,21 @@ public class PathHelper {
 
         registerPathInfo("dye_color", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_DYE_COLOR)).setInfo("Dye color"));
 
-        registerPathInfo("color_rgb_int", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0",""+255*256*256+255*256+255))).setInfo("RGB color in decimal form"));
+        registerPathInfo("color_rgb_int", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0",""+255*256*256+255*256+255))).setFlag(PathFlag.COLOR_RGB_INT).setInfo("RGB color in decimal form"));
 
         registerPathInfo("color_rgb_int_or_list", PathInfo.create(
+            DataType.ElementLiteral.of(NbtType.INT),
             DataType.ListUnordered.of(
-                PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).getter()
-            ),
-            DataType.ElementLiteral.of(NbtType.DOUBLE)
-        ).setInfo("RGB color in decimal form, or a list of R,G,B values from 0.0-1.0"));
+                PathInfo.create(DataType.ElementLiteral.of(NbtType.DOUBLE)).getter()
+            )
+        ).setFlag(PathFlag.COLOR_RGB_INT_OR_LIST).setInfo("RGB color in decimal form, or a list of R,G,B values from 0.0-1.0"));
+
+        registerPathInfo("color_argb_int_or_list", PathInfo.create(
+            DataType.ElementLiteral.of(NbtType.INT),
+            DataType.ListUnordered.of(
+                PathInfo.create(DataType.ElementLiteral.of(NbtType.DOUBLE)).getter()
+            )
+        ).setFlag(PathFlag.COLOR_ARGB_INT_OR_LIST).setInfo("ARGB color in decimal form, or a list of R,G,B,A values from 0.0-1.0"));
 
         registerPathInfo("block_predicate_or_list", PathInfo.create(//to_do reference static final compound supplier
             DataType.ListUnordered.of(PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
@@ -636,7 +740,15 @@ public class PathHelper {
 
         TEXT_COMPONENT,
         TEXT_COMPONENT_ITALIC,
-        TEXT_COMPONENT_LORE
+        TEXT_COMPONENT_LORE,
+
+        COLOR_RGB_INT,
+        COLOR_RGB_INT_OR_LIST,
+        COLOR_ARGB_INT_OR_LIST,
+
+        ATTRIBUTE_MODIFIER,
+        BANNER_PATTERN,
+        RARITY
 
     }
 
@@ -644,10 +756,13 @@ public class PathHelper {
 
         protected ItemStack icon = null;
         protected Component info = null;
-        protected PathFlag flag = PathFlag.NONE;
+        protected Component infoUnset = null;
+        protected PathFlag flag = null;
         protected boolean isEmpty = true;
+        protected boolean isUnstructured = false;
 
         private static final PathInfo EMPTY = PathInfoDefinition.create();
+        private static final PathInfo ANY = PathInfoDefinition.createUnstructured().setInfo("Unstructured NBT");
 
         private PathInfo() {}
 
@@ -655,12 +770,16 @@ public class PathHelper {
             return info;
         }
 
+        public Component getUnsetInfo() {
+            return infoUnset;
+        }
+
         public ItemStack getIcon() {
             return icon;
         }
 
         public PathFlag getFlag() {
-            return flag;
+            return flag != null ? flag : PathFlag.NONE;
         }
 
         public PathInfo setIcon(ItemStack icon) {
@@ -684,8 +803,34 @@ public class PathHelper {
         }
 
         public PathInfo setFlag(PathFlag flag) {
-            if(flag != null)
-                this.flag = flag;
+            this.flag = flag;
+            this.isEmpty = false;
+            return this;
+        }
+
+        public PathInfo setUnsetInfo(Tag defaultElement) {
+            if(defaultElement != null) {
+                this.infoUnset = Component.empty().append("Defaults to ")
+                    .append(BlackMagick.nbtToColorfulText(defaultElement));
+            }
+            this.isEmpty = false;
+            return this;
+        }
+
+        public PathInfo setUnsetInfo(String description) {
+            this.infoUnset = Component.empty().append(description);
+            this.isEmpty = false;
+            return this;
+        }
+
+        public PathInfo setUnsetInfo(Component description) {
+            this.infoUnset = description;
+            this.isEmpty = false;
+            return this;
+        }
+
+        public PathInfo setUnsetInfo(boolean bool) {
+            this.infoUnset = Component.empty().append("Defaults to ").append(Component.empty().append(bool ? "true" : "false").withStyle(ChatFormatting.GOLD));
             this.isEmpty = false;
             return this;
         }
@@ -713,6 +858,8 @@ public class PathHelper {
         public abstract PathInfo getCompoundKeyInfo(CompoundTag compound, String key);
 
         public abstract PathInfo getListIndexInfo(int i);
+
+        public abstract boolean showCompoundNewKeyRow();
 
         public static PathInfoDefinition create() {
             return PathInfoDefinition.create();
@@ -782,9 +929,18 @@ public class PathHelper {
             return pi.get().getListIndexInfo(i);
         }
 
+        public boolean showCompoundNewKeyRow() {
+            return pi.get().showCompoundNewKeyRow();
+        }
+
         @Override
         public Component getInfo() {
             return this.info != null ? this.info : pi.get().getInfo();
+        }
+
+        @Override
+        public Component getUnsetInfo() {
+            return this.infoUnset != null ? this.infoUnset : pi.get().getUnsetInfo();
         }
 
         @Override
@@ -814,8 +970,17 @@ public class PathHelper {
 
         private PathInfoDefinition() {}
 
+        private PathInfoDefinition(boolean isUnstructured) {
+            this.isUnstructured = isUnstructured;
+            this.isEmpty = false;
+        }
+
         public static PathInfoDefinition create() {
             return new PathInfoDefinition();
+        }
+
+        public static PathInfo createUnstructured() {
+            return new PathInfoDefinition(true);
         }
 
         public static PathInfoDefinition create(PathInfoSupplier... info) {
@@ -888,13 +1053,18 @@ public class PathHelper {
                 cacheAllNbtTypes = true;
                 
                 allNbtTypes.clear();
-                if(compoundSupplier != null)
-                    allNbtTypes.add(NbtType.COMPOUND);
-                if(listSupplier != null)
-                    allNbtTypes.add(NbtType.LIST);
-                if(elementSupplier != null) {
-                    allNbtTypes.remove(elementSupplier.getNbtType());
-                    allNbtTypes.add(elementSupplier.getNbtType());
+                if(this.isUnstructured) {
+                    allNbtTypes.addAll(List.of(NbtType.values()));
+                }
+                else {
+                    if(compoundSupplier != null)
+                        allNbtTypes.add(NbtType.COMPOUND);
+                    if(listSupplier != null)
+                        allNbtTypes.add(NbtType.LIST);
+                    if(elementSupplier != null) {
+                        allNbtTypes.remove(elementSupplier.getNbtType());
+                        allNbtTypes.add(elementSupplier.getNbtType());
+                    }
                 }
 
             }
@@ -906,6 +1076,18 @@ public class PathHelper {
         }
 
         public boolean hasPathType(PathType type) {
+            if(this.isUnstructured) {
+                switch(type) {
+                    case ELEMENT:
+                    case STRING:
+                    case COMPOUND:
+                    case LIST:
+                        return true;
+                    case UNIT:
+                    case BOOLEAN:
+                        return false;
+                }
+            }
             if(compoundSupplier != null && compoundSupplier.getPathType() == type)
                 return true;
             if(listSupplier != null && listSupplier.getPathType() == type)
@@ -948,15 +1130,27 @@ public class PathHelper {
         }
 
         public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
+            if(this.isUnstructured)
+                return PathInfo.ANY;
             if(compoundSupplier != null)
                 return compoundSupplier.getCompoundKeyInfo(compound, key);
             return PathInfo.EMPTY;
         }
 
         public PathInfo getListIndexInfo(int i) {
+            if(this.isUnstructured)
+                return PathInfo.ANY;
             if(listSupplier != null)
                 return listSupplier.getListIndexInfo(i);
             return PathInfo.EMPTY;
+        }
+
+        public boolean showCompoundNewKeyRow() {
+            if(this.isUnstructured)
+                return true;
+            if(compoundSupplier != null)
+                return compoundSupplier.showNewKeyRow();
+            return false;
         }
 
     }
@@ -983,6 +1177,10 @@ public class PathHelper {
         public abstract KeyGetter getCompoundKeys(CompoundTag compound);
 
         public abstract PathInfo getCompoundKeyInfo(CompoundTag compound, String key);
+
+        public boolean showNewKeyRow() {
+            return false;
+        }
 
     }
 
@@ -1064,6 +1262,29 @@ public class PathHelper {
                 if(this.keyInfo.containsKey(key))
                     return this.keyInfo.get(key).get();
                 return PathInfo.EMPTY;
+            }
+    
+        }
+
+        protected static class CompoundUnstructured extends PathInfoSupplierCompound {
+    
+            private CompoundUnstructured() {}
+    
+            public static CompoundUnstructured create() {
+                return new CompoundUnstructured();
+            }
+    
+            public KeyGetter getCompoundKeys(CompoundTag compound) {
+                return KeyGetter.create();
+            }
+    
+            public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
+                return PathInfo.ANY;
+            }
+
+            @Override
+            public boolean showNewKeyRow() {
+                return true;
             }
     
         }
@@ -1194,8 +1415,7 @@ public class PathHelper {
         COMPOUND("Compound", "{}"),
         LIST("List", "[]"),
 
-        BOOLEAN("Boolean", "true","false"),
-        ANY("Any", "0","\"\"","{}","[]");
+        BOOLEAN("Boolean", "true","false");
 
         private final String label;
         private final String[] suggs;
