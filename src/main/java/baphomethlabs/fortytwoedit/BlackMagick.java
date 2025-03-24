@@ -1,6 +1,7 @@
 package baphomethlabs.fortytwoedit;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -150,7 +151,7 @@ public class BlackMagick {
     }
 
     /**
-     * Get SNBT representation of NBT.
+     * Get String contents of NbtString or SNBT representation of NBT.
      * A null element will return an empty string.
      * 
      * @param inp
@@ -198,7 +199,11 @@ public class BlackMagick {
     public static boolean nbtIsNumber(Tag inp) {
         if(inp == null)
             return false;
-        switch(inp.getId()) {
+        return nbtTypeIsNumber(inp.getId());
+    }
+
+    public static boolean nbtTypeIsNumber(byte inp) {
+        switch(inp) {
             case Tag.TAG_BYTE:
             case Tag.TAG_SHORT:
             case Tag.TAG_INT:
@@ -872,6 +877,22 @@ public class BlackMagick {
     }
 
     /**
+     * Returns a list of strings sorted alphabetically.
+     * Treats uppercase and lowercase the same.
+     * 
+     * @param list
+     * @return
+     */
+    public static List<String> sortList(List<String> list) {
+        List<String> newList = Lists.newArrayList();
+
+        newList.addAll(list);
+
+        Collections.sort(newList, String.CASE_INSENSITIVE_ORDER);
+        return newList;
+    }
+
+    /**
      * Format suggs so that they represent an NbtString (without modifying original list).
      * Required when string suggs are used in a txt not setup for NbtStrings.
      * 
@@ -902,28 +923,118 @@ public class BlackMagick {
         return list;
     }
 
-    public static List<String> joinCommandSuggs(List<List<String>> joinLists, List<String> startVals) {
+    public static List<String> joinCommandSuggs(List<String> suggsList, List<String> startVals) {
         Set<String> set = Sets.newHashSet();
         List<String> list = Lists.newArrayList();
 
-        if(joinLists != null)
-            for(List<String> l : joinLists)
-                if(l != null)
-                    for(String s : l)
-                        if(!s.isEmpty())
-                            set.add(s);
+        if(suggsList != null)
+            for(String s : suggsList)
+                if(!s.isEmpty())
+                    set.add(s);
 
         if(startVals != null)
             set.removeAll(startVals);
 
         list.addAll(set);
-        Collections.sort(list);
+        Collections.sort(list, new SnbtSortComparator());
 
         if(startVals != null)
-            for(int i=0; i<startVals.size(); i++)
-                list.add(0,startVals.get(startVals.size()-1-i));
+            for(int i=0; i<startVals.size(); i++) {
+                String current = startVals.get(startVals.size()-1-i);
+                if(!current.isEmpty())
+                    list.add(0,current);
+            }
 
         return list;
+    }
+
+    private static class SnbtSortComparator implements Comparator<String> {
+
+        @Override
+        public int compare(String s1, String s2) {
+
+            Tag el1 = BlackMagick.nbtFromString(s1);
+            if(el1 == null)
+                el1 = StringTag.valueOf(s1);
+
+            Tag el2 = BlackMagick.nbtFromString(s2);
+            if(el2 == null)
+                el2 = StringTag.valueOf(s2);
+
+            if(el1.getId() != el2.getId()) {
+                if(nbtTypeInt(el1.getId()) < nbtTypeInt(el2.getId()))
+                    return -1;
+                return 1;
+            }
+
+            switch(el1.getId()) {
+                case Tag.TAG_BYTE: {
+                    if(((ByteTag)el1).byteValue() < ((ByteTag)el2).byteValue())
+                        return -1;
+                    return 1;
+                }
+                case Tag.TAG_SHORT: {
+                    if(((ShortTag)el1).shortValue() < ((ShortTag)el2).shortValue())
+                        return -1;
+                    return 1;
+                }
+                case Tag.TAG_INT: {
+                    if(((IntTag)el1).intValue() < ((IntTag)el2).intValue())
+                        return -1;
+                    return 1;
+                }
+                case Tag.TAG_LONG: {
+                    if(((LongTag)el1).longValue() < ((LongTag)el2).longValue())
+                        return -1;
+                    return 1;
+                }
+                case Tag.TAG_FLOAT: {
+                    if(((FloatTag)el1).floatValue() < ((FloatTag)el2).floatValue())
+                        return -1;
+                    return 1;
+                }
+                case Tag.TAG_DOUBLE: {
+                    if(((DoubleTag)el1).doubleValue() < ((DoubleTag)el2).doubleValue())
+                        return -1;
+                    return 1;
+                }
+                case Tag.TAG_STRING: {
+                    boolean removed1 = BlackMagick.nbtToSnbtOrString(el1).startsWith("!");
+                    boolean removed2 = BlackMagick.nbtToSnbtOrString(el2).startsWith("!");
+                    if(!removed1 && removed2)
+                        return -1;
+                    if(removed1 && !removed2)
+                        return 1;
+                }
+                default: break;
+            }
+
+            return s1.compareToIgnoreCase(s2);
+
+        }
+
+        private int nbtTypeInt(byte type) {
+            switch(type) {
+                case Tag.TAG_COMPOUND: return 1;
+                case Tag.TAG_LIST: return 2;
+
+                case Tag.TAG_BYTE_ARRAY: return 3;
+                case Tag.TAG_INT_ARRAY: return 4;
+                case Tag.TAG_LONG_ARRAY: return 5;
+                
+                case Tag.TAG_BYTE: return 6;
+                case Tag.TAG_SHORT: return 7;
+                case Tag.TAG_INT: return 8;
+                case Tag.TAG_LONG: return 9;
+                case Tag.TAG_FLOAT: return 10;
+                case Tag.TAG_DOUBLE: return 11;
+
+                case Tag.TAG_STRING: return 12;
+
+                default: return 0;
+            }
+        }
+        
     }
 
     public static String[] getIntRangeArray(int min, int max) {

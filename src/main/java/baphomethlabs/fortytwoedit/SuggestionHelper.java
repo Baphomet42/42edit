@@ -49,298 +49,6 @@ import baphomethlabs.fortytwoedit.mixin.ClientLanguageAccessor;
 
 public class SuggestionHelper {
 
-    // to_do upgrade old commented PathHelpers
-
-    //     if(path.contains("components.consumable")) {
-    //         if(path.endsWith("components.consumable.on_consume_effects"))
-    //             return PathInfos.LIST_COMPOUND;
-    //         if(path.endsWith("components.consumable.on_consume_effects[0]"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("type").withOptional("effects","probability","diameter","sound")));
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].type"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_CONSUME_EFFECT_TYPE));
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].effects"))
-    //             return PathInfos.LIST_COMPOUND;
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].effects[0]"))
-    //             return PathInfos.EFFECT_NODE.withDesc(Component.nullToEmpty("Used for \"apply_effects\" or \"remove_effects\""));
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].id"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT));
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].amplifier"))
-    //             return PathInfos.EFFECT_AMPLIFIER;
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].duration"))
-    //             return PathInfos.EFFECT_DURATION;
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].ambient"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].show_particles"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].effects[0].show_icon"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].probability"))
-    //             return PathInfos.FLOAT.withDesc(Component.nullToEmpty("Used for \"apply_effects\""));
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].diameter"))
-    //             return PathInfos.FLOAT.withDesc(Component.nullToEmpty("Used for \"teleport_randomly\" (Defaults to 16f)"));
-    //         if(path.endsWith("components.consumable.on_consume_effects[0].sound"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Component.nullToEmpty("Used for \"play_sound\""));
-    //     }
-
-    //     if(path.contains("components.death_protection")) {
-    //         if(path.endsWith("components.death_protection"))
-    //             return (new PathInfo(KeyGetter.create().withOptional("death_effects"))).withIcon(Items.TOTEM_OF_UNDYING);
-    //         if(path.endsWith("components.death_protection.death_effects"))
-    //             return PathInfos.LIST_COMPOUND;
-    //         if(path.endsWith("components.death_protection.death_effects[0]"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("type").withOptional("effects","probability","diameter","sound")));
-    //         if(path.endsWith("components.death_protection.death_effects[0].type"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_CONSUME_EFFECT_TYPE));
-    //         if(path.endsWith("components.death_protection.death_effects[0].effects"))
-    //             return PathInfos.LIST_COMPOUND;
-    //         if(path.endsWith("components.death_protection.death_effects[0].effects[0]"))
-    //             return PathInfos.EFFECT_NODE.withDesc(Component.nullToEmpty("Used for \"apply_effects\" or \"remove_effects\""));
-    //         if(path.endsWith("components.death_protection.death_effects[0].effects[0].id"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT));
-    //         if(path.endsWith("components.death_protection.death_effects[0].effects[0].amplifier"))
-    //             return PathInfos.EFFECT_AMPLIFIER;
-    //         if(path.endsWith("components.death_protection.death_effects[0].effects[0].duration"))
-    //             return PathInfos.EFFECT_DURATION;
-    //         if(path.endsWith("components.death_protection.death_effects[0].effects[0].ambient"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith("components.death_protection.death_effects[0].effects[0].show_particles"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith("components.death_protection.death_effects[0].effects[0].show_icon"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith("components.death_protection.death_effects[0].probability"))
-    //             return PathInfos.FLOAT.withDesc(Component.nullToEmpty("Used for \"apply_effects\""));
-    //         if(path.endsWith("components.death_protection.death_effects[0].diameter"))
-    //             return PathInfos.FLOAT.withDesc(Component.nullToEmpty("Used for \"teleport_randomly\" (Defaults to 16f)"));
-    //         if(path.endsWith("components.death_protection.death_effects[0].sound"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Component.nullToEmpty("Used for \"play_sound\""));
-    //     }
-
-    //     if(path.contains(".entity_data")) {
-    //         if(path.endsWith(".entity_data"))
-    //             return (new PathInfo(KeyGetter.create().withRequired("id").withOptional(
-    //             "CustomName","CustomNameVisible","Glowing","HasVisualFire","Invulnerable","Motion","NoGravity","Pos","Rotation","Silent","Tags",
-    //             "active_effects","attributes","CanPickUpLoot","equipment","FallFlying","Health","leash","LeftHanded","NoAI","PersistenceRequired","Team",
-    //             "DisabledSlots","Invisible","Marker","NoBasePlate","Pose","ShowArms","Small",
-    //             "Fixed","Invisible","Item","ItemDropChance","ItemRotation",
-    //             "beam_target","ShowBottom",
-    //             "SoundEvent",
-    //             "Duration","DurationOnUse","potion_contents","Particle","Radius","RadiusOnUse","RadiusPerTick","ReapplicationDelay","WaitTime",
-    //             "variant"))).withIcon(Items.CREEPER_SPAWN_EGG);
-    //         if(path.endsWith(".entity_data.id"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_ENTITY_TYPE));
-    //         if(path.endsWith(".entity_data.Air"))
-    //             return PathInfos.SHORT;
-    //         if(path.endsWith(".entity_data.CustomName"))
-    //             return PathInfos.TEXT;
-    //         if(path.endsWith(".entity_data.CustomNameVisible"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".entity_data.equipment"))
-    //             return (new PathInfo(KeyGetter.create().withOptional("feet","legs","chest","head","body","saddle","mainhand","offhand")));
-    //         if(path.endsWith(".entity_data.equipment.feet"))
-    //             return PathInfos.ITEM_NODE;
-    //         if(path.endsWith(".entity_data.equipment.legs"))
-    //             return PathInfos.ITEM_NODE;
-    //         if(path.endsWith(".entity_data.equipment.chest"))
-    //             return PathInfos.ITEM_NODE;
-    //         if(path.endsWith(".entity_data.equipment.head"))
-    //             return PathInfos.ITEM_NODE;
-    //         if(path.endsWith(".entity_data.equipment.body"))
-    //             return PathInfos.ITEM_NODE;
-    //         if(path.endsWith(".entity_data.equipment.saddle"))
-    //             return PathInfos.ITEM_NODE;
-    //         if(path.endsWith(".entity_data.equipment.mainhand"))
-    //             return PathInfos.ITEM_NODE;
-    //         if(path.endsWith(".entity_data.equipment.offhand"))
-    //             return PathInfos.ITEM_NODE;
-    //         if(path.endsWith(".entity_data.FallDistance"))
-    //             return PathInfos.FLOAT;
-    //         if(path.endsWith(".entity_data.Fire"))
-    //             return PathInfos.SHORT;
-    //         if(path.endsWith(".entity_data.Glowing"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".entity_data.HasVisualFire"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".entity_data.Invulnerable"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".entity_data.Motion"))
-    //             return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0d,0d,0d]"))).withDesc(Component.nullToEmpty("[x, y, z] motion in each direction\nx - east\ny - up\nz - south"));
-    //         if(path.endsWith(".entity_data.NoGravity"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".entity_data.OnGround"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".entity_data.Passengers"))
-    //             return PathInfos.LIST_COMPOUND;
-    //         if(path.endsWith(".entity_data.PortalCooldown"))
-    //             return PathInfos.INT;
-    //         if(path.endsWith(".entity_data.Pos"))
-    //             return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0d,0d,0d]"))).withDesc(Component.nullToEmpty("[x, y, z]"));
-    //         if(path.endsWith(".entity_data.Rotation"))
-    //             return (new PathInfo(PathType.INLINE_LIST,SuggestionGetter.newInline("[0f,0f]"))).withDesc(Component.nullToEmpty("[Yaw, Pitch]\nYaw: -180 to 180 (0 is south, 90 is west)\nPitch: -90 (up) to 90 (down)"));
-    //         if(path.endsWith(".entity_data.Silent"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".entity_data.Tags"))
-    //             return PathInfos.LIST_STRING;
-    //         if(path.endsWith(".entity_data.Tags[0]"))
-    //             return PathInfos.STRING;
-    //         if(path.endsWith(".entity_data.TicksFrozen"))
-    //             return PathInfos.INT;
-    //         if(path.endsWith(".entity_data.UUID"))
-    //             return PathInfos.UUID;
-
-    //         String lbl = "Mobs";
-    //         if(path.endsWith(".entity_data.active_effects"))
-    //             return PathInfos.LIST_COMPOUND.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.active_effects[0]") || path.endsWith(".hidden_effect"))
-    //             return (new PathInfo(KeyGetter.create().withOptional("ambient","amplifier","duration","hidden_effect","id","show_icon","show_particles"))).withGroup(lbl).withFlag(PathFlag.EFFECT);
-    //         if(path.endsWith(".entity_data.active_effects[0].ambient") || path.endsWith(".hidden_effect.ambient"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".entity_data.active_effects[0].amplifier") || path.endsWith(".hidden_effect.amplifier"))
-    //             return PathInfos.EFFECT_AMPLIFIER;
-    //         if(path.endsWith(".entity_data.active_effects[0].duration") || path.endsWith(".hidden_effect.duration"))
-    //             return PathInfos.EFFECT_DURATION;
-    //         if(path.endsWith(".entity_data.active_effects[0].id") || path.endsWith(".hidden_effect.id"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_STATUS_EFFECT));
-    //         if(path.endsWith(".entity_data.active_effects[0].show_icon") || path.endsWith(".hidden_effect.show_icon"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".entity_data.active_effects[0].show_particles") || path.endsWith(".hidden_effect.show_particles"))
-    //             return PathInfos.TRINARY;
-    //         if(path.endsWith(".entity_data.attributes"))
-    //             return PathInfos.DEFAULT.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.CanPickUpLoot"))
-    //             return PathInfos.TRINARY.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.FallFlying"))
-    //             return PathInfos.TRINARY.withDesc(Component.nullToEmpty("If true, mob will glide if wearing an elytra")).withGroup(lbl);
-    //         if(path.endsWith(".entity_data.Health"))
-    //             return PathInfos.FLOAT.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.leash"))
-    //             return (new PathInfo(PathType.DEFAULT,SuggestionGetter.newInline("{UUID:[I;0,0,0,0]}","{UUID:"+BlackMagick.nbtToSnbt(FortytwoEdit.UUID)+"}","[I;0,0,0]"))).withDesc(Component.nullToEmpty("Can be either:\na) NbtCompound like {UUID:[I;0,0,0,0]} pointing to an entity UUID\nb) NbtIntArray containing [I; X, Y, Z]")).withGroup(lbl);
-    //         if(path.endsWith(".entity_data.LeftHanded"))
-    //             return PathInfos.TRINARY.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.NoAI"))
-    //             return PathInfos.TRINARY.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.PersistenceRequired"))
-    //             return PathInfos.TRINARY.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.Team"))
-    //             return PathInfos.STRING.withDesc(Component.nullToEmpty("Name of team for the mob to join when spawning")).withGroup(lbl);
-
-    //         lbl = "Common";
-    //         if(path.endsWith(".entity_data.Invisible"))
-    //             return PathInfos.TRINARY.withGroup(lbl).withDesc(Component.nullToEmpty("Used by armor stands and item frames"));
-
-    //         lbl = "Armor Stands";
-    //         if(path.endsWith(".entity_data.DisabledSlots"))
-    //             return (new PathInfo(PathType.INT,SuggestionGetter.newInline("16191"))).withDesc(Component.nullToEmpty("Value of 16191 prevents adding, changing, or removing armor or hand items")).withGroup(lbl);
-    //         if(path.endsWith(".entity_data.Marker"))
-    //             return PathInfos.TRINARY.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.NoBasePlate"))
-    //             return PathInfos.TRINARY.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.Pose"))
-    //             return (new PathInfo(PathType.POSE)).withGroup(lbl);
-    //         if(path.endsWith(".entity_data.ShowArms"))
-    //             return PathInfos.TRINARY.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.Small"))
-    //             return PathInfos.TRINARY.withGroup(lbl);
-
-    //         lbl = "Item Frames";
-    //         if(path.endsWith(".entity_data.Fixed"))
-    //             return PathInfos.TRINARY.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.Item"))
-    //             return PathInfos.ITEM_NODE.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.ItemDropChance"))
-    //             return PathInfos.FLOAT.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.ItemRotation"))
-    //             return (new PathInfo(PathType.BYTE,SuggestionGetter.newInline("0","1","2","3","4","5","6","7"))).withDesc(Component.nullToEmpty("Number of times the item is rotated clockwise")).withGroup(lbl);
-
-    //         lbl = "End Crystals";
-    //         if(path.endsWith(".entity_data.beam_target"))
-    //             return PathInfos.INT_ARRAY_POS.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.ShowBottom"))
-    //             return PathInfos.TRINARY.withGroup(lbl);
-
-    //         lbl = "Arrows and Tridents";
-    //         if(path.endsWith(".entity_data.SoundEvent"))
-    //             return (new PathInfo(PathType.STRING,REGISTRY_SOUND_EVENT)).withDesc(Component.nullToEmpty("Arrows types and tridents will play this sound when hitting something")).withGroup(lbl);
-
-    //         lbl = "Area Effect Clouds";
-    //         if(path.endsWith(".entity_data.Duration"))
-    //             return PathInfos.INT.withDesc(Component.nullToEmpty("Max age after WaitTime")).withGroup(lbl);
-    //         if(path.endsWith(".entity_data.DurationOnUse"))
-    //             return PathInfos.INT.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.potion_contents"))
-    //             return PathInfos.POTION_CONTENTS.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.Particle"))
-    //             return (new PathInfo(PathType.INLINE_COMPOUND,REGISTRY_PARTICLE_TYPE.withFormat(SuggestionGetter.Format.AEC_PARTICLE_TYPE))).withDesc(Component.nullToEmpty("Format like {type:\"dust\",color:[.5d,0d,1d],scale:2}")).withGroup(lbl);
-    //         if(path.endsWith(".entity_data.Radius"))
-    //             return PathInfos.FLOAT.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.RadiusOnUse"))
-    //             return PathInfos.FLOAT.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.RadiusPerTick"))
-    //             return PathInfos.FLOAT.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.ReapplicationDelay"))
-    //             return PathInfos.INT.withGroup(lbl);
-    //         if(path.endsWith(".entity_data.WaitTime"))
-    //             return PathInfos.INT.withDesc(Component.nullToEmpty("Time before cloud can have a radius and effect (particles will still appear in the center)")).withGroup(lbl);
-
-    public record KeyGetter(SuggestionGetter[] requiredKeys, SuggestionGetter[] optionalKeys) {
-
-        public static KeyGetter create() {
-            return new KeyGetter(new SuggestionGetter[0], new SuggestionGetter[0]);
-        }
-
-        public KeyGetter withRequired(SuggestionGetter... keys) {
-            List<SuggestionGetter> newList = Lists.newArrayList();
-            newList.addAll(List.of(requiredKeys));
-            newList.addAll(List.of(keys));
-            return new KeyGetter(newList.toArray(new SuggestionGetter[0]), optionalKeys);
-        }
-
-        public KeyGetter withOptional(SuggestionGetter... keys) {
-            List<SuggestionGetter> newList = Lists.newArrayList();
-            newList.addAll(List.of(optionalKeys));
-            newList.addAll(List.of(keys));
-            return new KeyGetter(requiredKeys, newList.toArray(new SuggestionGetter[0]));
-        }
-
-        public KeyGetter withRequired(String... keys) {
-            List<SuggestionGetter> newList = Lists.newArrayList();
-            newList.addAll(List.of(requiredKeys));
-            newList.add(SuggestionGetter.newInline(keys));
-            return new KeyGetter(newList.toArray(new SuggestionGetter[0]), optionalKeys);
-        }
-
-        public KeyGetter withOptional(String... keys) {
-            List<SuggestionGetter> newList = Lists.newArrayList();
-            newList.addAll(List.of(optionalKeys));
-            newList.add(SuggestionGetter.newInline(keys));
-            return new KeyGetter(requiredKeys, newList.toArray(new SuggestionGetter[0]));
-        }
-
-        public Set<String> getRequired() {
-            Set<String> set = Sets.newHashSet();
-            for(SuggestionGetter suggs : requiredKeys)
-                set.addAll(suggs.getList());
-            return set;
-        }
-
-        public Set<String> getOptional() {
-            Set<String> set = Sets.newHashSet();
-            for(SuggestionGetter suggs : optionalKeys)
-                set.addAll(suggs.getList());
-            set.removeAll(getRequired());
-            return set;
-        }
-
-        public Set<String> getKeys() {
-            Set<String> set = Sets.newHashSet();
-            for(SuggestionGetter suggs : requiredKeys)
-                set.addAll(suggs.getList());
-            for(SuggestionGetter suggs : optionalKeys)
-                set.addAll(suggs.getList());
-            return set;
-        }
-
-    }
-
     public record SuggestionGetter(String[] inlinedSuggs, String listMapKey, boolean isSnbt, SuggestionGetter[] joinedLists, boolean isEmpty) {
 
         public static SuggestionGetter newInline(String... suggs) {
@@ -393,7 +101,7 @@ public class SuggestionHelper {
                     set.addAll(s.getList(snbt));
             List<String> list = Lists.newArrayList();
             list.addAll(set);
-            Collections.sort(list);
+            Collections.sort(list, String.CASE_INSENSITIVE_ORDER);
             return list;
         }
 
@@ -485,10 +193,10 @@ public class SuggestionHelper {
     /**
      * 
      * @param key an enchantment ID
-     * @return the max level for the enchantment, or 1 if unknown
+     * @return the max level for the enchantment, or -1 if unknown
      */
     public static int getEnchantmentMaxLevel(String key) {
-        int max = 1;
+        int max = -1;
         try {
             final Minecraft client = Minecraft.getInstance();
             if(client.level != null) {
@@ -509,7 +217,7 @@ public class SuggestionHelper {
      * @param item
      * @return int array with [rows,columns] or [-1,-1] depending on storage size of blockentity for item
      */
-    public static int[] getContainerSize(Item item) {//to_do move classes?
+    public static int[] getContainerSize(Item item) {
 
         ResourceLocation identifier = BlackMagick.identifierOrNull(item.toString());
         if(identifier != null) {
@@ -579,6 +287,23 @@ public class SuggestionHelper {
             BuiltInRegistries.DATA_COMPONENT_TYPE.forEach(i -> {
                 if(!i.isTransient())
                     list.add(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
+            });
+            Collections.sort(list);
+        }
+        return list;
+    });
+
+    /**
+     * Contains components that can be serialized
+     */
+    public static final SuggestionGetter LIST_DATA_COMPONENT_TYPE_OR_REMOVED = registerSuggsList("LIST_DATA_COMPONENT_TYPE_OR_REMOVED", () -> {
+        List<String> list = createOrGetCacheList("LIST_DATA_COMPONENT_TYPE_OR_REMOVED",false);
+        if(list.isEmpty()) {
+            BuiltInRegistries.DATA_COMPONENT_TYPE.forEach(i -> {
+                if(!i.isTransient()) {
+                    list.add(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
+                    list.add("!"+BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
+                }
             });
             Collections.sort(list);
         }
@@ -817,6 +542,9 @@ public class SuggestionHelper {
     public static final SuggestionGetter REGISTRY_ITEM = registerSuggsList("REGISTRY_ITEM", () ->
         getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ITEM",false),BuiltInRegistries.ITEM));
 
+    public static final SuggestionGetter REGISTRY_MAP_DECORATION_TYPE = registerSuggsList("REGISTRY_MAP_DECORATION_TYPE", () ->
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_MAP_DECORATION_TYPE",false),BuiltInRegistries.MAP_DECORATION_TYPE));
+
     public static final SuggestionGetter REGISTRY_SOUND_EVENT = registerSuggsList("REGISTRY_SOUND_EVENT", () ->
         getRegistryIfEmpty(createOrGetCacheList("REGISTRY_SOUND_EVENT",false),BuiltInRegistries.SOUND_EVENT));
 
@@ -961,7 +689,7 @@ public class SuggestionHelper {
         return list;
     }
 
-    // private static List<String> setCommandSuggs(List<String> list, String cmd) {
+    // private static List<String> setCommandSuggs(List<String> list, String cmd) { to_do live command suggs
     //     if(list.isEmpty()) {
     //         final MinecraftClient client = MinecraftClient.getInstance();
     //         CommandDispatcher<CommandSource> commandDispatcher = client.player.networkHandler.getCommandDispatcher();
@@ -1040,6 +768,9 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter ASSETS_TEXTURES = registerSuggsList("ASSETS_TEXTURES", () ->
         getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_TEXTURES",false),"textures",PNG_SUFFIX));
+
+    public static final SuggestionGetter ASSETS_TEXTURES_PAINTING = registerSuggsList("ASSETS_TEXTURES_PAINTING", () ->
+        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_TEXTURES_PAINTING",false),"textures/painting",PNG_SUFFIX));
 
 
 }

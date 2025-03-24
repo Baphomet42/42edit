@@ -324,8 +324,9 @@ public class FortytwoEdit implements ClientModInitializer {
         new CapeTexture(CapeGroup.PUBLIC, "mcc_15th_year", "MCC 15th Year", "http://textures.minecraft.net/texture/56c35628fe1c4d59dd52561a3d03bfa4e1a76d397c8b9c476c2f77cb6aebb1df"),
         new CapeTexture(CapeGroup.PUBLIC, "minecraft_experience", "Minecraft Experience", "http://textures.minecraft.net/texture/7658c5025c77cfac7574aab3af94a46a8886e3b7722a895255fbf22ab8652434"),
         new CapeTexture(CapeGroup.PUBLIC, "mojang_office", "Mojang Office", "http://textures.minecraft.net/texture/5c29410057e32abec02d870ecb52ec25fb45ea81e785a7854ae8429d7236ca26"),
-        new CapeTexture(CapeGroup.PUBLIC, "home", "Home", "http://textures.minecraft.net/texture/4b5de481e1b41f51c678155ff965c7e9526c7c641aaaf97a501916c7cb101c4b"),
-        new CapeTexture(CapeGroup.PUBLIC, "menace", "Menace", "http://textures.minecraft.net/texture/b1fc59bc3de3cda3ed4d99c3d65b721c57cec900ece350cbda6f451099e078e7"),
+        new CapeTexture(CapeGroup.PUBLIC, "home", "Home", "http://textures.minecraft.net/texture/b8cd2315f14e30fc78a2e581b4ebd29b26cdb038d93c73e498030b969d234f1d"),
+        new CapeTexture(CapeGroup.PUBLIC, "menace", "Menace", "http://textures.minecraft.net/texture/78014dd0d45639c2962818c3b0c487c6d0501cdcd301f281ba06c9be7400042c"),
+        //new CapeTexture(CapeGroup.PUBLIC, "yearn", "Yearn", ""), // TODO new cape
 
         new CapeTexture(CapeGroup.MINECON, "minecon_2011", "MineCon 2011", "http://textures.minecraft.net/texture/953cac8b779fe41383e675ee2b86071a71658f2180f56fbce8aa315ea70e2ed6"),
         new CapeTexture(CapeGroup.MINECON, "minecon_2012", "MineCon 2012", "http://textures.minecraft.net/texture/a2e8d97ec79100e90a75d369d1b3ba81273c4f82bc1b737e934eed4a854be1b6"),

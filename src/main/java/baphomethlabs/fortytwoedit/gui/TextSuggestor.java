@@ -99,7 +99,9 @@ public class TextSuggestor {
         List<Suggestion> list2 = Lists.newArrayList();
         list.add(new Suggestion(StringRange.at(0),this.textField.getValue()));
         for(Suggestion suggestion : suggestions.getList()) {
-            if(suggestion.getText().startsWith(string2) || suggestion.getText().startsWith("minecraft:" + string2)) {
+            if(suggestion.getText().startsWith(string2) || suggestion.getText().startsWith("minecraft:" + string2)
+            || suggestion.getText().startsWith("!minecraft:" + string2) || suggestion.getText().startsWith("!" + string2)
+            || suggestion.getText().startsWith("\"" + string2) || suggestion.getText().startsWith("'" + string2)) {
                 list.add(suggestion);
                 continue;
             }
