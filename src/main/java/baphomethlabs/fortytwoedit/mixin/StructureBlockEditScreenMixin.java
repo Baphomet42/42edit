@@ -37,7 +37,7 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
         nameEdit.setResponder(value -> {
 
             if(loadButton.visible) {
-                //SuggestionHelper.clearDynamicListCaches(); to_do uncomment if list made dynamic
+                //SuggestionHelper.clearDynamicListCaches(); uncomment if list made dynamic
 
                 if(suggs != null)
                     suggs.refresh();

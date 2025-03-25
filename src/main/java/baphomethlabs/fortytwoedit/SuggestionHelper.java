@@ -10,6 +10,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.ClientLanguage;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -19,6 +20,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.IoSupplier;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.animal.Fox;
@@ -43,7 +45,6 @@ import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import baphomethlabs.fortytwoedit.mixin.DecoratedPotPatternsAccessor;
 import baphomethlabs.fortytwoedit.mixin.KeyMappingAccessor;
 import baphomethlabs.fortytwoedit.mixin.ClientLanguageAccessor;
 
@@ -305,19 +306,6 @@ public class SuggestionHelper {
                     list.add("!"+BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
                 }
             });
-            Collections.sort(list);
-        }
-        return list;
-    });
-
-    /**
-     * Contains pottery sherd items and brick item
-     */
-    public static final SuggestionGetter LIST_DECORATED_POT_PATTERN_ITEMS = registerSuggsList("LIST_DECORATED_POT_PATTERN_ITEMS", () -> {//to_do use item tag `#minecraft:decorated_pot_ingredients` ?
-        List<String> list = createOrGetCacheList("LIST_DECORATED_POT_PATTERN_ITEMS",false);
-        if(list.isEmpty()) {
-            for(Item i : DecoratedPotPatternsAccessor.getItemToPotTexture().keySet())
-                list.add(i.toString());
             Collections.sort(list);
         }
         return list;
@@ -663,6 +651,26 @@ public class SuggestionHelper {
         getTagsIfEmpty(createOrGetCacheList("DATA_TAG_PAINTING_VARIANT",true),Registries.PAINTING_VARIANT));
 
 
+    // dynamic data tags entry lists
+
+    private static List<String> getItemsInTag(List<String> list, String tag) {
+        if(list.isEmpty()) {
+            final Minecraft client = Minecraft.getInstance();
+            if(client.level != null)
+                client.level.registryAccess().lookup(Registries.ITEM).ifPresent(reg -> {
+                    for(Holder<Item> itemHolder : reg.getTagOrEmpty(TagKey.create(Registries.ITEM,ResourceLocation.parse(tag)))) {
+                        list.add(itemHolder.value().toString());
+                    }
+                });
+            Collections.sort(list);
+        }
+        return list;
+    }
+
+    public static final SuggestionGetter DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS = registerSuggsList("DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS", () ->
+        getItemsInTag(createOrGetCacheList("DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS",true),"decorated_pot_ingredients"));
+
+
     // static data lists from vanilla
 
     private static List<String> getVanillaDataIfEmpty(List<String> list, String path, String suffix) {
@@ -725,7 +733,7 @@ public class SuggestionHelper {
         getVanillaDataIfEmpty(createOrGetCacheList("DATA_RECIPE",false),"recipe",JSON_SUFFIX));
 
     public static final SuggestionGetter DATA_STRUCTURE = registerSuggsList("DATA_STRUCTURE", () ->
-        getVanillaDataIfEmpty(createOrGetCacheList("DATA_STRUCTURE",false),"structure",NBT_SUFFIX));
+        getVanillaDataIfEmpty(createOrGetCacheList("DATA_STRUCTURE",false),"structure",NBT_SUFFIX)); // if made dynamic, update structure block screen to refresh dynamic suggs
 
     public static final SuggestionGetter DATA_TRIAL_SPAWNER = registerSuggsList("DATA_TRIAL_SPAWNER", () ->
         getVanillaDataIfEmpty(createOrGetCacheList("DATA_TRIAL_SPAWNER",false),"trial_spawner",JSON_SUFFIX));

@@ -22,15 +22,12 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.ByteArrayTag;
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.DoubleTag;
 import net.minecraft.nbt.FloatTag;
-import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.LongArrayTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NbtUtils;
@@ -567,32 +564,6 @@ public class BlackMagick {
         } catch(Exception ex) {}
 
         return nbt;
-    }
-
-    /**
-     * Create default NbtElement for a given type
-     * 
-     * @param type from NbtElement.getType()
-     * @return a new NbtElement or null if the type is unknown
-     */
-    public static Tag getDefaultNbt(byte type) {
-        switch(type) {
-            case Tag.TAG_COMPOUND : return new CompoundTag();
-            case Tag.TAG_LIST : return new ListTag();
-            case Tag.TAG_BYTE : return ByteTag.ZERO;
-            case Tag.TAG_BYTE_ARRAY : return new ByteArrayTag(new byte[0]);
-            case Tag.TAG_SHORT : return ShortTag.valueOf((short)0);
-            case Tag.TAG_INT : return IntTag.valueOf(0);
-            case Tag.TAG_INT_ARRAY : return new IntArrayTag(new int[0]);
-            case Tag.TAG_LONG : return LongTag.valueOf((long)0);
-            case Tag.TAG_LONG_ARRAY : return new LongArrayTag(new long[0]);
-            case Tag.TAG_DOUBLE : return DoubleTag.valueOf((double)0);
-            case Tag.TAG_FLOAT : return FloatTag.valueOf((float)0);
-            case Tag.TAG_STRING : return StringTag.valueOf("");
-            default: break;
-        }
-        FortytwoEdit.logError("Failed to create default NbtElement for type: "+type);
-        return null;
     }
 
     private static CompoundTag removeComponentLocks(CompoundTag base, String path) {

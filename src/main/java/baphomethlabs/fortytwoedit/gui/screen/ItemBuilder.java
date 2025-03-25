@@ -164,20 +164,10 @@ public class ItemBuilder extends GenericScreen {
     private boolean hsvLock = false;
     private boolean editorOutputLocked = false;
     private Set<AbstractWidget> editorLockedWidget = Sets.newHashSet();
-    private static final ItemStack[] RGB_ITEMS =
+    private static final ItemStack[] RGB_ITEMS = //to_do old code
         new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
     private Component textComponentPreview = Component.nullToEmpty("");
     private boolean textComponentPreviewBook = false;
-    private int textComponentEffectMode = -1;
-    // private String textComponentEffectPath = null; to_do old code
-    // private String textComponentEffectBase = null;
-    private static int[] textComponentEffects = new int[8];//bold,italic,underlined,strikethrough,obfuscated,radgrad,colmode,elmode
-    // private static String textComponentShadowColor = "";
-    // private String textComponentBaseText = "";
-    // private boolean textComponentBaseValid = false;
-    // private boolean textComponentEffectValid = false;
-    // private String textComponentEffectFull = "";
-    // private static String textComponentLastColor = "white";
     private static double[] tabScroll = new double[tabs.length];
     private boolean pauseSaveScroll = false;
     protected NbtEdit nbtEdit = null;
@@ -806,7 +796,7 @@ public class ItemBuilder extends GenericScreen {
         return Component.empty().append(text).withStyle(ChatFormatting.YELLOW);
     }
 
-    private void updateColorSets() {
+    private void updateColorSets() {//to_do old code
         if(!editorLocked) {
             editorLocked = true;
 
@@ -816,13 +806,11 @@ public class ItemBuilder extends GenericScreen {
 
             for(int rgbNum=0; rgbNum<colorSets.length; rgbNum++) {
                 for(EditBox w : colorHexTxts.get(rgbNum)) {
-                    if(textComponentEffectMode != 1 || textComponentEffects[6]==2) {
-                        if(!editorLockedWidget.contains(w)) {
-                            w.setValue(""+getRgbHex(rgbNum));
-                        }
-                        w.setTextColor(getRgbDec(rgbNum));
-                        w.setTooltip(Tooltip.create(Component.nullToEmpty(getRgbHex(rgbNum))));
+                    if(!editorLockedWidget.contains(w)) {
+                        w.setValue(""+getRgbHex(rgbNum));
                     }
+                    w.setTextColor(getRgbDec(rgbNum));
+                    w.setTooltip(Tooltip.create(Component.nullToEmpty(getRgbHex(rgbNum))));
                 }
                 for(EditBox w : colorDecTxts.get(rgbNum)) {
                     if(!editorLockedWidget.contains(w)) {
@@ -2339,17 +2327,17 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }
                 if(!modifiedComponentKeys.isEmpty()) {
-                    addTabWidgetScroll(tabNum, new RowWidget("Modified Components"));
+                    addTabWidgetScroll(tabNum, new RowWidget(PathInfo.COMPOUND_KEY_MODIFIED_COMPONENTS_LABEL));
                     for(String c : BlackMagick.sortSet(modifiedComponentKeys))
                         addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                 }
                 if(!defaultComponentKeys.isEmpty()) {
-                    addTabWidgetScroll(tabNum, new RowWidget("Default Components"));
+                    addTabWidgetScroll(tabNum, new RowWidget(PathInfo.COMPOUND_KEY_DEFAULT_COMPONENTS_LABEL));
                     for(String c : BlackMagick.sortSet(defaultComponentKeys))
                         addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                 }
                 if(!removedComponentKeys.isEmpty()) {
-                    addTabWidgetScroll(tabNum, new RowWidget("Removed Components"));
+                    addTabWidgetScroll(tabNum, new RowWidget(PathInfo.COMPOUND_KEY_REMOVED_COMPONENTS_LABEL));
                     for(String c : BlackMagick.sortSet(removedComponentKeys))
                         addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                 }
@@ -2780,6 +2768,10 @@ public class ItemBuilder extends GenericScreen {
 
         switch(nbtEditStyle) {
             case TEMPLATE: {
+                if(foundTemplateStyle) {
+                    addTabWidgetScroll(tabNum, new RowWidget(Component.empty().append(editElement == null ? "Set Element"
+                        : ("Edit " + PathHelper.nbtTypeFromByte(editElement.getId()).label())).withStyle(ChatFormatting.UNDERLINE)));
+                }
                 if(editElement != null && nbtEdit.pi().hasPathType(PathType.COMPOUND) && editElement.getId() == Tag.TAG_COMPOUND) {
 
                     CompoundTag thisCompound = (editElement != null && editElement.getId() == Tag.TAG_COMPOUND) ? (CompoundTag)editElement : new CompoundTag();
@@ -2822,8 +2814,6 @@ public class ItemBuilder extends GenericScreen {
                         addTabWidgetScroll(tabNum, RowWidgetElement.customCompoundKey(this, thisCompound, true));
                     }
 
-                    addTabWidgetScroll(tabNum, new RowWidget());
-
                 }
                 else if(editElement != null && nbtEdit.pi().hasPathType(PathType.LIST) && editElement.getId() == Tag.TAG_LIST) {
 
@@ -2833,19 +2823,21 @@ public class ItemBuilder extends GenericScreen {
                     for(int i=0; i<listSize; i++)
                         addTabWidgetScroll(tabNum, RowWidgetElement.listTemplateElement(this, thisList, i));
 
-                    if(nbtEdit.pi().getListSize()>-1 && nbtEdit.pi().getListSize()<=thisList.size()) {
+                    if(nbtEdit.pi().getListSize() == -1 || thisList.size() < nbtEdit.pi().getListSize()) {
                         addTabWidgetScroll(tabNum, new RowWidget("Append Element"));
                         addTabWidgetScroll(tabNum, RowWidgetElement.customListElement(this, thisList, true));
                     }
 
-                    addTabWidgetScroll(tabNum, new RowWidget());
-
                 }
-                if(foundTemplateStyle)
+                if(foundTemplateStyle) {
+                    addTabWidgetScroll(tabNum, new RowWidget());
                     break;
+                }
             }
             case NBT: {
                 boolean found = false;
+                addTabWidgetScroll(tabNum, new RowWidget(Component.empty().append(editElement == null ? "Set Element"
+                    : ("Edit " + PathHelper.nbtTypeFromByte(editElement.getId()).label())).withStyle(ChatFormatting.UNDERLINE)));
                 if(editElement != null) {
                     switch(editElement.getId()) {
                         case Tag.TAG_COMPOUND: {
@@ -2857,8 +2849,6 @@ public class ItemBuilder extends GenericScreen {
 
                             addTabWidgetScroll(tabNum, new RowWidget("Set Key"));
                             addTabWidgetScroll(tabNum, RowWidgetElement.customCompoundKey(this, thisCompound, false));
-
-                            addTabWidgetScroll(tabNum, new RowWidget());
 
                             break;
                         }
@@ -2873,8 +2863,6 @@ public class ItemBuilder extends GenericScreen {
                             addTabWidgetScroll(tabNum, new RowWidget("Append Element"));
                             addTabWidgetScroll(tabNum, RowWidgetElement.customListElement(this, thisList, false));
 
-                            addTabWidgetScroll(tabNum, new RowWidget());
-
                             break;
                         }
                         default: break;
@@ -2882,8 +2870,8 @@ public class ItemBuilder extends GenericScreen {
                 }
                 if(!found) {
                     addTabWidgetScroll(tabNum, RowWidgetElement.fallbackElement(this));
-                    addTabWidgetScroll(tabNum, new RowWidget());
                 }
+                addTabWidgetScroll(tabNum, new RowWidget());
                 break;
             }
             case SNBT: {
@@ -3456,9 +3444,6 @@ public class ItemBuilder extends GenericScreen {
         //             widgetCacheAdd(WidgetCacheType.TEXT_COMPONENT_TRANSLATION_FALLBACK,row.txts[0]);
         //         }
         //     }
-        //     {
-        //         addTabWidgetScroll(tabNum, new RowWidget());
-        //     }
         //     updateTextComponentEffectBtns();
         //     updateColorSets();
         // }
@@ -3518,7 +3503,7 @@ public class ItemBuilder extends GenericScreen {
         protected int[] btnY = null;
         protected EditBox[] txts = new EditBox[0];
         protected int[] txtX = new int[0];
-        protected String lbl;
+        protected Component lbl;
         protected boolean lblCentered = false;
         protected int lblColor = LABEL_COLOR;
         protected ItemStack displayItem = null;//to_do remove
@@ -3604,6 +3589,10 @@ public class ItemBuilder extends GenericScreen {
          * Centered lbl
          */
         public RowWidget(String label) {
+            this(Component.nullToEmpty(label));
+        }
+
+        public RowWidget(Component label) {
             lbl = label;
             lblCentered = true;
         }
@@ -3743,9 +3732,9 @@ public class ItemBuilder extends GenericScreen {
             }
             if(lbl != null) {
                 if(lblCentered)
-                    context.drawCenteredString(ItemBuilder.this.font, Component.nullToEmpty(this.lbl), ItemBuilder.this.width/2, y+6, lblColor);
+                    context.drawCenteredString(ItemBuilder.this.font, this.lbl, ItemBuilder.this.width/2, y+6, lblColor);
                 else
-                    context.drawString(ItemBuilder.this.font, Component.nullToEmpty(this.lbl), ItemBuilder.this.x+ROW_LEFT_SCROLL+3, y+6, lblColor);
+                    context.drawString(ItemBuilder.this.font, this.lbl, ItemBuilder.this.x+ROW_LEFT_SCROLL+3, y+6, lblColor);
             }
             if(displayItem != null) {
                 drawItem(context,displayItem,x+ROW_LEFT_SCROLL+2+displayItemXoff,y+2);//to_do remove (used to draw item for component widget)
@@ -5210,7 +5199,7 @@ public class ItemBuilder extends GenericScreen {
                     }
                 }
                 else
-                    tt = Tooltip.create(stacks[i].getHoverName());//to_do used styled hover name?
+                    tt = Tooltip.create(stacks[i].getHoverName());
 
                 ItemSlotButton w = new ItemSlotButton(20, stacks[i], btn -> {
                     // nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
@@ -5704,7 +5693,7 @@ public class ItemBuilder extends GenericScreen {
 
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    private enum WidgetCacheType {
+    private enum WidgetCacheType {//to_do remove unused
         NONE,                   // do not cache (used for fallback page)
 
         TXT_DECIMAL_COLOR,      // EditBox for PathType.DECIMAL_COLOR
