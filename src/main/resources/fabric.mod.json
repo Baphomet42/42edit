@@ -11,7 +11,6 @@
     "homepage": "https://baphomet42.github.io/",
     "sources":  "https://github.com/Baphomet42/42edit"
   },
-  "license": "MIT",
   "icon": "assets/42edit/textures/icon/mod.png",
   "environment": "client",
   "entrypoints": {

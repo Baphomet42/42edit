@@ -154,14 +154,14 @@ public class ItemBuilder extends GenericScreen {
     private TextSuggestor suggs;
     private Set<EditBox> currentTxt = Sets.newHashSet();
     private static int[][] colorSets = {{66,6,102},{0,0,0}};
-    private static float[] colorHsv = {0f,0f,0f};
+    private static float[] colorHsl = {0f,0f,0f};
     private List<Set<EditBox>> colorHexTxts = Lists.newArrayList();
     private List<Set<EditBox>> colorDecTxts = Lists.newArrayList();
     private List<List<Set<RgbSlider>>> colorRgbSliders = Lists.newArrayList();
-    private List<Set<RgbSlider>> colorHsvSliders = Lists.newArrayList();
+    private List<Set<RgbSlider>> colorHslSliders = Lists.newArrayList();
     private List<List<Set<PosWidget>>> colorItemWids = Lists.newArrayList();
     private boolean editorLocked = false;
-    private boolean hsvLock = false;
+    private boolean hslLock = false;
     private boolean editorOutputLocked = false;
     private Set<AbstractWidget> editorLockedWidget = Sets.newHashSet();
     private static final ItemStack[] RGB_ITEMS = //to_do old code
@@ -220,7 +220,7 @@ public class ItemBuilder extends GenericScreen {
                     colorItemWids.get(colorItemWids.size()-1).add(Sets.newHashSet());
             }
             for(int i=0; i<3; i++)
-                colorHsvSliders.add(Sets.newHashSet());
+                colorHslSliders.add(Sets.newHashSet());
             for(int i=0; i<6; i++) {
                 poseSliderBtns.add(Sets.newHashSet());
                 poseSliders.add(Lists.newArrayList());
@@ -829,11 +829,11 @@ public class ItemBuilder extends GenericScreen {
                 }
             }
 
-            if(!hsvLock) {
-                rgbToHsv(colorSets[0][0],colorSets[0][1],colorSets[0][2]);
+            if(!hslLock) {
+                rgbToHsl(colorSets[0][0],colorSets[0][1],colorSets[0][2]);
                 for(int num=0; num<3; num++) {
-                    for(RgbSlider w : colorHsvSliders.get(num)) {
-                        w.setVal(colorHsv[num]);
+                    for(RgbSlider w : colorHslSliders.get(num)) {
+                        w.setVal(colorHsl[num]);
                     }
                 }
             }
@@ -907,17 +907,17 @@ public class ItemBuilder extends GenericScreen {
     //     updateColorSets();
     // }
 
-    private void setHsv(int num, float val) {
+    private void setHsl(int num, float val) {
         if(!editorLocked && !editorOutputLocked) {
-            colorHsv[num] = val;
-            hsvToRgb(0,colorHsv[0],colorHsv[1],colorHsv[2]);
-            hsvLock = true;
+            colorHsl[num] = val;
+            hslToRgb(0,colorHsl[0],colorHsl[1],colorHsl[2]);
+            hslLock = true;
             updateColorSets();
-            hsvLock = false;
+            hslLock = false;
         }
     }
 
-    private void hsvToRgb(int rgbNum, float h, float s, float v) {
+    private void hslToRgb(int rgbNum, float h, float s, float v) {
         float sat = s/100f;
         float val = v/100f;
         float c = val*sat;
@@ -967,7 +967,7 @@ public class ItemBuilder extends GenericScreen {
         colorSets[rgbNum][2] = Math.round((b0+m)*255);
     }
 
-    private void rgbToHsv(int r, int g, int b) {
+    private void rgbToHsl(int r, int g, int b) {
         float red = r/255f;
         float green = g/255f;
         float blue = b/255f;
@@ -997,7 +997,7 @@ public class ItemBuilder extends GenericScreen {
         float s = (max==0) ? 0 : (delta/max)*100;
         float v = max*100;
 
-        colorHsv = new float[]{h,s,v};
+        colorHsl = new float[]{h,s,v};
     }
 
     private void drawItem(GuiGraphics context, ItemStack item, int x, int y) {//to_do remove
@@ -3054,11 +3054,11 @@ public class ItemBuilder extends GenericScreen {
         //     }
 
         //     for(int i=0; i<3; i++) {
-        //         colorHsvSliders.get(i).clear();
+        //         colorHslSliders.get(i).clear();
         //         {
         //             RgbSlider w = new RgbSlider(rgbNum,i,false,false);
         //             addTabWidgetScroll(tabNum, new RowWidget(new PosWidget[]{new PosWidget(w,15,0)}));
-        //             colorHsvSliders.get(i).add(w);
+        //             colorHslSliders.get(i).add(w);
         //         }
         //     }
 
@@ -5601,7 +5601,7 @@ public class ItemBuilder extends GenericScreen {
                     this.max = 360f;
                 else
                     this.max = 100f;
-                this.value = (colorHsv[num] - min) / (max - min);
+                this.value = (colorHsl[num] - min) / (max - min);
             }
             this.applyValue();
             this.updateMessage();
@@ -5615,7 +5615,7 @@ public class ItemBuilder extends GenericScreen {
             }
             else {
                 float valMult = Math.round((this.value*(max-min)+min)*1000);
-                setHsv(num,valMult/1000f);
+                setHsl(num,valMult/1000f);
             }
         }
 
@@ -5638,10 +5638,10 @@ public class ItemBuilder extends GenericScreen {
                 else if(num == 1)
                     color += "S";
                 else
-                    color += "V";
+                    color += "L";
                 color += UNICODE_SECTION_SIGN+"r ";
 
-                float valMult = Math.round((colorHsv[num])*1000);
+                float valMult = Math.round((colorHsl[num])*1000);
                 float val = valMult/1000f;
 
                 this.setMessage(Component.nullToEmpty(color+val));

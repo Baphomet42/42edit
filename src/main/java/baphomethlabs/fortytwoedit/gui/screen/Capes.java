@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
-import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -16,7 +15,6 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -46,7 +44,7 @@ public class Capes extends GenericScreen {
             FortytwoEdit.readOptions();
             FortytwoEdit.opticapesOn = (boolean)trackOutput;
             FortytwoEdit.updateOptions();
-            FortytwoEdit.clearCapes();
+            FortytwoEdit.clearOptiCapes();
             reloadScreen();
         })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle OptiFine capes mode\n\nWhen on: you can see players' OptiFine capes")));
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Refresh"), button -> this.btnReloadCapes()).bounds(x+20+80+WID_SPACE,y+ROW_HEIGHT*3+1,60,WID_HEIGHT).build())
@@ -66,9 +64,9 @@ public class Capes extends GenericScreen {
             .setTooltip(Tooltip.create(Component.nullToEmpty("Cycle custom cape left")));
         this.txtCustom = new EditBox(this.font,x+20+1+80+WID_SPACE+15,y+ROW_HEIGHT*4+1,90-2,WID_HEIGHT,Component.nullToEmpty(""));
         this.txtCustom.setMaxLength(MAX_TEXT_LENGTH);
-        this.txtCustom.setValue(FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].name());
+        this.txtCustom.setValue(FortytwoEdit.getClientCapeTextboxName());
         this.txtCustom.moveCursorToStart(false);
-        this.txtCustom.setTooltip(buildCapeTooltip());
+        this.txtCustom.setTooltip(FortytwoEdit.getClientCapeTextboxTooltip());
         this.txtCustom.setEditable(false);
         this.addRenderableWidget(this.txtCustom);
         this.addRenderableWidget(Button.builder(Component.nullToEmpty(">"), button -> this.btnIncCustom()).bounds(x+20+80+WID_SPACE+15+90,y+ROW_HEIGHT*4+1,15,WID_HEIGHT).build())
@@ -99,7 +97,7 @@ public class Capes extends GenericScreen {
 
     protected void btnReloadCapes() {
         FortytwoEdit.showToast("OptiCapes cache cleared",FortytwoEdit.debugCapeNamesSize()+" name(s) and "+FortytwoEdit.debugCapeNames2Size()+" cape(s) deleted");
-        FortytwoEdit.clearCapes();
+        FortytwoEdit.clearOptiCapes();
         unsel();
     }
 
@@ -120,36 +118,13 @@ public class Capes extends GenericScreen {
     }
 
     protected void btnDecCustom() {
-        FortytwoEdit.clientCape--;
-        if(FortytwoEdit.clientCape<0)
-            FortytwoEdit.clientCape=FortytwoEdit.CLIENT_CAPES.length-1;
-
-        int capeIndex = FortytwoEdit.clientCape;
-
-        FortytwoEdit.readOptions();
-        FortytwoEdit.clientCape = capeIndex;
-        FortytwoEdit.updateOptions();
+        FortytwoEdit.cycleClientCape(false);
         reloadScreen();
     }
 
     protected void btnIncCustom() {
-        FortytwoEdit.clientCape++;
-        if(FortytwoEdit.clientCape>=FortytwoEdit.CLIENT_CAPES.length)
-            FortytwoEdit.clientCape=0;
-
-        int capeIndex = FortytwoEdit.clientCape;
-
-        FortytwoEdit.readOptions();
-        FortytwoEdit.clientCape = capeIndex;
-        FortytwoEdit.updateOptions();
+        FortytwoEdit.cycleClientCape(true);
         reloadScreen();
-    }
-
-    private Tooltip buildCapeTooltip() {
-        MutableComponent tt = Component.nullToEmpty(FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].name()).copy();
-        if(FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].desc() != null)
-            tt.append("\n\n").append(Component.nullToEmpty(FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].desc()).copy().withStyle(ChatFormatting.GRAY));
-        return Tooltip.create(tt);
     }
 
     @Override

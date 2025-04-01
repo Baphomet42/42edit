@@ -42,7 +42,7 @@ public abstract class AbstractClientPlayerMixin {
                 }
             }
             if(FortytwoEdit.showClientCape && name.equals(FortytwoEdit.USERNAME)) {
-                cape = FortytwoEdit.CLIENT_CAPES[FortytwoEdit.clientCape].identifier();
+                cape = FortytwoEdit.getClientCape();
                 changed = true;
             }
 

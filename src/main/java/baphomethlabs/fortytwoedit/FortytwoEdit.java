@@ -10,12 +10,16 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import org.apache.commons.compress.utils.Lists;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.mojang.authlib.SignatureState;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+import com.mojang.authlib.minecraft.MinecraftProfileTextures;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
@@ -32,14 +36,17 @@ import baphomethlabs.fortytwoedit.gui.screen.SecretScreen;
 import baphomethlabs.fortytwoedit.mixin.GameRendererInvoker;
 import baphomethlabs.fortytwoedit.mixin.HotbarManagerAccessor;
 import baphomethlabs.fortytwoedit.mixin.KeyMappingAccessor;
+import baphomethlabs.fortytwoedit.mixin.SkinManagerInvoker;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -239,7 +246,7 @@ public class FortytwoEdit implements ClientModInitializer {
         return capeNames2.size();
     }
 
-    public static void clearCapes() {
+    public static void clearOptiCapes() {
         capeNames.clear();
         final Minecraft client = Minecraft.getInstance();
         for(String name : capeNames2) {
@@ -311,69 +318,158 @@ public class FortytwoEdit implements ClientModInitializer {
 
     // custom capes
     public static boolean showClientCape = false;
-    public static int clientCape = 0;
-    public static final CapeTexture[] CLIENT_CAPES = { // Update from https://namemc.com/capes
-        new CapeTexture(CapeGroup.NONE, "none", "No cape", null, null, null),
+    public static String selectedClientCape = "none";
+    private static CapeTexture cacheClientCape = null;
+    public static final List<CapeTexture> CLIENT_CAPES = Lists.newArrayList();
+    private static void resetClientCapes() {
+        CLIENT_CAPES.clear();
+        CAPE_URLS.clear();
+        CAPE_MAP.clear();
+        cacheClientCape = null;
+        warnedCapeCache = null;
 
-        new CapeTexture(CapeGroup.PUBLIC, "migrator", "Migrator", "http://textures.minecraft.net/texture/2340c0e03dd24a11b15a8b33c2a7e9e32abb2051b2481d0ba7defd635ca7a933"),
-        new CapeTexture(CapeGroup.PUBLIC, "vanilla", "Vanilla", "http://textures.minecraft.net/texture/f9a76537647989f9a0b6d001e320dac591c359e9e61a31f4ce11c88f207f0ad4"),
-        new CapeTexture(CapeGroup.PUBLIC, "cherry_blossom", "Cherry Blossom", "http://textures.minecraft.net/texture/afd553b39358a24edfe3b8a9a939fa5fa4faa4d9a9c3d6af8eafb377fa05c2bb"),
-        new CapeTexture(CapeGroup.PUBLIC, "15th_anniversary", "15th Anniversary", "http://textures.minecraft.net/texture/cd9d82ab17fd92022dbd4a86cde4c382a7540e117fae7b9a2853658505a80625"),
-        new CapeTexture(CapeGroup.PUBLIC, "purple_heart", "Purple Heart", "http://textures.minecraft.net/texture/cb40a92e32b57fd732a00fc325e7afb00a7ca74936ad50d8e860152e482cfbde"),
-        new CapeTexture(CapeGroup.PUBLIC, "followers", "Follower's", "http://textures.minecraft.net/texture/569b7f2a1d00d26f30efe3f9ab9ac817b1e6d35f4f3cfb0324ef2d328223d350"),
-        new CapeTexture(CapeGroup.PUBLIC, "mcc_15th_year", "MCC 15th Year", "http://textures.minecraft.net/texture/56c35628fe1c4d59dd52561a3d03bfa4e1a76d397c8b9c476c2f77cb6aebb1df"),
-        new CapeTexture(CapeGroup.PUBLIC, "minecraft_experience", "Minecraft Experience", "http://textures.minecraft.net/texture/7658c5025c77cfac7574aab3af94a46a8886e3b7722a895255fbf22ab8652434"),
-        new CapeTexture(CapeGroup.PUBLIC, "mojang_office", "Mojang Office", "http://textures.minecraft.net/texture/5c29410057e32abec02d870ecb52ec25fb45ea81e785a7854ae8429d7236ca26"),
-        new CapeTexture(CapeGroup.PUBLIC, "home", "Home", "http://textures.minecraft.net/texture/b8cd2315f14e30fc78a2e581b4ebd29b26cdb038d93c73e498030b969d234f1d"),
-        new CapeTexture(CapeGroup.PUBLIC, "menace", "Menace", "http://textures.minecraft.net/texture/78014dd0d45639c2962818c3b0c487c6d0501cdcd301f281ba06c9be7400042c"),
-        //new CapeTexture(CapeGroup.PUBLIC, "yearn", "Yearn", ""), // TODO new cape
+        registerCape(new CapeTexture(CapeTextureStatus.NONE, "none", "No Cape", null), null);
 
-        new CapeTexture(CapeGroup.MINECON, "minecon_2011", "MineCon 2011", "http://textures.minecraft.net/texture/953cac8b779fe41383e675ee2b86071a71658f2180f56fbce8aa315ea70e2ed6"),
-        new CapeTexture(CapeGroup.MINECON, "minecon_2012", "MineCon 2012", "http://textures.minecraft.net/texture/a2e8d97ec79100e90a75d369d1b3ba81273c4f82bc1b737e934eed4a854be1b6"),
-        new CapeTexture(CapeGroup.MINECON, "minecon_2013", "MineCon 2013", "http://textures.minecraft.net/texture/153b1a0dfcbae953cdeb6f2c2bf6bf79943239b1372780da44bcbb29273131da"),
-        new CapeTexture(CapeGroup.MINECON, "minecon_2015", "MineCon 2015", "http://textures.minecraft.net/texture/b0cc08840700447322d953a02b965f1d65a13a603bf64b17c803c21446fe1635"),
-        new CapeTexture(CapeGroup.MINECON, "minecon_2016", "MineCon 2016", "http://textures.minecraft.net/texture/e7dfea16dc83c97df01a12fabbd1216359c0cd0ea42f9999b6e97c584963e980"),
-        new CapeTexture(CapeGroup.OTHER, "founders", "Founder's"),
-
-        new CapeTexture(CapeGroup.PRIVATE, "realms_mapmaker", "Realms Mapmaker", "http://textures.minecraft.net/texture/17912790ff164b93196f08ba71d0e62129304776d0f347334f8a6eae509f8a56"),
-        new CapeTexture(CapeGroup.PRIVATE, "mojira_moderator", "Mojira Moderator", "http://textures.minecraft.net/texture/ae677f7d98ac70a533713518416df4452fe5700365c09cf45d0d156ea9396551"),
-        new CapeTexture(CapeGroup.PRIVATE, "translator", "Translator", "http://textures.minecraft.net/texture/1bf91499701404e21bd46b0191d63239a4ef76ebde88d27e4d430ac211df681e"),
-        new CapeTexture(CapeGroup.PRIVATE, "cobalt", "Cobalt", "http://textures.minecraft.net/texture/ca35c56efe71ed290385f4ab5346a1826b546a54d519e6a3ff01efa01acce81"),
-        new CapeTexture(CapeGroup.PRIVATE, "scrolls", "Scrolls", "http://textures.minecraft.net/texture/3efadf6510961830f9fcc077f19b4daf286d502b5f5aafbd807c7bbffcaca245"),
-
-        new CapeTexture(CapeGroup.MOJANG, "mojang_classic", "Mojang (Classic)", "http://textures.minecraft.net/texture/8f120319222a9f4a104e2f5cb97b2cda93199a2ee9e1585cb8d09d6f687cb761"),
-        new CapeTexture(CapeGroup.MOJANG, "mojang", "Mojang", "http://textures.minecraft.net/texture/5786fe99be377dfb6858859f926c4dbc995751e91cee373468c5fbf4865e7151"),
-        new CapeTexture(CapeGroup.MOJANG, "mojang_studios", "Mojang Studios", "http://textures.minecraft.net/texture/9e507afc56359978a3eb3e32367042b853cddd0995d17d0da995662913fb00f7"),
-
-        new CapeTexture(CapeGroup.OTHER, "spartan", "Spartan"),
-        new CapeTexture(CapeGroup.OTHER, "christmas", "Christmas"),
-        new CapeTexture(CapeGroup.OTHER, "42", "42", null, "42Richtofen42's OptiFine cape") // edit http://s.optifine.net/capes/42Richtofen42.png to 128x64
+        registerCustomCape("founders", "Founder's", "Bedrock Edition cape from MINECON Live 2019");
+        registerCustomCape("spartan", "Spartan", "From the Battle & Beasts Skin Pack");
+        registerCustomCape("christmas", "Christmas", "Temporarily shown around Christmas of 2010");
+        registerCustomCape("42banner", "42cape", "OptiFine cape of 42Richtofen42"); // edit http://s.optifine.net/capes/42Richtofen42.png to 128x64
     };
+    public record CapeTexture(CapeTextureStatus status, String id, String name, String desc) {
+        public static CapeTexture newCustom(String id, String name, String desc) {
+            return new CapeTexture(CapeTextureStatus.CUSTOM, id, name, desc);
+        }
+        public static CapeTexture newUrl(String id, String name, String desc) {
+            return new CapeTexture(CapeTextureStatus.URL, id, name, desc);
+        }
+    }
+    private enum CapeTextureStatus {
+        NONE,
+        CUSTOM,
+        URL,
+        UNKNOWN
+    }
+    private static String warnedCapeCache = null;
+    private static final Set<String> CAPE_URLS = Sets.newHashSet();
+    private static final Set<String> CAPE_URLS_QUEUE = Sets.newHashSet();
+    private static final Map<String,String> CAPE_URLS_QUEUE_MAP = Maps.newHashMap();
+    private static void registerCustomCape(String id, String name, String desc) {
+        registerCape(CapeTexture.newCustom(id, name, desc), ResourceLocation.tryParse("42edit:textures/cape/"+id+".png"));
+    }
+    private static void registerCape(CapeTexture cape, ResourceLocation texture) {
+        CLIENT_CAPES.add(cape);
+        CAPE_MAP.put(cape.id(), texture);
+    }
+    /**
+     * see {@link net.minecraft.client.resources.SkinManager#registerTextures}
+     */
+    private static void registerCapeUrl(String url, String id, String name, String desc) {
+        if(url == null)
+            return;
+        if(!CAPE_URLS.contains(url)) {
+            CAPE_URLS.add(url);
+            CAPE_URLS_QUEUE.add(url);
+            CAPE_URLS_QUEUE_MAP.put(url, id);
+            CLIENT_CAPES.add(CapeTexture.newUrl(id, name, desc));
+        }
+    }
+    public static void resolveCapeUrlQueue() {
+        if(!CAPE_URLS_QUEUE.isEmpty()) {
+            final Minecraft client = Minecraft.getInstance();
+            if(client.getSkinManager() != null && client.getUser() != null && client.getUser().getProfileId() != null) {
+                for(String url : CAPE_URLS_QUEUE) {
+                    try {
+                        CompletableFuture<PlayerSkin> futurePlayerSkin = ((SkinManagerInvoker)client.getSkinManager())
+                            .invokeRegisterTextures(new java.util.UUID(0,0), new MinecraftProfileTextures(null,
+                            new MinecraftProfileTexture(url, null), null, SignatureState.SIGNED));
+                            futurePlayerSkin.thenAccept(playerSkin -> {
+                                if(CAPE_URLS_QUEUE_MAP.containsKey(url)) {
+                                    CAPE_MAP.put(CAPE_URLS_QUEUE_MAP.get(url), playerSkin.capeTexture());
+                                }
+                                else
+                                    FortytwoEdit.logWarn("Failed to load cape id for: "+url);
+                            });
+                    }
+                    catch(Exception ex) {
+                        FortytwoEdit.logWarn("Failed to load cape texture for: "+url);
+                    }
+                }
+                CAPE_URLS_QUEUE.clear();
+            }
+        }
+        else if(warnedCapeCache == null || !warnedCapeCache.equals(selectedClientCape)) {
+            warnedCapeCache = selectedClientCape;
+            FortytwoEdit.logWarn("Failed to find custom cape with ID: "+selectedClientCape);
+        }
+    }
+    private static final Map<String,ResourceLocation> CAPE_MAP = Maps.newHashMap();
+    public static ResourceLocation getClientCape() {
+        if(CAPE_MAP.containsKey(selectedClientCape))
+            return CAPE_MAP.get(selectedClientCape);
+        resolveCapeUrlQueue();
+        return null;
+    }
+    private static CapeTexture getCacheClientCape() {
+        if(cacheClientCape != null)
+            return cacheClientCape;
+        for(CapeTexture c : CLIENT_CAPES)
+            if(c.id().equals(selectedClientCape)) {
+                cacheClientCape = c;
+                return cacheClientCape;
+            }
+        cacheClientCape = new CapeTexture(CapeTextureStatus.UNKNOWN, selectedClientCape, selectedClientCape, selectedClientCape);
+        return cacheClientCape;
+    }
+    public static String getClientCapeTextboxName() {
+        return getCacheClientCape().name();
+    }
+    public static Tooltip getClientCapeTextboxTooltip() {
+        CapeTexture cape = getCacheClientCape();
+        if(cape.status()==CapeTextureStatus.UNKNOWN) {
+            return Tooltip.create(Component.empty().append("Unknown").withStyle(ChatFormatting.RED));
+        }
+        MutableComponent txtCustomTt = Component.empty().append(cape.name());
+        if(cape.desc() != null)
+            txtCustomTt.append("\n").append(Component.empty().append(cape.desc()).withStyle(ChatFormatting.GRAY));
+        return Tooltip.create(txtCustomTt);
+    }
+    public static void cycleClientCape(boolean right) {
+        if(CLIENT_CAPES.isEmpty())
+            return;
+        int index = -1;
+        for(int i=0; i<CLIENT_CAPES.size(); i++) {
+            if(CLIENT_CAPES.get(i).id().equals(selectedClientCape)) {
+                index = i;
+                break;
+            }
+        }
+        if(index == -1) {
+            index = 0;
+        }
+        else {
+            if(right) {
+                index++;
+                if(index >= CLIENT_CAPES.size())
+                    index = 0;
+            }
+            else {
+                index--;
+                if(index < 0)
+                    index = CLIENT_CAPES.size()-1;
+            }
+        }
+
+        String newCape = CLIENT_CAPES.get(index).id();
+
+        FortytwoEdit.readOptions();
+        FortytwoEdit.selectedClientCape = newCape;
+        FortytwoEdit.updateOptions();
+
+        cacheClientCape = null;
+    }
+
     public static String USERNAME = "";
     public static IntArrayTag UUID = new IntArrayTag(new int[]{0,0,0,0});
-    public record CapeTexture(CapeGroup group, String id, String name, String link, String desc, ResourceLocation identifier) {
-
-        public CapeTexture(CapeGroup group, String id, String name) {
-            this(group, id, name, null, null);
-        }
-
-        public CapeTexture(CapeGroup group, String id, String name, String link) {
-            this(group, id, name, link, null);
-        }
-
-        public CapeTexture(CapeGroup group, String id, String name, String link, String desc) {
-            this(group, id, name, link, desc, ResourceLocation.fromNamespaceAndPath("42edit", "textures/cape/"+id+".png"));
-        }
-
-    }
-    public enum CapeGroup {
-        NONE,       // empty cape
-        PUBLIC,     // easily available for many players
-        PRIVATE,    // very exclusive
-        MINECON,    // classic minecon capes
-        MOJANG,     // mojang
-        OTHER       // bedrock, skin pack, custom, archived, etc
-    }
 
     //skin testing
     public static boolean showClientSkin = false;
@@ -517,7 +613,7 @@ public class FortytwoEdit implements ClientModInitializer {
         USERNAME = client.getUser().getName();
         if(client.getUser().getProfileId() != null)
             UUID = new IntArrayTag(UUIDUtil.uuidToIntArray(client.getUser().getProfileId()));
-        clearCapes();
+        clearOptiCapes();
 
         getSavedItems(); // used to show log errors
         refreshWebItems(false);
@@ -799,7 +895,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         SuggestionHelper.runAllListMethods();
 
-        clearCapes();
+        clearOptiCapes();
         setCustomSkin(null);
 
         FileTools.scanModFiles();
@@ -829,12 +925,7 @@ public class FortytwoEdit implements ClientModInitializer {
         // keep options consistent
         options.getByte("afk_screen_lock").ifPresent(b -> afkScreenLock = (b == 1));
         options.getByte("custom_cape_toggle").ifPresent(b -> showClientCape = (b == 1));
-        options.getString("custom_cape").ifPresent(s -> {
-            clientCape = 0;
-            for(int i=0; i<CLIENT_CAPES.length; i++)
-                if(CLIENT_CAPES[i].id().equals(s))
-                    clientCape = i;
-        });
+        options.getString("custom_cape").ifPresent(s -> selectedClientCape = s);
         options.getCompound("keybinds").ifPresent(c -> {
             Set<String> foundKeys = Sets.newHashSet();
             for(String k : c.keySet()) {
@@ -900,7 +991,7 @@ public class FortytwoEdit implements ClientModInitializer {
         options.putInt("file_format",FileTools.FILE_FORMAT);
         options.putBoolean("afk_screen_lock",afkScreenLock);
         options.putBoolean("custom_cape_toggle",showClientCape);
-        options.putString("custom_cape",CLIENT_CAPES[clientCape].id());
+        options.putString("custom_cape",selectedClientCape);
         CompoundTag keysCompound = options.getCompoundOrEmpty("keybinds");
         for(int i=0; i<KEYBINDS.length; i++) {
             keysCompound.put(KEYBINDS[i].getName(),StringTag.valueOf(KEYBINDS[i].saveString()));
@@ -1122,6 +1213,24 @@ public class FortytwoEdit implements ClientModInitializer {
                     }
                 }
             }
+        }
+        resetClientCapes();
+        if(newItems != null && newItems.getList("capes").isPresent() && !newItems.getList("capes").get().isEmpty()) {
+
+            for(Tag thisTag : newItems.getList("capes").get()) {
+                if(thisTag.getId() == Tag.TAG_COMPOUND) {
+                    CompoundTag thisCompound = (CompoundTag)thisTag;
+                    if(thisCompound.getString("name").isPresent() && thisCompound.getString("url").isPresent()) {
+                        String name = thisCompound.getString("name").get();
+                        String url = thisCompound.getString("url").get();
+                        String id = thisCompound.getString("id").orElse(
+                            name.replace(" ","_").toLowerCase().replaceAll("[^a-z0-9_:./-]",""));
+                        String desc = thisCompound.getString("description").orElse(null);
+                        registerCapeUrl(url, id, name, desc);
+                    }
+                }
+            }
+
         }
 
         if(webItems.isEmpty())
