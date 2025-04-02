@@ -324,6 +324,7 @@ public class FortytwoEdit implements ClientModInitializer {
     private static void resetClientCapes() {
         CLIENT_CAPES.clear();
         CAPE_URLS.clear();
+        CAPE_REGISTERED_IDS.clear();
         CAPE_MAP.clear();
         cacheClientCape = null;
         warnedCapeCache = null;
@@ -353,8 +354,9 @@ public class FortytwoEdit implements ClientModInitializer {
     private static final Set<String> CAPE_URLS = Sets.newHashSet();
     private static final Set<String> CAPE_URLS_QUEUE = Sets.newHashSet();
     private static final Map<String,String> CAPE_URLS_QUEUE_MAP = Maps.newHashMap();
+    private static final Set<String> CAPE_REGISTERED_IDS = Sets.newHashSet();
     private static void registerCustomCape(String id, String name, String desc) {
-        registerCape(CapeTexture.newCustom(id, name, desc), ResourceLocation.tryParse("42edit:textures/cape/"+id+".png"));
+        registerCape(CapeTexture.newCustom(id, name, desc), ResourceLocation.tryParse("42edit:cape/"+id));
     }
     private static void registerCape(CapeTexture cape, ResourceLocation texture) {
         CLIENT_CAPES.add(cape);
@@ -370,6 +372,7 @@ public class FortytwoEdit implements ClientModInitializer {
             CAPE_URLS.add(url);
             CAPE_URLS_QUEUE.add(url);
             CAPE_URLS_QUEUE_MAP.put(url, id);
+            CAPE_REGISTERED_IDS.add(id);
             CLIENT_CAPES.add(CapeTexture.newUrl(id, name, desc));
         }
     }
@@ -397,7 +400,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 CAPE_URLS_QUEUE.clear();
             }
         }
-        else if(warnedCapeCache == null || !warnedCapeCache.equals(selectedClientCape)) {
+        else if(!CAPE_REGISTERED_IDS.contains(selectedClientCape) && (warnedCapeCache == null || !warnedCapeCache.equals(selectedClientCape))) {
             warnedCapeCache = selectedClientCape;
             FortytwoEdit.logWarn("Failed to find custom cape with ID: "+selectedClientCape);
         }
@@ -521,6 +524,60 @@ public class FortytwoEdit implements ClientModInitializer {
         return false;
     }
 
+    private static final String[] MOD_ASSETS_TEXTURES = new String[]{//to_do replace with real solution
+        "cape/42banner",
+        "cape/christmas",
+        "cape/founders",
+        "cape/spartan",
+
+        "gui/generic",
+        "gui/menu_bar",
+
+        "icon/mod",
+        "icon/mycelium"
+    };
+    private static final String[] MOD_LANGUAGES = new String[]{
+        "en_us",
+        "en_pt",
+        "en_ud"
+    };
+
+    public static void loadAllModAssets() {
+        final Minecraft client = Minecraft.getInstance();
+        for(String path : MOD_ASSETS_TEXTURES)
+            loadAssetsTexture(client, path);
+    }
+
+    public static void loadAssetsTexture(Minecraft client, String path) {
+        try {
+            NativeImage texture = NativeImage.read(client.getClass().getClassLoader().getResourceAsStream("assets/"+MOD_ID_MC+"/textures/"+path+".png"));
+            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(MOD_ID_MC,path);
+            client.getTextureManager().release(id);
+            client.getTextureManager().register(id,new DynamicTexture(id::toString,texture));
+        }
+        catch(Exception ex) {
+            FortytwoEdit.logError("Failed to load mod texture: "+path);
+        }
+    }
+
+    public static InputStream getAssetsLang(String lang) {
+        boolean found = false;
+        for(String s : MOD_LANGUAGES) {
+            if(s.equals(lang))
+                found = true;
+        }
+        if(found) {
+            final Minecraft client = Minecraft.getInstance();
+            try {
+                return client.getClass().getClassLoader().getResourceAsStream("assets/"+MOD_ID_MC+"/lang/"+lang+".json");
+            }
+            catch(Exception ex) {
+                FortytwoEdit.logError("Failed to load mod language: "+lang);
+            }
+        }
+        return null;
+    }
+
     //freelook
     public static boolean isFreeLooking = false;
     private static CameraType lastPerspective;
@@ -631,7 +688,15 @@ public class FortytwoEdit implements ClientModInitializer {
         }
         logInfo("Found PathInfo for "+foundComponentPaths+"/"+SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList().size()+" components");
 
-        logInfo("Client initialized");
+        logInfo("42edit client initialized");
+    }
+
+    public static void onMinecraftInit() {
+        logInfo("Running 42edit post-init setup");
+
+        loadAllModAssets();
+
+        logInfo("42edit post-init setup finished");
     }
 
     public static void clientTick(Minecraft client) {
@@ -873,7 +938,8 @@ public class FortytwoEdit implements ClientModInitializer {
         final Minecraft client = Minecraft.getInstance();
         try {
             client.getToastManager().addToast(new SystemToast(TOAST_TYPE, TOAST_PREFIX.copy().append(title), desc));
-        } catch(Exception ex) {
+        }
+        catch(Exception ex) {
             logError("Failed to show toast ("+title.getString()+") ("+desc.getString()+"): "+ex.getMessage());
         }
     }
@@ -1148,7 +1214,8 @@ public class FortytwoEdit implements ClientModInitializer {
                     stream.close();
                     con.disconnect();
                 }
-            } catch(Exception ex) {
+            }
+            catch(Exception ex) {
                 logWarn("Failed connection to BaphomethLabs Black Market ("+webItemsUrlActive+")");
                 didError = true;
             }

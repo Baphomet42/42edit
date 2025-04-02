@@ -109,7 +109,8 @@ public class LogScreen extends GenericScreen {
 
                         if(logList.get(i).searchLine().matches(regexMod))
                             matchRegex = true;
-                    } catch(Exception ex) {
+                    }
+                    catch(Exception ex) {
                         regexError = ex.getMessage();
                     }
                 }

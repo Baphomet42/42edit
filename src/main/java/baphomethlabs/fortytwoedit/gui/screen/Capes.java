@@ -111,7 +111,8 @@ public class Capes extends GenericScreen {
             String url = "https://optifine.net/capeChange?u=" +
                 minecraft.getUser().getProfileId().toString().replace("-","") + "&n=" + minecraft.getUser().getName() + "&s=" + serverId;
             Util.getPlatform().openUri(url);
-        } catch(Exception ex) {
+        }
+        catch(Exception ex) {
             FortytwoEdit.showToast("Failed to edit cape","Could not open OptiFine cape editor webpage");
         }
         unsel();

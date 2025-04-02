@@ -228,7 +228,8 @@ public class FileTools {
                 if(file.exists())
                     return true;
 
-            } catch(Exception ex) {
+            }
+            catch(Exception ex) {
                 error = ex.getMessage();
             }
         }
@@ -285,7 +286,8 @@ public class FileTools {
                 Util.getPlatform().openFile(dir);
                 return true;
             }
-        } catch(Exception ex) {
+        }
+        catch(Exception ex) {
             error = ex.getMessage();
         }
         String logMsg = "Failed to open directory '" + filePath + "'";

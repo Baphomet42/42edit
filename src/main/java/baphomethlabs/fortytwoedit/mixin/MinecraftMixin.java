@@ -14,6 +14,11 @@ import net.minecraft.world.entity.Entity;
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin {
 
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void appendConstructor(CallbackInfo ci) {
+        FortytwoEdit.onMinecraftInit();
+    }
+
 	@Inject(method = "tick", at = @At("RETURN"))
 	private void appendClientTick(CallbackInfo ci) {
 		FortytwoEdit.clientTick((Minecraft)(Object)this);

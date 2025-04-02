@@ -8,6 +8,8 @@
     "AbstractScrollAreaMixin",
     "CameraMixin",
     "ClientLanguageAccessor",
+    "ClientLanguageInvoker",
+    "ClientLanguageMixin",
     "ClientTooltipComponentMixin",
     "CreativeModeInventoryScreenMixin",
     "DecoratedPotPatternsAccessor",

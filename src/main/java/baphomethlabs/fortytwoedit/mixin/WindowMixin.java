@@ -1,6 +1,5 @@
 package baphomethlabs.fortytwoedit.mixin;
 
-import java.io.IOException;
 import java.io.InputStream;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,7 +15,8 @@ public abstract class WindowMixin {
     private NativeImage redirectIcon(InputStream stream) {
         try {
             return NativeImage.read(getClass().getClassLoader().getResourceAsStream("assets/42edit/textures/icon/mycelium.png"));
-        } catch(IOException ex) {
+        }
+        catch(Exception ex) {
             FortytwoEdit.logError("Failed to set game icon");
         }
         return new NativeImage(16,16,true);

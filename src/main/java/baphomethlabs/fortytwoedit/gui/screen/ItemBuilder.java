@@ -882,7 +882,8 @@ public class ItemBuilder extends GenericScreen {
                     if(c<0 || c>255)
                         valid = false;
                     rgb[i] = c;
-                } catch(Exception ex) {
+                }
+                catch(Exception ex) {
                     valid = false;
                 }
             }
@@ -2094,7 +2095,8 @@ public class ItemBuilder extends GenericScreen {
 
                                 try {
                                     item = ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(inp)).createItemStack(1,false);
-                                } catch(Exception ex) {
+                                }
+                                catch(Exception ex) {
                                     if(ex instanceof CommandSyntaxException) {
                                         setErrorMsg(((CommandSyntaxException)ex).getMessage());
                                         if(inpError.contains(" at position ")) {
@@ -3939,7 +3941,8 @@ public class ItemBuilder extends GenericScreen {
                                         try {
                                             ItemArgument.item(BlackMagick.getCommandRegistries()).parse(
                                                 new StringReader("stone["+path.replaceFirst("components\\.","")+"="+value+"]"));
-                                        } catch(Exception ex) {
+                                        }
+                                        catch(Exception ex) {
                                             if(ex instanceof CommandSyntaxException) {
                                                 setErrorMsg(((CommandSyntaxException)ex).getMessage());
                                                 if(inpError.contains(" at position ")) {
@@ -3953,7 +3956,8 @@ public class ItemBuilder extends GenericScreen {
                                     keyType = "id";
                                     try {
                                         ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(value));
-                                    } catch(Exception ex) {
+                                    }
+                                    catch(Exception ex) {
                                         if(ex instanceof CommandSyntaxException) {
                                             setErrorMsg(((CommandSyntaxException)ex).getMessage());
                                             if(inpError.contains(" at position ")) {
@@ -3963,7 +3967,8 @@ public class ItemBuilder extends GenericScreen {
                                     }
                                     try {
                                         ResourceLocation.parse(value);
-                                    } catch(Exception ex) {
+                                    }
+                                    catch(Exception ex) {
                                         setErrorMsg(ex.getMessage());
                                     }
                                 }
@@ -3971,7 +3976,8 @@ public class ItemBuilder extends GenericScreen {
                                     keyType = "count";
                                     try {
                                         IntegerArgumentType.integer(1,selItem.getMaxStackSize()).parse(new StringReader(value));//to_do get from itemStack param
-                                    } catch(Exception ex) {
+                                    }
+                                    catch(Exception ex) {
                                         if(ex instanceof CommandSyntaxException) {
                                             setErrorMsg(((CommandSyntaxException)ex).getMessage());
                                             if(inpError.contains(" at position ")) {
@@ -3981,7 +3987,8 @@ public class ItemBuilder extends GenericScreen {
                                     }
                                     try {
                                         Integer.parseInt(value);
-                                    } catch(Exception ex) {
+                                    }
+                                    catch(Exception ex) {
                                         setErrorMsg("Expected integer");
                                     }
                                 }

@@ -14,8 +14,8 @@ import baphomethlabs.fortytwoedit.FortytwoEdit;
 
 public abstract class GenericScreen extends Screen {
 
-    protected static final ResourceLocation TEXTURE_GENERIC = ResourceLocation.fromNamespaceAndPath("42edit","textures/gui/generic.png");
-    protected static final ResourceLocation TEXTURE_MENU_BAR = ResourceLocation.fromNamespaceAndPath("42edit","textures/gui/menu_bar.png");
+    protected static final ResourceLocation TEXTURE_GENERIC = ResourceLocation.fromNamespaceAndPath("42edit","gui/generic");
+    protected static final ResourceLocation TEXTURE_MENU_BAR = ResourceLocation.fromNamespaceAndPath("42edit","gui/menu_bar");
     protected int backgroundWidth = 12*20;
     protected int backgroundHeight = 9*22;
     protected int x;

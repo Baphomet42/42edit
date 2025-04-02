@@ -479,7 +479,8 @@ public class BlackMagick {
         try {
             String giveMsg = "bundle[bundle_contents=["+item+"]]";
             ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(giveMsg));
-        } catch(Exception ex) {
+        }
+        catch(Exception ex) {
             if(ex instanceof CommandSyntaxException) {
                 String err = ((CommandSyntaxException)ex).getMessage();
                 String bundleErr = "Malformed 'minecraft:bundle_contents' component: ";
