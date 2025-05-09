@@ -331,7 +331,6 @@ public class FortytwoEdit implements ClientModInitializer {
 
         registerCape(new CapeTexture(CapeTextureStatus.NONE, "none", "No Cape", null), null);
 
-        registerCustomCape("founders", "Founder's", "Bedrock Edition cape from MINECON Live 2019");
         registerCustomCape("spartan", "Spartan", "From the Battle & Beasts Skin Pack");
         registerCustomCape("christmas", "Christmas", "Temporarily shown around Christmas of 2010");
         registerCustomCape("42banner", "42cape", "OptiFine cape of 42Richtofen42"); // edit http://s.optifine.net/capes/42Richtofen42.png to 128x64
@@ -527,7 +526,6 @@ public class FortytwoEdit implements ClientModInitializer {
     private static final String[] MOD_ASSETS_TEXTURES = new String[]{//to_do replace with real solution
         "cape/42banner",
         "cape/christmas",
-        "cape/founders",
         "cape/spartan",
 
         "gui/generic",
