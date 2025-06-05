@@ -16,6 +16,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.item.component.TooltipDisplay;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,6 +46,9 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
     protected abstract List<Component> getTooltipFromContainerItem(ItemStack stack);
 
     @Shadow
+    protected abstract boolean showTooltipWithItemInHand(ItemStack stack);
+
+    @Shadow
     protected abstract void slotClicked(Slot slot, int slotId, int button, ClickType actionType);
 
     @Shadow
@@ -53,33 +57,36 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
     @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
     private void injectRenderTooltip(GuiGraphics context, int x, int y, CallbackInfo c) {
 
-        if(((AbstractContainerMenu)this.menu).getCarried().isEmpty() && this.hoveredSlot != null && this.hoveredSlot.hasItem()) {
+        if(this.hoveredSlot != null && this.hoveredSlot.hasItem()) {
             ItemStack stack = this.hoveredSlot.getItem().copy();
-            DataComponentMap components = stack.getComponents();
-            if(components.has(DataComponents.CONTAINER)) {
-                ItemContainerContents container = components.get(DataComponents.CONTAINER);
-                int rows = 3;
-                int columns = 9;
-                int[] size = SuggestionHelper.getContainerSize(stack.getItem());
-                if(size[0]>0)
-                    rows = size[0];
-                if(size[1]>0)
-                    columns = size[1];
+            if(((AbstractContainerMenu)this.menu).getCarried().isEmpty() || this.showTooltipWithItemInHand(stack)) {
+                DataComponentMap components = stack.getComponents();
+		        TooltipDisplay tooltipDisplay = stack.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT);
+                if(components.has(DataComponents.CONTAINER) && tooltipDisplay.shows(DataComponents.CONTAINER)) {
+                    ItemContainerContents container = components.get(DataComponents.CONTAINER);
+                    int rows = 3;
+                    int columns = 9;
+                    int[] size = SuggestionHelper.getContainerSize(stack.getItem());
+                    if(size[0]>0)
+                        rows = size[0];
+                    if(size[1]>0)
+                        columns = size[1];
 
-                NonNullList<ItemStack> items = NonNullList.withSize(rows*columns,ItemStack.EMPTY);
-                container.copyInto(items);
+                    NonNullList<ItemStack> items = NonNullList.withSize(rows*columns,ItemStack.EMPTY);
+                    container.copyInto(items);
 
-                boolean empty = true;
-                for(ItemStack i: items) {
-                    if(!i.isEmpty())
-                        empty = false;
-                }
+                    boolean empty = true;
+                    for(ItemStack i: items) {
+                        if(!i.isEmpty())
+                            empty = false;
+                    }
 
-                if(!empty) {
-                    stack.set(DataComponents.CONTAINER,ItemContainerContents.EMPTY);
-                    Optional<TooltipComponent> data = Optional.of(new ContainerTooltipData(items,rows,columns));
-                    context.renderTooltip(this.font, this.getTooltipFromContainerItem(stack), data, x, y);
-                    c.cancel();
+                    if(!empty) {
+                        stack.set(DataComponents.CONTAINER,ItemContainerContents.EMPTY);
+                        Optional<TooltipComponent> data = Optional.of(new ContainerTooltipData(items,rows,columns));
+                        context.setTooltipForNextFrame(this.font, this.getTooltipFromContainerItem(stack), data, x, y, stack.get(DataComponents.TOOLTIP_STYLE));
+                        c.cancel();
+                    }
                 }
             }
         }

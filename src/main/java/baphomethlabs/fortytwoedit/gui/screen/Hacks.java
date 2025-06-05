@@ -282,7 +282,7 @@ public class Hacks extends GenericScreen {
     }
 
     protected void btnPano() {
-        minecraft.grabPanoramixScreenshot(new File(minecraft.gameDirectory.getAbsolutePath()),1024,1024);
+        minecraft.grabPanoramixScreenshot(new File(minecraft.gameDirectory.getAbsolutePath()));
         unsel();
     }
 

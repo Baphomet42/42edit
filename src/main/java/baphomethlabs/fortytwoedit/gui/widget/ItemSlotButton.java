@@ -3,7 +3,7 @@ package baphomethlabs.fortytwoedit.gui.widget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -92,36 +92,36 @@ public class ItemSlotButton extends Button {
 		super.renderWidget(context, mouseX, mouseY, delta);
 
         if(this.showSlot)
-            context.blitSprite(RenderType::guiTextured,
+            context.blitSprite(RenderPipelines.GUI_TEXTURED,
                 SPRITE_SLOT, this.getX()+((size-SIZE_SLOT)/2), this.getY()+((size-SIZE_SLOT)/2), SIZE_SLOT, SIZE_SLOT);
 
         if(isHoveredOrFocused() && this.showSlot)
-            context.blitSprite(RenderType::guiTextured,
+            context.blitSprite(RenderPipelines.GUI_TEXTURED,
                 SPRITE_HIGHLIGHT_BACK, this.getX()+((size-SIZE_HIGHLIGHT)/2), this.getY()+((size-SIZE_HIGHLIGHT)/2), SIZE_HIGHLIGHT, SIZE_HIGHLIGHT);
 
         drawItem(context,this.item,this.getX()+((size-SIZE_ITEM)/2),this.getY()+((size-SIZE_ITEM)/2));
 
         if(this.emptySlotSprite != null && this.item.isEmpty())
-            context.blitSprite(RenderType::guiTexturedOverlay,
+            context.blitSprite(RenderPipelines.GUI_TEXTURED,
                 this.emptySlotSprite, this.getX()+((size-SIZE_EMPTY_SLOT_SPRITE)/2), this.getY()+((size-SIZE_EMPTY_SLOT_SPRITE)/2),
                 SIZE_EMPTY_SLOT_SPRITE, SIZE_EMPTY_SLOT_SPRITE);
 
         if(isHoveredOrFocused() && this.showSlot)
-            context.blitSprite(RenderType::guiTexturedOverlay,
+            context.blitSprite(RenderPipelines.GUI_TEXTURED,
                 SPRITE_HIGHLIGHT_FRONT, this.getX()+((size-SIZE_HIGHLIGHT)/2), this.getY()+((size-SIZE_HIGHLIGHT)/2), SIZE_HIGHLIGHT, SIZE_HIGHLIGHT);
 
         if(this.overlay != null)
-            context.blitSprite(RenderType::guiTexturedOverlay,
+            context.blitSprite(RenderPipelines.GUI_TEXTURED,
                 this.overlay, this.getX()+((size-overlaySize)/2), this.getY()+((size-overlaySize)/2), overlaySize, overlaySize);
 
         switch(this.error) {
             case WARN : {
-                context.blitSprite(RenderType::guiTexturedOverlay,
+                context.blitSprite(RenderPipelines.GUI_TEXTURED,
                     SPRITE_WARNING, this.getX()+((size-SIZE_ERROR)/2), this.getY()+((size-SIZE_ERROR)/2), SIZE_ERROR, SIZE_ERROR);
                 break;
             }
             case ERROR : {
-                context.blitSprite(RenderType::guiTexturedOverlay,
+                context.blitSprite(RenderPipelines.GUI_TEXTURED,
                     SPRITE_ERROR, this.getX()+((size-SIZE_ERROR)/2), this.getY()+((size-SIZE_ERROR)/2), SIZE_ERROR, SIZE_ERROR);
                 break;
             }

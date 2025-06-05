@@ -24,9 +24,10 @@ public class Capes extends GenericScreen {
 
     protected EditBox txtCustom;
     protected EditBox txtCustomSkin;
-    protected int playerX;
-    protected int playerY;
-    private static final Vector3f vec = new Vector3f();
+    protected final int playerX = backgroundWidth;
+    protected final int playerY = 0;
+    protected final int playerWidth = 100;
+    protected final int playerHeight = backgroundHeight;
     private static final String CUSTOM_SKIN_ERROR_TITLE = "Failed to load skin";
 
     public Capes() {}
@@ -91,8 +92,6 @@ public class Capes extends GenericScreen {
         this.txtCustomSkin.setTooltip(Tooltip.create(Component.nullToEmpty("Drag and drop a skin into this window to set a custom skin")));
         this.txtCustomSkin.setEditable(false);
         this.addRenderableWidget(this.txtCustomSkin);
-        playerX = x + 240+40;
-        playerY = this.height/2 + 30;
     }
 
     protected void btnReloadCapes() {
@@ -157,29 +156,38 @@ public class Capes extends GenericScreen {
 
     /**
      * Modified from {@link net.minecraft.client.gui.screens.inventory.InventoryScreen#renderEntityInInventoryFollowsMouse}
+     * Replace both 180.0F occurances with 0.0F to flip player backwards.
+     * Change `renderEntityInInventory(` to `InventoryScreen.renderEntityInInventory(`
      */
-    private static void drawPlayer(GuiGraphics context, int x, int y, int size, float mouseX, float mouseY, LivingEntity entity) {
-        float f = (float)Math.atan(mouseX / 40.0f);
-        float g = (float)Math.atan(mouseY / 40.0f);
-        Quaternionf quaternionf = new Quaternionf().rotateZ((float)Math.PI);
-        Quaternionf quaternionf2 = new Quaternionf().rotateX(g * 20.0f * ((float)Math.PI / 180));
-        quaternionf.mul(quaternionf2);
-        float h = entity.yBodyRot;
-        float i = entity.getYRot();
-        float j = entity.getXRot();
-        float k = entity.yHeadRotO;
-        float l = entity.yHeadRot;
-        entity.yBodyRot = 0.0f + f * 20.0f;
-        entity.setYRot(0.0f + f * 40.0f);
-        entity.setXRot(-g * 20.0f);
-        entity.yHeadRot = entity.getYRot();
-        entity.yHeadRotO = entity.getYRot();
-        InventoryScreen.renderEntityInInventory(context, x, y, size, vec, quaternionf, quaternionf2, entity);
-        entity.yBodyRot = h;
-        entity.setYRot(i);
-        entity.setXRot(j);
-        entity.yHeadRotO = k;
-        entity.yHeadRot = l;
+    private static void drawPlayer(GuiGraphics guiGraphics, int i, int j, int k, int l, int m, float f, float g, float h, LivingEntity livingEntity) {
+		float n = (i + k) / 2.0F;
+		float o = (j + l) / 2.0F;
+		guiGraphics.enableScissor(i, j, k, l);
+		float p = (float)Math.atan((n - g) / 40.0F);
+		float q = (float)Math.atan((o - h) / 40.0F);
+		Quaternionf quaternionf = new Quaternionf().rotateZ((float) Math.PI);
+		Quaternionf quaternionf2 = new Quaternionf().rotateX(q * 20.0F * (float) (Math.PI / 180.0));
+		quaternionf.mul(quaternionf2);
+		float r = livingEntity.yBodyRot;
+		float s = livingEntity.getYRot();
+		float t = livingEntity.getXRot();
+		float u = livingEntity.yHeadRotO;
+		float v = livingEntity.yHeadRot;
+		livingEntity.yBodyRot = 0.0F + p * 20.0F;
+		livingEntity.setYRot(0.0F + p * 40.0F);
+		livingEntity.setXRot(-q * 20.0F);
+		livingEntity.yHeadRot = livingEntity.getYRot();
+		livingEntity.yHeadRotO = livingEntity.getYRot();
+		float w = livingEntity.getScale();
+		Vector3f vector3f = new Vector3f(0.0F, livingEntity.getBbHeight() / 2.0F + f * w, 0.0F);
+		float x = m / w;
+		InventoryScreen.renderEntityInInventory(guiGraphics, i, j, k, l, x, vector3f, quaternionf, quaternionf2, livingEntity);
+		livingEntity.yBodyRot = r;
+		livingEntity.setYRot(s);
+		livingEntity.setXRot(t);
+		livingEntity.yHeadRotO = u;
+		livingEntity.yHeadRot = v;
+		guiGraphics.disableScissor();
     }
 
     @Override
@@ -188,7 +196,7 @@ public class Capes extends GenericScreen {
         context.drawCenteredString(this.font, Component.nullToEmpty("Client Capes & Skins"), this.width / 2, y+11, TEXT_COLOR);
         context.drawString(this.font, Component.nullToEmpty("Capes"), x+20,y+7+ROW_HEIGHT*2, LABEL_COLOR);
         context.drawString(this.font, Component.nullToEmpty("Skin"), x+20,y+7+ROW_HEIGHT*5, LABEL_COLOR);
-        drawPlayer(context, playerX, playerY, 60, (float)(playerX) - mouseX, (float)(playerY - 50) - mouseY, (LivingEntity)this.minecraft.player);
+        drawPlayer(context, x + playerX, y + playerY, x + playerX + playerWidth, y + playerY + playerHeight, 60, 0.0F, mouseX, mouseY, (LivingEntity)this.minecraft.player);
     }
 
 }

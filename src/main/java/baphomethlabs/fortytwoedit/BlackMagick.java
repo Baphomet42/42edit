@@ -17,7 +17,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.arguments.NbtPathArgument.NbtPath;
 import net.minecraft.commands.arguments.item.ItemArgument;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentType;
@@ -38,9 +37,13 @@ import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
 
 /**
  * Class containing static methods used for working with NBT, Text components, and more
@@ -260,31 +263,15 @@ public class BlackMagick {
 
     /**
      * @param inp item compound with id/count/components
-     * @return stack from nbt without world registries (or empty stack if invalid)
-     */
-    public static ItemStack itemFromNbtStatic(CompoundTag inp) {
-        if(inp != null) {
-            try {
-                return ItemStack.parse(RegistryAccess.EMPTY, inp).orElse(ItemStack.EMPTY);
-            } catch(Exception ex) {}
-        }
-        return ItemStack.EMPTY;
-    }
-
-    /**
-     * @param inp item compound with id/count/components
      * @return stack from nbt (or empty stack if invalid)
      */
     public static ItemStack itemFromNbt(CompoundTag inp) {
-        final Minecraft client = Minecraft.getInstance();
-        if(client.level != null && inp != null) {
+        if(inp != null) {
             try {
-                Optional<ItemStack> optionalStack = ItemStack.parse(client.level.registryAccess(),inp);
-                if(optionalStack.isPresent())
-                    return optionalStack.get();
+                return ItemStack.CODEC.decode(BlackMagick.getOps(),inp).getOrThrow().getFirst();
             } catch(Exception ex) {}
         }
-        return itemFromNbtStatic(inp);
+        return ItemStack.EMPTY;
     }
 
     /**
@@ -303,14 +290,12 @@ public class BlackMagick {
      * @return compound with id/count/components (or empty compound)
      */
     public static CompoundTag itemToNbtStorage(ItemStack item) {
-        CompoundTag nbt = new CompoundTag();
-        final Minecraft client = Minecraft.getInstance();
-        try {
-            if(client.level != null && item != null && !item.isEmpty()) {
-                nbt = (CompoundTag)item.save(client.level.registryAccess());
-            }
-        } catch(Exception ex) {}
-        return nbt;
+        if(item != null && !item.isEmpty()) {
+            try {
+				return (CompoundTag)ItemStack.CODEC.encodeStart(BlackMagick.getOps(),item).getOrThrow();
+            } catch(Exception ex) {}
+        }
+        return new CompoundTag();
     }
 
     /**
@@ -423,11 +408,8 @@ public class BlackMagick {
      * Modified from {@link net.minecraft.commands.arguments.item.ItemInput#serializeComponents}
      */
     private static String componentsAsString(DataComponentMap comps) {
-        final Minecraft client = Minecraft.getInstance();
-        if(client.level != null && comps != null) {
-            HolderLookup.Provider provider = client.level.registryAccess();
-
-            DynamicOps<Tag> dynamicOps = provider.createSerializationContext(NbtOps.INSTANCE);
+        if(comps != null) {
+            DynamicOps<Tag> dynamicOps = BlackMagick.getOps();
             return comps.stream().flatMap(component -> {
                 DataComponentType<?> dataComponentType = component.type();
                 ResourceLocation resourceLocation = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(dataComponentType);
@@ -439,7 +421,6 @@ public class BlackMagick {
         }
         return "";
     }
-
 
     /**
      * 
@@ -712,6 +693,48 @@ public class BlackMagick {
         }
         catch(Exception ex) {}
         return null;
+    }
+
+    public static ValueInput valueInputFromCompound(CompoundTag nbt) {
+        return TagValueInput.create(new ProblemReporter.ScopedCollector(FortytwoEdit.getLogger()), getRegistryAccess(), nbt);
+    }
+
+    public static TagValueOutput valueOutputNew() {
+        return TagValueOutput.createWithContext(new ProblemReporter.ScopedCollector(FortytwoEdit.getLogger()), getRegistryAccess());
+    }
+
+    public static CompoundTag valueOutputToCompound(TagValueOutput output) {
+        return output.buildResult();
+    }
+
+    public static RegistryAccess getRegistryAccess() {
+        final Minecraft client = Minecraft.getInstance();
+        return getRegistryAccess(client);
+    }
+
+    /**
+     * see {@link net.minecraft.client.gui.screens.inventory.InventoryScreen#handleHotbarLoadOrSave}
+     */
+    public static RegistryAccess getRegistryAccess(Minecraft client) {
+        try {
+            return client.player.level().registryAccess();
+        } catch(Exception ex) {}
+        return RegistryAccess.EMPTY;
+    }
+
+    public static DynamicOps<Tag> getOps() {
+        final Minecraft client = Minecraft.getInstance();
+        return getOps(client);
+    }
+
+    /**
+     * see {@link net.minecraft.client.gui.screens.inventory.InventoryScreen#handleHotbarLoadOrSave}
+     */
+    public static DynamicOps<Tag> getOps(Minecraft client) {
+        try {
+            return getRegistryAccess(client).createSerializationContext(NbtOps.INSTANCE);
+        } catch(Exception ex) {}
+        return NbtOps.INSTANCE;
     }
 
     /**
@@ -1060,10 +1083,7 @@ public class BlackMagick {
      * @return vanilla command registries with all features enabled
      */
     public static CommandBuildContext getCommandRegistries() {
-        final Minecraft client = Minecraft.getInstance();
-        if(client.level != null)
-            return CommandBuildContext.simple(client.level.registryAccess(), FortytwoEdit.FEATURES);
-        return CommandBuildContext.simple(RegistryAccess.EMPTY, FortytwoEdit.FEATURES);
+        return CommandBuildContext.simple(BlackMagick.getRegistryAccess(), FortytwoEdit.FEATURES);
     }
 
     public static Component getElementDifferencesOrColorfulText(Tag left, Tag right) {

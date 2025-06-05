@@ -71,7 +71,7 @@ public class LogScreen extends GenericScreen {
             updateBox();
             unsel();
         }));
-        box = this.addRenderableWidget(new MultiLineEditBox(this.minecraft.font, x+15-3, y+35, 240-24, ROW_HEIGHT*6, Component.nullToEmpty(""), Component.nullToEmpty("")));
+        box = this.addRenderableWidget(MultiLineEditBox.builder().setX(x+15-3).setY(y+35).build(minecraft.font, 240-24, ROW_HEIGHT*6, Component.nullToEmpty("")));
         txtRegex = new EditBox(this.font,x+15-3,y+35+ROW_HEIGHT*6+1,160,WID_HEIGHT,Component.nullToEmpty(""));
         txtRegex.setMaxLength(MAX_TEXT_LENGTH);
         txtRegex.setValue(""+regexInput);

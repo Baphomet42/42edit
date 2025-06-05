@@ -20,7 +20,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -51,6 +51,7 @@ import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.storage.TagValueOutput;
 import org.lwjgl.glfw.GLFW;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -126,15 +127,15 @@ public class ItemBuilder extends GenericScreen {
         .append(grayWhiteText("","\n(Mostly Harmless)")));
     private static final Tooltip TOOLTIP_LOCAL_ITEMS =
         Tooltip.create(grayWhiteText("Local Items","\n\nSave items for later without using up your saved hotbars"));
-    private static final ItemStack[] SAVED_TAB_MODE_ITEMS = new ItemStack[]{BlackMagick.itemFromNbtStatic(BlackMagick.validCompoundFromString(
+    private static final ItemStack[] SAVED_TAB_MODE_ITEMS = new ItemStack[]{BlackMagick.itemFromString(
         "{id:player_head,components:{profile:{properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQ"
         +"iIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pb"
         +"mVjcmFmdC5uZXQvdGV4dHVyZS9iZDlmMThjOWQ4NWY5MmY3MmY4NjRkNjdjMTM2N2U5YTQ1ZGMxMGYzNzE1NDljNDZhNGQ0ZGQ5ZTRmMTN"
-        +"mZjQiDQogICAgfQ0KICB9DQp9\"}]}}}")),
-        BlackMagick.itemFromNbtStatic(BlackMagick.validCompoundFromString("{id:player_head,components:{profile:{"
+        +"mZjQiDQogICAgfQ0KICB9DQp9\"}]}}}"),
+        BlackMagick.itemFromString("{id:player_head,components:{profile:{"
         +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlN"
         +"LSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MjY0ODZmNDI0ODljZWYwMmM5ZTk4ZGQ4Y"
-        +"mU1YTNmMzhlODc5MTQ3NTQzMjZlNzdjODM3YzFiMmJjYmE2NSINCiAgICB9DQogIH0NCn0=\"}]}}}"))};
+        +"mU1YTNmMzhlODc5MTQ3NTQzMjZlNzdjODM3YzFiMmJjYmE2NSINCiAgICB9DQogIH0NCn0=\"}]}}}")};
     protected static final ResourceLocation DELETE_ITEM_OVERLAY = ResourceLocation.withDefaultNamespace("container/beacon/cancel");
     protected static final int DELETE_ITEM_OVERLAY_SIZE = 16;
     private ArmorStand renderArmorStand;
@@ -346,7 +347,7 @@ public class ItemBuilder extends GenericScreen {
             bannerChangePreview.setXRot(25.0f);
             bannerChangePreview.yHeadRot = bannerChangePreview.getYRot();
             bannerChangePreview.yHeadRotO = bannerChangePreview.getYRot();
-            bannerChangePreview.load(BlackMagick.validCompoundFromString("{Invisible:true,Pose:{RightArm:[-90f,-90f,0f]}}"));
+            bannerChangePreview.load(BlackMagick.valueInputFromCompound(BlackMagick.validCompoundFromString("{Invisible:true,Pose:{RightArm:[-90f,-90f,0f]}}")));
         }
 
         //banner
@@ -653,7 +654,7 @@ public class ItemBuilder extends GenericScreen {
             entity.put("Pos",BlackMagick.nbtFromString("[0d,0d,0d]"));
             entity.put("Motion",BlackMagick.nbtFromString("[0d,0d,0d]"));
             entity.put("Rotation",BlackMagick.nbtFromString("[0f,0f]"));
-            renderArmorStand.load(entity.copy());
+            renderArmorStand.load(BlackMagick.valueInputFromCompound(entity.copy()));
         }
 
         updatePose();
@@ -669,8 +670,11 @@ public class ItemBuilder extends GenericScreen {
             renderArmorPose.yHeadRot = renderArmorPose.getYRot();
             renderArmorPose.yHeadRotO = renderArmorPose.getYRot();
             CompoundTag nbt = new CompoundTag();
-            if(renderArmorStand != null)
-                nbt = renderArmorStand.saveWithoutId(new CompoundTag());
+            if(renderArmorStand != null) {
+                TagValueOutput val = BlackMagick.valueOutputNew();
+                renderArmorStand.saveWithoutId(val);
+                nbt = BlackMagick.valueOutputToCompound(val);
+            }
 
             for(int i=0; i<poseSliders.size(); i++) {
                 ListTag poseList = null;
@@ -699,7 +703,7 @@ public class ItemBuilder extends GenericScreen {
             }
 
             nbt.put("Pose",poseCompound.copy());
-            renderArmorPose.load(nbt.copy());
+            renderArmorPose.load(BlackMagick.valueInputFromCompound(nbt.copy()));
 
             if(!editorOutputLocked) {
                 if(widgetCacheTest(WidgetCacheType.TXT_POSE)) {
@@ -2024,7 +2028,7 @@ public class ItemBuilder extends GenericScreen {
             int tabNum = CACHE_TAB_NBT;
             final MultiLineEditBox giveBox;
             {
-                giveBox = new MultiLineEditBox(minecraft.font, 0, 0, ROW_WIDTH, ROW_HEIGHT*6, Component.nullToEmpty(""), Component.nullToEmpty(""));
+                giveBox = MultiLineEditBox.builder().setX(0).setY(0).build(minecraft.font, ROW_WIDTH, ROW_HEIGHT*6, Component.nullToEmpty(""));
                 addTabWidgetLocked(tabNum, new PosWidget(giveBox,ROW_LEFT_LOCKED,ROW_TOP));
                 widgetCacheAdd(WidgetCacheType.GIVE_BOX_BOX,giveBox);
                 giveBox.setValueListener(value -> {
@@ -2450,7 +2454,7 @@ public class ItemBuilder extends GenericScreen {
                 addTabWidgetScroll(tabNum, new RowWidget("Saved Hotbars"));
             }
             for(int h=0; h<HotbarManager.NUM_HOTBAR_GROUPS; h++) {
-                List<ItemStack> row = minecraft.getHotbarManager().get(h).load(minecraft.level.registryAccess());
+                List<ItemStack> row = minecraft.getHotbarManager().get(h).load(BlackMagick.getRegistryAccess());
                 ItemStack[] stacks = new ItemStack[9];
                 for(int c=0; c<stacks.length; c++) {
                     if(row.size() > c)
@@ -2879,8 +2883,7 @@ public class ItemBuilder extends GenericScreen {
             case SNBT: {
                 final String currentVal = BlackMagick.nbtToSnbt(editElement);
 
-                MultiLineEditBox elementTxt = new MultiLineEditBox(minecraft.font, 0, 0, ROW_WIDTH, ROW_HEIGHT*6,
-                    Component.nullToEmpty(""), Component.nullToEmpty(""));
+                MultiLineEditBox elementTxt = MultiLineEditBox.builder().setX(0).setY(0).build(minecraft.font, ROW_WIDTH, ROW_HEIGHT*6, Component.nullToEmpty(""));
                 final PathFlag pathFlag = nbtEdit.pi().getFlag();
                 elementTxt.setValueListener(value -> {
                     if(widgetCacheTest(WidgetCacheType.NBT_EDIT_SNBT_ADD_BTN)) {
@@ -5352,7 +5355,7 @@ public class ItemBuilder extends GenericScreen {
         public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             super.render(context, index, y, x, entryWidth, entryHeight, mouseX, mouseY, hovered, tickDelta);
             if(this.renderHotbarSel)
-                context.blitSprite(RenderType::guiTexturedOverlay, SEL_SLOT,
+                context.blitSprite(RenderPipelines.GUI_TEXTURED, SEL_SLOT,
                     x+(minecraft.player.getInventory().getSelectedSlot()*20)+40-2, y-2-20, 24, 23);
         }
 
@@ -5834,7 +5837,7 @@ public class ItemBuilder extends GenericScreen {
     @Override
     protected void renderBehindBackgroundTexture(GuiGraphics context) {
         if(textComponentPreviewBook)
-            context.blit(RenderType::guiTextured, BookViewScreen.BOOK_LOCATION, x + bookX, y + bookY, 0.0F, 0.0F, 192, 192, 256, 256);
+            context.blit(RenderPipelines.GUI_TEXTURED, BookViewScreen.BOOK_LOCATION, x + bookX, y + bookY, 0.0F, 0.0F, 192, 192, 256, 256);
     }
 
     @Override

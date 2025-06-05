@@ -1,13 +1,12 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import java.time.Duration;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
@@ -18,12 +17,12 @@ public abstract class GenericScreen extends Screen {
     protected static final ResourceLocation TEXTURE_MENU_BAR = ResourceLocation.fromNamespaceAndPath("42edit","gui/menu_bar");
     protected int backgroundWidth = 12*20;
     protected int backgroundHeight = 9*22;
-    protected int x;
+    protected int x;// to_do rename to leftPos and topPos (see AbstractContainerScreen)
     protected int y;
-    protected static final int LABEL_COLOR = 0xA0A0A0;
-    protected static final int LABEL_COLOR_DIM = 0x404040;
-    protected static final int ERROR_COLOR = 0xFF5555;
-    protected static final int TEXT_COLOR = 0xFFFFFF;
+    protected static final int LABEL_COLOR = 0xFFA0A0A0;
+    protected static final int LABEL_COLOR_DIM = 0xFF404040;
+    protected static final int ERROR_COLOR = 0xFFFF5555;
+    protected static final int TEXT_COLOR = 0xFFFFFFFF;
     protected static final int WID_HEIGHT = 20; // standard widget height
     protected static final int ROW_HEIGHT = 22; // standard spacing amounts between rows of widgets
     protected static final int TOP_OFFSET = (ROW_HEIGHT-WID_HEIGHT)/2;
@@ -77,7 +76,7 @@ public abstract class GenericScreen extends Screen {
 
         ResourceLocation backgroundTexture = getBackgroundTexture();
         if(backgroundTexture != null)
-            context.blit(RenderType::guiTextured, backgroundTexture, this.x, this.y, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
+		    context.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, this.x, this.y, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
     }
 
     @Override

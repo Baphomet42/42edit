@@ -199,12 +199,9 @@ public class SuggestionHelper {
     public static int getEnchantmentMaxLevel(String key) {
         int max = -1;
         try {
-            final Minecraft client = Minecraft.getInstance();
-            if(client.level != null) {
-                Enchantment ench = client.level.registryAccess().lookup(Registries.ENCHANTMENT).get().getValue(ResourceLocation.parse(key));
-                if(ench != null)
-                    max = ench.getMaxLevel();
-            }
+            Enchantment ench = BlackMagick.getRegistryAccess().lookup(Registries.ENCHANTMENT).get().getValue(ResourceLocation.parse(key));
+            if(ench != null)
+                max = ench.getMaxLevel();
         } catch(Exception ex) {}
         return max;
     }
@@ -558,7 +555,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
             if(client.level != null)
-                client.level.registryAccess().lookup(registryRef).ifPresent(reg -> {
+                BlackMagick.getRegistryAccess(client).lookup(registryRef).ifPresent(reg -> {
                     for(ResourceLocation i : reg.keySet())
                         list.add(i.toString());
                 });
@@ -619,7 +616,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
             if(client.level != null)
-                client.level.registryAccess().lookup(registryRef).ifPresent(reg -> {
+                BlackMagick.getRegistryAccess(client).lookup(registryRef).ifPresent(reg -> {
                     reg.listTagIds().forEach(tag -> {
                         list.add("#"+tag.location().toString());
                     });
@@ -657,7 +654,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
             if(client.level != null)
-                client.level.registryAccess().lookup(Registries.ITEM).ifPresent(reg -> {
+                BlackMagick.getRegistryAccess(client).lookup(Registries.ITEM).ifPresent(reg -> {
                     for(Holder<Item> itemHolder : reg.getTagOrEmpty(TagKey.create(Registries.ITEM,ResourceLocation.parse(tag)))) {
                         list.add(itemHolder.value().toString());
                     }

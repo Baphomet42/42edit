@@ -79,6 +79,12 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final String MOD_ID_JAVA = "fortytwoedit";
     public static final String MOD_ID_MC = "42edit";
 	private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID_MC);
+    /**
+     * Used for creating ProblemReporter.ScopedCollector objects only
+     */
+    public static final Logger getLogger() {
+        return LOGGER;
+    }
 
     // gui
     public static QuickScreen quickScreen = QuickScreen.NONE;
@@ -623,24 +629,24 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     // common
-    public static final ItemStack HEAD42 = BlackMagick.itemFromNbtStatic(BlackMagick.validCompoundFromString("{id:player_head,components:{profile:{name:\"42Richtofen42\","
+    public static final ItemStack HEAD42 = BlackMagick.itemFromString("{id:player_head,components:{profile:{name:\"42Richtofen42\","
         +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlc"
         +"yIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lNDliNjliNWU3MzVlYjUyMmIyNGM2OTczNTQ5ZGRhODMzYjE1ZD"
-        +"kxYjg3NDM1NjRjZmIxN2QwZjk2MWMwZjU0Ig0KICAgIH0NCiAgfQ0KfQ==\"}]}}}"));
+        +"kxYjg3NDM1NjRjZmIxN2QwZjk2MWMwZjU0Ig0KICAgIH0NCiAgfQ0KfQ==\"}]}}}");
     public static final CompoundTag BANNER42 = BlackMagick.validCompoundFromString("{id:red_banner,components:{banner_patterns:[{color:\"black\",pattern:\"minecraft:curly_border\"}"
         +",{color:\"black\",pattern:\"minecraft:bricks\"},{color:\"red\",pattern:\"minecraft:triangle_bottom\"},{color:\"black\",pattern:\"minecraft:triangle_bottom\"}"
         +",{color:\"purple\",pattern:\"minecraft:flower\"},{color:\"black\",pattern:\"minecraft:gradient\"}]}}");
     public static final CompoundTag BANNERBRICK = BlackMagick.validCompoundFromString("{id:orange_banner,components:{banner_patterns:[{color:\"black\",pattern:\"minecraft:gradient\"}"
         +",{color:\"black\",pattern:\"minecraft:gradient\"},{color:\"black\",pattern:\"minecraft:gradient\"},{color:\"orange\",pattern:\"minecraft:triangles_bottom\"}"
         +",{color:\"red\",pattern:\"minecraft:bricks\"},{color:\"green\",pattern:\"minecraft:creeper\"}]}}");
-    public static final ItemStack ITEM_ERROR = BlackMagick.itemFromNbtStatic(BlackMagick.validCompoundFromString("{id:player_head,components:{profile:{"
+    public static final ItemStack ITEM_ERROR = BlackMagick.itemFromString("{id:player_head,components:{profile:{"
         +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcy"
         +"IgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hZTE4MjM2NzExOTYzMTMxNzY5MjM0Mzc4OGNkNWM4NTRjMTNiNDQ5"
-        +"ZDM2ZTYyMmI4NTU0YTU2MzhlZDM4NTkzIg0KICAgIH0NCiAgfQ0KfQ==\"}]}}}"));
-    public static final ItemStack ITEM_QUESTION = BlackMagick.itemFromNbtStatic(BlackMagick.validCompoundFromString("{components:{\"minecraft:profile\":"
+        +"ZDM2ZTYyMmI4NTU0YTU2MzhlZDM4NTkzIg0KICAgIH0NCiAgfQ0KfQ==\"}]}}}");
+    public static final ItemStack ITEM_QUESTION = BlackMagick.itemFromString("{components:{\"minecraft:profile\":"
         +"{id:[I;1617833968,-310949822,-1653808685,840726584],name:\"MHF_Question\",properties:[{name:\"textures\",value:\"ewogICJzaWduYXR1cmVSZXF1aXJlZCIg"
         +"OiBmYWxzZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2QzNGUwNjNjYWZiNDY3Y"
-        +"TVjOGRlNDNlYzc4NjE5Mzk5ZjM2OWY0YTUyNDM0ZGE4MDE3YTk4M2NkZDkyNTE2YTAiCiAgICB9CiAgfQp9\"}]}},count:1,id:\"minecraft:player_head\"}"));
+        +"TVjOGRlNDNlYzc4NjE5Mzk5ZjM2OWY0YTUyNDM0ZGE4MDE3YTk4M2NkZDkyNTE2YTAiCiAgICB9CiAgfQp9\"}]}},count:1,id:\"minecraft:player_head\"}");
 
     public static final CompoundTag LORE_BAPHOMETHLABS = BlackMagick.validCompoundFromString("{color:\"gold\",\"text\":\"BaphomethLabs\"}");
     public static final CompoundTag LORE_BAPHOMETHLABS_BOTTLE = BlackMagick.validCompoundFromString("{color:\"gold\",\"text\":\"Bottled by BaphomethLabs\"}");
@@ -1257,7 +1263,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     if(versionData.getInt("version").isPresent() && versionData.getList("items").isPresent()) {
                         int versionNum = versionData.getInt("version").get();
     
-                        if(itemsVer == -1 || (versionNum > itemsVer && versionNum <= SharedConstants.getCurrentVersion().getPackVersion(PackType.SERVER_DATA))) {
+                        if(itemsVer == -1 || (versionNum > itemsVer && versionNum <= SharedConstants.getCurrentVersion().packVersion(PackType.SERVER_DATA))) {
                             itemsVer = versionNum;
                             jsonItems = versionData.getList("items").get();
                         }

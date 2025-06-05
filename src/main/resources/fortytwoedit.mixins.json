@@ -5,7 +5,6 @@
   "client": [
     "AbstractClientPlayerMixin",
     "AbstractContainerScreenMixin",
-    "AbstractScrollAreaMixin",
     "CameraMixin",
     "ClientLanguageAccessor",
     "ClientLanguageInvoker",

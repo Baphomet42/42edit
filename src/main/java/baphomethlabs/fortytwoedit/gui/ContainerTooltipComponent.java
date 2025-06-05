@@ -3,7 +3,7 @@ package baphomethlabs.fortytwoedit.gui;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -59,7 +59,7 @@ public class ContainerTooltipComponent implements ClientTooltipComponent {
     }
 
     private void draw(GuiGraphics context, int x, int y, Sprite sprite) {
-        context.blitSprite(RenderType::guiTextured, sprite.texture, x, y, sprite.width, sprite.height);
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, sprite.texture, x, y, sprite.width, sprite.height);
     }
 
     static enum Sprite {
