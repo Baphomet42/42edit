@@ -7,7 +7,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
@@ -20,9 +19,6 @@ import baphomethlabs.fortytwoedit.FortytwoEdit;
 public class LogScreen extends GenericScreen {
 
     private MultiLineEditBox box;
-    private AbstractWidget pauseBtn;
-    private static final Tooltip PAUSE_TOOLTIP = Tooltip.create(Component.nullToEmpty("Temporarily freeze new messages from appearing"));
-    private static final Tooltip RESUME_TOOLTIP = Tooltip.create(Component.nullToEmpty("Unpause log and show new messages"));
     private static File logFile;
     private static int fullLogLines = 0;
     private static int fullLogStart = 0;
@@ -55,14 +51,12 @@ public class LogScreen extends GenericScreen {
         logFile = new File(minecraft.gameDirectory.getAbsolutePath()+"\\logs\\latest.log");
 
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new DebugScreen())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
-        pauseBtn = this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Resume"),
-                Component.literal("Pause")).withInitialValue(paused).displayOnlyValue().create(x+GUI_SPACE+40+WID_SPACE,y+GUI_SPACE,40,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Resume"),
+                Component.literal("Pause")).withInitialValue(paused).displayOnlyValue().withTooltip(val -> Tooltip.create(val ? Component.nullToEmpty("Unpause log and show new messages") : Component.nullToEmpty("Temporarily freeze new messages from appearing"))).create(x+GUI_SPACE+40+WID_SPACE,y+GUI_SPACE,40,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             paused = (boolean)trackOutput;
             updateBox();
             unsel();
-            pauseBtn.setTooltip(paused ? RESUME_TOOLTIP : PAUSE_TOOLTIP);
         }));
-        pauseBtn.setTooltip(PAUSE_TOOLTIP);
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Clear"), button -> btnClearLog()).bounds(x+backgroundWidth-GUI_SPACE-50-40-WID_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Clear all logged messages\n\nShift click to restore all cleared messages")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("[42edit]"),

@@ -1494,7 +1494,7 @@ public class ItemBuilder extends GenericScreen {
                                 return showLabel ? Component.empty().append(grayWhiteText("Modifier:\n",btnTxt)) : btnTxt;
                             }
                             if(BlackMagick.elementsEqual(el, BlackMagick.getNbtPath(BlackMagick.itemToNbt(stack),"components.minecraft:attribute_modifiers[0]"))) {
-                                return showLabel ? Component.empty().append(grayWhiteText("Modifier: ","No effect")) : Component.empty().append("No effect");
+                                return showLabel ? Component.empty().append(grayWhiteText("Modifier: ","Hidden")) : Component.empty().append("Hidden");
                             }
                         }
                     }

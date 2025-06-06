@@ -40,7 +40,9 @@ public class Hacks extends GenericScreen {
 
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Mix [On]"),
-                Component.literal("Mix [Off]")).withInitialValue(FortytwoEdit.randoMode).displayOnlyValue().create(x+20,y+ROW_HEIGHT*2+1,80,WID_HEIGHT,
+                Component.literal("Mix [Off]")).withInitialValue(FortytwoEdit.randoMode).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty(
+                "Toggle mix mode\n\nWhen on: after placing a block, change to a random hotbar slot\n\n"
+                +"If numbers are specified, the random slot will be selected from those.\nExample: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)"))).create(x+20,y+ROW_HEIGHT*2+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             setTxtRando();
             if(!(boolean)trackOutput)
@@ -48,8 +50,7 @@ public class Hacks extends GenericScreen {
             else if((boolean)trackOutput && FortytwoEdit.randoSlots != null)
                 FortytwoEdit.randoMode = true;
             unsel();
-        })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle mix mode\n\nWhen on: after placing a block, change to a random hotbar slot\n\n"
-            +"If numbers are specified, the random slot will be selected from those.\nExample: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)")));
+        }));
         this.txtRando = new EditBox(this.font,x+20+80+WID_SPACE,y+44+1,100-2,WID_HEIGHT,Component.nullToEmpty(""));
         this.txtRando.setMaxLength(15);
         if(FortytwoEdit.randoSlots != null) {
@@ -66,13 +67,13 @@ public class Hacks extends GenericScreen {
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Full Data"), button -> this.btnGetEntity(0)).bounds(x+20+80+WID_SPACE,y+ROW_HEIGHT*3+1,60,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Get Entity without removing position, uuid, etc.")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Xray [On]"),
-                Component.literal("Xray [Off]")).withInitialValue(FortytwoEdit.seeInvis).displayOnlyValue().create(x+20,y+ROW_HEIGHT*4+1,100,WID_HEIGHT,
+                Component.literal("Xray [Off]")).withInitialValue(FortytwoEdit.seeInvis).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle xray mode\n\nWhen on: all entities will glow through blocks"))).create(x+20,y+ROW_HEIGHT*4+1,100,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
-            minecraft.levelRenderer.allChanged();
+            //minecraft.levelRenderer.allChanged(); // to_do enable if invis block mixins are reimplemented
             FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
             FortytwoEdit.xrayEntity = FortytwoEdit.seeInvis;
             unsel();
-        })).setTooltip(Tooltip.create(Component.nullToEmpty("Toggle xray mode\n\nWhen on: barriers, light blocks, and other invisible blocks will appear as solid blocks")));
+        }));
         btnWgtFindInvis = this.addRenderableWidget(Button.builder(Component.nullToEmpty("Find Invis Entities"),
             button -> this.btnFindInvis()).bounds(x+20+100+WID_SPACE,y+ROW_HEIGHT*4+1,100,WID_HEIGHT).build());
         if(!minecraft.player.getAbilities().instabuild) {
@@ -84,11 +85,11 @@ public class Hacks extends GenericScreen {
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Death Pos"), button -> this.btnDeathPos()).bounds(x+20,y+ROW_HEIGHT*5+1,100,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Print your last position of death (only you can see this)")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("   Auto Fish [On]"),
-                Component.literal("   Auto Fish [Off]")).withInitialValue(FortytwoEdit.autoFish).displayOnlyValue().create(x+20+100+WID_SPACE,y+ROW_HEIGHT*5+1,100,WID_HEIGHT,
+                Component.literal("   Auto Fish [Off]")).withInitialValue(FortytwoEdit.autoFish).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on"))).create(x+20+100+WID_SPACE,y+ROW_HEIGHT*5+1,100,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.autoFish = !FortytwoEdit.autoFish;
             unsel();
-        })).setTooltip(Tooltip.create(Component.nullToEmpty("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on")));
+        }));
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Look N"), button -> this.btnLookN()).bounds(x+20,y+ROW_HEIGHT*7+1,40,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Set your rotation to straight north")));
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Rotate"), button -> this.btnLookR()).bounds(x+20+40+WID_SPACE,y+ROW_HEIGHT*7+1,40,WID_HEIGHT).build())

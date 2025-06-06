@@ -34,7 +34,7 @@ dependencies {
 	//		./gradlew genSources --refresh-dependencies
 	//		.\gradlew vscode
 	//	.vscode/launch.json:
-	//		"args": "--quickPlaySingleplayer \"Continue Testing\"",
+	//		"args": "--quickPlaySingleplayer
 	//		remove runDir lines
 	//	java project clean workspace
 	//	./gradlew build

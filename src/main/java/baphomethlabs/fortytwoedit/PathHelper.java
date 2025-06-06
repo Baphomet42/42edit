@@ -75,7 +75,13 @@ public class PathHelper {
                 "amount", PathInfo.create(DataType.ElementLiteral.of(NbtType.DOUBLE)).getter(),
                 "operation", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("add_value","add_multiplied_base","add_multiplied_total"))).setInfo("add_value: base + amount1 + amount2\n\nadd_multiplied_base: base * (1 + amount1 + amount2)\n\nadd_multiplied_total: base * (1 + amount1) * (1 + amount2)").getter()
                 ),Map.of(
-                "slot", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_ATTRIBUTE_MODIFIER_SLOT)).setUnsetInfo(StringTag.valueOf("any")).getter()
+                "slot", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_ATTRIBUTE_MODIFIER_SLOT)).setUnsetInfo(StringTag.valueOf("any")).getter(),
+                "display", PathInfo.create(DataType.CompoundStructured.of(Map.of(
+                    "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("default","hidden","override"))).getter()
+                    ),Map.of(
+                    "value", PathInfo.copyOf("text_component").setInfo("For 'override' type - text component to show").getter()
+                    )
+                )).setUnsetInfo(BlackMagick.nbtFromString("{type:\"default\"}")).getter()
             ))).setFlag(PathFlag.ATTRIBUTE_MODIFIER).getter()
         )).setIcon(Items.DIAMOND_SWORD));
 
@@ -231,8 +237,10 @@ public class PathHelper {
             "slot", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_EQUIPMENT_SLOT)).getter()
             ),Map.of(
             "equip_sound", PathInfo.copyOf("sound_event_or_definition").setUnsetInfo(StringTag.valueOf("minecraft:item.armor.equip_generic")).getter(),
+            "shearing_sound", PathInfo.copyOf("sound_event_or_definition").setUnsetInfo(StringTag.valueOf("minecraft:item.shears.snip")).getter(),
             "asset_id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_EQUIPMENT)).setInfo("Resource location of an equipment model at `assets/<namespace>/equipment/<id>`").getter(),
             "allowed_entities", PathInfo.copyOf("entity_id_tag_or_list").setUnsetInfo("Applies to all entity types").getter(),
+            "can_be_sheared", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).getter(),
             "dispensable", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter(),
             "swappable", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("If the item can be equipped when interacting").setUnsetInfo(true).getter(),
             "damage_on_hurt", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter(),
@@ -527,17 +535,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:mooshroom/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_MOOSHROOM_VARIANT)).setIcon(Items.MOOSHROOM_SPAWN_EGG));
 
-        registerPathInfo("components.minecraft:painting/variant", PathInfo.create(// stores in specified form [data storage]
-            DataType.CompoundStructured.of(Map.of(
-                "asset_id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES_PAINTING)).setInfo("Resource location of a texture at `assets/<namespace>/textures/painting/<id>`").getter(),
-                "width", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).getter(),
-                "height", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).getter()
-                ),Map.of(
-                "title", PathInfoGetter.of("text_component"),
-                "author", PathInfoGetter.of("text_component")
-            )),
-            DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_PAINTING_VARIANT)
-        ).setIcon(Items.PAINTING));
+        registerPathInfo("components.minecraft:painting/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_PAINTING_VARIANT)).setIcon(Items.PAINTING));
 
         registerPathInfo("components.minecraft:parrot/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_PARROT_VARIANT)).setIcon(Items.PARROT_SPAWN_EGG));
 
