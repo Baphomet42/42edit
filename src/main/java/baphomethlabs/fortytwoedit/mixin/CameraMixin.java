@@ -10,6 +10,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.BlockGetter;
 
 @Mixin(Camera.class)
@@ -45,10 +46,21 @@ public abstract class CameraMixin {
                 Mth.lerp((double)tickDelta, focusedEntity.zo, focusedEntity.getZ())
             );
 
-            float s = 1f;
-            if(focusedEntity instanceof LivingEntity)
-                s = ((LivingEntity)focusedEntity).getScale();
-            this.move(-this.getMaxZoom(4.0f * s), 0.0f, 0.0f);
+            float g = 4.0F;
+			float h = 1.0F;
+			if (focusedEntity instanceof LivingEntity livingEntity) {
+				h = livingEntity.getScale();
+				g = (float)livingEntity.getAttributeValue(Attributes.CAMERA_DISTANCE);
+			}
+
+			float i = h;
+			float j = g;
+			if (focusedEntity.isPassenger() && focusedEntity.getVehicle() instanceof LivingEntity livingEntity2) {
+				i = livingEntity2.getScale();
+				j = (float)livingEntity2.getAttributeValue(Attributes.CAMERA_DISTANCE);
+			}
+
+			this.move(-this.getMaxZoom(Math.max(h * g, i * j)), 0.0F, 0.0F);
         }
     }
 
