@@ -1,12 +1,7 @@
 package baphomethlabs.fortytwoedit.gui;
 
 import com.google.common.collect.Lists;
-import com.mojang.brigadier.StringReader;
-import com.mojang.brigadier.context.StringRange;
-import com.mojang.brigadier.suggestion.Suggestion;
-import com.mojang.brigadier.suggestion.Suggestions;
 import java.util.List;
-import java.util.Locale;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -17,6 +12,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.BelowOrAboveWidgetTool
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec2;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +33,7 @@ public class TextSuggestor {
     private TextSuggestor.SuggestionsList suggestionsWindow;
     boolean keepSuggestions;
     String[] suggsArr = {};
-    Suggestions suggestionsObject;
+    private static final int MIN_WIDTH = 20;
 
     public TextSuggestor(Minecraft client, EditBox editBox, Font font) {
         this.client = client;
@@ -46,12 +42,11 @@ public class TextSuggestor {
         this.lineStartOffset = 1;
         this.suggestionLineLimit = 5;
         this.fillColor = 0;
-        suggestionsObject = new Suggestions(StringRange.at(0),Lists.newArrayList());
     }
 
     public void setSuggestions(String[] list) {
         suggsArr = list;
-        updateCommandInfo();
+        refresh();
     }
 
     public boolean keyPressed(int i, int j, int k) {
@@ -70,8 +65,8 @@ public class TextSuggestor {
     }
 
     public void showSuggestions() {
-        if(!suggestionsObject.isEmpty()) {
-            this.suggestionsWindow = new TextSuggestor.SuggestionsList(this.sortSuggestions(suggestionsObject));
+        if(suggsArr.length > 0) {
+            this.suggestionsWindow = new TextSuggestor.SuggestionsList(this.sortSuggestions(suggsArr));
         }
     }
 
@@ -79,56 +74,86 @@ public class TextSuggestor {
         this.suggestionsWindow = null;
     }
 
-    private List<Suggestion> sortSuggestions(Suggestions suggestions) {
-        String string = this.input.getValue().substring(0, this.input.getCursorPosition());
-        String string2 = string.toLowerCase(Locale.ROOT);
-        List<Suggestion> list = Lists.newArrayList();
-        List<Suggestion> list2 = Lists.newArrayList();
-        list.add(new Suggestion(StringRange.at(0),this.input.getValue()));
-        for(Suggestion suggestion : suggestions.getList()) {
-            if(suggestion.getText().startsWith(string2) || suggestion.getText().startsWith("minecraft:" + string2)
-            || suggestion.getText().startsWith("!minecraft:" + string2) || suggestion.getText().startsWith("!" + string2)
-            || suggestion.getText().startsWith("\"" + string2) || suggestion.getText().startsWith("'" + string2)) {
-                list.add(suggestion);
-                continue;
+    private List<SuggestionEntry> sortSuggestions(String[] suggestions) {
+        String searchTerm = this.input.getValue().toLowerCase();
+        List<SuggestionEntry> list = Lists.newArrayList();
+        List<SuggestionEntry> list2 = Lists.newArrayList();
+        List<SuggestionEntry> list3 = Lists.newArrayList();
+        list.add(SuggestionEntry.of(this.font, this.input.getValue(), ChatFormatting.GRAY, ChatFormatting.ITALIC));
+        for(String suggestion : suggestions) {
+            if(suggestion.length() > 0 && searchTerm.length() > 0) {
+                if(testSuggsMatch(suggestion.toLowerCase(), searchTerm, true)) {
+                    list.add(SuggestionEntry.of(this.font, suggestion, searchTerm, ChatFormatting.BOLD));
+                }
+                else if(testSuggsMatch(suggestion.toLowerCase(), searchTerm, false)) {
+                    list2.add(SuggestionEntry.of(this.font, suggestion, searchTerm, ChatFormatting.BOLD));
+                }
             }
-            list2.add(suggestion);
+            list3.add(searchTerm.length() > 0 ? SuggestionEntry.of(this.font, suggestion, ChatFormatting.GRAY) : SuggestionEntry.of(this.font, suggestion));
         }
         list.addAll(list2);
+        if(list.size() > 1) // the `1` accounts for the this.input.getValue() entry above
+            list.add(SuggestionEntry.of(this.font, this.input.getValue(), Component.empty()));
+        list.addAll(list3);
         return list;
     }
 
+    protected static final String SEARCH_PREFIXES = "!#";
+    protected static final String SEARCH_WRAPPERS = "\"'";
+
+    protected static boolean testSuggsMatch(String suggestion, String searchTerm, boolean starting) {
+        if((starting && suggestion.startsWith(searchTerm))
+        || (!starting && suggestion.contains(searchTerm)))
+            return true;
+
+        String searchWrapper = "";
+        String suggsWrapper = "";
+        if(suggestion.length() > 1 && SEARCH_WRAPPERS.contains(suggestion.substring(0,1))) {
+            suggsWrapper = suggestion.substring(0,1);
+            suggestion = suggestion.substring(1);
+        }
+        if(searchTerm.length() > 1 && SEARCH_WRAPPERS.contains(searchTerm.substring(0,1))) {
+            searchWrapper = searchTerm.substring(0,1);
+            searchTerm = searchTerm.substring(1);
+
+            if(!suggsWrapper.equals(searchWrapper))
+                return false;
+        }
+
+        if((starting && suggestion.startsWith(searchTerm))
+        || (!starting && suggestion.contains(searchTerm)))
+            return true;
+
+        String searchPrefix = "";
+        String suggsPrefix = "";
+        if(suggestion.length() > 1 && SEARCH_PREFIXES.contains(suggestion.substring(0,1))) {
+            suggsPrefix = suggestion.substring(0,1);
+            suggestion = suggestion.substring(1);
+        }
+        if(searchTerm.length() > 1 && SEARCH_PREFIXES.contains(searchTerm.substring(0,1))) {
+            searchPrefix = searchTerm.substring(0,1);
+            searchTerm = searchTerm.substring(1);
+
+            if(!suggsPrefix.equals(searchPrefix))
+                return false;
+        }
+
+        if(!searchTerm.contains(":") && suggestion.contains(":") && (suggestion.length() > suggestion.indexOf(":") + 1)) {
+            if((starting && suggestion.substring(suggestion.indexOf(":") + 1).startsWith(searchTerm))
+            || (!starting && suggestion.substring(suggestion.indexOf(":") + 1).contains(searchTerm)))
+                return true;
+        }
+
+        return (starting && suggestion.startsWith(searchTerm))
+            || (!starting && suggestion.contains(searchTerm));
+    }
+
 	public void refresh() {
-		updateCommandInfo();
-	}
-
-    public void updateCommandInfo() {
-        String string = this.input.getValue();
-        if(!this.keepSuggestions) {
+        if(!keepSuggestions) {
             this.suggestionsWindow = null;
+            this.showSuggestions();
         }
-        StringReader stringReader = new StringReader(string);
-        int i = this.input.getCursorPosition();
-        int j = stringReader.getCursor();
-        if(i >= j && (this.suggestionsWindow == null || !this.keepSuggestions)) {
-            List<Suggestion> tempList = Lists.newArrayList();
-            for(String s : suggsArr) {
-                tempList.add(new Suggestion(StringRange.at(0),s));
-            }
-            suggestionsObject = new Suggestions(StringRange.at(0), tempList);
-            this.updateUsageInfo();
-        }
-    }
-
-    private void updateUsageInfo() {
-        this.suggestionsWindow = null;
-        this.showSuggestions();
-    }
-
-    @Nullable
-    static String calculateSuggestionSuffix(String string, String string2) {
-        return string2.startsWith(string) ? string2.substring(string.length()) : null;
-    }
+	}
 
     public void render(GuiGraphics guiGraphics, int i, int j) {
         this.renderSuggestions(guiGraphics, i, j);
@@ -142,9 +167,81 @@ public class TextSuggestor {
         return false;
     }
 
+    protected record SuggestionEntry(String raw, Component formatted) {
+
+        public static SuggestionEntry of(Font font, String raw, Component formatted) {
+            while(font.width(formatted) < MIN_WIDTH) {
+                formatted = formatted.copy().append(" ");
+            }
+            return new SuggestionEntry(raw, formatted);
+        }
+
+        public static SuggestionEntry of(Font font, String raw) {
+            return SuggestionEntry.of(font, raw, Component.nullToEmpty(raw));
+        }
+
+        public static SuggestionEntry of(Font font, String raw, ChatFormatting... formatting) {
+            return SuggestionEntry.of(font, raw, Component.nullToEmpty(raw).copy().withStyle(formatting));
+        }
+
+        public static SuggestionEntry of(Font font, String raw, String searchTerm, ChatFormatting... matching) {
+            MutableComponent formatted = Component.empty();
+            String parseString = raw;
+
+            for(int i=0; i<SEARCH_WRAPPERS.length(); i++) {
+                if(parseString.startsWith(SEARCH_WRAPPERS.substring(i,i+1))) {
+                    if(searchTerm.startsWith(SEARCH_WRAPPERS.substring(i,i+1))) {
+                        formatted.append(Component.nullToEmpty(SEARCH_WRAPPERS.substring(i,i+1)).copy().withStyle(matching));
+                        searchTerm = searchTerm.substring(1);
+                    }
+                    else {
+                        formatted.append(Component.nullToEmpty(SEARCH_WRAPPERS.substring(i,i+1)));
+                    }
+                    parseString = parseString.substring(1);
+                    break;
+                }
+            }
+            for(int i=0; i<SEARCH_PREFIXES.length(); i++) {
+                if(parseString.startsWith(SEARCH_PREFIXES.substring(i,i+1))) {
+                    if(searchTerm.startsWith(SEARCH_PREFIXES.substring(i,i+1))) {
+                        formatted.append(Component.nullToEmpty(SEARCH_PREFIXES.substring(i,i+1)).copy().withStyle(matching));
+                        searchTerm = searchTerm.substring(1);
+                    }
+                    else {
+                        formatted.append(Component.nullToEmpty(SEARCH_PREFIXES.substring(i,i+1)));
+                    }
+                    parseString = parseString.substring(1);
+                    break;
+                }
+            }
+
+            while(parseString.length() > 0 && searchTerm.length() > 0) {
+                int index = parseString.toLowerCase().indexOf(searchTerm.toLowerCase());
+                if(index == -1) {
+                    break;
+                }
+                else if(index == 0) {
+                    formatted.append(Component.nullToEmpty(parseString.substring(0,searchTerm.length())).copy().withStyle(matching));
+                    parseString = parseString.substring(searchTerm.length());
+                }
+                else {
+                    formatted.append(Component.nullToEmpty(parseString.substring(0,index)));
+                    parseString = parseString.substring(index);
+                }
+
+            }
+
+            if(parseString.length() > 0)
+                formatted.append(Component.nullToEmpty(parseString));
+
+            return SuggestionEntry.of(font, raw, formatted);
+        }
+
+    }
+
     public class SuggestionsList {
         private final Rect2i rect;
-        private final List<Suggestion> suggestionList;
+        private final List<SuggestionEntry> suggestionList;
         private int offset;
         private int current;
         private Vec2 lastMouse = Vec2.ZERO;
@@ -154,7 +251,7 @@ public class TextSuggestor {
         private final int WIDTH_PADDING = 3;
         private final int SUGGS_PADDING = 2;
 
-        SuggestionsList(final List<Suggestion> list) {
+        SuggestionsList(final List<SuggestionEntry> list) {
             this.rect = new Rect2i(0, 0, MIN_WIDTH, Math.min(list.size(), TextSuggestor.this.suggestionLineLimit) * LINE_HEIGHT);
             this.suggestionList = list;
             this.select(0);
@@ -166,12 +263,12 @@ public class TextSuggestor {
             List<ClientTooltipComponent> tooltipList = Lists.newArrayList();
             int maxWidth = MIN_WIDTH;
             for(int n = 0; n < k; n++) {
-                Suggestion suggestion = (Suggestion)this.suggestionList.get(n + this.offset);
-                Component t = Component.nullToEmpty(suggestion.getText());
+                SuggestionEntry suggestion = this.suggestionList.get(n + this.offset);
+                Component text = suggestion.formatted();
                 if(n + this.offset == this.current)
-                    t = t.copy().withStyle(ChatFormatting.YELLOW);
-                tooltipList.add(ClientTooltipComponent.create(t.getVisualOrderText()));
-                maxWidth = Math.max(maxWidth, TextSuggestor.this.font.width(suggestion.getText()));
+                    text = text.copy().withStyle(ChatFormatting.YELLOW);
+                tooltipList.add(ClientTooltipComponent.create(text.getVisualOrderText()));
+                maxWidth = Math.max(maxWidth, TextSuggestor.this.font.width(text));
             }
             rect.setWidth(maxWidth+WIDTH_PADDING*2);
 
@@ -296,12 +393,11 @@ public class TextSuggestor {
         }
 
         public void useSuggestion() {
-            Suggestion suggestion = (Suggestion)this.suggestionList.get(this.current);
+            SuggestionEntry suggestion = this.suggestionList.get(this.current);
             TextSuggestor.this.keepSuggestions = true;
-            TextSuggestor.this.input.setValue(suggestion.getText());
-            int i = suggestion.getRange().getStart() + suggestion.getText().length();
-            TextSuggestor.this.input.setCursorPosition(i);
-            TextSuggestor.this.input.setHighlightPos(i);
+            TextSuggestor.this.input.setValue(suggestion.raw());
+            TextSuggestor.this.input.setCursorPosition(suggestion.raw().length());
+            TextSuggestor.this.input.setHighlightPos(suggestion.raw().length());
             this.select(this.current);
             TextSuggestor.this.keepSuggestions = false;
             this.tabCycles = true;
