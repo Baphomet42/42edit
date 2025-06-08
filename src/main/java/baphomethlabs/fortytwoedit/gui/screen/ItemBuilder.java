@@ -2576,6 +2576,10 @@ public class ItemBuilder extends GenericScreen {
             );
         }
 
+        public boolean newItemIsDiff() {
+            return !BlackMagick.elementsEqual(this.current, BlackMagick.itemToNbt(BlackMagick.itemFromNbt(this.current)));
+        }
+
         public Component getPathChanges() {
             return BlackMagick.getElementDifferencesOrColorfulText(
                 BlackMagick.getNbtPath(this.original,fullPath),
@@ -3169,11 +3173,15 @@ public class ItemBuilder extends GenericScreen {
                 setErrorMsg(BlackMagick.getItemCompoundErrors(BlackMagick.nbtToSnbt(nbtEdit.current()),inpError));
 
             saveBtn.active = true;
+            saveBtn.setMessage(Component.nullToEmpty("Save"));
             if(!nbtEdit.unsaved()) {
                 saveBtn.setTooltip(Tooltip.create(Component.nullToEmpty("Item unchanged")));
                 saveBtn.active = false;
             }
             else if(nbtEdit.current() != null && !nbtEdit.getItem().isEmpty()) {
+                if(nbtEdit.newItemIsDiff())
+                    saveBtn.setMessage(Component.nullToEmpty("Save").copy().withStyle(ChatFormatting.YELLOW));
+
                 Component tempText = grayWhiteText("Set item:\n",nbtEdit.getNewItemDiff());
                 if(minecraft.player.getAbilities().instabuild) {
                     saveBtn.setTooltip(Tooltip.create(tempText));
@@ -3182,6 +3190,11 @@ public class ItemBuilder extends GenericScreen {
                     saveBtn.setTooltip(Tooltip.create(Component.empty().append(ERROR_CREATIVE).append("\n\n").append(tempText)));
                     saveBtn.active = false;
                 }
+            }
+            else {
+                saveBtn.active = false;
+                saveBtn.setMessage(Component.nullToEmpty("Save").copy().withStyle(ChatFormatting.RED));
+                saveBtn.setTooltip(Tooltip.create(Component.nullToEmpty("Error loading item")));
             }
         }
     }

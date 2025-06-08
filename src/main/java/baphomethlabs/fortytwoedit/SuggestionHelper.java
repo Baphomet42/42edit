@@ -524,6 +524,9 @@ public class SuggestionHelper {
     public static final SuggestionGetter REGISTRY_CONSUME_EFFECT_TYPE = registerSuggsList("REGISTRY_CONSUME_EFFECT_TYPE", () ->
         getRegistryIfEmpty(createOrGetCacheList("REGISTRY_CONSUME_EFFECT_TYPE",false),BuiltInRegistries.CONSUME_EFFECT_TYPE));
 
+    public static final SuggestionGetter REGISTRY_DIALOG_TYPE = registerSuggsList("REGISTRY_DIALOG_TYPE", () ->
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_DIALOG_TYPE",false),BuiltInRegistries.DIALOG_TYPE));
+
     public static final SuggestionGetter REGISTRY_ITEM = registerSuggsList("REGISTRY_ITEM", () ->
         getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ITEM",false),BuiltInRegistries.ITEM));
 
@@ -578,6 +581,9 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter DATA_DAMAGE_TYPE = registerSuggsList("DATA_DAMAGE_TYPE", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_DAMAGE_TYPE",true),Registries.DAMAGE_TYPE));
+
+    public static final SuggestionGetter DATA_DIALOG = registerSuggsList("DATA_DIALOG", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_DIALOG",true),Registries.DIALOG));
 
     public static final SuggestionGetter DATA_ENCHANTMENT = registerSuggsList("DATA_ENCHANTMENT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_ENCHANTMENT",true),Registries.ENCHANTMENT));
@@ -634,6 +640,9 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter DATA_TAG_DAMAGE_TYPE = registerSuggsList("DATA_TAG_DAMAGE_TYPE", () ->
         getTagsIfEmpty(createOrGetCacheList("DATA_TAG_DAMAGE_TYPE",true),Registries.DAMAGE_TYPE));
+
+    public static final SuggestionGetter DATA_TAG_DIALOG = registerSuggsList("DATA_TAG_DIALOG", () ->
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_DIALOG",true),Registries.DIALOG));
 
     public static final SuggestionGetter DATA_TAG_ENCHANTMENT = registerSuggsList("DATA_TAG_ENCHANTMENT", () ->
         getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ENCHANTMENT",true),Registries.ENCHANTMENT));

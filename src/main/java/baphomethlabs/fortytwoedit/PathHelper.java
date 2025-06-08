@@ -71,7 +71,7 @@ public class PathHelper {
         registerPathInfo("components.minecraft:attribute_modifiers", PathInfo.create(DataType.ListUnordered.of(
             PathInfo.create(DataType.CompoundStructured.of(Map.of(
                 "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_ATTRIBUTE)).getter(),
-                "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("minecraft:armor.body","minecraft:armor.boots","minecraft:armor.chestplate","minecraft:armor.helmet","minecraft:armor.leggings",Item.BASE_ATTACK_DAMAGE_ID.toString(),Item.BASE_ATTACK_SPEED_ID.toString()))).setInfo("Unique namespaced ID used to update modifiers").getter(),
+                "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("minecraft:armor.body","minecraft:armor.boots","minecraft:armor.chestplate","minecraft:armor.helmet","minecraft:armor.leggings",Item.BASE_ATTACK_DAMAGE_ID.toString(),Item.BASE_ATTACK_SPEED_ID.toString()))).setInfo("Unique resource location used to update modifiers").getter(),
                 "amount", PathInfo.create(DataType.ElementLiteral.of(NbtType.DOUBLE)).getter(),
                 "operation", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("add_value","add_multiplied_base","add_multiplied_total"))).setInfo("add_value: base + amount1 + amount2\n\nadd_multiplied_base: base * (1 + amount1 + amount2)\n\nadd_multiplied_total: base * (1 + amount1) * (1 + amount2)").getter()
                 ),Map.of(
@@ -622,11 +622,44 @@ public class PathHelper {
                 )).setInfo("List of text components to append and inherit the style of this one").getter()),
                 Map.entry("insertion", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("String to be inserted into chat when shift-clicked (only works in chat)").getter()),
                 Map.entry("click_event", PathInfo.create(DataType.CompoundStructured.of(Map.of(
-                    "action", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("run_command","suggest_command","copy_to_clipboard","open_url","change_page"))).setInfo("Action when clicked (only works in chat and written books)").getter() // open_file isn't listed as it is never represented in NBT and only used internally
+                    "action", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("run_command","suggest_command","copy_to_clipboard","open_url","change_page","show_dialog","custom"))).setInfo("Action when clicked (only works in chat and written books)").getter() // open_file isn't listed as it is never represented in NBT and only used internally
                     ),Map.of(
                     "command", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'run_command' action - string command with or without a slash\n\nFor 'suggest_command' action - string command starting with a slash, or chat message without a slash").getter(),
                     "value", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'copy_to_clipboard' action - string to copy").getter(),
                     "url", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'open_url' action - url to open").getter(),
+                    "dialog", PathInfo.create(
+                        DataType.CompoundStructured.of(Map.of(
+                            "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_DIALOG_TYPE)).getter(),
+                            "title", PathInfo.copyOf("text_component").setInfo("Text component to show on page").getter()
+                        ),Map.ofEntries(
+                            Map.entry("external_title", PathInfo.copyOf("text_component").setInfo("Text component to show on buttons leading to this dialog").getter()),
+                            Map.entry("body", PathInfo.create().getter()),
+                            Map.entry("inputs", PathInfo.create().getter()),
+                            Map.entry("can_close_with_escape", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).setInfo("If the dialog should be exited using the Escape key").getter()),
+                            Map.entry("pause", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).setInfo("If the dialog should pause the game in singleplayer").getter()),
+                            Map.entry("after_action", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("none","close","wait_for_response"))).setUnsetInfo(StringTag.valueOf("close")).getter()),
+                            Map.entry("action", PathInfo.create().getter()),
+                            Map.entry("exit_action", PathInfo.create().getter()),
+                            Map.entry("yes", PathInfo.create().getter()),
+                            Map.entry("no", PathInfo.create().getter()),
+                            Map.entry("actions", PathInfo.create().getter()),
+                            Map.entry("columns", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("2"))).setUnsetInfo(IntTag.valueOf(2)).setInfo("For 'multi_action', 'dialog_list', and 'server_link' type - number of columns to arrange elements").getter()),
+                            Map.entry("button_width", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("1","150","1024"))).setUnsetInfo(IntTag.valueOf(150)).setInfo("For 'dialog_list' and 'server_link' type - width of buttons between 1 and 1024").getter()),
+                            Map.entry("dialogs", PathInfo.create(
+                                DataType.ListUnordered.of(
+                                    PathInfo.create(
+                                        DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_DIALOG)
+                                        //to_do handle ref to dialog definition compound pathinfo
+                                    ).getter()
+                                ),
+                                DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newJoined(SuggestionHelper.DATA_DIALOG,SuggestionHelper.DATA_TAG_DIALOG))
+                                //to_do handle ref to dialog definition compound pathinfo
+                            ).setInfo("A single dialog ID, tag, or inline definition, or a list containing only dialog IDs or only inline definitions").getter())
+                        )),
+                        DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_DIALOG)
+                    ).setInfo("For 'show_dialog' action - resource location of dialog to open, or an inline dialog definition").getter(),
+                    "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'custom' action - resource location to send to server").getter(),
+                    "payload", PathInfo.copyOf(PathInfo.ANY.getter()).setInfo("For 'custom' action - optional NBT to send to server").getter(),
                     "page", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).setInfo("For 'change_page' action - written book page to jump to").getter()
                 ))).setInfo("Action when clicked (only works in chat and written books)").getter()),
                 Map.entry("hover_event", PathInfo.create(DataType.CompoundStructured.of(Map.of(
@@ -651,7 +684,7 @@ public class PathHelper {
                 Map.entry("storage", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("foo:bar"))).setInfo("For 'nbt' type - resource location of storage to read data of").getter()),
                 Map.entry("block", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("0 0 0","~ ~ ~","^ ^ ^"))).setInfo("For 'nbt' type - coordinates of block to read data of (can be absolute, relative, or local)").getter()),
                 Map.entry("entity", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("@s","@p","@r","@a","@e"))).setInfo("For 'nbt' type - entity selector to read data of").getter()),
-                Map.entry("interpret", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("For 'nbt' type - if the data should be interpreted as a text component instead of displaying the NBT directly").getter())
+                Map.entry("interpret", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).setInfo("For 'nbt' type - if the data should be interpreted as a text component instead of displaying the NBT directly").getter())
 
             )),
             DataType.ElementLiteral.of(NbtType.STRING),

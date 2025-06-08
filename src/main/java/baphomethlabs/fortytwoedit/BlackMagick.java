@@ -268,7 +268,7 @@ public class BlackMagick {
     public static ItemStack itemFromNbt(CompoundTag inp) {
         if(inp != null) {
             try {
-                return ItemStack.CODEC.decode(BlackMagick.getOps(),inp).getOrThrow().getFirst();
+                return ItemStack.CODEC.parse(BlackMagick.getOps(),inp).resultOrPartial().orElse(ItemStack.EMPTY);
             } catch(Exception ex) {}
         }
         return ItemStack.EMPTY;
