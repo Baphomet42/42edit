@@ -1646,6 +1646,27 @@ public class ItemBuilder extends GenericScreen {
         return null;
     }
 
+    private ItemStack bundleOrItemFromList(String inp) {
+        if(inp.startsWith("[") && inp.endsWith("]") && BlackMagick.nbtFromString(inp,Tag.TAG_LIST) != null
+        && !((ListTag)BlackMagick.nbtFromString(inp,Tag.TAG_LIST)).isEmpty()) {
+            ListTag list = (ListTag)BlackMagick.nbtFromString(inp,Tag.TAG_LIST);
+            ItemStack bundle = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.validCompoundFromString("{id:\"bundle\"}"),
+                "components.minecraft:bundle_contents",list));
+            if(bundle != null && !bundle.isEmpty()) {
+                ListTag validatedList = (ListTag)BlackMagick.getNbtPath(BlackMagick.itemToNbt(bundle),"components.minecraft:bundle_contents",Tag.TAG_LIST);
+                if(validatedList != null && !validatedList.isEmpty()) {
+                    if(validatedList.size() == 1 && validatedList.get(0).getId() == Tag.TAG_COMPOUND) {
+                        ItemStack innerItem = BlackMagick.itemFromNbt((CompoundTag)validatedList.get(0));
+                        if(innerItem != null && !innerItem.isEmpty())
+                            return innerItem;
+                    }
+                    return bundle;
+                }
+            }
+        }
+        return null;
+    }
+
     private Component getKeyButtonTooltip(PathNode node, PathInfo pi) {
         MutableComponent btnTt = Component.empty().append(grayWhiteText(node.isKey() ? "Key: " : "Index: ", node.isKey() ? node.key() : (""+node.index())));
         appendPathInfo(btnTt, pi);
@@ -2087,6 +2108,12 @@ public class ItemBuilder extends GenericScreen {
                                         grayWhiteText("Set current item to:\n",BlackMagick.nbtToColorfulText(BlackMagick.itemToNbtStorage(item)))));
                                 }
                             }
+                            else if(bundleOrItemFromList(inp) != null) {
+                                item = bundleOrItemFromList(inp);
+                                btnGive.active = true;
+                                btnGive.setTooltip(Tooltip.create(
+                                    grayWhiteText("Set current item to:\n",BlackMagick.nbtToColorfulText(BlackMagick.itemToNbtStorage(item)))));
+                            }
                             else {
                                 int count = 1;
                                 if(inp.contains(" ")) {
@@ -2189,6 +2216,9 @@ public class ItemBuilder extends GenericScreen {
                                 if(BlackMagick.nbtFromString(inpString,Tag.TAG_COMPOUND) != null) {
                                     item = BlackMagick.itemFromString(inpString);
                                 }
+                            }
+                            else if(bundleOrItemFromList(inp) != null) {
+                                item = bundleOrItemFromList(inp);
                             }
                             else {
                                 int count = 1;
