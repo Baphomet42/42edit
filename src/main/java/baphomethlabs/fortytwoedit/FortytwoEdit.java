@@ -1262,8 +1262,8 @@ public class FortytwoEdit implements ClientModInitializer {
                     CompoundTag versionData = versionsList.getCompound(i).get();
                     if(versionData.getInt("version").isPresent() && versionData.getList("items").isPresent()) {
                         int versionNum = versionData.getInt("version").get();
-    
-                        if(itemsVer == -1 || (versionNum > itemsVer && versionNum <= SharedConstants.getCurrentVersion().packVersion(PackType.SERVER_DATA))) {
+                        // TODO
+                        if(itemsVer == -1 || (versionNum > itemsVer && versionNum <= SharedConstants.getCurrentVersion().packVersion(PackType.SERVER_DATA).major())) {
                             itemsVer = versionNum;
                             jsonItems = versionData.getList("items").get();
                         }

@@ -80,12 +80,12 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if(suggs != null && suggs.mouseClicked(mouseX, mouseY, button)) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleTap) {
+        if(suggs != null && suggs.mouseClicked(mouseX, mouseY, button, doubleTap)) {
             return true;
         }
         suggs = null;
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(mouseX, mouseY, button, doubleTap);
     }
 
 }

@@ -60,8 +60,8 @@ public class TextSuggestor {
         return this.suggestionsWindow != null && this.suggestionsWindow.mouseScrolled(Mth.clamp(d, -1.0, 1.0));
     }
 
-    public boolean mouseClicked(double d, double e, int i) {
-        return this.suggestionsWindow != null && this.suggestionsWindow.mouseClicked((int)d, (int)e, i);
+    public boolean mouseClicked(double d, double e, int i, boolean doubleTap) {
+        return this.suggestionsWindow != null && this.suggestionsWindow.mouseClicked((int)d, (int)e, i, doubleTap);
     }
 
     public void showSuggestions() {
@@ -311,7 +311,7 @@ public class TextSuggestor {
             return clientTooltipPositioner.positionTooltip(guiGraphics.guiWidth(), guiGraphics.guiHeight(), i, j, k, l);
         }
 
-        public boolean mouseClicked(int i, int j, int k) {
+        public boolean mouseClicked(int i, int j, int k, boolean doubleTap) {
             if(!this.rect.contains(i, j)) {
                 return false;
             }

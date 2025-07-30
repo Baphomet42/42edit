@@ -3508,8 +3508,8 @@ public class ItemBuilder extends GenericScreen {
         public TabWidgetEntry() {}
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if(super.mouseClicked(mouseX, mouseY, button))
+        public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleTap) {
+            if(super.mouseClicked(mouseX, mouseY, button, doubleTap))
                 return true;
             unsel();
             return false;
@@ -3534,8 +3534,8 @@ public class ItemBuilder extends GenericScreen {
         protected void renderListBackground(GuiGraphics context) {}
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if(super.mouseClicked(mouseX, mouseY, button))
+        public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleTap) {
+            if(super.mouseClicked(mouseX, mouseY, button, doubleTap))
                 return true;
             unsel();
             return false;
@@ -5935,12 +5935,12 @@ public class ItemBuilder extends GenericScreen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if(suggs != null && suggs.mouseClicked(mouseX, mouseY, button)) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleTap) {
+        if(suggs != null && suggs.mouseClicked(mouseX, mouseY, button, doubleTap)) {
             return true;
         }
         resetSuggs();
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(mouseX, mouseY, button, doubleTap);
     }
 
     @Override
