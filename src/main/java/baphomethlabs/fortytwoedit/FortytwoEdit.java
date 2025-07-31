@@ -915,6 +915,11 @@ public class FortytwoEdit implements ClientModInitializer {
         client.keyboardHandler.setClipboard(text);
     }
 
+    public static String getClipboard() {
+        final Minecraft client = Minecraft.getInstance();
+        return client.keyboardHandler.getClipboard();
+    }
+
     private static final String LOG_PREFIX = "(42edit) ";
     private static final SystemToast.SystemToastId TOAST_TYPE = new SystemToast.SystemToastId();
     private static final MutableComponent TOAST_PREFIX = Component.empty().append("").append(Component.empty().append("(42edit) ").withStyle(ChatFormatting.BLACK));
@@ -944,7 +949,7 @@ public class FortytwoEdit implements ClientModInitializer {
             client.getToastManager().addToast(new SystemToast(TOAST_TYPE, TOAST_PREFIX.copy().append(title), desc));
         }
         catch(Exception ex) {
-            logError("Failed to show toast ("+title.getString()+") ("+desc.getString()+"): "+ex.getMessage());
+            logError("Failed to show toast ("+BlackMagick.textComponentToStringLiteral(title)+") ("+BlackMagick.textComponentToStringLiteral(desc)+"): "+ex.getMessage());
         }
     }
 
@@ -1255,6 +1260,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
             ListTag versionsList = newItems.getList("versions").get();
             int itemsVer = -1;
+            int itemsVerMinor = 0;
             ListTag jsonItems = null;
 
             for(int i=0; i<versionsList.size(); i++) {
@@ -1262,9 +1268,16 @@ public class FortytwoEdit implements ClientModInitializer {
                     CompoundTag versionData = versionsList.getCompound(i).get();
                     if(versionData.getInt("version").isPresent() && versionData.getList("items").isPresent()) {
                         int versionNum = versionData.getInt("version").get();
-                        // TODO
-                        if(itemsVer == -1 || (versionNum > itemsVer && versionNum <= SharedConstants.getCurrentVersion().packVersion(PackType.SERVER_DATA).major())) {
+                        int versionMinor = versionData.getIntOr("version_minor", 0);
+                        if(itemsVer == -1 ||
+                            (
+                                (versionNum > itemsVer || (versionNum == itemsVer && versionMinor > itemsVerMinor))
+                                && versionNum <= SharedConstants.getCurrentVersion().packVersion(PackType.SERVER_DATA).major()
+                                && versionMinor <= SharedConstants.getCurrentVersion().packVersion(PackType.SERVER_DATA).minor()
+                            )
+                        ) {
                             itemsVer = versionNum;
+                            itemsVerMinor = versionMinor;
                             jsonItems = versionData.getList("items").get();
                         }
                     }

@@ -157,7 +157,8 @@ public class Hacks extends GenericScreen {
                 else {
                     nbt.putString("id","minecraft:endermite_spawn_egg");
                     entityData.putString("id",EntityType.getKey(current.getType()).toString());
-                    components.putString("minecraft:item_name","Custom "+current.getType().getDescription().getString()+" Spawn Egg");
+                    components.putString("minecraft:item_name","Custom "
+                        +BlackMagick.textComponentToStringLiteral(current.getType().getDescription())+" Spawn Egg");
                 }
                 if(mode == 1) {
                     entityData.remove("Air");

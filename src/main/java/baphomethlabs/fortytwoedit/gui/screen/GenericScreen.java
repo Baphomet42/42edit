@@ -1,6 +1,8 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import java.time.Duration;
+import java.util.List;
+import org.lwjgl.glfw.GLFW;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphics;
@@ -9,6 +11,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
+import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 
 public abstract class GenericScreen extends Screen {
@@ -41,6 +45,32 @@ public abstract class GenericScreen extends Screen {
     public static final Component ERROR_CREATIVE = Component.empty().append("Creative required").withStyle(ChatFormatting.RED);
     public static final Tooltip TT_CREATIVE = Tooltip.create(ERROR_CREATIVE);
     private boolean unsel = false;
+
+    private static String prevTooltipRaw = null;
+    private static String prevTooltipNbt = null;
+    private static long prevTooltipTime = 0L;
+    private static long prevTooltipCopyTime = 0L;
+    private static final int TOOLTIP_COPY_COOLDOWN = 1500;
+    private static int prevTooltipScroll = -1;
+    private static List<FormattedCharSequence> prevTooltipCache = null;
+
+    public static List<FormattedCharSequence> setCurrentTooltip(Component text) {
+        prevTooltipTime = System.currentTimeMillis();
+        String newTooltipNbt = BlackMagick.textComponentToSnbt(text);
+        if(prevTooltipNbt == null || !prevTooltipNbt.equals(newTooltipNbt)) {
+            prevTooltipNbt = newTooltipNbt;
+            prevTooltipRaw = BlackMagick.textComponentToStringLiteral(text);
+            prevTooltipScroll = 0;
+            prevTooltipCache = null;
+        }
+        return prevTooltipCache;
+    }
+    public static void setCurrentTooltipScroll(int i) {
+        prevTooltipScroll = i;
+    }
+    public static int getCurrentTooltipScroll() {
+        return prevTooltipScroll;
+    }
 
     public GenericScreen() {
         super(GameNarrator.NO_TITLE);
@@ -89,6 +119,57 @@ public abstract class GenericScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if(System.currentTimeMillis()-prevTooltipTime < 100) {
+            if(hasControlDown() && keyCode == GLFW.GLFW_KEY_C) {
+                if(prevTooltipNbt != null) {
+                    if(hasAltDown()) {
+                        if(System.currentTimeMillis() - prevTooltipCopyTime > TOOLTIP_COPY_COOLDOWN || !prevTooltipNbt.equals(FortytwoEdit.getClipboard())) {
+                            FortytwoEdit.setClipboard(prevTooltipNbt);
+                            FortytwoEdit.showToast("Clipboard", "Tooltip component copied");
+                            prevTooltipCopyTime = System.currentTimeMillis();
+                        }
+                    }
+                    else {
+                        if(System.currentTimeMillis() - prevTooltipCopyTime > TOOLTIP_COPY_COOLDOWN || !prevTooltipRaw.equals(FortytwoEdit.getClipboard())) {
+                            FortytwoEdit.setClipboard(prevTooltipRaw);
+                            FortytwoEdit.showToast("Clipboard", "Tooltip text copied");
+                            prevTooltipCopyTime = System.currentTimeMillis();
+                        }
+                    }
+                }
+                return true;
+            }
+            if(hasControlDown() && keyCode == GLFW.GLFW_KEY_PAGE_UP) {
+                if(hasAltDown()) {
+                    if(prevTooltipScroll != 0) {
+                        prevTooltipScroll = 0;
+                        prevTooltipCache = null;
+                    }
+                }
+                else {
+                    if(prevTooltipScroll > 0) {
+                        prevTooltipScroll--;
+                        prevTooltipCache = null;
+                    }
+                }
+                return true;
+            }
+            if(hasControlDown() && keyCode == GLFW.GLFW_KEY_PAGE_DOWN) {
+                if(hasAltDown()) {
+                    if(prevTooltipScroll != Integer.MAX_VALUE) {
+                        prevTooltipScroll = Integer.MAX_VALUE;
+                        prevTooltipCache = null;
+                    }
+                }
+                else {
+                    if(prevTooltipScroll < Integer.MAX_VALUE) {
+                        prevTooltipScroll++;
+                        prevTooltipCache = null;
+                    }
+                }
+                return true;
+            }
+        }
         if(super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }

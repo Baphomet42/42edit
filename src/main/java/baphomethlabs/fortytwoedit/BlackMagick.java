@@ -20,6 +20,7 @@ import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
@@ -41,6 +42,7 @@ import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.level.storage.ValueInput;
@@ -259,6 +261,30 @@ public class BlackMagick {
                 return new ParsedText(true,stack.getHoverName().copy());
         }
         return new ParsedText(false,Component.nullToEmpty("Invalid Text Component").copy().withStyle(ChatFormatting.RED));
+    }
+
+    /**
+     * 
+     * @param inp
+     * @return SNBT representation of text component, or null if inp is null
+     */
+    public static String textComponentToSnbt(Component inp) {
+        if(inp == null)
+            return null;
+        ItemStack temp = new ItemStack(Items.STONE);
+        temp.set(DataComponents.CUSTOM_NAME, inp);
+        return BlackMagick.nbtToSnbt(BlackMagick.getNbtPath(BlackMagick.itemToNbt(temp),"components.minecraft:custom_name"));
+    }
+
+    /**
+     * 
+     * @param inp
+     * @return literal text from text component, or null if inp is null
+     */
+    public static String textComponentToStringLiteral(Component inp) {
+        if(inp == null)
+            return null;
+        return inp.getString();
     }
 
     /**

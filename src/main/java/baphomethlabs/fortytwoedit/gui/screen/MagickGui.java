@@ -70,16 +70,16 @@ public class MagickGui extends GenericScreen {
     }
 
     protected void btnAutoClick() {
-        if(btnWgtAutoClick.getMessage().getString().equals("[Use]")) {
+        if(BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Use]")) {
             FortytwoEdit.updateAutoClick(false,true,false,1500);
         }
-        else if(btnWgtAutoClick.getMessage().getString().equals("[Attack .65]")) {
+        else if(BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Attack .65]")) {
             FortytwoEdit.updateAutoClick(true,false,false,1500);
         }
-        else if(btnWgtAutoClick.getMessage().getString().equals("[Attack 1.5]")) {
+        else if(BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Attack 1.5]")) {
             FortytwoEdit.updateAutoClick(false,false,true,650);
         }
-        else if(btnWgtAutoClick.getMessage().getString().equals("[Mine]")) {
+        else if(BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Mine]")) {
             FortytwoEdit.updateAutoClick(false,false,true,1500);
         }
         else {

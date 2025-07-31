@@ -15,6 +15,7 @@ import net.minecraft.client.gui.components.Button.OnPress;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.MultiLineEditBox;
+import net.minecraft.client.gui.components.MultiLineTextWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -120,6 +121,7 @@ public class ItemBuilder extends GenericScreen {
     public static boolean savedItemsError = false;
     private String inpError = null;
     private String inpErrorTrim = null;
+    private MultiLineTextWidget lblInpError;
     private static boolean viewBlackMarket = false;
     private static final Tooltip TOOLTIP_BLACK_MARKET =
         Tooltip.create(grayWhiteText("Black Market Items","\n\nGet custom items produced by ")
@@ -1448,10 +1450,16 @@ public class ItemBuilder extends GenericScreen {
         if(errorMsg == null) {
             inpError = null;
             inpErrorTrim = null;
+            lblInpError = null;
         }
         else {
             inpError = errorMsg;
             inpErrorTrim = trimStringSize(errorMsg);
+            lblInpError = (new MultiLineTextWidget(width/2, y+this.backgroundHeight+3,
+                Component.empty().append(inpErrorTrim).withStyle(ChatFormatting.RED),
+                this.font));
+            lblInpError.setTooltip(Tooltip.create(Component.empty().append(inpError).withStyle(ChatFormatting.RED)));
+            lblInpError.setX((width - lblInpError.getWidth()) / 2);
         }
     }
 
@@ -1489,7 +1497,7 @@ public class ItemBuilder extends GenericScreen {
                         if(!stack.isEmpty()) {
                             List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
                             if(textList.size()>3) {
-                                Component btnTxt = Component.nullToEmpty(textList.get(2).getString()).copy()
+                                Component btnTxt = Component.nullToEmpty(BlackMagick.textComponentToStringLiteral(textList.get(2))).copy()
                                     .append(Component.nullToEmpty(" ")).append(textList.get(3));
                                 return showLabel ? Component.empty().append(grayWhiteText("Modifier:\n",btnTxt)) : btnTxt;
                             }
@@ -1508,7 +1516,7 @@ public class ItemBuilder extends GenericScreen {
                         if(!stack.isEmpty()) {
                             List<Component> textList = stack.getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
                             if(textList.size()>1) {
-                                Component btnTxt = Component.nullToEmpty(textList.get(1).getString());
+                                Component btnTxt = Component.nullToEmpty(BlackMagick.textComponentToStringLiteral(textList.get(1)));
                                 return showLabel ? Component.empty().append(grayWhiteText("Pattern:\n",btnTxt)) : btnTxt;
                             }
                         }
@@ -5242,7 +5250,7 @@ public class ItemBuilder extends GenericScreen {
                         List<Component> textList = patternItems[i].getTooltipLines(TooltipContext.EMPTY,null,TooltipFlag.NORMAL);
                         if(textList.size()>1) {
                             disabled = false;
-                            tt = Tooltip.create(Component.nullToEmpty(textList.get(1).getString().replace("Red ","")));
+                            tt = Tooltip.create(Component.nullToEmpty(BlackMagick.textComponentToStringLiteral(textList.get(1)).replace("Red ","")));
                         }
                     }
                     if(disabled) {
@@ -5865,8 +5873,8 @@ public class ItemBuilder extends GenericScreen {
                     mouseX, mouseY, (LivingEntity)renderArmorPose);
             }
         }
-        if(inpErrorTrim != null)
-            context.drawCenteredString(this.font, Component.nullToEmpty(inpErrorTrim), this.width / 2, y+this.backgroundHeight+3, ERROR_COLOR);
+        if(lblInpError != null)
+            lblInpError.render(context, mouseX, mouseY, delta);
 
         if(suggs != null)
             suggs.render(context, mouseX, mouseY);
