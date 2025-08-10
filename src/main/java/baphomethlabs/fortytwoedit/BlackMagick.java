@@ -249,7 +249,10 @@ public class BlackMagick {
      * @return parsed Text or error message
      */
     public static ParsedText textComponentFromString(String inp) {
-        Tag textComponent = BlackMagick.nbtFromString(inp);
+        return textComponentFromNbt(BlackMagick.nbtFromString(inp));
+    }
+
+    public static ParsedText textComponentFromNbt(Tag textComponent) {
         if(textComponent != null) {
             CompoundTag nbt = new CompoundTag();
             nbt.putString("id","stone");

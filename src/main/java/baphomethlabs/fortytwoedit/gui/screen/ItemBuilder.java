@@ -144,7 +144,7 @@ public class ItemBuilder extends GenericScreen {
     private ArmorStand renderArmorPose;
     protected final int playerX = backgroundWidth+10;
     protected final int playerY = -10;
-    protected final int bookX = -150 - 2;
+    protected final int bookX = backgroundWidth - 20 - 13;
     protected final int bookY = 7;
     private static final int ENTITY_RENDER_SIZE = 35;
     private boolean prevArmorStand = false;
@@ -169,7 +169,7 @@ public class ItemBuilder extends GenericScreen {
     private Set<AbstractWidget> editorLockedWidget = Sets.newHashSet();
     private static final ItemStack[] RGB_ITEMS = //to_do old code
         new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
-    private Component textComponentPreview = Component.nullToEmpty("");
+    private Component textComponentPreview = null;
     private boolean textComponentPreviewBook = false;
     private static double[] tabScroll = new double[tabs.length];
     private boolean pauseSaveScroll = false;
@@ -1636,6 +1636,7 @@ public class ItemBuilder extends GenericScreen {
                 case TEXT_COMPONENT:
                 case TEXT_COMPONENT_ITALIC:
                 case TEXT_COMPONENT_LORE:
+                case TEXT_COMPONENT_BOOK:
                 {
                     ParsedText text = BlackMagick.textComponentFromString(elSnbt);
                     if(text.isValid()) {
@@ -2516,6 +2517,7 @@ public class ItemBuilder extends GenericScreen {
     public int createBlankTabSetup() {
         int tabNum = CACHE_TAB_BLANK;
         textComponentPreview = null;
+        textComponentPreviewBook = false;
         showBannerPreview = false;
         showPosePreview = false;
         tabScroll[tabNum] = 0d;
@@ -2554,16 +2556,28 @@ public class ItemBuilder extends GenericScreen {
         TEMPLATE
     }
 
-    private record NbtEdit(CompoundTag original, CompoundTag current, boolean unsaved, PathNode[] pathNodes, String fullPath, PathInfo pi) {
+    private record NbtEdit(CompoundTag original, CompoundTag current, boolean unsaved, PathNode[] pathNodes, String fullPath, PathInfo pi, TextComponentPathNode textComponentNode) {
 
         public static NbtEdit newEdit(CompoundTag startValue) {
             CompoundTag newNbt = startValue==null ? new CompoundTag() : startValue.copy();
-            return new NbtEdit(startValue, newNbt, false, new PathNode[0], "", PathHelper.getItemPath(newNbt, new PathNode[0]));
+            return new NbtEdit(startValue, newNbt, false, new PathNode[0], "", PathHelper.getItemPath(newNbt, new PathNode[0]), null);
         }
 
         public NbtEdit withPath(PathNode[] path) {
             PathNode[] newPath = path == null ? new PathNode[0] : path;
-            return new NbtEdit(this.original, this.current, this.unsaved, newPath, PathNode.resolvePath(newPath), PathHelper.getItemPath(this.current, path));
+
+            TextComponentPathNode textComponentNode = null;
+            List<PathNode> textComponentPathNodes = Lists.newArrayList();
+            for(PathNode n : newPath) {
+                textComponentPathNodes.add(n);
+                PathFlag f = PathHelper.getItemPath(this.current, textComponentPathNodes.toArray(new PathNode[0])).getFlag();
+                if(f.isTextComponent()) {
+                    textComponentNode = new TextComponentPathNode(PathNode.resolvePath(textComponentPathNodes.toArray(new PathNode[0])), f);
+                    break;
+                }
+            }
+
+            return new NbtEdit(this.original, this.current, this.unsaved, newPath, PathNode.resolvePath(newPath), PathHelper.getItemPath(this.current, path), textComponentNode);
         }
 
         public NbtEdit addPath(PathNode node) {
@@ -2589,7 +2603,7 @@ public class ItemBuilder extends GenericScreen {
                     BlackMagick.itemToNbtStorage(BlackMagick.itemFromNbt(this.original)),
                     BlackMagick.itemToNbtStorage(BlackMagick.itemFromNbt(newValue))
                 ),
-                this.pathNodes, this.fullPath, this.pi);
+                this.pathNodes, this.fullPath, this.pi, this.textComponentNode);
         }
 
         public ItemStack getItem() {
@@ -2636,6 +2650,8 @@ public class ItemBuilder extends GenericScreen {
         }
 
     }
+
+    private record TextComponentPathNode(String path, PathFlag flag) {}
 
     /**
      * Used to update current nbtEdit page
@@ -2690,6 +2706,27 @@ public class ItemBuilder extends GenericScreen {
         }
         nbtEditScrollNow = true;
         nbtEdit = newNbtEdit;
+
+        if(nbtEdit.textComponentNode() != null) {
+            ParsedText text = BlackMagick.textComponentFromNbt(BlackMagick.getNbtPath(nbtEdit.current(),nbtEdit.textComponentNode().path()));
+            textComponentPreview = text.text();
+            if(text.isValid())
+                switch(nbtEdit.textComponentNode().flag()) {
+                    case TEXT_COMPONENT_ITALIC: {
+                        textComponentPreview = Component.empty().withStyle(ChatFormatting.ITALIC).append(textComponentPreview);
+                        break;
+                    }
+                    case TEXT_COMPONENT_LORE: {
+                        textComponentPreview = Component.empty().withStyle(ChatFormatting.ITALIC,ChatFormatting.DARK_PURPLE).append(textComponentPreview);
+                        break;
+                    }
+                    case TEXT_COMPONENT_BOOK: {
+                        textComponentPreviewBook = true;
+                        break;
+                    }
+                    default: break;
+                }
+        }
 
         ItemSlotButton btnStyleTemplate = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[0], btn -> {
             nbtEditStyle = NbtEditStyle.TEMPLATE;
@@ -5837,9 +5874,9 @@ public class ItemBuilder extends GenericScreen {
                     FormattedText stringVisitable = textComponentPreview;
                     List<FormattedCharSequence> page = this.font.split(stringVisitable, 114);
                     int l = Math.min(128 / this.font.lineHeight, page.size());
-                    for(int m = 0; m < l; ++m) {
+                    for(int m = 0; m < l; m++) {
                         FormattedCharSequence orderedText = page.get(m);
-                        context.drawString(this.font, orderedText, x + bookX + 36, y + bookY + 32 + m * this.font.lineHeight, 0, false);
+                        context.drawString(this.font, orderedText, x + bookX + 36, y + bookY + 32 + m * this.font.lineHeight, 0xFF000000, false);
                     }
                     Style style = this.getBookTextStyleAt(page, x + bookX, y + bookY, mouseX, mouseY);
                     if(style != null) {
@@ -5852,11 +5889,6 @@ public class ItemBuilder extends GenericScreen {
                 if(tab != CACHE_TAB_BLANK) {
                     textComponentPreview = null;
                 }
-            }
-            else {
-                textComponentPreviewBook = false;
-                if(nbtEditUnsaved() && tab == CACHE_TAB_BLANK)
-                    context.drawCenteredString(this.font, Component.nullToEmpty("Unsaved"), this.width / 2, y-11, TEXT_COLOR);
             }
 
             if(showBannerPreview && bannerChangePreview != null) {
@@ -5887,7 +5919,7 @@ public class ItemBuilder extends GenericScreen {
 
     @Override
     protected void renderBehindBackgroundTexture(GuiGraphics context) {
-        if(textComponentPreviewBook)
+        if(textComponentPreviewBook && tabs[tab].hideTabs())
             context.blit(RenderPipelines.GUI_TEXTURED, BookViewScreen.BOOK_LOCATION, x + bookX, y + bookY, 0.0F, 0.0F, 192, 192, 256, 256);
     }
 

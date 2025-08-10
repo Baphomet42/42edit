@@ -46,6 +46,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import baphomethlabs.fortytwoedit.mixin.KeyMappingAccessor;
+import baphomethlabs.fortytwoedit.mixin.TextureAtlasAccessor;
 import baphomethlabs.fortytwoedit.mixin.ClientLanguageAccessor;
 
 public class SuggestionHelper {
@@ -76,33 +77,31 @@ public class SuggestionHelper {
         }
 
         public List<String> getList(boolean snbt) {
-            Set<String> set = Sets.newHashSet();
+            List<String> list = Lists.newArrayList();
             if(snbt) {
                 if(inlinedSuggs != null) {
                     if(isSnbt)
-                        set.addAll(Set.of(inlinedSuggs));
+                        list.addAll(Set.of(inlinedSuggs));
                     else
-                        set.addAll(BlackMagick.formatStringSuggs(List.of(inlinedSuggs)));
+                        list.addAll(BlackMagick.formatStringSuggs(List.of(inlinedSuggs)));
                 }
                 if(listMapKey != null && SUGGS_LIST_METHODS.containsKey(listMapKey)) {
                     if(isSnbt)
-                        set.addAll(SUGGS_LIST_METHODS.get(listMapKey).get());
+                        list.addAll(SUGGS_LIST_METHODS.get(listMapKey).get());
                     else
-                        set.addAll(BlackMagick.formatStringSuggs(SUGGS_LIST_METHODS.get(listMapKey).get()));
+                        list.addAll(BlackMagick.formatStringSuggs(SUGGS_LIST_METHODS.get(listMapKey).get()));
                 }
             }
             else {
                 if(inlinedSuggs != null && !isSnbt)
-                    set.addAll(Set.of(inlinedSuggs));
+                    list.addAll(Set.of(inlinedSuggs));
                 if(listMapKey != null && !isSnbt && SUGGS_LIST_METHODS.containsKey(listMapKey))
-                    set.addAll(SUGGS_LIST_METHODS.get(listMapKey).get());
+                    list.addAll(SUGGS_LIST_METHODS.get(listMapKey).get());
             }
             if(joinedLists != null)
                 for(SuggestionGetter s : joinedLists)
-                    set.addAll(s.getList(snbt));
-            List<String> list = Lists.newArrayList();
-            list.addAll(set);
-            Collections.sort(list, String.CASE_INSENSITIVE_ORDER);
+                    list.addAll(s.getList(snbt));
+            sortUnique(list);
             return list;
         }
 
@@ -168,6 +167,15 @@ public class SuggestionHelper {
     protected static SuggestionGetter registerSuggsListSnbt(String listName, Supplier<List<String>> method) {
         SUGGS_LIST_METHODS.put(listName, method);
         return SuggestionGetter.newRef(listName, true);
+    }
+
+    public static void sortUnique(List<String> list) {
+        Set<String> tempSet = Sets.newHashSet();
+        tempSet.addAll(list);
+
+        list.clear();
+        list.addAll(tempSet);
+        Collections.sort(list, String.CASE_INSENSITIVE_ORDER);
     }
 
 
@@ -261,7 +269,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(EquipmentSlotGroup i : EquipmentSlotGroup.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -271,7 +279,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(Axolotl.Variant i : Axolotl.Variant.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -286,7 +294,7 @@ public class SuggestionHelper {
                 if(!i.isTransient())
                     list.add(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
             });
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -303,7 +311,7 @@ public class SuggestionHelper {
                     list.add("!"+BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
                 }
             });
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -313,7 +321,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(DyeColor i : DyeColor.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -323,7 +331,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(EquipmentSlot i : EquipmentSlot.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -333,7 +341,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(FireworkExplosion.Shape i : FireworkExplosion.Shape.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -344,7 +352,7 @@ public class SuggestionHelper {
             for(String i : ChatFormatting.getNames(true, false))
                 if(!i.equals("reset"))
                     list.add(i);
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -354,7 +362,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(Fox.Variant i : Fox.Variant.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -364,7 +372,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(Variant i : Variant.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -375,7 +383,7 @@ public class SuggestionHelper {
             for(String i : KeyMappingAccessor.getKeysList().keySet())
                 if(!i.startsWith("42edit."))
                     list.add(i);
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -385,7 +393,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(Llama.Variant i : Llama.Variant.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -393,16 +401,14 @@ public class SuggestionHelper {
     public static final SuggestionGetter LIST_MAP_COLOR = registerSuggsListSnbt("LIST_MAP_COLOR", () -> {
         List<String> list = createOrGetCacheList("LIST_MAP_COLOR",false);
         if(list.isEmpty()) {
-            Set<String> tempSet = Sets.newHashSet();
-            tempSet.add(""+MapItemColor.DEFAULT.rgb());
+            list.add(""+MapItemColor.DEFAULT.rgb());
             for(ResourceLocation i : BuiltInRegistries.MAP_DECORATION_TYPE.keySet()) {
                 MapDecorationType t = BuiltInRegistries.MAP_DECORATION_TYPE.get(i).get().value();
                 if(t.hasMapColor()) {
-                    tempSet.add(""+t.mapColor());
+                    list.add(""+t.mapColor());
                 }
             }
-            list.addAll(tempSet);
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -412,7 +418,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(MushroomCow.Variant i : MushroomCow.Variant.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -422,7 +428,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(Parrot.Variant i : Parrot.Variant.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -430,12 +436,10 @@ public class SuggestionHelper {
     public static final SuggestionGetter LIST_POTION_CUSTOM_NAME = registerSuggsList("LIST_POTION_CUSTOM_NAME", () -> {
         List<String> list = createOrGetCacheList("LIST_POTION_CUSTOM_NAME",false);
         if(list.isEmpty()) {
-            Set<String> tempSet = Sets.newHashSet();
-            tempSet.add("empty");
+            list.add("empty");
             for(ResourceLocation i : BuiltInRegistries.POTION.keySet())
-                tempSet.add(BuiltInRegistries.POTION.get(i).get().value().name());
-            list.addAll(tempSet);
-            Collections.sort(list);
+                list.add(BuiltInRegistries.POTION.get(i).get().value().name());
+            sortUnique(list);
         }
         return list;
     });
@@ -445,7 +449,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(Rabbit.Variant i : Rabbit.Variant.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -455,7 +459,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(Salmon.Variant i : Salmon.Variant.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -465,7 +469,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(TropicalFish.Pattern i : TropicalFish.Pattern.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
@@ -478,13 +482,43 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(ItemUseAnimation i : ItemUseAnimation.values())
                 list.add(i.getSerializedName());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     });
 
 
     // dynamic hardcoded lists
+
+    public static final SuggestionGetter LIST_ATLAS = registerSuggsList("LIST_ATLAS", () -> {
+        List<String> list = createOrGetCacheList("LIST_ATLAS",true);
+        if(list.isEmpty()) {
+            final Minecraft client = Minecraft.getInstance();
+            if(client.getAtlasManager() != null) {
+                client.getAtlasManager().forEach((resourceLocation, atlasEntry) -> {
+                    list.add(resourceLocation.toString());
+                });
+                sortUnique(list);
+            }
+        }
+        return list;
+    });
+
+    public static final SuggestionGetter LIST_SPRITE = registerSuggsList("LIST_SPRITE", () -> {
+        List<String> list = createOrGetCacheList("LIST_SPRITE",true);
+        if(list.isEmpty()) {
+            final Minecraft client = Minecraft.getInstance();
+            if(client.getAtlasManager() != null) {
+                client.getAtlasManager().forEach((resourceLocation, atlasEntry) -> {
+                    ((TextureAtlasAccessor)atlasEntry).getTexturesByName().forEach((textureLocation, textureSprite) -> {
+                        list.add(textureLocation.toString());
+                    });
+                });
+                sortUnique(list);
+            }
+        }
+        return list;
+    });
 
     public static final SuggestionGetter LIST_TRANSLATION_KEY = registerSuggsList("LIST_TRANSLATION_KEY", () -> {
         List<String> list = createOrGetCacheList("LIST_TRANSLATION_KEY",true);
@@ -494,7 +528,7 @@ public class SuggestionHelper {
                 for(String i : ((ClientLanguageAccessor)lang).getTranslations().keySet())
                     if(!i.startsWith("42edit."))
                         list.add(i);
-                Collections.sort(list);
+                sortUnique(list);
             }
         }
         return list;
@@ -507,7 +541,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             for(ResourceLocation i : registryRef.keySet())
                 list.add(i.toString());
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     }
@@ -562,7 +596,7 @@ public class SuggestionHelper {
                     for(ResourceLocation i : reg.keySet())
                         list.add(i.toString());
                 });
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     }
@@ -627,7 +661,7 @@ public class SuggestionHelper {
                         list.add("#"+tag.location().toString());
                     });
                 });
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     }
@@ -668,7 +702,7 @@ public class SuggestionHelper {
                         list.add(itemHolder.value().toString());
                     }
                 });
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     }
@@ -698,7 +732,7 @@ public class SuggestionHelper {
                     }
                 });
             } catch(Exception ex) {}
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     }
@@ -715,7 +749,7 @@ public class SuggestionHelper {
     //                 list.clear();
     //                 for (Suggestion suggestion : suggestions.getList())
     //                     list.add(suggestion.getText());
-    //                 Collections.sort(list);
+    //                 sortUnique(list);
     //             }
     //         });
     //     }
@@ -766,7 +800,7 @@ public class SuggestionHelper {
                     }
                 });
             } catch(Exception ex) {}
-            Collections.sort(list);
+            sortUnique(list);
         }
         return list;
     }

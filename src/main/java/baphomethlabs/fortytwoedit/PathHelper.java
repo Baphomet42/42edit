@@ -15,6 +15,7 @@ import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -498,9 +499,9 @@ public class PathHelper {
             "pages", PathInfo.create(DataType.ListUnordered.of(//to_do allow list of text components or list of objects with raw/filtered
                 PathInfo.create(// test storage [data storage]
                     DataType.CompoundStructured.of(Map.of(
-                        "raw", PathInfoGetter.of("text_component")
+                        "raw", PathInfo.copyOf("text_component").setFlag(PathFlag.TEXT_COMPONENT_BOOK).getter()
                         ),Map.of(
-                        "filtered", PathInfoGetter.of("text_component")
+                        "filtered", PathInfo.copyOf("text_component").setFlag(PathFlag.TEXT_COMPONENT_BOOK).getter()
                     ))
                 ).getter()
             )).getter(),
@@ -568,6 +569,7 @@ public class PathHelper {
                 "text", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'text' type - string text").getter(),
                 "keybind", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_KEYBIND)).setInfo("For 'keybind' type - string keybinding ID").getter(),
                 "translate", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_TRANSLATION_KEY)).setInfo("For 'translatable' type - string translation key").getter(),
+                "sprite", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_SPRITE)).setInfo("For 'object' type - Resource location of a sprite in 'atlas'").getter(),
                 "score", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
                     "name", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("@s","*",FortytwoEdit.USERNAME))).setInfo("Name, selector, or * to show each player their own score").getter(),
                     "objective", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Scoreboard objective").getter()
@@ -575,7 +577,7 @@ public class PathHelper {
                 "selector", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("@s","@p","@r","@a","@e"))).setInfo("For 'selector' type - entity selector to display (text component must be resolved)").getter(),
                 "nbt", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("foo.bar[0]"))).setInfo("For 'nbt' type - NBT path of the data to display (text component must be resolved)").getter()
                 ),Map.ofEntries(
-                Map.entry("type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("text","keybind","translatable","score","selector","nbt")))
+                Map.entry("type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("text","keybind","translatable","object","score","selector","nbt")))
                     .setInfo("The text component type to use. If unset, chooses based on the order:\n  text\n  translatable\n  keybind\n  score\n  selector\n  nbt")
                     .getter()),
 
@@ -601,10 +603,10 @@ public class PathHelper {
                 Map.entry("shadow_color", PathInfo.copyOf("color_argb_int_or_list").getter()),
                 Map.entry("font", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.ASSETS_FONT))
                     .setInfo(Component.empty().append("Resource location of a font at `assets/<namespace>/font/<id>`\n\nVanilla fonts:")
-                    .append(Component.empty().append("\n  default - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(ResourceLocation.withDefaultNamespace("default")))))
-                    .append(Component.empty().append("\n  uniform - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(ResourceLocation.withDefaultNamespace("uniform")))))
-                    .append(Component.empty().append("\n  alt - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ").withStyle(Style.EMPTY.withFont(ResourceLocation.withDefaultNamespace("alt")))))
-                    .append(Component.empty().append("\n  illageralt - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(ResourceLocation.withDefaultNamespace("illageralt")))))
+                    .append(Component.empty().append("\n  default - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(ResourceLocation.withDefaultNamespace("default"))))))
+                    .append(Component.empty().append("\n  uniform - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(ResourceLocation.withDefaultNamespace("uniform"))))))
+                    .append(Component.empty().append("\n  alt - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(ResourceLocation.withDefaultNamespace("alt"))))))
+                    .append(Component.empty().append("\n  illageralt - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(ResourceLocation.withDefaultNamespace("illageralt"))))))
                     ).setUnsetInfo("Inherit from parent text").getter()),
                 Map.entry("bold", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN))
                     .setInfo(Component.empty().append(Component.empty().append("true").withStyle(ChatFormatting.BOLD)).append("\nfalse")).setUnsetInfo("Inherit from parent text").getter()),
@@ -677,6 +679,8 @@ public class PathHelper {
                 Map.entry("with", PathInfo.create(DataType.ListUnordered.of(
                     PathInfoGetter.of("text_component")
                 )).setInfo("For 'translatable' type - list of text components for translate arguments").getter()),
+
+                Map.entry("atlas", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_ATLAS)).setInfo("For 'object' type - Resource location of a sprite atlas").setUnsetInfo(StringTag.valueOf("minecraft:blocks")).getter()),
 
                 Map.entry("separator", PathInfo.copyOf("text_component").setInfo("For 'selector' and 'nbt' types - text components to display between entries").setUnsetInfo(StringTag.valueOf(", ")).getter()),
 
@@ -827,6 +831,7 @@ public class PathHelper {
         TEXT_COMPONENT,
         TEXT_COMPONENT_ITALIC,
         TEXT_COMPONENT_LORE,
+        TEXT_COMPONENT_BOOK,
         TEXT_COMPONENT_FIELD_COLOR,
 
         COLOR_RGB_INT,
@@ -835,7 +840,11 @@ public class PathHelper {
 
         ATTRIBUTE_MODIFIER,
         BANNER_PATTERN,
-        RARITY
+        RARITY;
+
+        public boolean isTextComponent() {
+            return this == TEXT_COMPONENT || this == TEXT_COMPONENT_ITALIC || this == TEXT_COMPONENT_LORE || this == TEXT_COMPONENT_BOOK;
+        }
 
     }
 

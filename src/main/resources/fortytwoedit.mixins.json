@@ -25,6 +25,7 @@
     "StringUtilMixin",
     "StructureBlockEditScreenMixin",
     "SubtitleOverlayMixin",
+    "TextureAtlasAccessor",
     "TooltipMixin",
     "TooltipPositionerMixin",
     "WindowMixin"
