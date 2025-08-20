@@ -3804,35 +3804,34 @@ public class ItemBuilder extends GenericScreen {
         }
 
         @Override
-        public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             for(int i=0; i<btns.length; i++) {
-                this.btns[i].setX(x+this.btnX[i]);
+                this.btns[i].setX(this.getContentX()+this.btnX[i]);
                 if(this.btnY == null)
-                    this.btns[i].setY(y);
+                    this.btns[i].setY(this.getContentY());
                 else
-                    this.btns[i].setY(y+this.btnY[i]);
+                    this.btns[i].setY(this.getContentY()+this.btnY[i]);
                 this.btns[i].render(context, mouseX, mouseY, tickDelta);
             }
             for(int i=0; i<txts.length; i++) {
-                this.txts[i].setX(x+this.txtX[i]);
-                this.txts[i].setY(y);
+                this.txts[i].setX(this.getContentX()+this.txtX[i]);
+                this.txts[i].setY(this.getContentY());
                 this.txts[i].render(context, mouseX, mouseY, tickDelta);
             }
             for(PosWidget posWidget : this.wids) {
-                posWidget.w.setX(x+posWidget.x);
-                posWidget.w.setY(y+posWidget.y);
+                posWidget.w.setX(this.getContentX()+posWidget.x);
+                posWidget.w.setY(this.getContentY()+posWidget.y);
                 posWidget.w.render(context, mouseX, mouseY, tickDelta);
             }
             if(lbl != null) {
                 if(lblCentered)
-                    context.drawCenteredString(ItemBuilder.this.font, this.lbl, ItemBuilder.this.width/2, y+6, lblColor);
+                    context.drawCenteredString(ItemBuilder.this.font, this.lbl, ItemBuilder.this.width/2, this.getContentY()+6, lblColor);
                 else
-                    context.drawString(ItemBuilder.this.font, this.lbl, ItemBuilder.this.x+ROW_LEFT_SCROLL+3, y+6, lblColor);
+                    context.drawString(ItemBuilder.this.font, this.lbl, ItemBuilder.this.x+ROW_LEFT_SCROLL+3, this.getContentY()+6, lblColor);
             }
             if(displayItem != null) {
-                drawItem(context,displayItem,x+ROW_LEFT_SCROLL+2+displayItemXoff,y+2);//to_do remove (used to draw item for component widget)
+                drawItem(context,displayItem,this.getContentX()+ROW_LEFT_SCROLL+2+displayItemXoff,this.getContentY()+2);//to_do remove (used to draw item for component widget)
             }
-
         }
 
     }
@@ -5440,11 +5439,11 @@ public class ItemBuilder extends GenericScreen {
         }
 
         @Override
-        public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            super.render(context, index, y, x, entryWidth, entryHeight, mouseX, mouseY, hovered, tickDelta);
+        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            super.renderContent(context, mouseX, mouseY, hovered, tickDelta);
             if(this.renderHotbarSel)
                 context.blitSprite(RenderPipelines.GUI_TEXTURED, SEL_SLOT,
-                    x+(minecraft.player.getInventory().getSelectedSlot()*20)+40-2, y-2-20, 24, 23);
+                    this.getContentX()+(minecraft.player.getInventory().getSelectedSlot()*20)+40-2, this.getContentY()-2-20, 24, 23);
         }
 
     }
@@ -5572,8 +5571,8 @@ public class ItemBuilder extends GenericScreen {
         }
 
         @Override
-        public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            super.render(context, index, y, x, entryWidth, entryHeight, mouseX, mouseY, hovered, tickDelta);
+        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            super.renderContent(context, mouseX, mouseY, hovered, tickDelta);
 
             boolean editorEqual = false;
             switch(this.cacheType) {
@@ -5599,12 +5598,14 @@ public class ItemBuilder extends GenericScreen {
             }
 
             if(!editorEqual) {
-                context.drawString(ItemBuilder.this.font, Component.nullToEmpty("Unlinked from editor"), x+this.btnX[this.btnX.length-1]+20+5, y+6, ERROR_COLOR);
+                context.drawString(ItemBuilder.this.font, Component.nullToEmpty("Unlinked from editor"),
+                    this.getContentX()+this.btnX[this.btnX.length-1]+20+5, this.getContentY()+6, ERROR_COLOR);
                 this.btns[0].active = true;
                 this.btns[1].active = true;
             }
             else {
-                context.drawString(ItemBuilder.this.font, Component.nullToEmpty("Linked to editor"), x+this.btnX[this.btnX.length-1]+20+5, y+6, LABEL_COLOR_DIM);
+                context.drawString(ItemBuilder.this.font, Component.nullToEmpty("Linked to editor"),
+                    this.getContentX()+this.btnX[this.btnX.length-1]+20+5, this.getContentY()+6, LABEL_COLOR_DIM);
                 this.btns[0].active = false;
                 this.btns[1].active = false;
             }

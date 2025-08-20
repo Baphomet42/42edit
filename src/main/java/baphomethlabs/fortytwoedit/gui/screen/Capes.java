@@ -103,13 +103,11 @@ public class Capes extends GenericScreen {
     protected void btnEditCape() {
         //from https://github.com/dragonostic/of-capes/blob/main/src/main/java/net/drago/ofcapes/mixin/SkinOptionsScreenMixin.java
         try {
-            BigInteger random1Bi = new BigInteger(128, new Random());
-            BigInteger random2Bi = new BigInteger(128, new Random(System.identityHashCode(new Object())));
-            String serverId = random1Bi.xor(random2Bi).toString(16);
-            minecraft.getMinecraftSessionService().joinServer(minecraft.getUser().getProfileId(),minecraft.getUser().getAccessToken(),serverId);
-            String url = "https://optifine.net/capeChange?u=" +
-                minecraft.getUser().getProfileId().toString().replace("-","") + "&n=" + minecraft.getUser().getName() + "&s=" + serverId;
-            Util.getPlatform().openUri(url);
+            //TODO test
+            Util.getPlatform().openUri(
+                "https://optifine.net/capeChange?u=" + minecraft.getUser().getProfileId().toString().replace("-","")
+                + "&n=" + minecraft.getUser().getName()
+                + "&s=" + (new BigInteger(128, new Random())).xor(new BigInteger(128, new Random(System.identityHashCode(new Object())))).toString(16));
         }
         catch(Exception ex) {
             FortytwoEdit.showToast("Failed to edit cape","Could not open OptiFine cape editor webpage");
