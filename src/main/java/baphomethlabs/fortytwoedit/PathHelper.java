@@ -1118,23 +1118,23 @@ public class PathHelper {
             boolean foundList = false;
             boolean foundElement = false;
             for(PathInfoSupplier pi : info) {
-                if(pi instanceof PathInfoSupplierCompound) {
+                if(pi instanceof PathInfoSupplierCompound pi2) {
                     if(foundCompound)
                         FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierCompound");
                     else
-                        newInfo.setCompoundInfo((PathInfoSupplierCompound)pi);
+                        newInfo.setCompoundInfo(pi2);
                 }
-                else if(pi instanceof PathInfoSupplierList) {
+                else if(pi instanceof PathInfoSupplierList pi2) {
                     if(foundList)
                         FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierList");
                     else
-                        newInfo.setListInfo((PathInfoSupplierList)pi);
+                        newInfo.setListInfo(pi2);
                 }
-                else if(pi instanceof PathInfoSupplierElement) {
+                else if(pi instanceof PathInfoSupplierElement pi2) {
                     if(foundElement)
                         FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierElement");
                     else
-                        newInfo.setElementInfo((PathInfoSupplierElement)pi);
+                        newInfo.setElementInfo(pi2);
                 }
                 else {
                     FortytwoEdit.logWarn("Tried to add unknown PathInfoSupplier");

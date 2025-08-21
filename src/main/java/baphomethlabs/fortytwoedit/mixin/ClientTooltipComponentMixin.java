@@ -15,8 +15,8 @@ public abstract interface ClientTooltipComponentMixin {
     @Inject(method = "create(Lnet/minecraft/world/inventory/tooltip/TooltipComponent;)Lnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipComponent;", at = @At("HEAD"), cancellable = true)
     private static void createContainer(TooltipComponent data, CallbackInfoReturnable<ClientTooltipComponent> cir) {
 
-        if(data instanceof ContainerTooltipData) {
-            cir.setReturnValue(new ContainerTooltipComponent((ContainerTooltipData)data));
+        if(data instanceof ContainerTooltipData data2) {
+            cir.setReturnValue(new ContainerTooltipComponent(data2));
         }
 
     }

@@ -491,8 +491,8 @@ public class BlackMagick {
             ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(giveMsg));
         }
         catch(Exception ex) {
-            if(ex instanceof CommandSyntaxException) {
-                String err = ((CommandSyntaxException)ex).getMessage();
+            if(ex instanceof CommandSyntaxException ex2) {
+                String err = ex2.getMessage();
                 String bundleErr = "Malformed 'minecraft:bundle_contents' component: ";
                 if(err.startsWith(bundleErr))
                     err = err.replaceFirst(bundleErr,"");
@@ -947,27 +947,15 @@ public class BlackMagick {
         return list;
     }
 
-    public static List<String> joinCommandSuggs(List<String> suggsList, List<String> startVals) {
-        Set<String> set = Sets.newHashSet();
+    public static List<String> joinCommandSuggs(List<String> suggsList, String startVal) {
         List<String> list = Lists.newArrayList();
+        if(suggsList != null && !suggsList.isEmpty()) {
+            list.addAll(suggsList);
+            Collections.sort(list, new SnbtSortComparator());
+        }
 
-        if(suggsList != null)
-            for(String s : suggsList)
-                if(!s.isEmpty())
-                    set.add(s);
-
-        if(startVals != null)
-            set.removeAll(startVals);
-
-        list.addAll(set);
-        Collections.sort(list, new SnbtSortComparator());
-
-        if(startVals != null)
-            for(int i=0; i<startVals.size(); i++) {
-                String current = startVals.get(startVals.size()-1-i);
-                if(!current.isEmpty())
-                    list.add(0,current);
-            }
+        if(startVal != null && !startVal.isEmpty() && (suggsList == null || !suggsList.contains(startVal)))
+            list.add(0,startVal);
 
         return list;
     }

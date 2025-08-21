@@ -155,6 +155,7 @@ public class ItemBuilder extends GenericScreen {
     public static final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
     public static final String[] BANNER_CHAR_LIST = new String[BANNER_PRESET_CHARS.replaceAll("\\s","").length()+1];
     private TextSuggestor suggs;
+    private boolean suggsPause = false;
     private Set<EditBox> currentTxt = Sets.newHashSet();
     private static int[][] colorSets = {{66,6,102},{0,0,0}};
     private static float[] colorHsl = {0f,0f,0f};
@@ -582,8 +583,8 @@ public class ItemBuilder extends GenericScreen {
         if(TAB_WIDGETS_SCROLL.get(CACHE_TAB_SAVED).size() >= FortytwoEdit.SAVED_ROWS)
             for(int i=0; i<FortytwoEdit.SAVED_ROWS; i++) {
                 RowWidget row = TAB_WIDGETS_SCROLL.get(CACHE_TAB_SAVED).get(i);
-                if(row instanceof RowWidgetSavedItemsRow)
-                    ((RowWidgetSavedItemsRow)row).updateSavedDisplay();
+                if(row instanceof RowWidgetSavedItemsRow row2)
+                    row2.updateSavedDisplay();
             }
     }
 
@@ -1722,7 +1723,7 @@ public class ItemBuilder extends GenericScreen {
     }
 
     private void suggsOnChanged(EditBox w, String[] suggestions, String startVal) {
-        if(w == null)
+        if(w == null || suggsPause)
             return;
 
         boolean shouldSetSuggs = false;
@@ -1744,14 +1745,11 @@ public class ItemBuilder extends GenericScreen {
         if(shouldSetSuggs) {
             if(suggs == null)
                 return;
-            List<String> startVals = null;
-            if(startVal != null)
-                startVals = List.of(startVal);
             List<String> joinSuggs = null;
             if(suggestions != null && suggestions.length>0) {
                 joinSuggs = List.of(suggestions);
             }
-            String[] suggsArr = BlackMagick.joinCommandSuggs(joinSuggs, startVals).toArray(new String[0]);
+            String[] suggsArr = BlackMagick.joinCommandSuggs(joinSuggs, startVal).toArray(new String[0]);
             if(suggsArr != null && suggsArr.length>0)
                 suggs.setSuggestions(suggsArr);
         }
@@ -2137,8 +2135,8 @@ public class ItemBuilder extends GenericScreen {
                                     item = ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(inp)).createItemStack(1,false);
                                 }
                                 catch(Exception ex) {
-                                    if(ex instanceof CommandSyntaxException) {
-                                        setErrorMsg(((CommandSyntaxException)ex).getMessage());
+                                    if(ex instanceof CommandSyntaxException ex2) {
+                                        setErrorMsg(ex2.getMessage());
                                         if(inpError.contains(" at position ")) {
                                             setErrorMsg(inpError.substring(0,inpError.indexOf(" at position ")));
                                         }
@@ -2321,6 +2319,7 @@ public class ItemBuilder extends GenericScreen {
      * @param tabNum
      */
     public void createTab(int tabNum) {
+        suggsPause = true;
         if(!pauseSaveScroll && tabWidget != null) {
             tabScroll[tab] = tabWidget.scrollAmount();
             pauseSaveScroll = true;
@@ -2512,6 +2511,7 @@ public class ItemBuilder extends GenericScreen {
             btnTab(tab);
         }
         resetSuggs();
+        suggsPause = false;
     }
 
     public int createBlankTabSetup() {
@@ -2699,6 +2699,7 @@ public class ItemBuilder extends GenericScreen {
      * @param newNbtEdit
      */
     public void createBlankTabNbtEdit(NbtEdit newNbtEdit) {
+        suggsPause = true;
         int tabNum = createBlankTabSetup();
 
         if(nbtEdit != null && tab == tabNum && tabWidget != null) {
@@ -3229,6 +3230,7 @@ public class ItemBuilder extends GenericScreen {
         nbtEditRefreshWidgets();
         btnTab(tabNum);
         resetSuggs();
+        suggsPause = false;
     }
 
     private void nbtEditRefreshWidgets() {
@@ -4033,8 +4035,8 @@ public class ItemBuilder extends GenericScreen {
                                                 new StringReader("stone["+path.replaceFirst("components\\.","")+"="+value+"]"));
                                         }
                                         catch(Exception ex) {
-                                            if(ex instanceof CommandSyntaxException) {
-                                                setErrorMsg(((CommandSyntaxException)ex).getMessage());
+                                            if(ex instanceof CommandSyntaxException ex2) {
+                                                setErrorMsg(ex2.getMessage());
                                                 if(inpError.contains(" at position ")) {
                                                     setErrorMsg(inpError.substring(0,inpError.indexOf(" at position ")));
                                                 }
@@ -4048,8 +4050,8 @@ public class ItemBuilder extends GenericScreen {
                                         ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(value));
                                     }
                                     catch(Exception ex) {
-                                        if(ex instanceof CommandSyntaxException) {
-                                            setErrorMsg(((CommandSyntaxException)ex).getMessage());
+                                        if(ex instanceof CommandSyntaxException ex2) {
+                                            setErrorMsg(ex2.getMessage());
                                             if(inpError.contains(" at position ")) {
                                                 setErrorMsg(inpError.substring(0,inpError.indexOf(" at position ")));
                                             }
@@ -4068,8 +4070,8 @@ public class ItemBuilder extends GenericScreen {
                                         IntegerArgumentType.integer(1,selItem.getMaxStackSize()).parse(new StringReader(value));//to_do get from itemStack param
                                     }
                                     catch(Exception ex) {
-                                        if(ex instanceof CommandSyntaxException) {
-                                            setErrorMsg(((CommandSyntaxException)ex).getMessage());
+                                        if(ex instanceof CommandSyntaxException ex2) {
+                                            setErrorMsg(ex2.getMessage());
                                             if(inpError.contains(" at position ")) {
                                                 setErrorMsg(inpError.substring(0,inpError.indexOf(" at position ")));
                                             }
