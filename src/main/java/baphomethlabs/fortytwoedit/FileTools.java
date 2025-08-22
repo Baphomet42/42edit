@@ -131,7 +131,7 @@ public class FileTools {
     public static CompoundTag readCompoundFromFile(String filePath) {
         String fileContents = readStringFromFile(filePath);
         if(fileContents != null && fileContents.length()>0) {
-            Tag nbt = BlackMagick.nbtFromString(fileContents);
+            Tag nbt = BlackMagick.nbtFromSnbt(fileContents);
             if(nbt != null && nbt.getId() == Tag.TAG_COMPOUND) {
                 return ((CompoundTag)nbt);
             }

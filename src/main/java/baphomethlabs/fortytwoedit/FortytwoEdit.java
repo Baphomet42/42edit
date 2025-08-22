@@ -898,7 +898,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 }
                 states += "}";
 
-                tag.put("block_state",BlackMagick.nbtFromString(states));
+                tag.put("block_state",BlackMagick.nbtFromSnbt(states));
                 stack.put("components",tag);
                 return BlackMagick.itemFromNbt(stack);
             }
@@ -1237,7 +1237,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     stream.close();
                 } catch(Exception ex) {}
 
-            Tag parseWebJson = BlackMagick.nbtFromString(webJson);
+            Tag parseWebJson = BlackMagick.nbtFromSnbt(webJson);
             if(parseWebJson != null && parseWebJson.getId()==Tag.TAG_COMPOUND) {
                 CompoundTag webNbt = (CompoundTag)parseWebJson;
                 newItems = webNbt.copy();

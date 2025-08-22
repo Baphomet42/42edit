@@ -82,7 +82,7 @@ public class PathHelper {
                     ),Map.of(
                     "value", PathInfo.copyOf("text_component").setInfo("For 'override' type - text component to show").getter()
                     )
-                )).setUnsetInfo(BlackMagick.nbtFromString("{type:\"default\"}")).getter()
+                )).setUnsetInfo(BlackMagick.nbtFromSnbt("{type:\"default\"}")).getter()
             ))).setFlag(PathFlag.ATTRIBUTE_MODIFIER).getter()
         )).setIcon(Items.DIAMOND_SWORD));
 

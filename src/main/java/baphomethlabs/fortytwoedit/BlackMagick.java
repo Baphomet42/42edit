@@ -117,7 +117,7 @@ public class BlackMagick {
      * @param inp snbt
      * @return parsed element or null if invalid
      */
-    public static Tag nbtFromString(String inp) {
+    public static Tag nbtFromSnbt(String inp) {
         String nbt = "{temp:"+inp+"}";
         CompoundTag temp;
         try {
@@ -135,8 +135,8 @@ public class BlackMagick {
      * @param type if parsed element not type, returns null
      * @return parsed element or null if invalid
      */
-    public static Tag nbtFromString(String inp, byte type) {
-        Tag el = nbtFromString(inp);
+    public static Tag nbtFromSnbt(String inp, byte type) {
+        Tag el = nbtFromSnbt(inp);
         if(el != null && el.getId() != type)
             return null;
         return el;
@@ -149,7 +149,7 @@ public class BlackMagick {
      * @return parsed compound or empty compound if invalid
      */
     public static CompoundTag validCompoundFromString(String inp) {
-        return BlackMagick.validCompound(BlackMagick.nbtFromString(inp));
+        return BlackMagick.validCompound(BlackMagick.nbtFromSnbt(inp));
     }
 
     /**
@@ -181,8 +181,8 @@ public class BlackMagick {
             String parsed = temp.toString();
             if(parsed.startsWith("{temp:") && parsed.endsWith("}")) {
                 parsed = parsed.substring(6,parsed.length()-1);
-                if(BlackMagick.nbtFromString(parsed)!=null && BlackMagick.nbtFromString(parsed).getId()==Tag.TAG_STRING
-                && (BlackMagick.nbtFromString(parsed)).toString().equals(inp.toString())) {
+                if(BlackMagick.nbtFromSnbt(parsed)!=null && BlackMagick.nbtFromSnbt(parsed).getId()==Tag.TAG_STRING
+                && (BlackMagick.nbtFromSnbt(parsed)).toString().equals(inp.toString())) {
                     return parsed;
                 }
             }
@@ -243,15 +243,20 @@ public class BlackMagick {
     }
 
     /**
-     * Converts json string to Text object. Valid forms include {text:""} [{text:""}] ""
+     * Converts snbt string to Text object. Valid forms include {text:""} [{text:""}] ""
      * 
-     * @param inp raw json string
+     * @param inp snbt text component
      * @return parsed Text or error message
      */
-    public static ParsedText textComponentFromString(String inp) {
-        return textComponentFromNbt(BlackMagick.nbtFromString(inp));
+    public static ParsedText textComponentFromSnbt(String inp) {
+        return textComponentFromNbt(BlackMagick.nbtFromSnbt(inp));
     }
 
+    /**
+     * 
+     * @param textComponent nbt text component (string, compound, or list)
+     * @return parsed Text or error message
+     */
     public static ParsedText textComponentFromNbt(Tag textComponent) {
         if(textComponent != null) {
             CompoundTag nbt = new CompoundTag();
@@ -269,14 +274,24 @@ public class BlackMagick {
     /**
      * 
      * @param inp
-     * @return SNBT representation of text component, or null if inp is null
+     * @return NBT representation of text component, or null
      */
-    public static String textComponentToSnbt(Component inp) {
+    public static Tag textComponentToNbt(Component inp) {
         if(inp == null)
             return null;
         ItemStack temp = new ItemStack(Items.STONE);
         temp.set(DataComponents.CUSTOM_NAME, inp);
-        return BlackMagick.nbtToSnbt(BlackMagick.getNbtPath(BlackMagick.itemToNbt(temp),"components.minecraft:custom_name"));
+        return BlackMagick.getNbtPath(BlackMagick.itemToNbt(temp),"components.minecraft:custom_name");
+    }
+
+    /**
+     * 
+     * @param inp
+     * @return SNBT representation of text component, or null
+     */
+    public static String textComponentToSnbt(Component inp) {
+        Tag el = textComponentToNbt(inp);
+        return el == null ? null : BlackMagick.nbtToSnbt(el);
     }
 
     /**
@@ -965,11 +980,11 @@ public class BlackMagick {
         @Override
         public int compare(String s1, String s2) {
 
-            Tag el1 = BlackMagick.nbtFromString(s1);
+            Tag el1 = BlackMagick.nbtFromSnbt(s1);
             if(el1 == null)
                 el1 = StringTag.valueOf(s1);
 
-            Tag el2 = BlackMagick.nbtFromString(s2);
+            Tag el2 = BlackMagick.nbtFromSnbt(s2);
             if(el2 == null)
                 el2 = StringTag.valueOf(s2);
 

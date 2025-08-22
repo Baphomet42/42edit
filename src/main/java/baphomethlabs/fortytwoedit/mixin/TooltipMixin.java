@@ -1,6 +1,7 @@
 package baphomethlabs.fortytwoedit.mixin;
 
 import java.util.List;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
@@ -61,9 +62,11 @@ public abstract class TooltipMixin {
                             lines.remove(lines.size()-1);
                             endLine--;
                         }
-                        List<FormattedCharSequence> extra = client.font.split(Component.nullToEmpty(
-                            "[Showing lines "+ startLine + "-" + endLine + " of " + originalLines + "]"
-                            ), client.screen.width-safeZone);
+                        List<FormattedCharSequence> extra = client.font.split(Component.empty()
+                            .append("[Showing lines "+ startLine + "-" + endLine + " of " + originalLines + "]")
+                            .append("  ")
+                            .append(Component.empty().append("Use Ctrl+PGU/PGD to cycle").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC))
+                            , client.screen.width-safeZone);
                         lines.add(extra.get(0));
                     }
                     cir.setReturnValue(lines);
