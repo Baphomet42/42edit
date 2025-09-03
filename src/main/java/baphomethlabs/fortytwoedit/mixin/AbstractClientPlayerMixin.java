@@ -9,8 +9,8 @@ import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.resources.PlayerSkin;
-import net.minecraft.client.resources.PlayerSkin.Model;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.PlayerModelType;
 
 @Mixin(AbstractClientPlayer.class)
 public abstract class AbstractClientPlayerMixin {
@@ -27,8 +27,8 @@ public abstract class AbstractClientPlayerMixin {
             PlayerSkin skin = playerEntry.getSkin();
             ResourceLocation texture = skin.texture();
             ResourceLocation cape = skin.capeTexture();
-            Model model = skin.model();
-            String name = playerEntry.getProfile().getName();
+            PlayerModelType model = skin.model();
+            String name = playerEntry.getProfile().name();
             boolean changed = false;
 
             //cape
@@ -56,9 +56,9 @@ public abstract class AbstractClientPlayerMixin {
             //model
             if(FortytwoEdit.showClientSkin && name.equals(FortytwoEdit.USERNAME)) {
                 if(FortytwoEdit.clientSkinSlim)
-                    model = Model.SLIM;
+                    model = PlayerModelType.SLIM;
                 else
-                    model = Model.WIDE;
+                    model = PlayerModelType.WIDE;
 
                 changed = true;
             }

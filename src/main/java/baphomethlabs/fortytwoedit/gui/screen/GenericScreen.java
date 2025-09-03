@@ -8,6 +8,8 @@ import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -110,19 +112,19 @@ public abstract class GenericScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleTap) {
-        if(super.mouseClicked(mouseX, mouseY, button, doubleTap))
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
+        if(super.mouseClicked(mouseButtonEvent, doubleTap))
             return true;
         unsel();
         return false;
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent keyEvent) {
         if(System.currentTimeMillis()-prevTooltipTime < 100) {
-            if(hasControlDown() && keyCode == GLFW.GLFW_KEY_C) {
+            if(keyEvent.hasControlDown() && keyEvent.key() == GLFW.GLFW_KEY_C) {
                 if(prevTooltipNbt != null) {
-                    if(hasAltDown()) {
+                    if(keyEvent.hasAltDown()) {
                         if(System.currentTimeMillis() - prevTooltipCopyTime > TOOLTIP_COPY_COOLDOWN || !prevTooltipNbt.equals(FortytwoEdit.getClipboard())) {
                             FortytwoEdit.setClipboard(prevTooltipNbt);
                             FortytwoEdit.showToast("Clipboard", "Tooltip component copied");
@@ -139,8 +141,8 @@ public abstract class GenericScreen extends Screen {
                 }
                 return true;
             }
-            if(hasControlDown() && keyCode == GLFW.GLFW_KEY_PAGE_UP) {
-                if(hasAltDown()) {
+            if(keyEvent.hasControlDown() && keyEvent.key() == GLFW.GLFW_KEY_PAGE_UP) {
+                if(keyEvent.hasAltDown()) {
                     if(prevTooltipScroll != 0) {
                         prevTooltipScroll = 0;
                         prevTooltipCache = null;
@@ -154,8 +156,8 @@ public abstract class GenericScreen extends Screen {
                 }
                 return true;
             }
-            if(hasControlDown() && keyCode == GLFW.GLFW_KEY_PAGE_DOWN) {
-                if(hasAltDown()) {
+            if(keyEvent.hasControlDown() && keyEvent.key() == GLFW.GLFW_KEY_PAGE_DOWN) {
+                if(keyEvent.hasAltDown()) {
                     if(prevTooltipScroll != Integer.MAX_VALUE) {
                         prevTooltipScroll = Integer.MAX_VALUE;
                         prevTooltipCache = null;
@@ -170,10 +172,10 @@ public abstract class GenericScreen extends Screen {
                 return true;
             }
         }
-        if(super.keyPressed(keyCode, scanCode, modifiers)) {
+        if(super.keyPressed(keyEvent)) {
             return true;
         }
-        if(FortytwoEdit.keyMagickGui.matches(keyCode,scanCode) || minecraft.options.keyInventory.matches(keyCode,scanCode)) {
+        if(FortytwoEdit.keyMagickGui.matches(keyEvent) || minecraft.options.keyInventory.matches(keyEvent)) {
             if(shouldCloseOnKeybind()) {
                 this.onClose();
                 return true;

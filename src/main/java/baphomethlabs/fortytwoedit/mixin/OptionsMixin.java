@@ -1,7 +1,6 @@
 package baphomethlabs.fortytwoedit.mixin;
 
 import java.util.List;
-import java.util.Map;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Options;
 import org.spongepowered.asm.mixin.Final;
@@ -22,29 +21,6 @@ public abstract class OptionsMixin {
 	@Final
 	@Shadow
 	public KeyMapping[] keyMappings;
-
-	@Inject(method = "load", at = @At("HEAD"))
-	private void appendModBindings(CallbackInfo ci) {
-		List<KeyMapping> allKeysList = Lists.newArrayList(keyMappings);
-        Map<String, Integer> categoryOrderMap = KeyMappingAccessor.getCategorySortOrder();
-        List<String> newCategories = Lists.newArrayList();
-
-        for(KeyMapping k : FortytwoEdit.KEYBINDS) {
-            if(!allKeysList.contains(k))
-                allKeysList.add(k);
-            if(!categoryOrderMap.containsKey(k.getCategory()))
-                newCategories.add(k.getCategory());
-        }
-        int maxCategory = 0;
-        for(String c : categoryOrderMap.keySet())
-           maxCategory = Math.max(maxCategory,categoryOrderMap.get(c));
-        for(String c : newCategories) {
-            maxCategory++;
-            categoryOrderMap.put(c,maxCategory);
-        }
-
-		keyMappings = allKeysList.toArray(new KeyMapping[0]);
-	}
 
 	@Redirect(method = "processOptions", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Options;keyMappings:[Lnet/minecraft/client/KeyMapping;"))
 	private KeyMapping[] removeModBindings(Options gameOptions) {

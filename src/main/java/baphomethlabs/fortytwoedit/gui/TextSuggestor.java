@@ -7,9 +7,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.BelowOrAboveWidgetTooltipPositioner;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -49,8 +50,8 @@ public class TextSuggestor {
         refresh();
     }
 
-    public boolean keyPressed(int i, int j, int k) {
-        if(this.suggestionsWindow != null && this.suggestionsWindow.keyPressed(i, j, k)) {
+    public boolean keyPressed(KeyEvent keyEvent) {
+        if(this.suggestionsWindow != null && this.suggestionsWindow.keyPressed(keyEvent)) {
             return true;
         }
         return false;
@@ -60,8 +61,8 @@ public class TextSuggestor {
         return this.suggestionsWindow != null && this.suggestionsWindow.mouseScrolled(Mth.clamp(d, -1.0, 1.0));
     }
 
-    public boolean mouseClicked(double d, double e, int i, boolean doubleTap) {
-        return this.suggestionsWindow != null && this.suggestionsWindow.mouseClicked((int)d, (int)e, i, doubleTap);
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
+        return this.suggestionsWindow != null && this.suggestionsWindow.mouseClicked(mouseButtonEvent, doubleTap);
     }
 
     public void showSuggestions() {
@@ -311,12 +312,12 @@ public class TextSuggestor {
             return clientTooltipPositioner.positionTooltip(guiGraphics.guiWidth(), guiGraphics.guiHeight(), i, j, k, l);
         }
 
-        public boolean mouseClicked(int i, int j, int k, boolean doubleTap) {
-            if(!this.rect.contains(i, j)) {
+        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
+            if(!this.rect.contains((int)mouseButtonEvent.x(), (int)mouseButtonEvent.y())) {
                 return false;
             }
 
-            int lineNum = (j - this.rect.getY()) / LINE_HEIGHT;
+            int lineNum = ((int)mouseButtonEvent.y() - this.rect.getY()) / LINE_HEIGHT;
             int suggsNum = lineNum + this.offset;
             if(suggsNum >= 0 && suggsNum < this.suggestionList.size() && lineNum >= 0 && lineNum < TextSuggestor.this.suggestionLineLimit) {
                 this.select(suggsNum);
@@ -335,30 +336,30 @@ public class TextSuggestor {
             return false;
         }
 
-        public boolean keyPressed(int i, int j, int k) {
-            if(i == 265) {//arrow up
+        public boolean keyPressed(KeyEvent keyEvent) {
+            if(keyEvent.key() == 265) {//arrow up
                 this.cycle(-1);
                 this.tabCycles = false;
                 return true;
             }
-            if(i == 264) {//arrow down
+            if(keyEvent.key() == 264) {//arrow down
                 this.cycle(1);
                 this.tabCycles = false;
                 return true;
             }
-            if(i == 258) {//tab
+            if(keyEvent.key() == 258) {//tab
                 if(this.tabCycles) {
-                    this.cycle(Screen.hasShiftDown() ? -1 : 1);
+                    this.cycle(keyEvent.hasShiftDown() ? -1 : 1);
                 }
                 this.useSuggestion();
                 return true;
             }
-            if(i == GLFW.GLFW_KEY_ENTER || i == GLFW.GLFW_KEY_KP_ENTER) {//enter
+            if(keyEvent.key() == GLFW.GLFW_KEY_ENTER || keyEvent.key() == GLFW.GLFW_KEY_KP_ENTER) {//enter
                 this.useSuggestion();
                 TextSuggestor.this.hide();
                 return true;
             }
-            if(i == 256) {//escape
+            if(keyEvent.key() == 256) {//escape
                 TextSuggestor.this.hide();
                 return true;
             }

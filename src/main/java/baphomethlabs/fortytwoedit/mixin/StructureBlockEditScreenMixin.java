@@ -14,6 +14,8 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.StructureBlockEditScreen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.Blocks;
 
@@ -60,8 +62,8 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
     }
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
-    private void injectKeyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        if(suggs != null && suggs.keyPressed(keyCode, scanCode, modifiers)) {
+    private void injectKeyPressed(KeyEvent keyEvent, CallbackInfoReturnable<Boolean> cir) {
+        if(suggs != null && suggs.keyPressed(keyEvent)) {
             cir.setReturnValue(true);
         }
     }
@@ -80,12 +82,12 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleTap) {
-        if(suggs != null && suggs.mouseClicked(mouseX, mouseY, button, doubleTap)) {
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
+        if(suggs != null && suggs.mouseClicked(mouseButtonEvent, doubleTap)) {
             return true;
         }
         suggs = null;
-        return super.mouseClicked(mouseX, mouseY, button, doubleTap);
+        return super.mouseClicked(mouseButtonEvent, doubleTap);
     }
 
 }

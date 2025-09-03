@@ -101,13 +101,14 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     // keys
-    public static KeyMapping keyAfkClick = new KeyMapping("42edit.key.afk_click", GLFW.GLFW_KEY_MINUS, "42edit.key.categories.42edit");
-    public static KeyMapping keyAfkMove = new KeyMapping("42edit.key.afk_move", GLFW.GLFW_KEY_EQUAL, "42edit.key.categories.42edit");
-    public static KeyMapping keyFreeLook = new KeyMapping("42edit.key.free_look", GLFW.GLFW_KEY_LEFT_ALT, "42edit.key.categories.42edit");
-    public static KeyMapping keyMagickGui = new KeyMapping("42edit.key.open_magick_gui", GLFW.GLFW_KEY_J, "42edit.key.categories.42edit");
-    public static KeyMapping keyMod = new KeyMapping("42edit.key.key_mod", InputConstants.UNKNOWN.getValue(), "42edit.key.categories.42edit");
-    public static KeyMapping keySpamClick = new KeyMapping("42edit.key.spam_click", InputConstants.UNKNOWN.getValue(), "42edit.key.categories.42edit");
-    public static KeyMapping keyZoom = new KeyMapping("42edit.key.zoom", GLFW.GLFW_KEY_R, "42edit.key.categories.42edit");
+    public static final String KEY_CATEGORY = "42edit.key.categories.42edit";
+    public static KeyMapping keyAfkClick = new KeyMapping("42edit.key.afk_click", GLFW.GLFW_KEY_MINUS, KeyMapping.Category.MISC);
+    public static KeyMapping keyAfkMove = new KeyMapping("42edit.key.afk_move", GLFW.GLFW_KEY_EQUAL, KeyMapping.Category.MISC);
+    public static KeyMapping keyFreeLook = new KeyMapping("42edit.key.free_look", GLFW.GLFW_KEY_LEFT_ALT, KeyMapping.Category.MISC);
+    public static KeyMapping keyMagickGui = new KeyMapping("42edit.key.open_magick_gui", GLFW.GLFW_KEY_J, KeyMapping.Category.MISC);
+    public static KeyMapping keyMod = new KeyMapping("42edit.key.key_mod", InputConstants.UNKNOWN.getValue(), KeyMapping.Category.MISC);
+    public static KeyMapping keySpamClick = new KeyMapping("42edit.key.spam_click", InputConstants.UNKNOWN.getValue(), KeyMapping.Category.MISC);
+    public static KeyMapping keyZoom = new KeyMapping("42edit.key.zoom", GLFW.GLFW_KEY_R, KeyMapping.Category.MISC);
 
     public static final KeyMapping[] KEYBINDS = new KeyMapping[]{
         keyAfkClick,

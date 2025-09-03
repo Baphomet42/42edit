@@ -14,11 +14,6 @@ public interface KeyMappingAccessor {
 		throw new AssertionError();
 	}
 
-	@Accessor("CATEGORY_SORT_ORDER")
-	public static Map<String, Integer> getCategorySortOrder() {
-		throw new AssertionError();
-	}
-
 	@Accessor("key")
 	InputConstants.Key getBoundKey();
 

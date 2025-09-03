@@ -2,10 +2,12 @@ package baphomethlabs.fortytwoedit.gui.screen;
 
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.gui.widget.ModifierButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -38,8 +40,8 @@ public class MagickGui extends GenericScreen {
         }
         else
             btnWgtHat.setTooltip(Tooltip.create(Component.translatable("42edit.gui.magick_screen.hat.tooltip")));
-        this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.super_secret"),
-            button -> this.btnSuperSecretSettings()).bounds(x+WID_LEFT,y+ROW_HEIGHT*5+TOP_OFFSET,165,WID_HEIGHT).build());
+        this.addRenderableWidget(new ModifierButton(Component.translatable("42edit.gui.magick_screen.super_secret"),
+            (button, inputWithModifiers) -> this.btnSuperSecretSettings(inputWithModifiers),x+WID_LEFT,y+ROW_HEIGHT*5+TOP_OFFSET,165,WID_HEIGHT));
         this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.capes"),
             button -> changeScreen(new Capes())).bounds(x+WID_LEFT,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
         this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.auto_click"),
@@ -59,8 +61,8 @@ public class MagickGui extends GenericScreen {
         unsel();
     }
 
-    protected void btnSuperSecretSettings() {
-        if(hasShiftDown()) {
+    protected void btnSuperSecretSettings(InputWithModifiers inputWithModifiers) {
+        if(inputWithModifiers.hasShiftDown()) {
             changeScreen(new SecretScreen());
         }
         else {

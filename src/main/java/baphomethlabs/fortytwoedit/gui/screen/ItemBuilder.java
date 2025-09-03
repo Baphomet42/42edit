@@ -21,6 +21,8 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.core.BlockPos;
@@ -3567,8 +3569,8 @@ public class ItemBuilder extends GenericScreen {
         public TabWidgetEntry() {}
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleTap) {
-            if(super.mouseClicked(mouseX, mouseY, button, doubleTap))
+        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
+            if(super.mouseClicked(mouseButtonEvent, doubleTap))
                 return true;
             unsel();
             return false;
@@ -3593,8 +3595,8 @@ public class ItemBuilder extends GenericScreen {
         protected void renderListBackground(GuiGraphics context) {}
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleTap) {
-            if(super.mouseClicked(mouseX, mouseY, button, doubleTap))
+        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
+            if(super.mouseClicked(mouseButtonEvent, doubleTap))
                 return true;
             unsel();
             return false;
@@ -5982,19 +5984,19 @@ public class ItemBuilder extends GenericScreen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if(suggs != null && suggs.keyPressed(keyCode, scanCode, modifiers)) {
+    public boolean keyPressed(KeyEvent keyEvent) {
+        if(suggs != null && suggs.keyPressed(keyEvent)) {
             return true;
         }
-        if(keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN) {
+        if(keyEvent.key() == GLFW.GLFW_KEY_LEFT || keyEvent.key() == GLFW.GLFW_KEY_RIGHT || keyEvent.key() == GLFW.GLFW_KEY_UP || keyEvent.key() == GLFW.GLFW_KEY_DOWN) {
             if(!activeTxt() && !activeSlider()) {
-                if((keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT) && this.UNSAVED_TEXT_WIDGETS.isEmpty() && !tabs[tab].hideTabs() && hotbarLeftBtn.active) {
-                    btnChangeSlot(keyCode == GLFW.GLFW_KEY_LEFT);
+                if((keyEvent.key() == GLFW.GLFW_KEY_LEFT || keyEvent.key() == GLFW.GLFW_KEY_RIGHT) && this.UNSAVED_TEXT_WIDGETS.isEmpty() && !tabs[tab].hideTabs() && hotbarLeftBtn.active) {
+                    btnChangeSlot(keyEvent.key() == GLFW.GLFW_KEY_LEFT);
                 }
                 return true;
             }
         }
-        if(super.keyPressed(keyCode, scanCode, modifiers)) {
+        if(super.keyPressed(keyEvent)) {
             return true;
         }
         return false;
@@ -6009,12 +6011,12 @@ public class ItemBuilder extends GenericScreen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleTap) {
-        if(suggs != null && suggs.mouseClicked(mouseX, mouseY, button, doubleTap)) {
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
+        if(suggs != null && suggs.mouseClicked(mouseButtonEvent, doubleTap)) {
             return true;
         }
         resetSuggs();
-        return super.mouseClicked(mouseX, mouseY, button, doubleTap);
+        return super.mouseClicked(mouseButtonEvent, doubleTap);
     }
 
     @Override
