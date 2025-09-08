@@ -5,12 +5,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.gui.screen.Capes;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.resources.PlayerSkin;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.PlayerModelType;
 
 @Mixin(AbstractClientPlayer.class)
 public abstract class AbstractClientPlayerMixin {
@@ -23,50 +21,10 @@ public abstract class AbstractClientPlayerMixin {
 
         PlayerInfo playerEntry = this.getPlayerInfo();
         if(playerEntry != null) {
-
-            PlayerSkin skin = playerEntry.getSkin();
-            ResourceLocation texture = skin.texture();
-            ResourceLocation cape = skin.capeTexture();
-            PlayerModelType model = skin.model();
-            String name = playerEntry.getProfile().name();
-            boolean changed = false;
-
-            //cape
-            if(FortytwoEdit.opticapesWorking && FortytwoEdit.opticapesOn) {
-                if(FortytwoEdit.capeCached(name)) {
-                    cape = ResourceLocation.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
-                    changed = true;
-                }
-                else if(!FortytwoEdit.nameCached(name) && FortytwoEdit.capeTimeCheck()) {
-                    FortytwoEdit.tryLoadCape(name);
-                }
+            PlayerSkin skin = Capes.injectSkinLogic(playerEntry.getProfile().name(), cir.getReturnValue());
+            if(skin != null) {
+                cir.setReturnValue(skin);
             }
-            if(FortytwoEdit.showClientCape && name.equals(FortytwoEdit.USERNAME)) {
-                cape = FortytwoEdit.getClientCape();
-                changed = true;
-            }
-
-            //skin
-            if(FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && name.equals(FortytwoEdit.USERNAME)) {
-                texture = FortytwoEdit.CUSTOM_SKIN_ID;
-                changed = true;
-            }
-
-
-            //model
-            if(FortytwoEdit.showClientSkin && name.equals(FortytwoEdit.USERNAME)) {
-                if(FortytwoEdit.clientSkinSlim)
-                    model = PlayerModelType.SLIM;
-                else
-                    model = PlayerModelType.WIDE;
-
-                changed = true;
-            }
-
-            if(changed) {
-                cir.setReturnValue(new PlayerSkin(texture, null, cape, cape, model, false));
-            }
-
         }
     }
 

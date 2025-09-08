@@ -272,6 +272,9 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     public static boolean tryLoadCape(String name) {
+        if(name == null || name.isEmpty())
+            return false;
+
         final Minecraft client = Minecraft.getInstance();
         if(capeNames.isEmpty() && !name.equals(client.getUser().getName()))
             tryLoadCape(client.getUser().getName());

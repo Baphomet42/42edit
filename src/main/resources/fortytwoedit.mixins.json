@@ -9,6 +9,7 @@
     "ClientLanguageAccessor",
     "ClientLanguageInvoker",
     "ClientLanguageMixin",
+    "ClientMannequinMixin",
     "ClientTooltipComponentMixin",
     "CreativeModeInventoryScreenMixin",
     "DecoratedPotPatternsAccessor",
