@@ -289,6 +289,8 @@ public class ItemBuilder extends GenericScreen {
             throwCopyBtn = this.addRenderableWidget(Button.builder(Component.nullToEmpty("Q*"),
                 button -> this.btnThrow(true)).bounds(width/2 + 30,y+5,WID_HEIGHT,WID_HEIGHT).build());
 
+            compareItems();
+
             if(!minecraft.player.getAbilities().instabuild) {
                 swapCopyBtn.active = false;
                 throwCopyBtn.active = false;
