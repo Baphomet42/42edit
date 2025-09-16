@@ -21,7 +21,9 @@ public class DebugScreen extends GenericScreen {
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("View Log..."), button -> changeScreen(new LogScreen())).bounds(x+20,y+ROW_HEIGHT*2+1,80,WID_HEIGHT).build());
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Reset Misc"), button -> this.btnRefreshRuntime()).bounds(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Clear various caches, refresh files, etc.")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Copy Hist"), button -> this.btnOutputHist()).bounds(x+20,y+ROW_HEIGHT*4+1,80,WID_HEIGHT).build())
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("View Hist..."), button -> changeScreen(new ItemHistoryScreen())).bounds(x+20,y+ROW_HEIGHT*4+1,80,WID_HEIGHT).build())
+            .setTooltip(Tooltip.create(Component.nullToEmpty("View item editor history")));
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Copy Hist"), button -> this.btnOutputHist()).bounds(x+20+80+5,y+ROW_HEIGHT*4+1,80,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Copy item history info and send to log")));
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Open Dir"), button -> btnOpenDir()).bounds(x+20,y+ROW_HEIGHT*5+1,80,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Open 42edit file directory")));

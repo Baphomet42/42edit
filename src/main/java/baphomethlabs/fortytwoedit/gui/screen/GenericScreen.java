@@ -3,10 +3,16 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import java.time.Duration;
 import java.util.List;
 import org.lwjgl.glfw.GLFW;
+import com.google.common.collect.Lists;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.MultiLineTextWidget;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -35,6 +41,8 @@ public abstract class GenericScreen extends Screen {
     protected static final int WID_SPACE = 5; // standard horizontal spacing between widgets
     protected static final int GUI_SPACE = 5; // standard starting position for widget in top corner of gui (for both x and y)
     protected static final int WID_LEFT = 20; // standard spacing before first widget in row
+    protected static final int SCROLL_ROW_LEFT_OFFSET = 3;
+    protected static final int WID_LEFT_SCROLL = 10 + SCROLL_ROW_LEFT_OFFSET; // standard spacing before first widget in row in ScrollList
     protected static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
     protected static final Duration TOOLTIP_DELAY_SHORT = Duration.ofMillis(100L);
     protected static final int MAX_TEXT_LENGTH = 131072;
@@ -46,7 +54,6 @@ public abstract class GenericScreen extends Screen {
     public static final String UNICODE_REFRESH = "🗘";
     public static final Component ERROR_CREATIVE = Component.empty().append("Creative required").withStyle(ChatFormatting.RED);
     public static final Tooltip TT_CREATIVE = Tooltip.create(ERROR_CREATIVE);
-    private boolean unsel = false;
 
     private static String prevTooltipRaw = null;
     private static String prevTooltipNbt = null;
@@ -55,6 +62,9 @@ public abstract class GenericScreen extends Screen {
     private static final int TOOLTIP_COPY_COOLDOWN = 1500;
     private static int prevTooltipScroll = -1;
     private static List<FormattedCharSequence> prevTooltipCache = null;
+
+    private boolean unsel = false;
+    private boolean hasTitle = false;
 
     public static List<FormattedCharSequence> setCurrentTooltip(Component text) {
         prevTooltipTime = System.currentTimeMillis();
@@ -76,6 +86,18 @@ public abstract class GenericScreen extends Screen {
 
     public GenericScreen() {
         super(GameNarrator.NO_TITLE);
+    }
+
+    public GenericScreen(String title) {
+        super(title == null ? GameNarrator.NO_TITLE : Component.nullToEmpty(title));
+        if(title != null)
+            hasTitle = true;
+    }
+
+    public GenericScreen(Component title) {
+        super(title == null ? GameNarrator.NO_TITLE : title);
+        if(title != null)
+            hasTitle = true;
     }
 
     public boolean shouldCloseOnKeybind() {
@@ -206,6 +228,13 @@ public abstract class GenericScreen extends Screen {
     }
 
     @Override
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        super.render(context, mouseX, mouseY, delta);
+        if(hasTitle)
+            context.drawCenteredString(this.font, this.getTitle(), this.width / 2, y+11, TEXT_COLOR);
+    }
+
+    @Override
     public void tick() {
         if(unsel) {
             clearFocus();
@@ -213,6 +242,213 @@ public abstract class GenericScreen extends Screen {
         }
 
         super.tick();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Modified from {@link net.minecraft.client.gui.screens.worldselection.EditGameRulesScreen.RuleList}
+     */
+    protected class ScrollList extends ContainerObjectSelectionList<ScrollRow> {
+
+        public ScrollList() {
+            this(false);
+        }
+
+        public ScrollList(boolean slotHeight) {
+            super(GenericScreen.this.minecraft, GenericScreen.this.width-30, GenericScreen.this.backgroundHeight-32-5, GenericScreen.this.y+32, slotHeight ? 20 : ROW_HEIGHT);
+        }
+
+        public ScrollRow addRow() {
+            this.addEntry(new ScrollRow());
+            return getRow();
+        }
+
+        public ScrollRow addRow(ScrollRow row) {
+            this.addEntry(row);
+            return getRow();
+        }
+
+        public ScrollRow getRow() {
+            if(this.children().isEmpty())
+                this.addRow();
+            return this.children().getLast();
+        }
+
+        public void centerAll() {
+            for(ScrollRow row : this.children()) {
+                row.center();
+            }
+        }
+
+        @Override
+        protected void renderListSeparators(GuiGraphics context) {}
+
+        @Override
+        protected void renderListBackground(GuiGraphics context) {}
+
+        @Override
+        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
+            if(super.mouseClicked(mouseButtonEvent, doubleTap))
+                return true;
+            unsel();
+            return false;
+        }
+
+    }
+    
+    /**
+     * Modified from {@link net.minecraft.client.gui.screens.worldselection.EditGameRulesScreen.RuleEntry}
+     */
+    protected class ScrollRow extends ContainerObjectSelectionList.Entry<ScrollRow> {
+
+        protected final List<PosWidget> children = Lists.newArrayList();
+        protected final List<AbstractWidget> childrenCache = Lists.newArrayList();
+
+        public ScrollRow() {}
+
+        public ScrollRow(PosWidget... posWidgets) {
+            for(PosWidget pw : posWidgets) {
+                add(pw);
+            }
+        }
+
+        public ScrollRow(AbstractWidget... widgets) {
+            for(AbstractWidget w : widgets) {
+                add(w);
+            }
+        }
+
+        public ScrollRow(String title) {
+            this(title, true);
+        }
+
+        public ScrollRow(String title, boolean centered) {
+            this(Component.nullToEmpty(title), centered);
+        }
+
+        public ScrollRow(Component title) {
+            this(title, true);
+        }
+
+        public ScrollRow(Component title, boolean centered) {
+            add(new MultiLineTextWidget(Component.empty().withColor(LABEL_COLOR).append(title), GenericScreen.this.font));
+            if(centered)
+                center();
+        }
+
+        private void set(int i, PosWidget posWidget) {
+            childrenCache.clear();
+            if(i==-1)
+                children.add(posWidget);
+            else
+                children.set(i, posWidget);
+        }
+
+        public void add(PosWidget posWidget) {
+            set(-1, posWidget);
+        }
+
+        public void add(AbstractWidget w, int x, int y) {
+            add(new PosWidget(w, x, y));
+        }
+
+        public void add(AbstractWidget w, int x) {
+            add(w, x, 0);
+        }
+
+        public void add(AbstractWidget w, boolean padLeft) {
+            add(w, children.isEmpty() ? WID_LEFT_SCROLL : (getRight() + (padLeft ? WID_SPACE : 0)));
+        }
+
+        public void add(AbstractWidget w) {
+            add(w, true);
+        }
+
+        public void center() {
+            int left = getLeft();
+            int right = getRight();
+            int offset = ((backgroundWidth - (right - left)) / 2) + SCROLL_ROW_LEFT_OFFSET - left;
+            
+            for(int i=0; i<children.size(); i++) {
+                set(i, PosWidget.create(children.get(i).w(), children.get(i).x() + offset, children.get(i).y()));
+            }
+        }
+
+        private int getLeft() {
+            int temp = 0;
+            if(!this.children.isEmpty())
+                temp = this.children.get(0).x();
+            for(PosWidget pw : this.children)
+                if(pw.x() < temp)
+                    temp = pw.x();
+            return temp;
+        }
+
+        private int getRight() {
+            int temp = 0;
+            if(!this.children.isEmpty())
+                temp = this.children.get(0).x() + this.children.get(0).w().getWidth();
+            for(PosWidget pw : this.children) {
+                int thisRight = pw.x() + pw.w().getWidth();
+                if(thisRight > temp)
+                    temp = thisRight;
+            }
+            return temp;
+        }
+
+        private List<AbstractWidget> getChildrenCache() {
+            if(childrenCache.isEmpty()) {
+                for(PosWidget pw : this.children)
+                    childrenCache.add(pw.w());
+            }
+            return this.childrenCache;
+        }
+
+        @Override
+        public List<? extends GuiEventListener> children() {
+            return getChildrenCache();
+        }
+
+        @Override
+        public List<? extends NarratableEntry> narratables() {
+            return getChildrenCache();
+        }
+
+        @Override
+        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
+            if(super.mouseClicked(mouseButtonEvent, doubleTap))
+                return true;
+            unsel();
+            return false;
+        }
+
+        @Override
+        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            for(PosWidget posWidget : this.children) {
+                posWidget.w().setX(this.getContentX()+posWidget.x());
+                posWidget.w().setY(this.getContentY()+posWidget.y());
+                posWidget.w().render(context, mouseX, mouseY, tickDelta);
+            }
+        }
+
+    }
+
+    protected static record PosWidget(AbstractWidget w, int x, int y) {
+
+        public static PosWidget create(AbstractWidget w, int x, int y) {
+            w.setPosition(x, y);
+            return new PosWidget(w, x, y);
+        }
+
+        public static PosWidget create(AbstractWidget w, int x) {
+            return create(w, x, 0);
+        }
+
+        public static PosWidget create(AbstractWidget w) {
+            return create(w, 0, 0);
+        }
+
     }
 
 }

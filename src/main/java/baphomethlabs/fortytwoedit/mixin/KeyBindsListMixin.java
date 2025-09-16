@@ -38,8 +38,6 @@ public abstract class KeyBindsListMixin extends ContainerObjectSelectionList<Key
             this.addEntry(KeyBindsListKeyEntryInvoker.invokeConstructor((KeyBindsList)(Object)this, keyMapping, component));
         }
 
-        System.out.println("test");
-
     }
     
 }

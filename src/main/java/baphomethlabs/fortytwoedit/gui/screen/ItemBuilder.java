@@ -99,8 +99,8 @@ public class ItemBuilder extends GenericScreen {
     protected static final int ROW_LEFT_LOCKED = 10;
     protected static final int ROW_WIDTH = 208;
     protected static final int ROW_RIGHT_LOCKED = ROW_LEFT_LOCKED+ROW_WIDTH;
-    protected static final int ROW_LEFT_SCROLL = ROW_LEFT_LOCKED+3;
-    protected static final int ROW_RIGHT_SCROLL = ROW_RIGHT_LOCKED+3;
+    protected static final int ROW_LEFT_SCROLL = ROW_LEFT_LOCKED+SCROLL_ROW_LEFT_OFFSET;
+    protected static final int ROW_RIGHT_SCROLL = ROW_RIGHT_LOCKED+SCROLL_ROW_LEFT_OFFSET;
     private static boolean runSuggsTest = true;
     protected ItemStack selItem = ItemStack.EMPTY;
     protected ItemStack selItemOff = ItemStack.EMPTY;
@@ -557,14 +557,14 @@ public class ItemBuilder extends GenericScreen {
         return false;
     }
 
-    protected Tooltip makeItemTooltip(ItemStack stack) {
+    public static Tooltip makeItemTooltip(ItemStack stack) {
         if(stack==null || stack.isEmpty())
             return Tooltip.create(Component.nullToEmpty("Failed to read item"));
         return Tooltip.create(Component.empty().append(stack.getStyledHoverName()).append("\n")
             .append(BlackMagick.nbtToColorfulText(BlackMagick.itemToNbtStorage(stack))));
     }
 
-    protected Tooltip makeItemTooltip(CompoundTag nbt, ItemStack stack) {
+    public static Tooltip makeItemTooltip(CompoundTag nbt, ItemStack stack) {
         if(nbt==null || !nbt.getString("id").isPresent())
             return Tooltip.create(Component.nullToEmpty("Failed to read item"));
         return Tooltip.create(Component.empty().append(stack == null ?
@@ -573,7 +573,7 @@ public class ItemBuilder extends GenericScreen {
             ).append("\n").append(BlackMagick.nbtToColorfulText(BlackMagick.itemToNbtStorage(stack))));
     }
 
-    protected Tooltip makeItemTooltip(String nbtString) {
+    public static Tooltip makeItemTooltip(String nbtString) {
         if(nbtString==null || nbtString.isEmpty())
             return Tooltip.create(Component.nullToEmpty("Failed to read item"));
         return Tooltip.create(Component.empty().append(BlackMagick.textComponentFromSnbt("{text:\"Failed to read item\",color:\"red\"}").text()

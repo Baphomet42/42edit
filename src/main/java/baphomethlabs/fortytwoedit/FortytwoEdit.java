@@ -30,6 +30,7 @@ import baphomethlabs.fortytwoedit.gui.screen.Capes;
 import baphomethlabs.fortytwoedit.gui.screen.DebugScreen;
 import baphomethlabs.fortytwoedit.gui.screen.Hacks;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
+import baphomethlabs.fortytwoedit.gui.screen.ItemHistoryScreen;
 import baphomethlabs.fortytwoedit.gui.screen.LogScreen;
 import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
 import baphomethlabs.fortytwoedit.gui.screen.SecretScreen;
@@ -97,7 +98,8 @@ public class FortytwoEdit implements ClientModInitializer {
         HACKS,
         ITEM_BUILDER,
         LOG_SCREEN,
-        SECRET_SCREEN
+        SECRET_SCREEN,
+        ITEM_HISTORY
     }
 
     // keys
@@ -162,6 +164,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     // item history
     private static final ListTag itemHistList = new ListTag();
+    public static final int ITEM_HIST_ROWS = 6;
     public static void addItemHist(ItemStack item) {
         if(item != null && !item.isEmpty())
             addItemHist(BlackMagick.itemToNbtStorage(item));
@@ -182,7 +185,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
             if(found<0) {
                 itemHistList.add(0,item.copy());
-                if(itemHistList.size()>54)
+                if(itemHistList.size()>ITEM_HIST_ROWS*9)
                     itemHistList.remove(itemHistList.size()-1);
             }
             else {
@@ -725,6 +728,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 case CAPES: client.setScreen(new Capes()); break;
                 case HACKS: client.setScreen(new Hacks()); break;
                 case DEBUG_SCREEN: client.setScreen(new DebugScreen()); break;
+                case ITEM_HISTORY: client.setScreen(new ItemHistoryScreen()); break;
             }
         }
 
