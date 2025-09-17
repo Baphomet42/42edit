@@ -41,8 +41,10 @@ public class ItemHistoryScreen extends GenericScreen {
                 else
                     item = ItemStack.EMPTY;
                 ItemSlotButton itemBtn = new ItemSlotButton(20, item, btn -> btnCopyItemNbt(item));
+                itemBtn.showSlot(false);
                 itemBtn.active = false;
                 if(item != null && !item.isEmpty()) {
+                    itemBtn.showSlot(true);
                     itemBtn.active = true;
                     itemBtn.setTooltip(ItemBuilder.makeItemTooltip(item));
                 }

@@ -47,8 +47,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.ClientAsset;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -64,6 +64,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.ItemStack;
@@ -368,9 +369,10 @@ public class FortytwoEdit implements ClientModInitializer {
     private static final Map<String,String> CAPE_URLS_QUEUE_MAP = Maps.newHashMap();
     private static final Set<String> CAPE_REGISTERED_IDS = Sets.newHashSet();
     private static void registerCustomCape(String id, String name, String desc) {
-        registerCape(CapeTexture.newCustom(id, name, desc), ResourceLocation.tryParse("42edit:cape/"+id));
+        ResourceLocation resourceLocation = ResourceLocation.tryParse("42edit:cape/"+id);
+        registerCape(CapeTexture.newCustom(id, name, desc), new ClientAsset.ResourceTexture(resourceLocation, resourceLocation));
     }
-    private static void registerCape(CapeTexture cape, ResourceLocation texture) {
+    private static void registerCape(CapeTexture cape, ClientAsset.Texture texture) {
         CLIENT_CAPES.add(cape);
         CAPE_MAP.put(cape.id(), texture);
     }
@@ -398,8 +400,8 @@ public class FortytwoEdit implements ClientModInitializer {
                             .invokeRegisterTextures(new java.util.UUID(0,0), new MinecraftProfileTextures(null,
                             new MinecraftProfileTexture(url, null), null, SignatureState.SIGNED));
                             futurePlayerSkin.thenAccept(playerSkin -> {
-                                if(CAPE_URLS_QUEUE_MAP.containsKey(url)) {
-                                    CAPE_MAP.put(CAPE_URLS_QUEUE_MAP.get(url), playerSkin.capeTexture());
+                                if(CAPE_URLS_QUEUE_MAP.containsKey(url) && playerSkin != null && playerSkin.cape() != null) {
+                                    CAPE_MAP.put(CAPE_URLS_QUEUE_MAP.get(url), playerSkin.cape());
                                 }
                                 else
                                     FortytwoEdit.logWarn("Failed to load cape id for: "+url);
@@ -417,8 +419,8 @@ public class FortytwoEdit implements ClientModInitializer {
             FortytwoEdit.logWarn("Failed to find custom cape with ID: "+selectedClientCape);
         }
     }
-    private static final Map<String,ResourceLocation> CAPE_MAP = Maps.newHashMap();
-    public static ResourceLocation getClientCape() {
+    private static final Map<String,ClientAsset.Texture> CAPE_MAP = Maps.newHashMap();
+    public static ClientAsset.Texture getClientCape() {
         if(CAPE_MAP.containsKey(selectedClientCape))
             return CAPE_MAP.get(selectedClientCape);
         resolveCapeUrlQueue();
@@ -490,7 +492,8 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean showClientSkin = false;
     public static boolean clientSkinSlim = false;
     public static String customSkinName = "";
-    public static final ResourceLocation CUSTOM_SKIN_ID = ResourceLocation.fromNamespaceAndPath("42edit","cache/custom_skin");
+    private static final ResourceLocation CUSTOM_SKIN_ID = ResourceLocation.fromNamespaceAndPath("42edit","cache/custom_skin");
+    public static final ClientAsset.Texture CUSTOM_SKIN_TEXTURE = new ClientAsset.ResourceTexture(CUSTOM_SKIN_ID, CUSTOM_SKIN_ID);
 
     public static boolean setCustomSkin(File file) {
         final Minecraft client = Minecraft.getInstance();
@@ -980,6 +983,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
         clearOptiCapes();
         setCustomSkin(null);
+
+        itemHistList.clear();
 
         FileTools.scanModFiles();
 

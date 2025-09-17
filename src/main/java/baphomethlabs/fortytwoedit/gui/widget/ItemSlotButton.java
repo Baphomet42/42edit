@@ -81,6 +81,10 @@ public class ItemSlotButton extends Button {
         context.renderItemDecorations(client.font,item,x,y);
     }
 
+    private boolean shouldShowSlotHighlight() {
+        return isHoveredOrFocused() && this.showSlot;
+    }
+
     public enum ItemError {
         NONE,
         WARN,
@@ -95,7 +99,7 @@ public class ItemSlotButton extends Button {
             context.blitSprite(RenderPipelines.GUI_TEXTURED,
                 SPRITE_SLOT, this.getX()+((size-SIZE_SLOT)/2), this.getY()+((size-SIZE_SLOT)/2), SIZE_SLOT, SIZE_SLOT);
 
-        if(isHoveredOrFocused() && this.showSlot)
+        if(shouldShowSlotHighlight())
             context.blitSprite(RenderPipelines.GUI_TEXTURED,
                 SPRITE_HIGHLIGHT_BACK, this.getX()+((size-SIZE_HIGHLIGHT)/2), this.getY()+((size-SIZE_HIGHLIGHT)/2), SIZE_HIGHLIGHT, SIZE_HIGHLIGHT);
 
@@ -106,7 +110,7 @@ public class ItemSlotButton extends Button {
                 this.emptySlotSprite, this.getX()+((size-SIZE_EMPTY_SLOT_SPRITE)/2), this.getY()+((size-SIZE_EMPTY_SLOT_SPRITE)/2),
                 SIZE_EMPTY_SLOT_SPRITE, SIZE_EMPTY_SLOT_SPRITE);
 
-        if(isHoveredOrFocused() && this.showSlot)
+        if(shouldShowSlotHighlight())
             context.blitSprite(RenderPipelines.GUI_TEXTURED,
                 SPRITE_HIGHLIGHT_FRONT, this.getX()+((size-SIZE_HIGHLIGHT)/2), this.getY()+((size-SIZE_HIGHLIGHT)/2), SIZE_HIGHLIGHT, SIZE_HIGHLIGHT);
 

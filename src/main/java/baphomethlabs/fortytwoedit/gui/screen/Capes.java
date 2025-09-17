@@ -14,11 +14,12 @@ import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.core.ClientAsset;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.PlayerModelType;
+import net.minecraft.world.entity.player.PlayerSkin;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
@@ -130,16 +131,17 @@ public class Capes extends GenericScreen {
     }
 
     public static PlayerSkin injectSkinLogic(String name, PlayerSkin current) {
-        ResourceLocation texture = current.texture();
-        ResourceLocation cape = current.capeTexture();
-        ResourceLocation elytra = current.elytraTexture();
+        ClientAsset.Texture body = current.body();
+        ClientAsset.Texture cape = current.cape();
+        ClientAsset.Texture elytra = current.elytra();
         PlayerModelType model = current.model();
         boolean changed = false;
 
         //cape
         if(FortytwoEdit.opticapesWorking && FortytwoEdit.opticapesOn) {
             if(FortytwoEdit.capeCached(name)) {
-                cape = ResourceLocation.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
+                ResourceLocation id = ResourceLocation.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
+                cape = new ClientAsset.ResourceTexture(id, id);
                 elytra = cape;
                 changed = true;
             }
@@ -155,7 +157,7 @@ public class Capes extends GenericScreen {
 
         //skin
         if(FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && name.equals(FortytwoEdit.USERNAME)) {
-            texture = FortytwoEdit.CUSTOM_SKIN_ID;
+            body = FortytwoEdit.CUSTOM_SKIN_TEXTURE;
             changed = true;
         }
 
@@ -171,7 +173,7 @@ public class Capes extends GenericScreen {
         }
 
         if(changed) {
-            return new PlayerSkin(texture, null, cape, elytra, model, false);
+            return new PlayerSkin(body, cape, elytra, model, false);
         }
 
         return null;

@@ -8,8 +8,8 @@ import baphomethlabs.fortytwoedit.gui.screen.Capes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.ClientMannequin;
 import net.minecraft.client.renderer.PlayerSkinRenderCache.RenderInfo;
-import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.world.entity.decoration.Mannequin;
+import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.world.item.component.ResolvableProfile;
 
 @Mixin(ClientMannequin.class)
@@ -24,8 +24,8 @@ public abstract class ClientMannequinMixin extends Mannequin {
     public void injectSkin(CallbackInfoReturnable<PlayerSkin> cir) {
 
         String name = null;
-        if(this.getProfile().right().isPresent()) {
-            ResolvableProfile resolvableProfile = this.getProfile().right().get();
+        if(this.getProfile() != null) {
+            ResolvableProfile resolvableProfile = this.getProfile();
             if(resolvableProfile instanceof ResolvableProfile.Dynamic dynamicProfile) {
                 if(dynamicProfile.name().isPresent()) {
                     name = dynamicProfile.name().get();

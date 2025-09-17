@@ -391,7 +391,11 @@ public class PathHelper {
                         ),Map.of(
                         "signature", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).getter()
                     ))).getter()
-                )).setInfo("List with a single compound entry for resolved skin information").getter()
+                )).setInfo("List with a single compound entry for resolved skin information").getter(),
+                "texture", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Resource location of a texture at `assets/<namespace>/textures/<id>`").getter(),
+                "cape", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Resource location of a texture at `assets/<namespace>/textures/<id>`").getter(),
+                "elytra", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Resource location of a texture at `assets/<namespace>/textures/<id>`").getter(),
+                "model", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("wide","slim"))).getter()
             )),
             DataType.ElementLiteral.of(NbtType.STRING)
         ).setIcon(Items.PLAYER_HEAD));

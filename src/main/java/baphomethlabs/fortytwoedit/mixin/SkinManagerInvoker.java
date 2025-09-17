@@ -1,7 +1,7 @@
 package baphomethlabs.fortytwoedit.mixin;
 
-import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.client.resources.SkinManager;
+import net.minecraft.world.entity.player.PlayerSkin;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.spongepowered.asm.mixin.Mixin;
