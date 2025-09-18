@@ -27,7 +27,8 @@ public abstract class KeyBindsListMixin extends ContainerObjectSelectionList<Key
     @Inject(method = "<init>", at = @At("RETURN"))
     private void appendConstructor(KeyBindsScreen keyBindsScreen, Minecraft minecraft, CallbackInfo ci) {
 
-        this.addEntry(KeyBindsListCategoryEntryInvoker.invokeConstructor((KeyBindsList)(Object)this, Component.translatable(FortytwoEdit.KEY_CATEGORY)));
+        KeyBindsList self = (KeyBindsList)(Object)this;
+        this.addEntry(self.new CategoryEntry(FortytwoEdit.KEY_CATEGORY));
 
         for(KeyMapping keyMapping : FortytwoEdit.KEYBINDS) {
 			Component component = Component.translatable(keyMapping.getName());

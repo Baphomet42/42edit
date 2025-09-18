@@ -18,7 +18,6 @@
     "GuiMixin",
     "HotbarManagerAccessor",
     "KeyBindsListMixin",
-    "KeyBindsListCategoryEntryInvoker",
     "KeyBindsListKeyEntryInvoker",
     "KeyMappingAccessor",
     "KeyMappingMixin",
