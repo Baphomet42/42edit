@@ -22,11 +22,15 @@ public abstract class ClientMannequinMixin extends Mannequin {
 
     @Inject(method = "getSkin", at = @At("RETURN"), cancellable = true)
     public void injectSkin(CallbackInfoReturnable<PlayerSkin> cir) {
-
-        String name = null;
         if(this.getProfile() != null) {
             ResolvableProfile resolvableProfile = this.getProfile();
+            if(resolvableProfile.skinPatch() != null) {
+                PlayerSkin.Patch overrides = resolvableProfile.skinPatch();
+                if(overrides.body().isPresent() || overrides.cape().isPresent() || overrides.elytra().isPresent() || overrides.model().isPresent())
+                    return;
+            }
             if(resolvableProfile instanceof ResolvableProfile.Dynamic dynamicProfile) {
+                String name = null;
                 if(dynamicProfile.name().isPresent()) {
                     name = dynamicProfile.name().get();
                 }
@@ -37,12 +41,12 @@ public abstract class ClientMannequinMixin extends Mannequin {
                         name = renderInfo.gameProfile().name();
                     }
                 }
-            }
-        }
-        if(name != null && !name.isEmpty()) {
-            PlayerSkin skin = Capes.injectSkinLogic(name, cir.getReturnValue());
-            if(skin != null) {
-                cir.setReturnValue(skin);
+                if(name != null && !name.isEmpty()) {
+                    PlayerSkin skin = Capes.injectSkinLogic(name, cir.getReturnValue());
+                    if(skin != null) {
+                        cir.setReturnValue(skin);
+                    }
+                }
             }
         }
     }
