@@ -3,7 +3,6 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -21,9 +20,9 @@ public class AutoClick extends GenericScreen {
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.AUTO_CLICK;
+        FortytwoEdit.quickScreen = AutoClick::new;
+        this.addBackButton();
 
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Use [On]"), Component.literal("Use [Off]")).withInitialValue(FortytwoEdit.autoClick).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle use key in auto click mode\n\nWhen on: auto click mode will hold the use key down"))).create(x+20,y+ROW_HEIGHT*2+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick((boolean)trackOutput,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
             unsel();

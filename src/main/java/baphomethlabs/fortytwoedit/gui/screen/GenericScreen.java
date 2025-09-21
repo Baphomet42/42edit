@@ -2,12 +2,14 @@ package baphomethlabs.fortytwoedit.gui.screen;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.function.Supplier;
 import org.lwjgl.glfw.GLFW;
 import com.google.common.collect.Lists;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.MultiLineTextWidget;
 import net.minecraft.client.gui.components.Tooltip;
@@ -22,6 +24,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder.RowWidget;
+import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
 
 public abstract class GenericScreen extends Screen {
 
@@ -115,12 +119,22 @@ public abstract class GenericScreen extends Screen {
         minecraft.setScreen(newScreen);
     }
 
+    protected void addBackButton() {
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"),
+            btn -> changeScreen(new MagickGui())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
+    }
+
+    protected void addBackButton(Supplier<GenericScreen> backScreen) {
+        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"),
+            btn -> changeScreen(backScreen.get())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
+    }
+
     @Override
     protected void init() {
         super.init();
         x = (this.width - this.backgroundWidth) / 2;
         y = (this.height - this.backgroundHeight) / 2;
-        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.NONE;
+        FortytwoEdit.quickScreen = FortytwoEdit.DEFAULT_SCREEN;
     }
 
     @Override
@@ -251,12 +265,18 @@ public abstract class GenericScreen extends Screen {
      */
     protected class ScrollList extends ContainerObjectSelectionList<ScrollRow> {
 
+        public static final int AREA_WIDTH_OFFSET = -30;
+        public static final int AREA_HEIGHT_OFFSET = -32-5;
+        public static final int AREA_Y_OFFSET = 32;
+
         public ScrollList() {
             this(false);
         }
 
         public ScrollList(boolean slotHeight) {
-            super(GenericScreen.this.minecraft, GenericScreen.this.width-30, GenericScreen.this.backgroundHeight-32-5, GenericScreen.this.y+32, slotHeight ? 20 : ROW_HEIGHT);
+            super(GenericScreen.this.minecraft,
+                GenericScreen.this.width+AREA_WIDTH_OFFSET, GenericScreen.this.backgroundHeight+AREA_HEIGHT_OFFSET, GenericScreen.this.y+AREA_Y_OFFSET,
+                slotHeight ? ItemSlotButton.SLOT_HEIGHT : ROW_HEIGHT);
         }
 
         public ScrollRow addRow() {
@@ -426,8 +446,7 @@ public abstract class GenericScreen extends Screen {
         @Override
         public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             for(PosWidget posWidget : this.children) {
-                posWidget.w().setX(this.getContentX()+posWidget.x());
-                posWidget.w().setY(this.getContentY()+posWidget.y());
+                posWidget.repositionInRow(this);
                 posWidget.w().render(context, mouseX, mouseY, tickDelta);
             }
         }
@@ -437,7 +456,6 @@ public abstract class GenericScreen extends Screen {
     protected static record PosWidget(AbstractWidget w, int x, int y) {
 
         public static PosWidget create(AbstractWidget w, int x, int y) {
-            w.setPosition(x, y);
             return new PosWidget(w, x, y);
         }
 
@@ -447,6 +465,18 @@ public abstract class GenericScreen extends Screen {
 
         public static PosWidget create(AbstractWidget w) {
             return create(w, 0, 0);
+        }
+
+        public void repositionInScreen(GenericScreen screen) {
+            w.setPosition(screen.x + x, screen.y + y);
+        }
+
+        public void repositionInRow(ScrollRow row) {
+            w.setPosition(row.getContentX() + x, row.getContentY() + y);
+        }
+
+        public void repositionInRow(RowWidget row) {
+            w.setPosition(row.getContentX() + x, row.getContentY() + y);
         }
 
     }

@@ -36,9 +36,9 @@ public class Hacks extends GenericScreen {
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.HACKS;
+        FortytwoEdit.quickScreen = Hacks::new;
+        this.addBackButton();
 
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Mix [On]"),
                 Component.literal("Mix [Off]")).withInitialValue(FortytwoEdit.randoMode).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty(
                 "Toggle mix mode\n\nWhen on: after placing a block, change to a random hotbar slot\n\n"

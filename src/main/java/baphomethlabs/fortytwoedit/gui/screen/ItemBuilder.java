@@ -196,7 +196,7 @@ public class ItemBuilder extends GenericScreen {
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.ITEM_BUILDER;
+        FortytwoEdit.quickScreen = ItemBuilder::new;
 
         if(firstInit) {
             if(firstInitStatic) {
@@ -271,7 +271,7 @@ public class ItemBuilder extends GenericScreen {
                     }
 
             //main
-            this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+5,y+5,40,WID_HEIGHT).build());
+            this.addBackButton();
             txtFormat = new EditBox(this.font,x+50,y+5+1,15,18,Component.nullToEmpty(""));
             txtFormat.setEditable(false);
             txtFormat.setValue(UNICODE_SECTION_SIGN);
@@ -332,9 +332,8 @@ public class ItemBuilder extends GenericScreen {
             createStaticTabs();
         this.tabWidget = null;
         for(PosWidget p : TAB_WIDGETS_LOCKED.get(tab)) {
-            p.w.setX(x+p.x);
-            p.w.setY(y+p.y);
-            this.addRenderableWidget(p.w);
+            p.repositionInScreen(this);
+            this.addRenderableWidget(p.w());
         }
         if(!TAB_WIDGETS_SCROLL.get(tab).isEmpty()) {
             this.tabWidget = new TabWidget(tab);
@@ -1766,10 +1765,10 @@ public class ItemBuilder extends GenericScreen {
     }
 
     protected PosWidget addTabWidgetLocked(int tabNum, PosWidget posWidget) {
-        if(posWidget.w instanceof EditBox || posWidget.w instanceof MultiLineEditBox)
-            ALL_TEXT_WIDGETS.add(posWidget.w);
-        else if(posWidget.w instanceof AbstractSliderButton)
-            ALL_SLIDER_WIDGETS.add(posWidget.w);
+        if(posWidget.w() instanceof EditBox || posWidget.w() instanceof MultiLineEditBox)
+            ALL_TEXT_WIDGETS.add(posWidget.w());
+        else if(posWidget.w() instanceof AbstractSliderButton)
+            ALL_SLIDER_WIDGETS.add(posWidget.w());
 
         TAB_WIDGETS_LOCKED.get(tabNum).add(posWidget);
         return posWidget;
@@ -1938,41 +1937,45 @@ public class ItemBuilder extends GenericScreen {
                     else {
                         if(minecraft.player.getMainHandItem().isEmpty())
                             BlackMagick.setItemMain(new ItemStack(Items.PLAYER_HEAD));
-                        else {
-                            BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(
-                                BlackMagick.itemToNbt(selItem),"components.minecraft:profile",null)));
-                        }
                     }
-                },null,false));
+                },FortytwoEdit.PROFILE_SUGGS,false));
             }
             {
                 final int i = tabNum; final int j = getTabWidgetScrollIndex(tabNum);
-                addTabWidgetScroll(tabNum, new RowWidget("Skin","Create static player head from give command (with the name removed)",btn -> {
+                addTabWidgetScroll(tabNum, new RowWidget("Skin","Create static player head from base64 properties",btn -> {
                     String inp = TAB_WIDGETS_SCROLL.get(i).get(j).btn()[0];
                     if(inp.equals("")) {
-                        if(!minecraft.player.getMainHandItem().isEmpty())
-                            BlackMagick.setItemMain(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),
-                                "components.minecraft:profile",null)));
+                        if(minecraft.player.getMainHandItem().isEmpty())
+                            BlackMagick.setItemMain(new ItemStack(Items.PLAYER_HEAD));
                     }
-                    else if(inp.contains("name:\"textures\"") && inp.contains(",value:\"")) {
-                        String value = inp;
-                        value = value.substring(value.indexOf(",value:\"")+8);
-                        if(value.contains("\"")) {
-                            value = value.substring(0,value.indexOf("\""));
+                    else {
+                        String base64 = inp;
+                        if(inp.contains("name:\"textures\"") && inp.contains(",value:\"")) {
+                            String value = inp;
+                            value = value.substring(value.indexOf(",value:\"")+8);
+                            if(value.contains("\""))
+                                base64 = value.substring(0,value.indexOf("\""));
+                        }
+
+                        String testBase64 = base64;
+                        while(testBase64.endsWith("="))
+                            testBase64 = testBase64.substring(0,testBase64.length()-1);
+                        testBase64 = base64.replaceAll("[a-zA-Z0-9+/]","");
+                        if(testBase64.length()==0) {
                             CompoundTag temp;
                             if(selItem.isEmpty())
                                 temp = BlackMagick.validCompoundFromString("{id:player_head}");
                             else
                                 temp = BlackMagick.itemToNbt(selItem);
-                            Tag parseValue = BlackMagick.nbtFromSnbt("[{name:\"textures\",value:\""+value+"\"}]");
-                            if(parseValue != null && parseValue.getId()==Tag.TAG_LIST) {
-                                temp = BlackMagick.setNbtPath(temp,"components.minecraft:profile.properties",parseValue);
-                                temp = BlackMagick.setNbtPath(temp,"components.minecraft:profile.name",null);
-                                temp = BlackMagick.setNbtPath(temp,"components.minecraft:profile.id",null);
-                                ItemStack newItem = BlackMagick.itemFromNbt(temp);
-                                if(!newItem.isEmpty())
-                                    BlackMagick.setItemMain(newItem);
-                            }
+                            temp = BlackMagick.setNbtPath(
+                                BlackMagick.setNbtPath(temp,"components.minecraft:profile.properties",BlackMagick.nbtFromSnbt("[{name:\"textures\",value:\"\"}]")),
+                                "components.minecraft:profile.properties[0].value",
+                                StringTag.valueOf(base64)
+                                );
+
+                            ItemStack newItem = BlackMagick.itemFromNbt(temp);
+                            if(!newItem.isEmpty())
+                                BlackMagick.setItemMain(newItem);
                         }
                     }
                 },null,false));
@@ -2280,7 +2283,7 @@ public class ItemBuilder extends GenericScreen {
             int tabNum = CACHE_TAB_SAVED;
             {
                 // button is setup in updateSavedModeButtons()
-                ItemSlotButton w = new ItemSlotButton(20, null, btn -> {
+                ItemSlotButton w = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, null, btn -> {
                     viewBlackMarket = !viewBlackMarket;
                     updateSavedModeButtons();
                     updateSavedTab();
@@ -2346,16 +2349,16 @@ public class ItemBuilder extends GenericScreen {
                 this.ALL_TEXT_WIDGETS.remove(t);
             }
             for(PosWidget p : r.wids) {
-                if(p.w != null) {
-                    this.UNSAVED_TEXT_WIDGETS.remove(p.w);
-                    this.ALL_TEXT_WIDGETS.remove(p.w);
-                    this.ALL_SLIDER_WIDGETS.remove(p.w);
+                if(p.w() != null) {
+                    this.UNSAVED_TEXT_WIDGETS.remove(p.w());
+                    this.ALL_TEXT_WIDGETS.remove(p.w());
+                    this.ALL_SLIDER_WIDGETS.remove(p.w());
                 }
             }
         }
         for(PosWidget r : TAB_WIDGETS_LOCKED.get(tabNum)) {
-            this.UNSAVED_TEXT_WIDGETS.remove(r.w);
-            this.ALL_TEXT_WIDGETS.remove(r.w);
+            this.UNSAVED_TEXT_WIDGETS.remove(r.w());
+            this.ALL_TEXT_WIDGETS.remove(r.w());
         }
         TAB_WIDGETS_SCROLL.get(tabNum).clear();
         TAB_WIDGETS_LOCKED.get(tabNum).clear();
@@ -2549,16 +2552,16 @@ public class ItemBuilder extends GenericScreen {
                 this.ALL_TEXT_WIDGETS.remove(t);
             }
             for(PosWidget p : r.wids) {
-                if(p.w != null) {
-                    this.UNSAVED_TEXT_WIDGETS.remove(p.w);
-                    this.ALL_TEXT_WIDGETS.remove(p.w);
-                    this.ALL_SLIDER_WIDGETS.remove(p.w);
+                if(p.w() != null) {
+                    this.UNSAVED_TEXT_WIDGETS.remove(p.w());
+                    this.ALL_TEXT_WIDGETS.remove(p.w());
+                    this.ALL_SLIDER_WIDGETS.remove(p.w());
                 }
             }
         }
         for(PosWidget r : TAB_WIDGETS_LOCKED.get(tabNum)) {
-            this.UNSAVED_TEXT_WIDGETS.remove(r.w);
-            this.ALL_TEXT_WIDGETS.remove(r.w);
+            this.UNSAVED_TEXT_WIDGETS.remove(r.w());
+            this.ALL_TEXT_WIDGETS.remove(r.w());
         }
         TAB_WIDGETS_SCROLL.get(tabNum).clear();
         TAB_WIDGETS_LOCKED.get(tabNum).clear();
@@ -3583,8 +3586,11 @@ public class ItemBuilder extends GenericScreen {
      */
     private class TabWidget extends ContainerObjectSelectionList<TabWidgetEntry> {
         public TabWidget(final int tab) {
-            super(ItemBuilder.this.minecraft, ItemBuilder.this.width-30, ItemBuilder.this.backgroundHeight-32-5, ItemBuilder.this.y+32,
-                (tab == CACHE_TAB_INV || tab == CACHE_TAB_SAVED) ? 20 : ROW_HEIGHT);
+            super(ItemBuilder.this.minecraft,
+                ItemBuilder.this.width+GenericScreen.ScrollList.AREA_WIDTH_OFFSET,
+                ItemBuilder.this.backgroundHeight+GenericScreen.ScrollList.AREA_HEIGHT_OFFSET,
+                ItemBuilder.this.y+GenericScreen.ScrollList.AREA_Y_OFFSET,
+                (tab == CACHE_TAB_INV || tab == CACHE_TAB_SAVED) ? ItemSlotButton.SLOT_HEIGHT : ROW_HEIGHT);
 
             for(RowWidget row : TAB_WIDGETS_SCROLL.get(tab))
                 this.addEntry((TabWidgetEntry)row);
@@ -3606,7 +3612,7 @@ public class ItemBuilder extends GenericScreen {
 
     }
 
-    protected class RowWidget extends TabWidgetEntry {
+    public class RowWidget extends TabWidgetEntry {
 
         protected final List<AbstractWidget> children = Lists.newArrayList();
         protected Button[] btns = new Button[0];
@@ -3637,15 +3643,15 @@ public class ItemBuilder extends GenericScreen {
         }
 
         protected AbstractWidget addPosWidget(PosWidget posWidget) {
-            if(posWidget==null || posWidget.w == null)
+            if(posWidget==null || posWidget.w() == null)
                 return null;
             this.wids.add(posWidget);
-            this.children.add(posWidget.w);
-            if(posWidget.w instanceof EditBox || posWidget.w instanceof MultiLineEditBox)
-                ALL_TEXT_WIDGETS.add(posWidget.w);
-            else if(posWidget.w instanceof AbstractSliderButton)
-                ALL_SLIDER_WIDGETS.add(posWidget.w);
-            return posWidget.w;
+            this.children.add(posWidget.w());
+            if(posWidget.w() instanceof EditBox || posWidget.w() instanceof MultiLineEditBox)
+                ALL_TEXT_WIDGETS.add(posWidget.w());
+            else if(posWidget.w() instanceof AbstractSliderButton)
+                ALL_SLIDER_WIDGETS.add(posWidget.w());
+            return posWidget.w();
         }
 
         protected boolean testPosWidget(int index) {//to_do remove
@@ -3654,7 +3660,7 @@ public class ItemBuilder extends GenericScreen {
 
         protected AbstractWidget getPosWidget(int index) {//to_do remove
             if(testPosWidget(index))
-                return this.wids.get(index).w;
+                return this.wids.get(index).w();
             return null;
         }
 
@@ -3837,9 +3843,8 @@ public class ItemBuilder extends GenericScreen {
                 this.txts[i].render(context, mouseX, mouseY, tickDelta);
             }
             for(PosWidget posWidget : this.wids) {
-                posWidget.w.setX(this.getContentX()+posWidget.x);
-                posWidget.w.setY(this.getContentY()+posWidget.y);
-                posWidget.w.render(context, mouseX, mouseY, tickDelta);
+                posWidget.repositionInRow(this);
+                posWidget.w().render(context, mouseX, mouseY, tickDelta);
             }
             if(lbl != null) {
                 if(lblCentered)
@@ -4357,7 +4362,7 @@ public class ItemBuilder extends GenericScreen {
                 final int btnSize = 35;
                 final int btnSpacing = 2;
 
-                row.addPosWidget(context.new PosWidget(keyBtn, ROW_LEFT_SCROLL, 0));
+                row.addPosWidget(new PosWidget(keyBtn, ROW_LEFT_SCROLL, 0));
                 {
                     Button w = Button.builder(Component.nullToEmpty("False"), btn -> {
                         context.nbtEditUpdate(fullPath, null);
@@ -4384,7 +4389,7 @@ public class ItemBuilder extends GenericScreen {
             else if((currentEl != null && (currentEl.getId()==Tag.TAG_COMPOUND || currentEl.getId()==Tag.TAG_LIST))
             || (currentEl == null && pi.getDefaultPathType().isComplex())) {
 
-                row.addPosWidget(context.new PosWidget(keyBtn, ROW_LEFT_SCROLL, 0));
+                row.addPosWidget(new PosWidget(keyBtn, ROW_LEFT_SCROLL, 0));
                 {
                     Button w = Button.builder(getComplexButtonText(currentEl, pi.getFlag()), btn -> {
                         context.createBlankTabNbtEdit(context.nbtEdit.addPath(PathNode.of(key)));
@@ -4428,7 +4433,7 @@ public class ItemBuilder extends GenericScreen {
                 final int btnSize = 35;
                 final int btnSpacing = 2;
 
-                row.addPosWidget(context.new PosWidget(keyBtn, ROW_LEFT_SCROLL, 0));
+                row.addPosWidget(new PosWidget(keyBtn, ROW_LEFT_SCROLL, 0));
                 {
                     Button w = Button.builder(Component.nullToEmpty("Unset"), btn -> {
                         context.nbtEditUpdate(fullPath, null);
@@ -5167,7 +5172,7 @@ public class ItemBuilder extends GenericScreen {
                             BlackMagick.itemFromString(savedItems.get(index))
                             : ItemStack.EMPTY)
                     );
-                this.btns[i] = new ItemSlotButton(20, thisItemStart, btn -> {
+                this.btns[i] = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, thisItemStart, btn -> {
                     if(!viewBlackMarket && savedModeSet) {
                         String itemString = "";
                         ItemStack savedItem = minecraft.player.getMainHandItem().copy();
@@ -5335,7 +5340,7 @@ public class ItemBuilder extends GenericScreen {
                 else
                     tt = Tooltip.create(stacks[i].getHoverName());
 
-                ItemSlotButton w = new ItemSlotButton(20, stacks[i], btn -> {
+                ItemSlotButton w = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, stacks[i], btn -> {
                     // nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
                     //     BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,StringTag.valueOf(vals[col])),blankElPath),saveBtn,
                     //     path2==null ? null : pagePath);
@@ -5415,7 +5420,7 @@ public class ItemBuilder extends GenericScreen {
                 this.btnX[i] = currentX;
                 final int index = row*9+i;
                 final ItemStack thisItem = cacheInv[index];
-                ItemSlotButton w = new ItemSlotButton(20, thisItem, btn -> btnCopyItemNbt(thisItem));
+                ItemSlotButton w = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, thisItem, btn -> btnCopyItemNbt(thisItem));
                 if(row == 4) {
                     w.addEmptySlotSprite(PLAYER_ARMOR_SPRITES[i]);
                 }
@@ -5460,7 +5465,7 @@ public class ItemBuilder extends GenericScreen {
             for(int i=0; i<this.btns.length; i++) {
                 this.btnX[i] = currentX;
                 final ItemStack thisItem = stacks[i];
-                ItemSlotButton w = new ItemSlotButton(20, thisItem, btn -> btnCopyItemNbt(thisItem));
+                ItemSlotButton w = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, thisItem, btn -> btnCopyItemNbt(thisItem));
                 if(slotSprites != null && slotSprites.length == stacks.length)
                     w.addEmptySlotSprite(slotSprites[i]);
                 this.btns[i] = w;
@@ -5814,19 +5819,6 @@ public class ItemBuilder extends GenericScreen {
         public Tab() {
             this(-1,"",ItemStack.EMPTY,true);
         }
-    }
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    private class PosWidget {
-        public AbstractWidget w = null;
-        public int x;
-        public int y;
-
-        public PosWidget(AbstractWidget w, int x, int y) {
-            this.w = w;
-            this.x = x;
-            this.y = y;
-        }
-
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
     private enum WidgetCacheType {//to_do remove unused

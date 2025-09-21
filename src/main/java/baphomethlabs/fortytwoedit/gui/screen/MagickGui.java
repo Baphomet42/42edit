@@ -26,7 +26,7 @@ public class MagickGui extends GenericScreen {
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.NONE;
+        FortytwoEdit.quickScreen = MagickGui::new;
 
         this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.item_builder"),
             button -> changeScreen(new ItemBuilder())).bounds(x+WID_LEFT,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());

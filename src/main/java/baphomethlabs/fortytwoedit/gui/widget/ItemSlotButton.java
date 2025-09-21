@@ -25,6 +25,8 @@ public class ItemSlotButton extends Button {
     public static final ResourceLocation SPRITE_OFFHAND = InventoryMenu.EMPTY_ARMOR_SLOT_SHIELD;
     public static final ResourceLocation SPRITE_MAINHAND = ResourceLocation.withDefaultNamespace("container/slot/sword");
 
+    public static final int SLOT_HEIGHT = 20;
+
     protected ItemStack item;
     protected boolean showSlot = true;
     protected ItemError error = ItemError.NONE;
@@ -32,6 +34,7 @@ public class ItemSlotButton extends Button {
     protected int overlaySize = 16;
     protected ResourceLocation emptySlotSprite = null;
     protected final int size;
+    
     private static final int SIZE_ITEM = 16;
     private static final int SIZE_HIGHLIGHT = 24;
     private static final int SIZE_SLOT = 18;

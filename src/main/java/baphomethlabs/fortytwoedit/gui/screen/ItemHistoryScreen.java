@@ -3,9 +3,7 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 public class ItemHistoryScreen extends GenericScreen {
@@ -17,9 +15,8 @@ public class ItemHistoryScreen extends GenericScreen {
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.ITEM_HISTORY;
-
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new DebugScreen())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
+        FortytwoEdit.quickScreen = ItemHistoryScreen::new;
+        this.addBackButton(DebugScreen::new);
 
         ScrollList scrollList = new ScrollList(true);
         this.addRenderableWidget(scrollList);
@@ -40,7 +37,7 @@ public class ItemHistoryScreen extends GenericScreen {
                     item = BlackMagick.itemFromNbt(BlackMagick.validCompound(history.get(i*9+slot)));
                 else
                     item = ItemStack.EMPTY;
-                ItemSlotButton itemBtn = new ItemSlotButton(20, item, btn -> btnCopyItemNbt(item));
+                ItemSlotButton itemBtn = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, item, btn -> btnCopyItemNbt(item));
                 itemBtn.showSlot(false);
                 itemBtn.active = false;
                 if(item != null && !item.isEmpty()) {

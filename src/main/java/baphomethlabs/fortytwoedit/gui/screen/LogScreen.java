@@ -7,7 +7,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.MultiLineEditBox;
@@ -48,11 +47,11 @@ public class LogScreen extends GenericScreen {
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.LOG_SCREEN;
+        FortytwoEdit.quickScreen = LogScreen::new;
+        this.addBackButton(DebugScreen::new);
 
         logFile = new File(minecraft.gameDirectory.getAbsolutePath()+"\\logs\\latest.log");
 
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new DebugScreen())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Resume"),
                 Component.literal("Pause")).withInitialValue(paused).displayOnlyValue().withTooltip(val -> Tooltip.create(val ? Component.nullToEmpty("Unpause log and show new messages") : Component.nullToEmpty("Temporarily freeze new messages from appearing"))).create(x+GUI_SPACE+40+WID_SPACE,y+GUI_SPACE,40,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             paused = (boolean)trackOutput;

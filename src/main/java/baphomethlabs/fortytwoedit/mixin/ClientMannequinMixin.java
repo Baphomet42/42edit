@@ -4,10 +4,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.gui.screen.Capes;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.ClientMannequin;
-import net.minecraft.client.renderer.PlayerSkinRenderCache.RenderInfo;
 import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.world.item.component.ResolvableProfile;
@@ -29,23 +28,11 @@ public abstract class ClientMannequinMixin extends Mannequin {
                 if(overrides.body().isPresent() || overrides.cape().isPresent() || overrides.elytra().isPresent() || overrides.model().isPresent())
                     return;
             }
-            if(resolvableProfile instanceof ResolvableProfile.Dynamic dynamicProfile) {
-                String name = null;
-                if(dynamicProfile.name().isPresent()) {
-                    name = dynamicProfile.name().get();
-                }
-                else {
-                    final Minecraft minecraft = Minecraft.getInstance();
-                    RenderInfo renderInfo = minecraft.playerSkinRenderCache().getOrDefault(resolvableProfile);
-                    if(renderInfo != null) {
-                        name = renderInfo.gameProfile().name();
-                    }
-                }
-                if(name != null && !name.isEmpty()) {
-                    PlayerSkin skin = Capes.injectSkinLogic(name, cir.getReturnValue());
-                    if(skin != null) {
-                        cir.setReturnValue(skin);
-                    }
+            String name = BlackMagick.getDynamicProfileName(resolvableProfile);
+            if(name != null && !name.isEmpty()) {
+                PlayerSkin skin = Capes.injectSkinLogic(name, cir.getReturnValue());
+                if(skin != null) {
+                    cir.setReturnValue(skin);
                 }
             }
         }

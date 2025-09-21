@@ -15,9 +15,9 @@ public class DebugScreen extends GenericScreen {
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.DEBUG_SCREEN;
+        FortytwoEdit.quickScreen = DebugScreen::new;
+        this.addBackButton(SecretScreen::new);
 
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new SecretScreen())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("View Log..."), button -> changeScreen(new LogScreen())).bounds(x+20,y+ROW_HEIGHT*2+1,80,WID_HEIGHT).build());
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Item History..."), button -> changeScreen(new ItemHistoryScreen())).bounds(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT).build());
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Copy"), button -> this.btnOutputHist()).bounds(x+20+80+5,y+ROW_HEIGHT*3+1,40,WID_HEIGHT).build())

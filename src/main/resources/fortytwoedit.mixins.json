@@ -24,6 +24,7 @@
     "MinecraftMixin",
     "MouseHandlerMixin",
     "OptionsMixin",
+    "ResolvableProfileDynamicMixin",
     "SkinManagerInvoker",
     "StringUtilMixin",
     "StructureBlockEditScreenMixin",

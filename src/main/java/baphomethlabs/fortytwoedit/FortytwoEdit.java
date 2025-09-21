@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import org.apache.commons.compress.utils.Lists;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
@@ -25,15 +26,10 @@ import com.mojang.blaze3d.platform.NativeImage;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
 import baphomethlabs.fortytwoedit.PathHelper.PathInfo;
 import baphomethlabs.fortytwoedit.PathHelper.PathNode;
-import baphomethlabs.fortytwoedit.gui.screen.AutoClick;
-import baphomethlabs.fortytwoedit.gui.screen.Capes;
-import baphomethlabs.fortytwoedit.gui.screen.DebugScreen;
-import baphomethlabs.fortytwoedit.gui.screen.Hacks;
+import baphomethlabs.fortytwoedit.gui.screen.GenericScreen;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
-import baphomethlabs.fortytwoedit.gui.screen.ItemHistoryScreen;
 import baphomethlabs.fortytwoedit.gui.screen.LogScreen;
 import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
-import baphomethlabs.fortytwoedit.gui.screen.SecretScreen;
 import baphomethlabs.fortytwoedit.mixin.GameRendererInvoker;
 import baphomethlabs.fortytwoedit.mixin.HotbarManagerAccessor;
 import baphomethlabs.fortytwoedit.mixin.KeyMappingAccessor;
@@ -89,19 +85,8 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     // gui
-    public static QuickScreen quickScreen = QuickScreen.NONE;
-    public enum QuickScreen {
-        NONE,
-
-        AUTO_CLICK,
-        CAPES,
-        DEBUG_SCREEN,
-        HACKS,
-        ITEM_BUILDER,
-        LOG_SCREEN,
-        SECRET_SCREEN,
-        ITEM_HISTORY
-    }
+    public static final Supplier<GenericScreen> DEFAULT_SCREEN = MagickGui::new;
+    public static Supplier<GenericScreen> quickScreen = DEFAULT_SCREEN;
 
     // keys
     public static KeyMapping.Category KEY_CATEGORY = KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath("42edit","keybinds"));
@@ -126,6 +111,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     // options
     private static CompoundTag optionsExtra = null;
+    public static boolean mixinProfileDynamicTooltip = true; // to_do add to config
 
     // zoom
     public static boolean zoomed = false;
@@ -487,6 +473,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     public static String USERNAME = "";
     public static IntArrayTag UUID = new IntArrayTag(new int[]{0,0,0,0});
+    public static String[] PROFILE_SUGGS = null;
 
     //skin testing
     public static boolean showClientSkin = false;
@@ -684,6 +671,7 @@ public class FortytwoEdit implements ClientModInitializer {
         USERNAME = client.getUser().getName();
         if(client.getUser().getProfileId() != null)
             UUID = new IntArrayTag(UUIDUtil.uuidToIntArray(client.getUser().getProfileId()));
+        PROFILE_SUGGS = new String[]{USERNAME,BlackMagick.nbtToSnbt(UUID)};
         clearOptiCapes();
 
         getSavedItems(); // used to show log errors
@@ -721,19 +709,8 @@ public class FortytwoEdit implements ClientModInitializer {
         }
 
         // magickgui
-        if(keyMagickGui.consumeClick()) {
-            switch(quickScreen) {
-                case NONE: client.setScreen(new MagickGui()); break;
-                case ITEM_BUILDER: client.setScreen(new ItemBuilder()); break;
-                case SECRET_SCREEN: client.setScreen(new SecretScreen()); break;
-                case LOG_SCREEN: client.setScreen(new LogScreen()); break;
-                case AUTO_CLICK: client.setScreen(new AutoClick()); break;
-                case CAPES: client.setScreen(new Capes()); break;
-                case HACKS: client.setScreen(new Hacks()); break;
-                case DEBUG_SCREEN: client.setScreen(new DebugScreen()); break;
-                case ITEM_HISTORY: client.setScreen(new ItemHistoryScreen()); break;
-            }
-        }
+        if(keyMagickGui.consumeClick())
+            client.setScreen(quickScreen.get());
 
         // zoom
         if(keyZoom.isDown() && !zoomed) {

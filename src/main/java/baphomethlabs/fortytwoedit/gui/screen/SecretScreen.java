@@ -24,9 +24,9 @@ public class SecretScreen extends GenericScreen {
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = FortytwoEdit.QuickScreen.SECRET_SCREEN;
+        FortytwoEdit.quickScreen = SecretScreen::new;
+        this.addBackButton();
 
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"), button -> changeScreen(new MagickGui())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Debug Tools..."), button -> changeScreen(new DebugScreen())).bounds(x+20,y+ROW_HEIGHT*2+1,80,WID_HEIGHT).build());
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Upside Down"), button -> flipTextBox()).bounds(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT).build());
         this.txtUpsideDown = new EditBox(this.font,x+20+80+WID_SPACE,y+ROW_HEIGHT*3+1,100,WID_HEIGHT,Component.nullToEmpty(""));

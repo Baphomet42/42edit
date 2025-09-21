@@ -37,14 +37,17 @@ dependencies {
 	//		"args": "--quickPlaySingleplayer
 	//		remove runDir lines
 	//	java project clean workspace
-	//	./gradlew build
+
+	//  BUILD
+	//  ./gradlew build
 
 	//	UPDATE LAUNCHER
 	//	use fabric installer to get new launcher profile
 	//	copy 42jar from build/libs to mods
 
 	//	RARE UPDATES
-	//	./gradlew clean			./gradlew --stop
+	//	./gradlew --stop
+	//  ./gradlew clean build
 	//	delete .gradle .vscode bin build run
 	//	delete .gradle .cache from User
 	//	update example mod files from https://github.com/FabricMC/fabric-example-mod/

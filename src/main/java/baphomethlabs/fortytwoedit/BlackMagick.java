@@ -14,6 +14,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.serialization.DynamicOps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.PlayerSkinRenderCache.RenderInfo;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.arguments.NbtPathArgument.NbtPath;
 import net.minecraft.commands.arguments.item.ItemArgument;
@@ -43,6 +44,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.level.storage.ValueInput;
@@ -1122,6 +1124,35 @@ public class BlackMagick {
         if(left!=null && right!=null && elementsEqual(left,right))
             return nbtToColorfulText(left);
         return getElementDifferences(left, right);
+    }
+
+    public static String getDynamicProfileName(ResolvableProfile resolvableProfile) {
+        if(resolvableProfile instanceof ResolvableProfile.Dynamic) {
+            if(resolvableProfile.name().isPresent()) {
+                return resolvableProfile.name().get();
+            }
+            else {
+                final Minecraft minecraft = Minecraft.getInstance();
+                RenderInfo renderInfo = minecraft.playerSkinRenderCache().getOrDefault(resolvableProfile);
+                if(renderInfo != null) {
+                    return renderInfo.gameProfile().name();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static String getDynamicUUIDProfileName(ResolvableProfile resolvableProfile) {
+        if(resolvableProfile instanceof ResolvableProfile.Dynamic) {
+            if(!resolvableProfile.name().isPresent()) {
+                final Minecraft minecraft = Minecraft.getInstance();
+                RenderInfo renderInfo = minecraft.playerSkinRenderCache().getOrDefault(resolvableProfile);
+                if(renderInfo != null) {
+                    return renderInfo.gameProfile().name();
+                }
+            }
+        }
+        return null;
     }
 
     /**
