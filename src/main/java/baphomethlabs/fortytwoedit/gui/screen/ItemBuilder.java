@@ -75,6 +75,7 @@ import baphomethlabs.fortytwoedit.PathHelper.PathType;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
 import baphomethlabs.fortytwoedit.gui.widget.NbtInlineEditBox;
+import baphomethlabs.fortytwoedit.gui.widget.WidgetUtil;
 
 public class ItemBuilder extends GenericScreen {
 
@@ -1441,11 +1442,11 @@ public class ItemBuilder extends GenericScreen {
 
     private String trimStringSize(String inp) {
         int maxSize = this.width-10;
-        if(ItemBuilder.this.font.width(inp)>maxSize && inp.length()>1) {
+        if(this.font.width(inp)>maxSize && inp.length()>1) {
             String trail = "...";
             maxSize -= font.width(trail);
             if(width>10)
-                inp = ItemBuilder.this.font.plainSubstrByWidth(inp,maxSize);
+                inp = this.font.plainSubstrByWidth(inp,maxSize);
             return inp+trail;
         }
         return inp;
@@ -2171,17 +2172,17 @@ public class ItemBuilder extends GenericScreen {
                             }
 
                             if(ItemStack.matches(item,selItem)) {
-                                ItemBuilder.this.markSaved(giveBox);
+                                this.markSaved(giveBox);
                                 btnGive.active = false;
                                 btnGive.setTooltip(Tooltip.create(Component.nullToEmpty("Item unchanged")));
                             }
                             else {
-                                ItemBuilder.this.markUnsaved(giveBox);
+                                this.markUnsaved(giveBox);
                             }
 
                         }
                         else {
-                            ItemBuilder.this.markSaved(giveBox);
+                            this.markSaved(giveBox);
                         }
 
                         if(!value.equals(BlackMagick.itemToGive(minecraft.player.getMainHandItem()))) {
@@ -2205,7 +2206,7 @@ public class ItemBuilder extends GenericScreen {
                     if(!minecraft.player.getMainHandItem().isEmpty() && widgetCacheTest(WidgetCacheType.GIVE_BOX_BOX)) {
                         ((MultiLineEditBox)widgetCacheGet(WidgetCacheType.GIVE_BOX_BOX)).setValue(BlackMagick.itemToGive(minecraft.player.getMainHandItem()));
                     }
-                    ItemBuilder.this.unsel();
+                    this.unsel();
                 }).size(60,WID_HEIGHT).build()),ROW_LEFT_LOCKED,ROW_TOP+ROW_HEIGHT*6));
             }
             {
@@ -2213,7 +2214,7 @@ public class ItemBuilder extends GenericScreen {
                     if(widgetCacheTest(WidgetCacheType.GIVE_BOX_BOX)) {
                         MultiLineEditBox editBox = (MultiLineEditBox)widgetCacheGet(WidgetCacheType.GIVE_BOX_BOX);
                         String inp = editBox.getValue();
-                        ItemBuilder.this.markSaved(editBox);
+                        this.markSaved(editBox);
 
                         if(minecraft.player.getAbilities().instabuild) {
                             ItemStack item = ItemStack.EMPTY;
@@ -2267,7 +2268,7 @@ public class ItemBuilder extends GenericScreen {
                             BlackMagick.setItemMain(item);
                         }
                     }
-                    ItemBuilder.this.unsel();
+                    this.unsel();
                 }).size(60,WID_HEIGHT).build();
                 if(!minecraft.player.getAbilities().instabuild)
                     w.active = false;
@@ -3677,7 +3678,7 @@ public class ItemBuilder extends GenericScreen {
          * btn(size) txt
          */
         public RowWidget(String name, String tooltip, OnPress onPress, String[] suggestions, boolean survival) {
-            int size = sizeFromName(name);
+            int size = WidgetUtil.sizeFromName(ItemBuilder.this, name);
 
             this.btns = new Button[]{Button.builder(Component.nullToEmpty(name), onPress).size(size,WID_HEIGHT).build()};
             this.btnX = new int[]{ROW_LEFT_SCROLL};
@@ -3771,22 +3772,6 @@ public class ItemBuilder extends GenericScreen {
             for(PosWidget w : p)
                 row.addPosWidget(w);
             return row;
-        }
-
-        /**
-         * Get button size based on text (between 40 and 100 pixels).
-         * Size is a multiple of 20.
-         * 
-         * @param text
-         * @return width of button
-         */
-        protected int sizeFromName(String text) {
-            int size = 40;
-            int min = ItemBuilder.this.font.width(text)+4;
-            while(min>size && size<100) {
-                size += 20;
-            }
-            return size;
         }
 
         public String[] btn() {

@@ -8,6 +8,8 @@ import net.minecraft.world.item.ItemStack;
 
 public class ItemHistoryScreen extends GenericScreen {
 
+    protected ScrollList SCROLL_PANE;
+
     public ItemHistoryScreen() {
         super("Item Editor History");
     }
@@ -18,18 +20,16 @@ public class ItemHistoryScreen extends GenericScreen {
         FortytwoEdit.quickScreen = ItemHistoryScreen::new;
         this.addBackButton(DebugScreen::new);
 
-        ScrollList scrollList = new ScrollList(true);
-        this.addRenderableWidget(scrollList);
+        setupScrollPane(false, true);
 
         ListTag history = FortytwoEdit.getItemHist();
-
         if(history.isEmpty())
-            scrollList.addRow(new ScrollRow("No item history to show"));
+            paneScroll().addRow("No item history to show");
         else
-            scrollList.addRow(new ScrollRow("Showing recent " + history.size() + " item(s)"));
+            paneScroll().addRow("Showing recent " + history.size() + " item(s)");
 
         for(int i=0; i<FortytwoEdit.ITEM_HIST_ROWS; i++) {
-            ScrollRow row = scrollList.addRow();
+            ScrollRow row = paneScroll().addRow();
             for(int slot=0; slot<9; slot++) {
                 final ItemStack item;
                 int histIndex = i*9+slot;

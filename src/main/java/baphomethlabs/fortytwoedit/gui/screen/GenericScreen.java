@@ -26,6 +26,7 @@ import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder.RowWidget;
 import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
+import baphomethlabs.fortytwoedit.gui.widget.WidgetUtil;
 
 public abstract class GenericScreen extends Screen {
 
@@ -39,17 +40,17 @@ public abstract class GenericScreen extends Screen {
     protected static final int LABEL_COLOR_DIM = 0xFF404040;
     protected static final int ERROR_COLOR = 0xFFFF5555;
     protected static final int TEXT_COLOR = 0xFFFFFFFF;
-    protected static final int WID_HEIGHT = 20; // standard widget height
+    public static final int WID_HEIGHT = 20; // standard widget height
     protected static final int ROW_HEIGHT = 22; // standard spacing amounts between rows of widgets
     protected static final int TOP_OFFSET = (ROW_HEIGHT-WID_HEIGHT)/2;
     protected static final int WID_SPACE = 5; // standard horizontal spacing between widgets
     protected static final int GUI_SPACE = 5; // standard starting position for widget in top corner of gui (for both x and y)
-    protected static final int WID_LEFT = 20; // standard spacing before first widget in row
+    protected static final int WID_LEFT = 10; // standard spacing before first widget in row
+    protected static final int WID_LEFT_NARROW = 20;
     protected static final int SCROLL_ROW_LEFT_OFFSET = 3;
-    protected static final int WID_LEFT_SCROLL = 10 + SCROLL_ROW_LEFT_OFFSET; // standard spacing before first widget in row in ScrollList
     protected static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
     protected static final Duration TOOLTIP_DELAY_SHORT = Duration.ofMillis(100L);
-    protected static final int MAX_TEXT_LENGTH = 131072;
+    public static final int MAX_TEXT_LENGTH = 131072;
     public static final String UNICODE_SECTION_SIGN = "\u00a7";
     public static final String UNICODE_UP_ARROW = "\u2227";
     public static final String UNICODE_DOWN_ARROW = "\u2228";
@@ -69,6 +70,21 @@ public abstract class GenericScreen extends Screen {
 
     private boolean unsel = false;
     private boolean hasTitle = false;
+    protected final WidgetUtil WIDGET_UTIL;
+    protected ScrollList SCROLL_PANE = null;
+
+    protected void setupScrollPane() {
+        setupScrollPane(true, false);
+    }
+
+    protected void setupScrollPane(boolean narrow, boolean slotHeight) {
+        SCROLL_PANE = new ScrollList(narrow, slotHeight);
+        this.addRenderableWidget(SCROLL_PANE);
+    }
+
+    protected ScrollList paneScroll() {
+        return SCROLL_PANE;
+    }
 
     public static List<FormattedCharSequence> setCurrentTooltip(Component text) {
         prevTooltipTime = System.currentTimeMillis();
@@ -90,18 +106,25 @@ public abstract class GenericScreen extends Screen {
 
     public GenericScreen() {
         super(GameNarrator.NO_TITLE);
+        WIDGET_UTIL = createWidgetUtil();
     }
 
     public GenericScreen(String title) {
         super(title == null ? GameNarrator.NO_TITLE : Component.nullToEmpty(title));
         if(title != null)
             hasTitle = true;
+        WIDGET_UTIL = createWidgetUtil();
     }
 
     public GenericScreen(Component title) {
         super(title == null ? GameNarrator.NO_TITLE : title);
         if(title != null)
             hasTitle = true;
+        WIDGET_UTIL = createWidgetUtil();
+    }
+
+    private WidgetUtil createWidgetUtil() {
+        return new WidgetUtil(this);
     }
 
     public boolean shouldCloseOnKeybind() {
@@ -268,25 +291,63 @@ public abstract class GenericScreen extends Screen {
         public static final int AREA_WIDTH_OFFSET = -30;
         public static final int AREA_HEIGHT_OFFSET = -32-5;
         public static final int AREA_Y_OFFSET = 32;
+        public static final int AREA_Y_OFFSET_NARROW = 9;
 
-        public ScrollList() {
-            this(false);
-        }
+        public final boolean NARROW;
 
-        public ScrollList(boolean slotHeight) {
+        public ScrollList(boolean narrow, boolean slotHeight) {
             super(GenericScreen.this.minecraft,
-                GenericScreen.this.width+AREA_WIDTH_OFFSET, GenericScreen.this.backgroundHeight+AREA_HEIGHT_OFFSET, GenericScreen.this.y+AREA_Y_OFFSET,
+                GenericScreen.this.width+AREA_WIDTH_OFFSET,
+                GenericScreen.this.backgroundHeight+AREA_HEIGHT_OFFSET,
+                GenericScreen.this.y+AREA_Y_OFFSET+(narrow ? AREA_Y_OFFSET_NARROW : 0),
                 slotHeight ? ItemSlotButton.SLOT_HEIGHT : ROW_HEIGHT);
+            NARROW = narrow;
         }
 
         public ScrollRow addRow() {
-            this.addEntry(new ScrollRow());
+            this.addEntry(new ScrollRow(NARROW));
             return getRow();
         }
 
         public ScrollRow addRow(ScrollRow row) {
             this.addEntry(row);
             return getRow();
+        }
+
+        public ScrollRow addRow(PosWidget... posWidgets) {
+            ScrollRow row = new ScrollRow(NARROW);
+            for(PosWidget pw : posWidgets) {
+                row.add(pw);
+            }
+            return addRow(row);
+        }
+
+        public ScrollRow addRow(AbstractWidget... widgets) {
+            ScrollRow row = new ScrollRow(NARROW);
+            for(AbstractWidget w : widgets) {
+                row.add(w);
+            }
+            return addRow(row);
+        }
+
+        public ScrollRow addRow(String title) {
+            return addRow(title, true);
+        }
+
+        public ScrollRow addRow(String title, boolean centered) {
+            return addRow(Component.nullToEmpty(title), centered);
+        }
+
+        public ScrollRow addRow(Component title) {
+            return addRow(title, true);
+        }
+
+        public ScrollRow addRow(Component title, boolean centered) {
+            ScrollRow row = new ScrollRow(NARROW);
+            row.add(new MultiLineTextWidget(Component.empty().withColor(LABEL_COLOR).append(title), GenericScreen.this.font));
+            if(centered)
+                row.center();
+            return addRow(row);
         }
 
         public ScrollRow getRow() {
@@ -324,37 +385,10 @@ public abstract class GenericScreen extends Screen {
 
         protected final List<PosWidget> children = Lists.newArrayList();
         protected final List<AbstractWidget> childrenCache = Lists.newArrayList();
+        protected final int LEFT_START;
 
-        public ScrollRow() {}
-
-        public ScrollRow(PosWidget... posWidgets) {
-            for(PosWidget pw : posWidgets) {
-                add(pw);
-            }
-        }
-
-        public ScrollRow(AbstractWidget... widgets) {
-            for(AbstractWidget w : widgets) {
-                add(w);
-            }
-        }
-
-        public ScrollRow(String title) {
-            this(title, true);
-        }
-
-        public ScrollRow(String title, boolean centered) {
-            this(Component.nullToEmpty(title), centered);
-        }
-
-        public ScrollRow(Component title) {
-            this(title, true);
-        }
-
-        public ScrollRow(Component title, boolean centered) {
-            add(new MultiLineTextWidget(Component.empty().withColor(LABEL_COLOR).append(title), GenericScreen.this.font));
-            if(centered)
-                center();
+        public ScrollRow(boolean narrow) {
+            this.LEFT_START = (narrow ? WID_LEFT_NARROW : WID_LEFT) + SCROLL_ROW_LEFT_OFFSET;
         }
 
         private void set(int i, PosWidget posWidget) {
@@ -378,7 +412,7 @@ public abstract class GenericScreen extends Screen {
         }
 
         public void add(AbstractWidget w, boolean padLeft) {
-            add(w, children.isEmpty() ? WID_LEFT_SCROLL : (getRight() + (padLeft ? WID_SPACE : 0)));
+            add(w, children.isEmpty() ? LEFT_START : (getRight() + (padLeft ? WID_SPACE : 0)));
         }
 
         public void add(AbstractWidget w) {

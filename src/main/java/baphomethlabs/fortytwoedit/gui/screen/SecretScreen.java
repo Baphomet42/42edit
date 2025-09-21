@@ -1,8 +1,6 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import java.util.List;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.nbt.CompoundTag;
@@ -19,7 +17,9 @@ public class SecretScreen extends GenericScreen {
     protected static final String UPSIDE_DOWN_CHARS = "ⱯɐᗺqƆɔᗡpƎǝℲɟ⅁ᵷHɥIᴉՐɾꞰʞꞀꞁWɯNuOoԀdꝹbᴚɹSs⟘ʇ∩nɅʌMʍXx⅄ʎZz0⥝ᘔƐ߈ϛ9ㄥ86 ˙'¿¡,:][)(}{-=";
     protected static final Tooltip ITEM_WARN_TT = Tooltip.create(Component.nullToEmpty("vanilla - no change to item warnings\n\nhide - never show warnings\n\nsmart - hide warnings for items that cannot run operator commands"));
 
-    public SecretScreen() {}
+    public SecretScreen() {
+        super("Super Secret Settings");
+    }
 
     @Override
     protected void init() {
@@ -27,11 +27,15 @@ public class SecretScreen extends GenericScreen {
         FortytwoEdit.quickScreen = SecretScreen::new;
         this.addBackButton();
 
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Debug Tools..."), button -> changeScreen(new DebugScreen())).bounds(x+20,y+ROW_HEIGHT*2+1,80,WID_HEIGHT).build());
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Upside Down"), button -> flipTextBox()).bounds(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT).build());
-        this.txtUpsideDown = new EditBox(this.font,x+20+80+WID_SPACE,y+ROW_HEIGHT*3+1,100,WID_HEIGHT,Component.nullToEmpty(""));
-        this.txtUpsideDown.setMaxLength(MAX_TEXT_LENGTH);
-        this.addRenderableWidget(this.txtUpsideDown);
+        setupScrollPane();
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Debug Tools...", btn -> changeScreen(new DebugScreen())).build()
+        );
+        this.txtUpsideDown = WIDGET_UTIL.newEditBox(100).build();
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Upside Down", btn -> flipTextBox()).build(),
+            this.txtUpsideDown
+        );
     }
 
     protected void flipTextBox() {
@@ -91,12 +95,6 @@ public class SecretScreen extends GenericScreen {
     @Override
     public boolean shouldCloseOnKeybind() {
         return !txtUpsideDown.canConsumeInput();
-    }
-
-    @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredString(this.font, Component.nullToEmpty("Super Secret Settings"), this.width / 2, y+11, TEXT_COLOR);
     }
 
 }
