@@ -77,7 +77,7 @@ import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
 import baphomethlabs.fortytwoedit.gui.widget.NbtInlineEditBox;
 import baphomethlabs.fortytwoedit.gui.widget.WidgetUtil;
 
-public class ItemBuilder extends GenericScreen {
+public class ItemBuilderScreen extends GenericScreen {
 
     protected static int tab = 0;
     protected static final int TAB_OFFSET = 5;
@@ -192,12 +192,12 @@ public class ItemBuilder extends GenericScreen {
     private int cacheInvSlot = -1;
     public static Tooltip FORMAT_CODES_TT = null;
 
-    public ItemBuilder() {}
+    public ItemBuilderScreen() {}
 
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = ItemBuilder::new;
+        FortytwoEdit.quickScreen = ItemBuilderScreen::new;
 
         if(firstInit) {
             if(firstInitStatic) {
@@ -1643,6 +1643,7 @@ public class ItemBuilder extends GenericScreen {
                 case TEXT_COMPONENT_ITALIC:
                 case TEXT_COMPONENT_LORE:
                 case TEXT_COMPONENT_BOOK:
+                case TEXT_COMPONENT_SIGN:
                 {
                     ParsedText text = BlackMagick.textComponentFromSnbt(elSnbt);
                     if(text.isValid()) {
@@ -2288,7 +2289,7 @@ public class ItemBuilder extends GenericScreen {
                     viewBlackMarket = !viewBlackMarket;
                     updateSavedModeButtons();
                     updateSavedTab();
-                    ItemBuilder.this.unsel();
+                    ItemBuilderScreen.this.unsel();
                 });
                 w.showSlot(false);
                 addTabWidgetLocked(tabNum, new PosWidget(widgetCacheAdd(WidgetCacheType.BTN_SAVED_SOURCE,w),ROW_LEFT_LOCKED,ROW_TOP));
@@ -2315,7 +2316,7 @@ public class ItemBuilder extends GenericScreen {
                         updateSavedModeButtons();
                         updateSavedTab();
                     }
-                    ItemBuilder.this.unsel();
+                    ItemBuilderScreen.this.unsel();
                 }).size(20,WID_HEIGHT).build();
                 addTabWidgetLocked(tabNum, new PosWidget(widgetCacheAdd(WidgetCacheType.BTN_SAVED_MODE,w),ROW_LEFT_LOCKED,ROW_TOP+ROW_HEIGHT));
             }
@@ -3587,10 +3588,10 @@ public class ItemBuilder extends GenericScreen {
      */
     private class TabWidget extends ContainerObjectSelectionList<TabWidgetEntry> {
         public TabWidget(final int tab) {
-            super(ItemBuilder.this.minecraft,
-                ItemBuilder.this.width+GenericScreen.ScrollList.AREA_WIDTH_OFFSET,
-                ItemBuilder.this.backgroundHeight+GenericScreen.ScrollList.AREA_HEIGHT_OFFSET,
-                ItemBuilder.this.y+GenericScreen.ScrollList.AREA_Y_OFFSET,
+            super(ItemBuilderScreen.this.minecraft,
+                ItemBuilderScreen.this.width+GenericScreen.ScrollList.AREA_WIDTH_OFFSET,
+                ItemBuilderScreen.this.backgroundHeight+GenericScreen.ScrollList.AREA_HEIGHT_OFFSET,
+                ItemBuilderScreen.this.y+GenericScreen.ScrollList.AREA_Y_OFFSET,
                 (tab == CACHE_TAB_INV || tab == CACHE_TAB_SAVED) ? ItemSlotButton.SLOT_HEIGHT : ROW_HEIGHT);
 
             for(RowWidget row : TAB_WIDGETS_SCROLL.get(tab))
@@ -3634,7 +3635,7 @@ public class ItemBuilder extends GenericScreen {
                     this.children.add(this.btns[i]);
                 for(int i=0; i<txts.length; i++) {
                     this.children.add(this.txts[i]);
-                    ItemBuilder.this.ALL_TEXT_WIDGETS.add(this.txts[i]);
+                    ItemBuilderScreen.this.ALL_TEXT_WIDGETS.add(this.txts[i]);
                 }
             }
         }
@@ -3678,7 +3679,7 @@ public class ItemBuilder extends GenericScreen {
          * btn(size) txt
          */
         public RowWidget(String name, String tooltip, OnPress onPress, String[] suggestions, boolean survival) {
-            int size = WidgetUtil.sizeFromName(ItemBuilder.this, name);
+            int size = WidgetUtil.sizeFromName(ItemBuilderScreen.this, name);
 
             this.btns = new Button[]{Button.builder(Component.nullToEmpty(name), onPress).size(size,WID_HEIGHT).build()};
             this.btnX = new int[]{ROW_LEFT_SCROLL};
@@ -3767,7 +3768,7 @@ public class ItemBuilder extends GenericScreen {
         /**
          * PosWidgets
          */
-        public static RowWidget of(ItemBuilder context, PosWidget[] p) {
+        public static RowWidget of(ItemBuilderScreen context, PosWidget[] p) {
             RowWidget row = context.new RowWidget();
             for(PosWidget w : p)
                 row.addPosWidget(w);
@@ -3778,10 +3779,10 @@ public class ItemBuilder extends GenericScreen {
             String[] texts = new String[this.txts.length];
             for(int i=0; i<texts.length; i++) {
                 this.txts[i].setTextColor(LABEL_COLOR);
-                ItemBuilder.this.markSaved(this.txts[i]);
+                ItemBuilderScreen.this.markSaved(this.txts[i]);
                 texts[i] = this.txts[i].getValue();
             }
-            ItemBuilder.this.unsel();
+            ItemBuilderScreen.this.unsel();
             return texts;
         }
 
@@ -3833,9 +3834,9 @@ public class ItemBuilder extends GenericScreen {
             }
             if(lbl != null) {
                 if(lblCentered)
-                    context.drawCenteredString(ItemBuilder.this.font, this.lbl, ItemBuilder.this.width/2, this.getContentY()+6, lblColor);
+                    context.drawCenteredString(ItemBuilderScreen.this.font, this.lbl, ItemBuilderScreen.this.width/2, this.getContentY()+6, lblColor);
                 else
-                    context.drawString(ItemBuilder.this.font, this.lbl, ItemBuilder.this.x+ROW_LEFT_SCROLL+3, this.getContentY()+6, lblColor);
+                    context.drawString(ItemBuilderScreen.this.font, this.lbl, ItemBuilderScreen.this.x+ROW_LEFT_SCROLL+3, this.getContentY()+6, lblColor);
             }
             if(displayItem != null) {
                 drawItem(context,displayItem,this.getContentX()+ROW_LEFT_SCROLL+2+displayItemXoff,this.getContentY()+2);//to_do remove (used to draw item for component widget)
@@ -4135,11 +4136,11 @@ public class ItemBuilder extends GenericScreen {
                             if(unsaved) {
                                 if(inpError==null)
                                     w.setTextColor(TEXT_COLOR);
-                                ItemBuilder.this.markUnsaved(w);
+                                ItemBuilderScreen.this.markUnsaved(w);
                             }
                             else {
                                 w.setTextColor(LABEL_COLOR);
-                                ItemBuilder.this.markSaved(w);
+                                ItemBuilderScreen.this.markSaved(w);
                             }
         
                             suggsOnChanged(w,baseSuggestions,startVal);
@@ -4324,7 +4325,7 @@ public class ItemBuilder extends GenericScreen {
             initChildren();
         }
 
-        public static RowWidgetElement compoundTemplateElement(ItemBuilder context, CompoundTag baseCompound, String key) {
+        public static RowWidgetElement compoundTemplateElement(ItemBuilderScreen context, CompoundTag baseCompound, String key) {
             RowWidgetElement row = context.new RowWidgetElement();
 
             NbtEdit thisNbtEdit = context.nbtEdit.addPath(PathNode.of(key));
@@ -4533,7 +4534,7 @@ public class ItemBuilder extends GenericScreen {
             return row;
         }
 
-        public static RowWidgetElement customCompoundKey(ItemBuilder context, CompoundTag baseCompound, boolean isTemplate) {
+        public static RowWidgetElement customCompoundKey(ItemBuilderScreen context, CompoundTag baseCompound, boolean isTemplate) {
             RowWidgetElement row = context.new RowWidgetElement();
 
             int size = 70;
@@ -4653,7 +4654,7 @@ public class ItemBuilder extends GenericScreen {
             return row;
         }
 
-        public static RowWidgetElement customListElement(ItemBuilder context, ListTag baseList, boolean isTemplate) {
+        public static RowWidgetElement customListElement(ItemBuilderScreen context, ListTag baseList, boolean isTemplate) {
             RowWidgetElement row = context.new RowWidgetElement();
 
             PathInfo pi = context.nbtEdit.pi().getListIndexInfo(baseList.size());
@@ -4711,7 +4712,7 @@ public class ItemBuilder extends GenericScreen {
             return row;
         }
 
-        public static RowWidgetElement listTemplateElement(ItemBuilder context, ListTag baseList, int index) {
+        public static RowWidgetElement listTemplateElement(ItemBuilderScreen context, ListTag baseList, int index) {
             if(index<0 || index>=baseList.size())
                 throw new IllegalArgumentException("Tried to create RowWidgetElement with index or listSize out of bounds");
 
@@ -4885,7 +4886,7 @@ public class ItemBuilder extends GenericScreen {
             return row;
         }
 
-        public static RowWidgetElement fallbackElement(ItemBuilder context) {
+        public static RowWidgetElement fallbackElement(ItemBuilderScreen context) {
             RowWidgetElement row = context.new RowWidgetElement();
 
             Tag currentEl = context.nbtEdit.getEditElement();
@@ -5203,7 +5204,7 @@ public class ItemBuilder extends GenericScreen {
                         if(!thisItem.isEmpty())
                             BlackMagick.setItemMain(thisItem);
                     }
-                    ItemBuilder.this.unsel();
+                    ItemBuilderScreen.this.unsel();
                 });
                 currentX += 20;
                 this.btns[i].active = false;
@@ -5625,13 +5626,13 @@ public class ItemBuilder extends GenericScreen {
             }
 
             if(!editorEqual) {
-                context.drawString(ItemBuilder.this.font, Component.nullToEmpty("Unlinked from editor"),
+                context.drawString(ItemBuilderScreen.this.font, Component.nullToEmpty("Unlinked from editor"),
                     this.getContentX()+this.btnX[this.btnX.length-1]+20+5, this.getContentY()+6, ERROR_COLOR);
                 this.btns[0].active = true;
                 this.btns[1].active = true;
             }
             else {
-                context.drawString(ItemBuilder.this.font, Component.nullToEmpty("Linked to editor"),
+                context.drawString(ItemBuilderScreen.this.font, Component.nullToEmpty("Linked to editor"),
                     this.getContentX()+this.btnX[this.btnX.length-1]+20+5, this.getContentY()+6, LABEL_COLOR_DIM);
                 this.btns[0].active = false;
                 this.btns[1].active = false;

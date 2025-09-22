@@ -27,9 +27,9 @@ import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
 import baphomethlabs.fortytwoedit.PathHelper.PathInfo;
 import baphomethlabs.fortytwoedit.PathHelper.PathNode;
 import baphomethlabs.fortytwoedit.gui.screen.GenericScreen;
-import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder;
+import baphomethlabs.fortytwoedit.gui.screen.ItemBuilderScreen;
 import baphomethlabs.fortytwoedit.gui.screen.LogScreen;
-import baphomethlabs.fortytwoedit.gui.screen.MagickGui;
+import baphomethlabs.fortytwoedit.gui.screen.MagickScreen;
 import baphomethlabs.fortytwoedit.mixin.GameRendererInvoker;
 import baphomethlabs.fortytwoedit.mixin.HotbarManagerAccessor;
 import baphomethlabs.fortytwoedit.mixin.KeyMappingAccessor;
@@ -85,7 +85,7 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     // gui
-    public static final Supplier<GenericScreen> DEFAULT_SCREEN = MagickGui::new;
+    public static final Supplier<GenericScreen> DEFAULT_SCREEN = MagickScreen::new;
     public static Supplier<GenericScreen> quickScreen = DEFAULT_SCREEN;
 
     // keys
@@ -1072,14 +1072,14 @@ public class FortytwoEdit implements ClientModInitializer {
 
     public static Map<Integer,String> getSavedItems() {
         Map<Integer,String> itemsMap = Maps.newHashMap();
-        ItemBuilder.savedItemsError = false;
+        ItemBuilderScreen.savedItemsError = false;
         CompoundTag savedItemsNbt = FileTools.readCompoundFromFile(FileTools.FILE_SAVED_ITEMS);
         if(savedItemsNbt == null) {
             savedItemsNbt = new CompoundTag();
             if(FileTools.testFileExists(FileTools.FILE_SAVED_ITEMS)) {
                 String fileString = FileTools.readStringFromFile(FileTools.FILE_SAVED_ITEMS);
                 if(fileString != null && !fileString.isEmpty()) {
-                    ItemBuilder.savedItemsError = true;
+                    ItemBuilderScreen.savedItemsError = true;
                 }
             }
             else {
@@ -1144,7 +1144,7 @@ public class FortytwoEdit implements ClientModInitializer {
         }
         if(!foundItems && !savedItemsNbt.isEmpty()) {
             logError("Failed to read saved items: " + BlackMagick.nbtToSnbt(savedItemsNbt));
-            ItemBuilder.savedItemsError = true;
+            ItemBuilderScreen.savedItemsError = true;
         }
 
         return itemsMap;

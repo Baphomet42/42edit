@@ -100,14 +100,16 @@ public class PathHelper {
                 "min_ticks_in_hive", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).getter(),
                 "ticks_in_hive", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).getter()
                 ),Map.of(
-                "entity_data", PathInfo.create().getter()
+                "entity_data", PathInfoGetter.of("components.minecraft:entity_data")
             ))).getter()
         )).setIcon(Items.BEE_NEST));
 
         registerPathInfo("components.minecraft:block_entity_data", PathInfo.create(DataType.CompoundStructured.of(Map.of(
             "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.REGISTRY_BLOCK_ENTITY_TYPE)).getter()
-            ),Map.of(
-            "front_text", PathInfo.create().getter()
+            ),Map.ofEntries(
+            Map.entry("front_text", PathInfoGetter.of("sign_text")),
+            Map.entry("back_text", PathInfoGetter.of("sign_text")),
+            Map.entry("is_waxed", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).getter())
         ))).setIcon(Items.SPAWNER));
 
         registerPathInfo("components.minecraft:block_state", PathInfo.create().setIcon(Items.PALE_OAK_STAIRS));
@@ -230,8 +232,8 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:entity_data", PathInfo.create(DataType.CompoundStructured.of(Map.of(
             "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_ENTITY_TYPE)).getter()
-            ),Map.of(
-            "Tags", PathInfo.create().getter()
+            ),Map.ofEntries(
+            Map.entry("Tags", PathInfo.create().getter())
         ))).setIcon(Items.ARMOR_STAND));
 
         registerPathInfo("components.minecraft:equippable", PathInfo.create(DataType.CompoundStructured.of(Map.of(
@@ -801,6 +803,19 @@ public class PathHelper {
 
         registerPathInfo("pos_int_array", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT_ARRAY,SuggestionGetter.newInlineSnbt("[I;0,0,0]"))).setInfo("Block position represented by [I; X, Y, Z]"));
 
+        registerPathInfo("sign_text", PathInfo.create(// test storage [data storage]
+            DataType.CompoundStructured.allOptional(Map.of(
+                "color", PathInfo.copyOf("dye_color").setUnsetInfo(StringTag.valueOf("black")).getter(),
+                "has_glowing_text", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).getter(),
+                "messages", PathInfo.create(DataType.ListUnordered.of(
+                    PathInfo.copyOf("text_component").setFlag(PathFlag.TEXT_COMPONENT_SIGN).getter()
+                )).setInfo("List of 4 text components").getter(),
+                "filtered_messages", PathInfo.create(DataType.ListUnordered.of(
+                    PathInfo.copyOf("text_component").setFlag(PathFlag.TEXT_COMPONENT_SIGN).getter()
+                )).setInfo("List of 4 text components").getter()
+            ))
+        ));
+
     }
 
     private static final Map<String, PathInfo> PATH_INFO_REF_MAP = Maps.newHashMap();
@@ -836,6 +851,7 @@ public class PathHelper {
         TEXT_COMPONENT_ITALIC,
         TEXT_COMPONENT_LORE,
         TEXT_COMPONENT_BOOK,
+        TEXT_COMPONENT_SIGN,
         TEXT_COMPONENT_FIELD_COLOR,
 
         COLOR_RGB_INT,
@@ -847,7 +863,7 @@ public class PathHelper {
         RARITY;
 
         public boolean isTextComponent() {
-            return this == TEXT_COMPONENT || this == TEXT_COMPONENT_ITALIC || this == TEXT_COMPONENT_LORE || this == TEXT_COMPONENT_BOOK;
+            return this == TEXT_COMPONENT || this == TEXT_COMPONENT_ITALIC || this == TEXT_COMPONENT_LORE || this == TEXT_COMPONENT_BOOK || this == TEXT_COMPONENT_SIGN;
         }
 
     }

@@ -24,7 +24,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
-import baphomethlabs.fortytwoedit.gui.screen.ItemBuilder.RowWidget;
+import baphomethlabs.fortytwoedit.gui.screen.ItemBuilderScreen.RowWidget;
 import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
 import baphomethlabs.fortytwoedit.gui.widget.WidgetUtil;
 
@@ -144,7 +144,7 @@ public abstract class GenericScreen extends Screen {
 
     protected void addBackButton() {
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"),
-            btn -> changeScreen(new MagickGui())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
+            btn -> changeScreen(FortytwoEdit.DEFAULT_SCREEN.get())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
     }
 
     protected void addBackButton(Supplier<GenericScreen> backScreen) {

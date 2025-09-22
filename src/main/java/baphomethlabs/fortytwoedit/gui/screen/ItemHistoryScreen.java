@@ -43,7 +43,7 @@ public class ItemHistoryScreen extends GenericScreen {
                 if(item != null && !item.isEmpty()) {
                     itemBtn.showSlot(true);
                     itemBtn.active = true;
-                    itemBtn.setTooltip(ItemBuilder.makeItemTooltip(item));
+                    itemBtn.setTooltip(ItemBuilderScreen.makeItemTooltip(item));
                 }
                 itemBtn.setTooltipDelay(TOOLTIP_DELAY_SHORT);
                 row.add(itemBtn, false);

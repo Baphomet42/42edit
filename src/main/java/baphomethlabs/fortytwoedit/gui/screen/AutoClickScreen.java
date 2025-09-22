@@ -10,17 +10,17 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-public class AutoClick extends GenericScreen {
+public class AutoClickScreen extends GenericScreen {
 
     protected EditBox txtAttackCooldown;
     protected boolean unsaved = false;
 
-    public AutoClick() {}
+    public AutoClickScreen() {}
 
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = AutoClick::new;
+        FortytwoEdit.quickScreen = AutoClickScreen::new;
         this.addBackButton();
 
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Use [On]"), Component.literal("Use [Off]")).withInitialValue(FortytwoEdit.autoClick).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle use key in auto click mode\n\nWhen on: auto click mode will hold the use key down"))).create(x+20,y+ROW_HEIGHT*2+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {

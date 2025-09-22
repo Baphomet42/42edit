@@ -25,18 +25,18 @@ import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FileTools;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 
-public class Hacks extends GenericScreen {
+public class HacksScreen extends GenericScreen {
 
     protected Button btnWgtFindInvis;
     protected EditBox txtRando;
     protected boolean unsaved = false;
 
-    public Hacks() {}
+    public HacksScreen() {}
 
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = Hacks::new;
+        FortytwoEdit.quickScreen = HacksScreen::new;
         this.addBackButton();
 
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Mix [On]"),

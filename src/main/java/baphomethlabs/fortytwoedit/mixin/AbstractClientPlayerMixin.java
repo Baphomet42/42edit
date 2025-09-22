@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import baphomethlabs.fortytwoedit.gui.screen.Capes;
+import baphomethlabs.fortytwoedit.gui.screen.CapeScreen;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.entity.player.PlayerSkin;
@@ -21,7 +21,7 @@ public abstract class AbstractClientPlayerMixin {
 
         PlayerInfo playerEntry = this.getPlayerInfo();
         if(playerEntry != null) {
-            PlayerSkin skin = Capes.injectSkinLogic(playerEntry.getProfile().name(), cir.getReturnValue());
+            PlayerSkin skin = CapeScreen.injectSkinLogic(playerEntry.getProfile().name(), cir.getReturnValue());
             if(skin != null) {
                 cir.setReturnValue(skin);
             }

@@ -1,6 +1,8 @@
 package baphomethlabs.fortytwoedit.gui;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
+
 import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -15,7 +17,6 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec2;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2ic;
 import org.lwjgl.glfw.GLFW;
@@ -245,7 +246,6 @@ public class TextSuggestor {
         private final List<SuggestionEntry> suggestionList;
         private int offset;
         private int current;
-        private Vec2 lastMouse = Vec2.ZERO;
         boolean tabCycles;
         private final int LINE_HEIGHT = 10;
         private final int MIN_WIDTH = 5;
@@ -278,15 +278,12 @@ public class TextSuggestor {
             rect.setX(vec.x()-WIDTH_PADDING);
             rect.setY(vec.y());
 
-            if(this.lastMouse.x != i || this.lastMouse.y != j) {
-                this.lastMouse = new Vec2(i, j);
-                
-                if(this.rect.contains(i, j)) {
-                    int lineNum = (j - this.rect.getY()) / LINE_HEIGHT;
-                    int suggsNum = lineNum + this.offset;
-                    if(suggsNum >= 0 && suggsNum < this.suggestionList.size() && lineNum >= 0 && lineNum < TextSuggestor.this.suggestionLineLimit) {
-                        this.select(suggsNum);
-                    }
+            if(this.rect.contains(i, j)) {
+                int lineNum = (j - this.rect.getY()) / LINE_HEIGHT;
+                int suggsNum = lineNum + this.offset;
+                if(suggsNum >= 0 && suggsNum < this.suggestionList.size() && lineNum >= 0 && lineNum < TextSuggestor.this.suggestionLineLimit) {
+                    this.select(suggsNum);
+                    guiGraphics.requestCursor(CursorTypes.POINTING_HAND);//to_do might no longer be needed if MC-302254 is fixed
                 }
             }
 

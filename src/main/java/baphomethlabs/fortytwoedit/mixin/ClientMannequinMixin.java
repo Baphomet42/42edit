@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import baphomethlabs.fortytwoedit.BlackMagick;
-import baphomethlabs.fortytwoedit.gui.screen.Capes;
+import baphomethlabs.fortytwoedit.gui.screen.CapeScreen;
 import net.minecraft.client.entity.ClientMannequin;
 import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.entity.player.PlayerSkin;
@@ -30,7 +30,7 @@ public abstract class ClientMannequinMixin extends Mannequin {
             }
             String name = BlackMagick.getDynamicProfileName(resolvableProfile);
             if(name != null && !name.isEmpty()) {
-                PlayerSkin skin = Capes.injectSkinLogic(name, cir.getReturnValue());
+                PlayerSkin skin = CapeScreen.injectSkinLogic(name, cir.getReturnValue());
                 if(skin != null) {
                     cir.setReturnValue(skin);
                 }

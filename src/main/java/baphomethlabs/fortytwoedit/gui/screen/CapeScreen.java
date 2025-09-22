@@ -24,7 +24,7 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 
-public class Capes extends GenericScreen {
+public class CapeScreen extends GenericScreen {
 
     protected EditBox txtCustom;
     protected EditBox txtCustomSkin;
@@ -34,12 +34,12 @@ public class Capes extends GenericScreen {
     protected final int playerHeight = backgroundHeight;
     private static final String CUSTOM_SKIN_ERROR_TITLE = "Failed to load skin";
 
-    public Capes() {}
+    public CapeScreen() {}
 
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = Capes::new;
+        FortytwoEdit.quickScreen = CapeScreen::new;
         this.addBackButton();
 
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("OptiFine [On]"),

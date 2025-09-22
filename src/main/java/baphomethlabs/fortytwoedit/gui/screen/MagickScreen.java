@@ -14,24 +14,24 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-public class MagickGui extends GenericScreen {
+public class MagickScreen extends GenericScreen {
 
     private Button btnWgtAutoClick;
     private Button btnWgtHat;
     private static final int ITEM_OFFSET = 2;
     private static final Component TITLE_TEXT = Component.translatable("42edit.gui.magick_screen.title").copy().withColor(0x420666).withStyle(ChatFormatting.BOLD);
 
-    public MagickGui() {}
+    public MagickScreen() {}
 
     @Override
     protected void init() {
         super.init();
-        FortytwoEdit.quickScreen = MagickGui::new;
+        FortytwoEdit.quickScreen = MagickScreen::new;
 
         this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.item_builder"),
-            button -> changeScreen(new ItemBuilder())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
+            button -> changeScreen(new ItemBuilderScreen())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
         this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.hacks"),
-            button -> changeScreen(new Hacks())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
+            button -> changeScreen(new HacksScreen())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
         btnWgtHat = this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.hat"),
             button -> this.btnHat()).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*4+TOP_OFFSET,60,WID_HEIGHT).build());
         if(!minecraft.player.getAbilities().instabuild) {
@@ -43,9 +43,9 @@ public class MagickGui extends GenericScreen {
         this.addRenderableWidget(new ModifierButton(Component.translatable("42edit.gui.magick_screen.super_secret"),
             (button, inputWithModifiers) -> this.btnSuperSecretSettings(inputWithModifiers),x+WID_LEFT_NARROW,y+ROW_HEIGHT*5+TOP_OFFSET,165,WID_HEIGHT));
         this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.capes"),
-            button -> changeScreen(new Capes())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
+            button -> changeScreen(new CapeScreen())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
         this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.auto_click"),
-            button -> changeScreen(new AutoClick())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*7+TOP_OFFSET,90,WID_HEIGHT).build());
+            button -> changeScreen(new AutoClickScreen())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*7+TOP_OFFSET,90,WID_HEIGHT).build());
         btnWgtAutoClick = this.addRenderableWidget(Button.builder(Component.empty(),
             button -> this.btnAutoClick()).bounds(x+WID_LEFT_NARROW+90+WID_SPACE,y+ROW_HEIGHT*7+TOP_OFFSET,70,WID_HEIGHT).build());
         setAutoClickMessage();
