@@ -1962,7 +1962,7 @@ public class ItemBuilderScreen extends GenericScreen {
                         String testBase64 = base64;
                         while(testBase64.endsWith("="))
                             testBase64 = testBase64.substring(0,testBase64.length()-1);
-                        testBase64 = base64.replaceAll("[a-zA-Z0-9+/]","");
+                        testBase64 = testBase64.replaceAll("[a-zA-Z0-9+/]","");
                         if(testBase64.length()==0) {
                             CompoundTag temp;
                             if(selItem.isEmpty())
