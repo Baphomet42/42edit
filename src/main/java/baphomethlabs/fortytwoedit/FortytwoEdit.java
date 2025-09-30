@@ -111,7 +111,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     // options
     private static CompoundTag optionsExtra = null;
-    public static boolean mixinProfileDynamicTooltip = true; // to_do add to config
+    public static boolean mixinProfileDynamicTooltip = true;
 
     // zoom
     public static boolean zoomed = false;
@@ -991,6 +991,7 @@ public class FortytwoEdit implements ClientModInitializer {
         options.getByte("afk_screen_lock").ifPresent(b -> afkScreenLock = (b == 1));
         options.getByte("custom_cape_toggle").ifPresent(b -> showClientCape = (b == 1));
         options.getString("custom_cape").ifPresent(s -> selectedClientCape = s);
+        options.getByte("dynamic_profile_tooltip_info").ifPresent(b -> mixinProfileDynamicTooltip = (b == 1));
         options.getCompound("keybinds").ifPresent(c -> {
             Set<String> foundKeys = Sets.newHashSet();
             for(String k : c.keySet()) {
@@ -1031,6 +1032,7 @@ public class FortytwoEdit implements ClientModInitializer {
         options.remove("afk_screen_lock");
         options.remove("custom_cape_toggle");
         options.remove("custom_cape");
+        options.remove("dynamic_profile_tooltip_info");
         options.remove("item_warning_override");
         if(options.getCompoundOrEmpty("keybinds").isEmpty())
             options.remove("keybinds");
@@ -1057,6 +1059,7 @@ public class FortytwoEdit implements ClientModInitializer {
         options.putBoolean("afk_screen_lock",afkScreenLock);
         options.putBoolean("custom_cape_toggle",showClientCape);
         options.putString("custom_cape",selectedClientCape);
+        options.putBoolean("dynamic_profile_tooltip_info",mixinProfileDynamicTooltip);
         CompoundTag keysCompound = options.getCompoundOrEmpty("keybinds");
         for(int i=0; i<KEYBINDS.length; i++) {
             keysCompound.put(KEYBINDS[i].getName(),StringTag.valueOf(KEYBINDS[i].saveString()));

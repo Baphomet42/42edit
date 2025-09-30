@@ -24,6 +24,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilderScreen.RowWidget;
 import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
 import baphomethlabs.fortytwoedit.gui.widget.WidgetUtil;
@@ -72,6 +73,7 @@ public abstract class GenericScreen extends Screen {
     private boolean hasTitle = false;
     protected final WidgetUtil WIDGET_UTIL;
     protected ScrollList SCROLL_PANE = null;
+    protected TextSuggestor suggs = null;
 
     protected void setupScrollPane() {
         setupScrollPane(true, false);
@@ -180,7 +182,7 @@ public abstract class GenericScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent keyEvent) {
-        if(System.currentTimeMillis()-prevTooltipTime < 100) {
+        if(suggs == null && System.currentTimeMillis()-prevTooltipTime < 100) {
             if(keyEvent.hasControlDown() && keyEvent.key() == GLFW.GLFW_KEY_C) {
                 if(prevTooltipNbt != null) {
                     if(keyEvent.hasAltDown()) {

@@ -158,7 +158,6 @@ public class ItemBuilderScreen extends GenericScreen {
     private static final String[] poseTypes = new String[]{"Head","Body","RightArm","LeftArm","RightLeg","LeftLeg"};
     public static final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
     public static final String[] BANNER_CHAR_LIST = new String[BANNER_PRESET_CHARS.replaceAll("\\s","").length()+1];
-    private TextSuggestor suggs;
     private boolean suggsPause = false;
     private Set<EditBox> currentTxt = Sets.newHashSet();
     private static int[][] colorSets = {{66,6,102},{0,0,0}};
@@ -2008,11 +2007,11 @@ public class ItemBuilderScreen extends GenericScreen {
                         if(soundId != null) {
                             String soundDisplay = soundId.getNamespace().equals("minecraft") ? soundId.getPath() : soundId.toString();
                             ItemStack item = BlackMagick.itemFromString(
-                                "{id:player_head,components:{\"minecraft:profile\":{properties:[{name:\"textures\",value:"+
+                                "{id:player_head,components:{\"minecraft:profile\":{name:\"Note_Block\",properties:[{name:\"textures\",value:"+
                                 "\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDov"+
                                 "L3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80Y2VlYjc3ZDRkMjU3MjRhOWNhZjJjN2NkZjJkODgzOTliMTQxN2M2YjlmZjUyMTM2NTliNjUzYmU0Mz"+
                                 "c2ZTMiDQogICAgfQ0KICB9DQp9\"}]},\"minecraft:note_block_sound\":\""+soundId.toString()+"\","+
-                                "\"minecraft:custom_name\":{italic:false,text:\""+soundDisplay+"\"},\"minecraft:max_stack_size\":1}}");
+                                "\"minecraft:custom_name\":{italic:false,text:\""+soundDisplay+"\"}}}");
                             if(!item.isEmpty())
                                 BlackMagick.setItemMain(item);
                         }
@@ -2396,14 +2395,14 @@ public class ItemBuilderScreen extends GenericScreen {
                     for(String c : BlackMagick.sortSet(modifiedComponentKeys))
                         addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                 }
-                if(!defaultComponentKeys.isEmpty()) {
-                    addTabWidgetScroll(tabNum, new RowWidget(PathInfo.COMPOUND_KEY_DEFAULT_COMPONENTS_LABEL));
-                    for(String c : BlackMagick.sortSet(defaultComponentKeys))
-                        addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
-                }
                 if(!removedComponentKeys.isEmpty()) {
                     addTabWidgetScroll(tabNum, new RowWidget(PathInfo.COMPOUND_KEY_REMOVED_COMPONENTS_LABEL));
                     for(String c : BlackMagick.sortSet(removedComponentKeys))
+                        addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
+                }
+                if(!defaultComponentKeys.isEmpty()) {
+                    addTabWidgetScroll(tabNum, new RowWidget(PathInfo.COMPOUND_KEY_DEFAULT_COMPONENTS_LABEL));
+                    for(String c : BlackMagick.sortSet(defaultComponentKeys))
                         addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
                 }
                 boolean firstUnset = true;
