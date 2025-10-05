@@ -288,19 +288,25 @@ public class ItemBuilderScreen extends GenericScreen {
             throwCopyBtn = this.addRenderableWidget(Button.builder(Component.nullToEmpty("Q*"),
                 button -> this.btnThrow(true)).bounds(width/2 + 30,y+5,WID_HEIGHT,WID_HEIGHT).build());
 
-            compareItems();
-
             if(!minecraft.player.getAbilities().instabuild) {
                 swapCopyBtn.active = false;
+                swapCopyBtn.setTooltip(TT_CREATIVE);
                 throwCopyBtn.active = false;
+                throwCopyBtn.setTooltip(TT_CREATIVE);
             }
             if(minecraft.player.isSpectator()) {
                 swapCopyBtn.active = false;
+                swapCopyBtn.setTooltip(null);
                 swapBtn.active = false;
+                swapBtn.setTooltip(null);
                 hotbarLeftBtn.active = false;
+                hotbarLeftBtn.setTooltip(null);
                 hotbarRightBtn.active = false;
+                hotbarRightBtn.setTooltip(null);
                 throwBtn.active = false;
+                throwBtn.setTooltip(null);
                 throwCopyBtn.active = false;
+                throwCopyBtn.setTooltip(null);
             }
             if(swapCopyBtn.active)
                 swapCopyBtn.setTooltip(Tooltip.create(Component.nullToEmpty("Copy item to offhand")));
@@ -314,6 +320,8 @@ public class ItemBuilderScreen extends GenericScreen {
                 throwBtn.setTooltip(Tooltip.create(Component.nullToEmpty("Throw item")));
             if(throwCopyBtn.active)
                 throwCopyBtn.setTooltip(Tooltip.create(Component.nullToEmpty("Throw a copy of item")));
+
+            compareItems();
 
             itemBtn = this.addRenderableWidget(new ItemSlotButton(x+backgroundWidth-20-5, y+5, 20, selItem, button -> this.btnCopySelItemNbt()));
             if(selItem==null || selItem.isEmpty()) {
@@ -512,15 +520,15 @@ public class ItemBuilderScreen extends GenericScreen {
 
     private void compareItems() {
 
-        swapBtn.setTooltip(null);
+        swapBtn.setTooltip(swapBtn.active ? Tooltip.create(Component.nullToEmpty("Swap item with offhand")) : null);
         if(!minecraft.player.getMainHandItem().isEmpty() && !minecraft.player.getOffhandItem().isEmpty()) {
             if(ItemStack.isSameItemSameComponents(minecraft.player.getMainHandItem(),minecraft.player.getOffhandItem())) {
                 swapBtn.setMessage(Component.empty().append("c").withStyle(ChatFormatting.GREEN));
             }
             else {
                 swapBtn.setMessage(Component.empty().append("c").withStyle(ChatFormatting.RED));
-                swapBtn.setTooltip(Tooltip.create(BlackMagick.getElementDifferences(BlackMagick.itemToNbtStorage(minecraft.player.getOffhandItem()),
-                    BlackMagick.itemToNbtStorage(minecraft.player.getMainHandItem()))));
+                swapBtn.setTooltip(Tooltip.create(Component.empty().append("Swap item with offhand\n\n").append(BlackMagick.getElementDifferences(BlackMagick.itemToNbtStorage(minecraft.player.getOffhandItem()),
+                    BlackMagick.itemToNbtStorage(minecraft.player.getMainHandItem())))));
             }
         }
         else {

@@ -12,9 +12,9 @@ public abstract class ChatComponentMixin {
 
     @ModifyVariable(method = "addMessageToDisplayQueue", at = @At("HEAD"), argsOnly = true)
     private static GuiMessage modifyAddMessageToDisplayQueue(GuiMessage guiMessage) {
-        if(FortytwoEdit.mixinChatProfileIcon) {
-            return FortytwoEdit.chatIconGet(guiMessage);
-        }
+        GuiMessage modifyMessage = FortytwoEdit.chatIconGet(guiMessage);
+        if(FortytwoEdit.mixinChatProfileIcon)
+            return modifyMessage;
         return guiMessage;
     }
 

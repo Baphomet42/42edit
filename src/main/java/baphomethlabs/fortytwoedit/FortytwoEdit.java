@@ -10,6 +10,7 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import org.apache.commons.compress.utils.Lists;
@@ -18,12 +19,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.SignatureState;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
+import baphomethlabs.fortytwoedit.BlackMagick.ParsedText;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
 import baphomethlabs.fortytwoedit.PathHelper.PathInfo;
 import baphomethlabs.fortytwoedit.PathHelper.PathNode;
@@ -120,28 +121,67 @@ public class FortytwoEdit implements ClientModInitializer {
 
     // chat icons
     public static boolean mixinChatProfileIcon = false;
+    private static final Set<String> CHAT_ICON_KEY_SET = Sets.newHashSet();
+    private static final List<String> CHAT_ICON_KEY_LIST = Lists.newArrayList();
     private static final Map<String,Component> CHAT_ICON_COMPONENT_CACHE = Maps.newHashMap();
     private static final Map<String,GuiMessage> CHAT_ICON_MESSAGE_CACHE = Maps.newHashMap();
-    public static void chatIconNew(Component text, GameProfile profile) {
+    private static void chatCache(String key) {
+        boolean added = CHAT_ICON_KEY_SET.add(key);
+        if(added) {
+            CHAT_ICON_KEY_LIST.add(key);
+            if(CHAT_ICON_KEY_LIST.size()>250) {
+                String removed = CHAT_ICON_KEY_LIST.remove(0);
+                CHAT_ICON_COMPONENT_CACHE.remove(removed);
+                CHAT_ICON_MESSAGE_CACHE.remove(removed);
+                CHAT_ICON_KEY_SET.remove(removed);
+            }
+        }
+    }
+    public static void chatIconNew(Component text, UUID uuid) {
         try {
             final Minecraft minecraft = Minecraft.getInstance();
             String mapKey = ""+minecraft.gui.getGuiTicks()+"_"+BlackMagick.textComponentToSnbt(text);
             MutableComponent newComponent = Component.empty();
 
-            if(!BlackMagick.textComponentToStringLiteral(text).contains(profile.name()))
-                return;
-
             String hat = ",hat:true";
-            PlayerInfo playerInfo = minecraft.player.connection.getPlayerInfo(profile.id());
+            PlayerInfo playerInfo = minecraft.player.connection.getPlayerInfo(uuid);
             if(playerInfo != null && !playerInfo.showHat()) {
                 hat = ",hat:false";
             }
 
-            newComponent.append(BlackMagick.textComponentFromSnbt("{object:'player',player:{id:"
-                +BlackMagick.nbtToSnbt(new IntArrayTag(UUIDUtil.uuidToIntArray(profile.id())))+"}"+hat+",shadow_color:0}").text());
-            newComponent.append(" ");
-            newComponent.append(text);
-            CHAT_ICON_COMPONENT_CACHE.put(mapKey,newComponent);
+            ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{id:"
+                +BlackMagick.nbtToSnbt(new IntArrayTag(UUIDUtil.uuidToIntArray(uuid)))+"}"+hat+",shadow_color:0}");
+            
+            if(parsedText.isValid()) {
+                newComponent.append(parsedText.text());
+                newComponent.append(" ");
+                newComponent.append(text);
+                CHAT_ICON_COMPONENT_CACHE.put(mapKey,newComponent);
+                chatCache(mapKey);
+            }
+        } catch(Exception ex) {}
+    }
+    public static void chatIconNew(Component text, String name) {
+        try {
+            final Minecraft minecraft = Minecraft.getInstance();
+            String mapKey = ""+minecraft.gui.getGuiTicks()+"_"+BlackMagick.textComponentToSnbt(text);
+            MutableComponent newComponent = Component.empty();
+
+            String hat = ",hat:true";
+            PlayerInfo playerInfo = minecraft.player.connection.getPlayerInfo(name);
+            if(playerInfo != null && !playerInfo.showHat()) {
+                hat = ",hat:false";
+            }
+
+            ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{name:"+BlackMagick.nbtToSnbt(StringTag.valueOf(name))+"}"+hat+",shadow_color:0}");
+            
+            if(parsedText.isValid()) {
+                newComponent.append(parsedText.text());
+                newComponent.append(" ");
+                newComponent.append(text);
+                CHAT_ICON_COMPONENT_CACHE.put(mapKey,newComponent);
+                chatCache(mapKey);
+            }
         } catch(Exception ex) {}
     }
     public static GuiMessage chatIconGet(GuiMessage guiMessage) {
@@ -155,9 +195,89 @@ public class FortytwoEdit implements ClientModInitializer {
         if(testComponent != null) {
             GuiMessage newMessage = new GuiMessage(guiMessage.addedTime(), testComponent, guiMessage.signature(), guiMessage.tag());
             CHAT_ICON_MESSAGE_CACHE.put(mapKey,newMessage);
+            chatCache(mapKey);
             return newMessage;
         }
 
+        try {
+            String name = null;
+            UUID uuid = null;
+            Tag nbt = BlackMagick.textComponentToNbt(guiMessage.content());
+            if(nbt.getId() == Tag.TAG_COMPOUND) {
+                CompoundTag compound = (CompoundTag)nbt;
+                if(!compound.contains("extra") && compound.getString("translate").isPresent()) {
+                    switch(compound.getString("translate").get()) {
+                        case "multiplayer.player.joined" :
+                        case "multiplayer.player.left" :
+                        case "chat.type.text" :
+                        case "chat.type.emote" :
+                        case "chat.type.announcement" :
+                        case "commands.message.display.incoming" :
+                        {
+                            Tag hoverUUID = BlackMagick.getNbtPath(compound,"with[0].hover_event.uuid");
+                            if(hoverUUID != null && hoverUUID.getId() == Tag.TAG_INT_ARRAY) {
+                                uuid = UUIDUtil.uuidFromIntArray(((IntArrayTag)hoverUUID).getAsIntArray());
+                            }
+                            else {
+                                Tag textTag = BlackMagick.getNbtPath(compound,"with[0]");
+                                if(textTag != null && textTag.getId() == Tag.TAG_STRING) {
+                                    name = BlackMagick.nbtToSnbtOrString(textTag);
+                                }
+                                else {
+                                    textTag = BlackMagick.getNbtPath(compound,"with[0].text");
+                                    if(textTag != null && textTag.getId() == Tag.TAG_STRING) {
+                                        name = BlackMagick.nbtToSnbtOrString(textTag);
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                        case "chat.type.team.text" :
+                        case "chat.type.team.sent" :
+                        {
+                            Tag hoverUUID = BlackMagick.getNbtPath(compound,"with[1].hover_event.uuid");
+                            if(hoverUUID != null && hoverUUID.getId() == Tag.TAG_INT_ARRAY) {
+                                uuid = UUIDUtil.uuidFromIntArray(((IntArrayTag)hoverUUID).getAsIntArray());
+                            }
+                            else {
+                                Tag textTag = BlackMagick.getNbtPath(compound,"with[1]");
+                                if(textTag != null && textTag.getId() == Tag.TAG_STRING) {
+                                    name = BlackMagick.nbtToSnbtOrString(textTag);
+                                }
+                                else {
+                                    textTag = BlackMagick.getNbtPath(compound,"with[1].text");
+                                    if(textTag != null && textTag.getId() == Tag.TAG_STRING) {
+                                        name = BlackMagick.nbtToSnbtOrString(textTag);
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                        case "commands.message.display.outgoing" :
+                        {
+                            uuid = UUIDUtil.uuidFromIntArray(FortytwoEdit.UUID.getAsIntArray());
+                            break;
+                        }
+                        default : break;
+                    }
+                }
+            }
+            if(uuid != null)
+                chatIconNew(guiMessage.content(), uuid);
+            else if(name != null)
+                chatIconNew(guiMessage.content(), name);
+
+            testComponent = CHAT_ICON_COMPONENT_CACHE.get(mapKey);
+            if(testComponent != null) {
+                GuiMessage newMessage = new GuiMessage(guiMessage.addedTime(), testComponent, guiMessage.signature(), guiMessage.tag());
+                CHAT_ICON_MESSAGE_CACHE.put(mapKey,newMessage);
+                chatCache(mapKey);
+                return newMessage;
+            }
+        } catch(Exception ex) {}
+
+        CHAT_ICON_MESSAGE_CACHE.put(mapKey,guiMessage);
+        chatCache(mapKey);
         return guiMessage;
     }
 
@@ -232,7 +352,7 @@ public class FortytwoEdit implements ClientModInitializer {
     private static boolean smooth = false;
 
     // hacks
-    //private static boolean inWorld = false;
+    private static boolean inWorld = false;
     private static final SecureRandom RNG = new SecureRandom();
     public static boolean autoMove = false;
     public static boolean autoClicker = false;
@@ -498,7 +618,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 for(String url : CAPE_URLS_QUEUE) {
                     try {
                         CompletableFuture<PlayerSkin> futurePlayerSkin = ((SkinManagerInvoker)client.getSkinManager())
-                            .invokeRegisterTextures(new java.util.UUID(0,0), new MinecraftProfileTextures(null,
+                            .invokeRegisterTextures(new UUID(0,0), new MinecraftProfileTextures(null,
                             new MinecraftProfileTexture(url, null), null, SignatureState.SIGNED));
                             futurePlayerSkin.thenAccept(playerSkin -> {
                                 if(CAPE_URLS_QUEUE_MAP.containsKey(url) && playerSkin != null && playerSkin.cape() != null) {
@@ -823,12 +943,16 @@ public class FortytwoEdit implements ClientModInitializer {
             autoMove = false;
         }
 
-        // if(inWorld && client.player == null) {
-        //     inWorld = false;
-        // }
-        // else if(!inWorld && client.player != null) {
-        //     inWorld = true;
-        // }
+        if(inWorld && client.player == null) {
+            inWorld = false;
+            CHAT_ICON_COMPONENT_CACHE.clear();
+            CHAT_ICON_MESSAGE_CACHE.clear();
+            CHAT_ICON_KEY_LIST.clear();
+            CHAT_ICON_KEY_SET.clear();
+        }
+        else if(!inWorld && client.player != null) {
+            inWorld = true;
+        }
 
         // magickgui
         if(keyMagickGui.consumeClick())
@@ -1085,8 +1209,10 @@ public class FortytwoEdit implements ClientModInitializer {
 
         itemHistList.clear();
 
-        // CHAT_ICON_COMPONENT_CACHE.clear(); do not clear
+        // CHAT_ICON_COMPONENT_CACHE.clear(); do not clear here
         CHAT_ICON_MESSAGE_CACHE.clear();
+        // CHAT_ICON_KEY_LIST.clear(); do not clear here
+        // CHAT_ICON_KEY_SET.clear(); do not clear here
 
         FileTools.scanModFiles();
 
