@@ -43,12 +43,15 @@ public abstract class GenericScreen extends Screen {
     protected static final int TEXT_COLOR = 0xFFFFFFFF;
     public static final int WID_HEIGHT = 20; // standard widget height
     protected static final int ROW_HEIGHT = 22; // standard spacing amounts between rows of widgets
+    protected static final int ROW_WIDTH = 208;
     protected static final int TOP_OFFSET = (ROW_HEIGHT-WID_HEIGHT)/2;
     protected static final int WID_SPACE = 5; // standard horizontal spacing between widgets
     protected static final int GUI_SPACE = 5; // standard starting position for widget in top corner of gui (for both x and y)
     protected static final int WID_LEFT = 10; // standard spacing before first widget in row
-    protected static final int WID_LEFT_NARROW = 20;
+    protected static final int NARROW_OFFSET = 10;
+    protected static final int WID_LEFT_NARROW = WID_LEFT + NARROW_OFFSET;
     protected static final int SCROLL_ROW_LEFT_OFFSET = 3;
+    protected static final int MULTI_LINE_TEXT_WIDGET_Y_OFFSET = 6;
     protected static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
     protected static final Duration TOOLTIP_DELAY_SHORT = Duration.ofMillis(100L);
     public static final int MAX_TEXT_LENGTH = 131072;
@@ -255,7 +258,12 @@ public abstract class GenericScreen extends Screen {
     }
 
     protected void reloadScreen() {
+        double scroll = 0;
+        if(SCROLL_PANE != null)
+            scroll = SCROLL_PANE.scrollAmount();
         this.rebuildWidgets();
+        if(SCROLL_PANE != null)
+            SCROLL_PANE.setScrollAmount(scroll);
     }
 
     protected void onCloseAction() {}
@@ -300,7 +308,7 @@ public abstract class GenericScreen extends Screen {
         public ScrollList(boolean narrow, boolean slotHeight) {
             super(GenericScreen.this.minecraft,
                 GenericScreen.this.width+AREA_WIDTH_OFFSET,
-                GenericScreen.this.backgroundHeight+AREA_HEIGHT_OFFSET,
+                GenericScreen.this.backgroundHeight+AREA_HEIGHT_OFFSET-(narrow ? AREA_Y_OFFSET_NARROW : 0),
                 GenericScreen.this.y+AREA_Y_OFFSET+(narrow ? AREA_Y_OFFSET_NARROW : 0),
                 slotHeight ? ItemSlotButton.SLOT_HEIGHT : ROW_HEIGHT);
             NARROW = narrow;
@@ -346,7 +354,7 @@ public abstract class GenericScreen extends Screen {
 
         public ScrollRow addRow(Component title, boolean centered) {
             ScrollRow row = new ScrollRow(NARROW);
-            row.add(new MultiLineTextWidget(Component.empty().withColor(LABEL_COLOR).append(title), GenericScreen.this.font));
+            row.add(new MultiLineTextWidget(Component.empty().withColor(LABEL_COLOR).append(title), GenericScreen.this.font), true, MULTI_LINE_TEXT_WIDGET_Y_OFFSET);
             if(centered)
                 row.center();
             return addRow(row);
@@ -409,12 +417,12 @@ public abstract class GenericScreen extends Screen {
             add(new PosWidget(w, x, y));
         }
 
-        public void add(AbstractWidget w, int x) {
-            add(w, x, 0);
+        public void add(AbstractWidget w, boolean padLeft, int y) {
+            add(w, children.isEmpty() ? LEFT_START : (getRight() + (padLeft ? WID_SPACE : 0)), y);
         }
 
         public void add(AbstractWidget w, boolean padLeft) {
-            add(w, children.isEmpty() ? LEFT_START : (getRight() + (padLeft ? WID_SPACE : 0)));
+            add(w, padLeft, 0);
         }
 
         public void add(AbstractWidget w) {

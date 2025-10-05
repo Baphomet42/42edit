@@ -98,7 +98,6 @@ public class ItemBuilderScreen extends GenericScreen {
     private static boolean firstInitStatic = true;
     protected static final int ROW_TOP = 36; // used for noScrollWidgets to align to the top of the first row
     protected static final int ROW_LEFT_LOCKED = 10;
-    protected static final int ROW_WIDTH = 208;
     protected static final int ROW_RIGHT_LOCKED = ROW_LEFT_LOCKED+ROW_WIDTH;
     protected static final int ROW_LEFT_SCROLL = ROW_LEFT_LOCKED+SCROLL_ROW_LEFT_OFFSET;
     protected static final int ROW_RIGHT_SCROLL = ROW_RIGHT_LOCKED+SCROLL_ROW_LEFT_OFFSET;

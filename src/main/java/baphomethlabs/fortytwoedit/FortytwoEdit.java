@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.SignatureState;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
@@ -38,10 +39,12 @@ import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.GuiMessage;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.ClientAsset;
@@ -115,11 +118,121 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean debugMixinHideBlockTags = false;
     public static boolean debugMixinRearrange = false;
 
+    // chat icons
+    public static boolean mixinChatProfileIcon = false;
+    private static final Map<String,Component> CHAT_ICON_COMPONENT_CACHE = Maps.newHashMap();
+    private static final Map<String,GuiMessage> CHAT_ICON_MESSAGE_CACHE = Maps.newHashMap();
+    public static void chatIconNew(Component text, GameProfile profile) {
+        try {
+            final Minecraft minecraft = Minecraft.getInstance();
+            String mapKey = ""+minecraft.gui.getGuiTicks()+"_"+BlackMagick.textComponentToSnbt(text);
+            MutableComponent newComponent = Component.empty();
+
+            if(!BlackMagick.textComponentToStringLiteral(text).contains(profile.name()))
+                return;
+
+            String hat = ",hat:true";
+            PlayerInfo playerInfo = minecraft.player.connection.getPlayerInfo(profile.id());
+            if(playerInfo != null && !playerInfo.showHat()) {
+                hat = ",hat:false";
+            }
+
+            newComponent.append(BlackMagick.textComponentFromSnbt("{object:'player',player:{id:"
+                +BlackMagick.nbtToSnbt(new IntArrayTag(UUIDUtil.uuidToIntArray(profile.id())))+"}"+hat+",shadow_color:0}").text());
+            newComponent.append(" ");
+            newComponent.append(text);
+            CHAT_ICON_COMPONENT_CACHE.put(mapKey,newComponent);
+        } catch(Exception ex) {}
+    }
+    public static GuiMessage chatIconGet(GuiMessage guiMessage) {
+        String mapKey = ""+guiMessage.addedTime()+"_"+BlackMagick.textComponentToSnbt(guiMessage.content());
+
+        GuiMessage testCache = CHAT_ICON_MESSAGE_CACHE.get(mapKey);
+        if(testCache != null)
+            return testCache;
+        
+        Component testComponent = CHAT_ICON_COMPONENT_CACHE.get(mapKey);
+        if(testComponent != null) {
+            GuiMessage newMessage = new GuiMessage(guiMessage.addedTime(), testComponent, guiMessage.signature(), guiMessage.tag());
+            CHAT_ICON_MESSAGE_CACHE.put(mapKey,newMessage);
+            return newMessage;
+        }
+
+        return guiMessage;
+    }
+
+
+    // locator bar
+    private static final String MIXIN_LOCATOR_BAR_OPTION_NEVER = "never";
+    private static final String MIXIN_LOCATOR_BAR_OPTION_OVERRIDE_DEFAULT = "override_default";
+    private static final String MIXIN_LOCATOR_BAR_OPTION_ALWAYS = "always";
+    private static final String[] MIXIN_LOCATOR_BAR_PROFILE_OPTIONS = {
+        MIXIN_LOCATOR_BAR_OPTION_NEVER,
+        MIXIN_LOCATOR_BAR_OPTION_OVERRIDE_DEFAULT,
+        MIXIN_LOCATOR_BAR_OPTION_ALWAYS
+    };
+    public static boolean mixinLocatorBarColor = true;
+    public static String mixinLocatorBarMode = MIXIN_LOCATOR_BAR_OPTION_NEVER;
+    public static boolean mixinLocatorBar = false;
+    public static boolean mixinLocatorBarAlways = false;
+    public static boolean mixinLocatorBarModeDefault() {
+        return mixinLocatorBarMode.equals(MIXIN_LOCATOR_BAR_OPTION_NEVER);
+    }
+    public static void mixinLocatorBarCycle() {
+        int index=-1;
+        for(int i=0; i<MIXIN_LOCATOR_BAR_PROFILE_OPTIONS.length; i++) {
+            if(MIXIN_LOCATOR_BAR_PROFILE_OPTIONS[i].equals(mixinLocatorBarMode)) {
+                index = i;
+                break;
+            }
+        }
+        index++;
+        if(index >= MIXIN_LOCATOR_BAR_PROFILE_OPTIONS.length)
+            index = 0;
+        FortytwoEdit.readOptions();
+        mixinLocatorBarSet(MIXIN_LOCATOR_BAR_PROFILE_OPTIONS[index]);
+        FortytwoEdit.updateOptions();
+    }
+    private static void mixinLocatorBarSet(String mode) {
+        mixinLocatorBarMode = mode;
+        mixinLocatorBar = false;
+        mixinLocatorBarAlways = false;
+        boolean found = false;
+        for(String option : MIXIN_LOCATOR_BAR_PROFILE_OPTIONS) {
+            if(option.equals(mode)) {
+                found = true;
+                break;
+            }
+        }
+        if(!found) {
+            String err = "Unknown option locator_bar_profile:"+BlackMagick.nbtToSnbt(StringTag.valueOf(mode))+" (expected one of: ";
+            boolean first = true;
+            for(String o : MIXIN_LOCATOR_BAR_PROFILE_OPTIONS) {
+                if(!first) {
+                    err += ", ";
+                }
+                else
+                    first = false;
+                err += BlackMagick.nbtToSnbt(StringTag.valueOf(o));
+            }
+            err += ")";
+            FortytwoEdit.logWarn(err);
+        }
+        else if(mode.equals(MIXIN_LOCATOR_BAR_OPTION_OVERRIDE_DEFAULT)) {
+            mixinLocatorBar = true;
+        }
+        else if(mode.equals(MIXIN_LOCATOR_BAR_OPTION_ALWAYS)) {
+            mixinLocatorBar = true;
+            mixinLocatorBarAlways = true;
+        }
+    }
+
     // zoom
     public static boolean zoomed = false;
     private static boolean smooth = false;
 
     // hacks
+    //private static boolean inWorld = false;
     private static final SecureRandom RNG = new SecureRandom();
     public static boolean autoMove = false;
     public static boolean autoClicker = false;
@@ -710,6 +823,13 @@ public class FortytwoEdit implements ClientModInitializer {
             autoMove = false;
         }
 
+        // if(inWorld && client.player == null) {
+        //     inWorld = false;
+        // }
+        // else if(!inWorld && client.player != null) {
+        //     inWorld = true;
+        // }
+
         // magickgui
         if(keyMagickGui.consumeClick())
             client.setScreen(quickScreen.get());
@@ -965,6 +1085,9 @@ public class FortytwoEdit implements ClientModInitializer {
 
         itemHistList.clear();
 
+        // CHAT_ICON_COMPONENT_CACHE.clear(); do not clear
+        CHAT_ICON_MESSAGE_CACHE.clear();
+
         FileTools.scanModFiles();
 
         LogScreen.debugTryRefreshVarious();
@@ -991,6 +1114,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         // keep options consistent
         options.getByte("afk_screen_lock").ifPresent(b -> afkScreenLock = (b == 1));
+        options.getByte("chat_icons").ifPresent(b -> mixinChatProfileIcon = (b == 1));
         options.getByte("custom_cape_toggle").ifPresent(b -> showClientCape = (b == 1));
         options.getString("custom_cape").ifPresent(s -> selectedClientCape = s);
         options.getByte("debug_screen_hide_tags").ifPresent(b -> debugMixinHideBlockTags = (b == 1));
@@ -1021,6 +1145,8 @@ public class FortytwoEdit implements ClientModInitializer {
                 KeyMapping.resetMapping();
             }
         });
+        options.getString("locator_bar_profile").ifPresent(s -> mixinLocatorBarSet(s));
+        options.getByte("locator_bar_profile_color").ifPresent(b -> mixinLocatorBarColor = (b == 1));
         options.getByte("opticapes").ifPresent(b -> opticapesOn = (b == 1));
         options.getByte("web_items").ifPresent(b -> webItemsAuto = (b == 1));
         options.getString("web_items_url").ifPresent(s -> {
@@ -1034,6 +1160,7 @@ public class FortytwoEdit implements ClientModInitializer {
         // keep options consistent
         options.remove("file_format");
         options.remove("afk_screen_lock");
+        options.remove("chat_icons");
         options.remove("custom_cape_toggle");
         options.remove("custom_cape");
         options.remove("debug_screen_hide_tags");
@@ -1042,6 +1169,8 @@ public class FortytwoEdit implements ClientModInitializer {
         options.remove("item_warning_override");
         if(options.getCompoundOrEmpty("keybinds").isEmpty())
             options.remove("keybinds");
+        options.remove("locator_bar_profile");
+        options.remove("locator_bar_profile_color");
         options.remove("opticapes");
         options.remove("web_items");
         options.remove("web_items_url");
@@ -1063,6 +1192,7 @@ public class FortytwoEdit implements ClientModInitializer {
         // keep options consistent
         options.putInt("file_format",FileTools.FILE_FORMAT);
         options.putBoolean("afk_screen_lock",afkScreenLock);
+        options.putBoolean("chat_icons",mixinChatProfileIcon);
         options.putBoolean("custom_cape_toggle",showClientCape);
         options.putString("custom_cape",selectedClientCape);
         options.putBoolean("debug_screen_hide_tags",debugMixinHideBlockTags);
@@ -1074,11 +1204,24 @@ public class FortytwoEdit implements ClientModInitializer {
             KEYBINDS_CONFIG_CACHE[i] = KEYBINDS[i].saveString();
         }
         options.put("keybinds",keysCompound);
+        options.putString("locator_bar_profile",mixinLocatorBarMode);
+        options.putBoolean("locator_bar_profile_color",mixinLocatorBarColor);
         options.putBoolean("opticapes",opticapesOn);
         options.putBoolean("web_items",webItemsAuto);
         options.putString("web_items_url",webItemsUrlOverride);
 
         FileTools.writeCompoundToFile(FileTools.FILE_OPTIONS, options, FileDisplayType.TREE);
+        onOptionsUpdates();
+    }
+
+    private static void onOptionsUpdates() {
+        final Minecraft minecraft = Minecraft.getInstance();
+        if(minecraft.debugEntries != null) {
+            minecraft.debugEntries.rebuildCurrentList();
+        }
+        if(minecraft.gui != null && minecraft.gui.getChat() != null) {
+            minecraft.gui.getChat().rescaleChat();
+        }
     }
 
     public static Map<Integer,String> getSavedItems() {

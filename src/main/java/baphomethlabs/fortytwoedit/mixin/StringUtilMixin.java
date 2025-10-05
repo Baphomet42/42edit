@@ -7,8 +7,9 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(StringUtil.class)
 public class StringUtilMixin {
-    @ModifyVariable(method = "isAllowedChatCharacter(I)Z", at = @At("HEAD"), ordinal = 0)
-    private static int injectedChar(int chr) {
+
+    @ModifyVariable(method = "isAllowedChatCharacter", at = @At("HEAD"), argsOnly = true)
+    private static int modifyIsAllowedChatCharacter(int chr) {
         if(chr == '\u00a7')
             return 'S';
         return chr;
