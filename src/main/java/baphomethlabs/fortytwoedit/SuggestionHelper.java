@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.core.Holder;
@@ -15,23 +14,24 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
-import net.minecraft.world.entity.animal.Fox;
-import net.minecraft.world.entity.animal.MushroomCow;
-import net.minecraft.world.entity.animal.Parrot;
-import net.minecraft.world.entity.animal.Rabbit;
-import net.minecraft.world.entity.animal.Salmon;
-import net.minecraft.world.entity.animal.TropicalFish;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
-import net.minecraft.world.entity.animal.horse.Llama;
-import net.minecraft.world.entity.animal.horse.Variant;
+import net.minecraft.world.entity.animal.cow.MushroomCow;
+import net.minecraft.world.entity.animal.equine.Llama;
+import net.minecraft.world.entity.animal.equine.Variant;
+import net.minecraft.world.entity.animal.fish.Salmon;
+import net.minecraft.world.entity.animal.fish.TropicalFish;
+import net.minecraft.world.entity.animal.fox.Fox;
+import net.minecraft.world.entity.animal.parrot.Parrot;
+import net.minecraft.world.entity.animal.rabbit.Rabbit;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemUseAnimation;
@@ -207,7 +207,7 @@ public class SuggestionHelper {
     public static int getEnchantmentMaxLevel(String key) {
         int max = -1;
         try {
-            Enchantment ench = BlackMagick.getRegistryAccess().lookup(Registries.ENCHANTMENT).get().getValue(ResourceLocation.parse(key));
+            Enchantment ench = BlackMagick.getRegistryAccess().lookup(Registries.ENCHANTMENT).get().getValue(Identifier.parse(key));
             if(ench != null)
                 max = ench.getMaxLevel();
         } catch(Exception ex) {}
@@ -225,7 +225,7 @@ public class SuggestionHelper {
      */
     public static int[] getContainerSize(Item item) {
 
-        ResourceLocation identifier = BlackMagick.identifierOrNull(item.toString());
+        Identifier identifier = BlackMagick.identifierOrNull(item.toString());
         if(identifier != null) {
             String id = identifier.toString();
 
@@ -402,7 +402,7 @@ public class SuggestionHelper {
         List<String> list = createOrGetCacheList("LIST_MAP_COLOR",false);
         if(list.isEmpty()) {
             list.add(""+MapItemColor.DEFAULT.rgb());
-            for(ResourceLocation i : BuiltInRegistries.MAP_DECORATION_TYPE.keySet()) {
+            for(Identifier i : BuiltInRegistries.MAP_DECORATION_TYPE.keySet()) {
                 MapDecorationType t = BuiltInRegistries.MAP_DECORATION_TYPE.get(i).get().value();
                 if(t.hasMapColor()) {
                     list.add(""+t.mapColor());
@@ -437,7 +437,7 @@ public class SuggestionHelper {
         List<String> list = createOrGetCacheList("LIST_POTION_CUSTOM_NAME",false);
         if(list.isEmpty()) {
             list.add("empty");
-            for(ResourceLocation i : BuiltInRegistries.POTION.keySet())
+            for(Identifier i : BuiltInRegistries.POTION.keySet())
                 list.add(BuiltInRegistries.POTION.get(i).get().value().name());
             sortUnique(list);
         }
@@ -495,8 +495,8 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
             if(client.getAtlasManager() != null) {
-                client.getAtlasManager().forEach((resourceLocation, atlasEntry) -> {
-                    list.add(resourceLocation.toString());
+                client.getAtlasManager().forEach((identifier, atlasEntry) -> {
+                    list.add(identifier.toString());
                 });
                 sortUnique(list);
             }
@@ -509,7 +509,7 @@ public class SuggestionHelper {
         if(list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
             if(client.getAtlasManager() != null) {
-                client.getAtlasManager().forEach((resourceLocation, atlasEntry) -> {
+                client.getAtlasManager().forEach((identifier, atlasEntry) -> {
                     ((TextureAtlasAccessor)atlasEntry).getTexturesByName().forEach((textureLocation, textureSprite) -> {
                         list.add(textureLocation.toString());
                     });
@@ -539,7 +539,7 @@ public class SuggestionHelper {
 
     private static List<String> getRegistryIfEmpty(List<String> list, Registry<?> registryRef) {
         if(list.isEmpty()) {
-            for(ResourceLocation i : registryRef.keySet())
+            for(Identifier i : registryRef.keySet())
                 list.add(i.toString());
             sortUnique(list);
         }
@@ -593,7 +593,7 @@ public class SuggestionHelper {
             final Minecraft client = Minecraft.getInstance();
             if(client.level != null)
                 BlackMagick.getRegistryAccess(client).lookup(registryRef).ifPresent(reg -> {
-                    for(ResourceLocation i : reg.keySet())
+                    for(Identifier i : reg.keySet())
                         list.add(i.toString());
                 });
             sortUnique(list);
@@ -698,7 +698,7 @@ public class SuggestionHelper {
             final Minecraft client = Minecraft.getInstance();
             if(client.level != null)
                 BlackMagick.getRegistryAccess(client).lookup(Registries.ITEM).ifPresent(reg -> {
-                    for(Holder<Item> itemHolder : reg.getTagOrEmpty(TagKey.create(Registries.ITEM,ResourceLocation.parse(tag)))) {
+                    for(Holder<Item> itemHolder : reg.getTagOrEmpty(TagKey.create(Registries.ITEM,Identifier.parse(tag)))) {
                         list.add(itemHolder.value().toString());
                     }
                 });
@@ -716,7 +716,7 @@ public class SuggestionHelper {
     private static List<String> getVanillaDataIfEmpty(List<String> list, String path, String suffix) {
         if(list.isEmpty()) {
             try {
-                Map<ResourceLocation,IoSupplier<InputStream>> map = Maps.newHashMap();
+                Map<Identifier,IoSupplier<InputStream>> map = Maps.newHashMap();
                 final String namespace = "minecraft";
                 ServerPacksSource.createVanillaPackSource().listResources(PackType.SERVER_DATA, namespace, path, map::putIfAbsent);
                 map.keySet().forEach(i -> {
@@ -784,7 +784,7 @@ public class SuggestionHelper {
     private static List<String> getVanillaAssetsIfEmpty(List<String> list, String path, String suffix) {
         if(list.isEmpty()) {
             try {
-                Map<ResourceLocation,IoSupplier<InputStream>> map = Maps.newHashMap();
+                Map<Identifier,IoSupplier<InputStream>> map = Maps.newHashMap();
                 final String namespace = "minecraft";
                 ServerPacksSource.createVanillaPackSource().listResources(PackType.CLIENT_RESOURCES, namespace, path, map::putIfAbsent);
                 map.keySet().forEach(i -> {

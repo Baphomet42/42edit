@@ -58,10 +58,8 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.PlayerSkin;
@@ -93,7 +91,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static Supplier<GenericScreen> quickScreen = DEFAULT_SCREEN;
 
     // keys
-    public static KeyMapping.Category KEY_CATEGORY = KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath("42edit","keybinds"));
+    public static KeyMapping.Category KEY_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("42edit","keybinds"));
     public static KeyMapping keyAfkClick = new KeyMapping("42edit.key.afk_click", GLFW.GLFW_KEY_MINUS, KEY_CATEGORY);
     public static KeyMapping keyAfkMove = new KeyMapping("42edit.key.afk_move", GLFW.GLFW_KEY_EQUAL, KEY_CATEGORY);
     public static KeyMapping keyFreeLook = new KeyMapping("42edit.key.free_look", GLFW.GLFW_KEY_LEFT_ALT, KEY_CATEGORY);
@@ -526,7 +524,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     cape.setPixel(x, y, capeInp.getPixel(x, y));
 
             capeInp.close();
-            ResourceLocation capeCacheId = getCapeCacheID(name);
+            Identifier capeCacheId = getCapeCacheID(name);
             client.getTextureManager().register(capeCacheId, new DynamicTexture(capeCacheId::toString, cape));
             cape.close();
             capeNames2.add(name);
@@ -547,8 +545,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
         return false;
     }
-    private static ResourceLocation getCapeCacheID(String name) {
-        return ResourceLocation.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
+    private static Identifier getCapeCacheID(String name) {
+        return Identifier.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
     }
 
     // custom capes
@@ -590,8 +588,8 @@ public class FortytwoEdit implements ClientModInitializer {
     private static final Map<String,String> CAPE_URLS_QUEUE_MAP = Maps.newHashMap();
     private static final Set<String> CAPE_REGISTERED_IDS = Sets.newHashSet();
     private static void registerCustomCape(String id, String name, String desc) {
-        ResourceLocation resourceLocation = ResourceLocation.tryParse("42edit:cape/"+id);
-        registerCape(CapeTexture.newCustom(id, name, desc), new ClientAsset.ResourceTexture(resourceLocation, resourceLocation));
+        Identifier identifier = Identifier.tryParse("42edit:cape/"+id);
+        registerCape(CapeTexture.newCustom(id, name, desc), new ClientAsset.ResourceTexture(identifier, identifier));
     }
     private static void registerCape(CapeTexture cape, ClientAsset.Texture texture) {
         CLIENT_CAPES.add(cape);
@@ -714,7 +712,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean showClientSkin = false;
     public static boolean clientSkinSlim = false;
     public static String customSkinName = "";
-    private static final ResourceLocation CUSTOM_SKIN_ID = ResourceLocation.fromNamespaceAndPath("42edit","cache/custom_skin");
+    private static final Identifier CUSTOM_SKIN_ID = Identifier.fromNamespaceAndPath("42edit","cache/custom_skin");
     public static final ClientAsset.Texture CUSTOM_SKIN_TEXTURE = new ClientAsset.ResourceTexture(CUSTOM_SKIN_ID, CUSTOM_SKIN_ID);
 
     public static boolean setCustomSkin(File file) {
@@ -787,7 +785,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void loadAssetsTexture(Minecraft client, String path) {
         try {
             NativeImage texture = NativeImage.read(client.getClass().getClassLoader().getResourceAsStream("assets/"+MOD_ID_MC+"/textures/"+path+".png"));
-            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(MOD_ID_MC,path);
+            Identifier id = Identifier.fromNamespaceAndPath(MOD_ID_MC,path);
             client.getTextureManager().release(id);
             client.getTextureManager().register(id,new DynamicTexture(id::toString,texture));
         }
@@ -823,25 +821,22 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final FeatureFlagSet FEATURES = FeatureFlagSet.of(FeatureFlags.VANILLA);
 
     //supersecretsettings
-    public static final ResourceLocation[] SUPER_SECRET_SETTING_PROGRAMS = new ResourceLocation[]{/*Identifier.of("42edit","shaders/post/notch.json"), Identifier.of("42edit","shaders/post/fxaa.json"), Identifier.of("42edit","shaders/post/art.json"), Identifier.of("42edit","shaders/post/bumpy.json"), Identifier.of("42edit","shaders/post/blobs2.json"), Identifier.of("42edit","shaders/post/pencil.json"), Identifier.of("42edit","shaders/post/color_convolve.json"), Identifier.of("42edit","shaders/post/deconverge.json"), Identifier.of("42edit","shaders/post/flip.json"),*/ ResourceLocation.withDefaultNamespace("invert"),/* Identifier.of("42edit","shaders/post/ntsc.json"), Identifier.of("42edit","shaders/post/outline.json"), Identifier.of("42edit","shaders/post/phosphor.json"), Identifier.of("42edit","shaders/post/scan_pincushion.json"), Identifier.of("42edit","shaders/post/sobel.json"), Identifier.of("42edit","shaders/post/bits.json"), Identifier.of("42edit","shaders/post/desaturate.json"), Identifier.of("42edit","shaders/post/green.json"), Identifier.of("42edit","shaders/post/blur.json"), Identifier.of("42edit","shaders/post/wobble.json"), Identifier.of("42edit","shaders/post/blobs.json"), Identifier.of("42edit","shaders/post/antialias.json"),*/ ResourceLocation.withDefaultNamespace("creeper"), ResourceLocation.withDefaultNamespace("spider")};
+    public static final Identifier[] SUPER_SECRET_SETTING_PROGRAMS = new Identifier[]{/*Identifier.of("42edit","shaders/post/notch.json"), Identifier.of("42edit","shaders/post/fxaa.json"), Identifier.of("42edit","shaders/post/art.json"), Identifier.of("42edit","shaders/post/bumpy.json"), Identifier.of("42edit","shaders/post/blobs2.json"), Identifier.of("42edit","shaders/post/pencil.json"), Identifier.of("42edit","shaders/post/color_convolve.json"), Identifier.of("42edit","shaders/post/deconverge.json"), Identifier.of("42edit","shaders/post/flip.json"),*/ Identifier.withDefaultNamespace("invert"),/* Identifier.of("42edit","shaders/post/ntsc.json"), Identifier.of("42edit","shaders/post/outline.json"), Identifier.of("42edit","shaders/post/phosphor.json"), Identifier.of("42edit","shaders/post/scan_pincushion.json"), Identifier.of("42edit","shaders/post/sobel.json"), Identifier.of("42edit","shaders/post/bits.json"), Identifier.of("42edit","shaders/post/desaturate.json"), Identifier.of("42edit","shaders/post/green.json"), Identifier.of("42edit","shaders/post/blur.json"), Identifier.of("42edit","shaders/post/wobble.json"), Identifier.of("42edit","shaders/post/blobs.json"), Identifier.of("42edit","shaders/post/antialias.json"),*/ Identifier.withDefaultNamespace("creeper"), Identifier.withDefaultNamespace("spider")};
     private static int superSecretSettingIndex = SUPER_SECRET_SETTING_PROGRAMS.length;
-    private static final ResourceLocation[] SECRETSOUNDS = getSecretSounds();
-    private static ResourceLocation[] getSecretSounds() {
-        Set<ResourceLocation> sounds = BuiltInRegistries.SOUND_EVENT.keySet();
-        List<ResourceLocation> valid = Lists.newArrayList();
-        for(ResourceLocation sound: sounds) {
+    private static final Identifier[] SECRETSOUNDS = getSecretSounds();
+    private static Identifier[] getSecretSounds() {
+        Set<Identifier> sounds = BuiltInRegistries.SOUND_EVENT.keySet();
+        List<Identifier> valid = Lists.newArrayList();
+        for(Identifier sound: sounds) {
             if(sound.getPath().contains("entity.") || sound.getPath().contains("block.") || sound.getPath().contains("weather.") || sound.getPath().contains("item."))
                 valid.add(sound);
         }
-        return valid.toArray(new ResourceLocation[0]);
+        return valid.toArray(new Identifier[0]);
     }
     private static void secretSound() {
         if(SECRETSOUNDS != null && SECRETSOUNDS.length > 0) {
-            final Minecraft client = Minecraft.getInstance();
             int i = randomInt(SECRETSOUNDS.length);
-            try {
-                client.player.playNotifySound(SoundEvent.createVariableRangeEvent(SECRETSOUNDS[i]), SoundSource.MASTER, 1f, .5f);
-            } catch(Exception ex) {}
+            BlackMagick.playClientSound(SECRETSOUNDS[i], 1f, .5f);
         }
     }
     public static void cycleSuperSecretSetting() {

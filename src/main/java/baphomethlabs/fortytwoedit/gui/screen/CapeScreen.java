@@ -7,17 +7,22 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
-import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.core.ClientAsset;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.PlayerModelType;
 import net.minecraft.world.entity.player.PlayerSkin;
 import org.joml.Quaternionf;
@@ -43,7 +48,7 @@ public class CapeScreen extends GenericScreen {
         this.addBackButton();
 
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("OptiFine [On]"),
-                Component.literal("OptiFine [Off]")).withInitialValue(FortytwoEdit.opticapesOn).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle OptiFine capes mode\n\nWhen on: you can see players' OptiFine capes"))).create(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT,
+                Component.literal("OptiFine [Off]"), FortytwoEdit.opticapesOn).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle OptiFine capes mode\n\nWhen on: you can see players' OptiFine capes"))).create(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
 
             FortytwoEdit.readOptions();
@@ -57,7 +62,7 @@ public class CapeScreen extends GenericScreen {
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Edit"), button -> this.btnEditCape()).bounds(x+20+80+WID_SPACE+60+WID_SPACE,y+ROW_HEIGHT*3+1,40,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Edit your OptiFine cape (requires donation to OptiFine)")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Custom [On]"),
-                Component.literal("Custom [Off]")).withInitialValue(FortytwoEdit.showClientCape).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle custom capes mode\n\nWhen on: change your cape (only you can see this)"))).create(x+20,y+ROW_HEIGHT*4+1,80,WID_HEIGHT,
+                Component.literal("Custom [Off]"), FortytwoEdit.showClientCape).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle custom capes mode\n\nWhen on: change your cape (only you can see this)"))).create(x+20,y+ROW_HEIGHT*4+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
 
             FortytwoEdit.readOptions();
@@ -78,13 +83,13 @@ public class CapeScreen extends GenericScreen {
             .setTooltip(Tooltip.create(Component.nullToEmpty("Cycle custom cape right")));
 
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Custom [On]"),
-                Component.literal("Custom [Off]")).withInitialValue(FortytwoEdit.showClientSkin).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle custom skin mode\n\nWhen on: change your skin (only you can see this)"))).create(x+20,y+ROW_HEIGHT*6+1,80,WID_HEIGHT,
+                Component.literal("Custom [Off]"), FortytwoEdit.showClientSkin).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle custom skin mode\n\nWhen on: change your skin (only you can see this)"))).create(x+20,y+ROW_HEIGHT*6+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.showClientSkin = (boolean)trackOutput;
             unsel();
         }));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("3px"),
-                Component.literal("4px")).withInitialValue(FortytwoEdit.clientSkinSlim).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle skin model between wide/slim (requires custom skin mode)"))).create(x+20+80+WID_SPACE,y+ROW_HEIGHT*6+1,30,WID_HEIGHT,
+                Component.literal("4px"), FortytwoEdit.clientSkinSlim).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle skin model between wide/slim (requires custom skin mode)"))).create(x+20+80+WID_SPACE,y+ROW_HEIGHT*6+1,30,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.clientSkinSlim = (boolean)trackOutput;
             unsel();
@@ -140,7 +145,7 @@ public class CapeScreen extends GenericScreen {
         //cape
         if(FortytwoEdit.opticapesWorking && FortytwoEdit.opticapesOn) {
             if(FortytwoEdit.capeCached(name)) {
-                ResourceLocation id = ResourceLocation.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
+                Identifier id = Identifier.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
                 cape = new ClientAsset.ResourceTexture(id, id);
                 elytra = cape;
                 changed = true;
@@ -208,39 +213,44 @@ public class CapeScreen extends GenericScreen {
 
     /**
      * Modified from {@link net.minecraft.client.gui.screens.inventory.InventoryScreen#renderEntityInInventoryFollowsMouse}
-     * Replace both 180.0F occurances with 0.0F to flip player backwards.
-     * Change `renderEntityInInventory(` to `InventoryScreen.renderEntityInInventory(`
+     * Replace y body rot 180.0F occurances with 0.0F to flip player backwards. Do not replace 180.0 in quaternion
+     * Copy referenced `extractRenderState` method here
      */
     private static void drawPlayer(GuiGraphics guiGraphics, int i, int j, int k, int l, int m, float f, float g, float h, LivingEntity livingEntity) {
 		float n = (i + k) / 2.0F;
 		float o = (j + l) / 2.0F;
-		guiGraphics.enableScissor(i, j, k, l);
 		float p = (float)Math.atan((n - g) / 40.0F);
 		float q = (float)Math.atan((o - h) / 40.0F);
 		Quaternionf quaternionf = new Quaternionf().rotateZ((float) Math.PI);
 		Quaternionf quaternionf2 = new Quaternionf().rotateX(q * 20.0F * (float) (Math.PI / 180.0));
 		quaternionf.mul(quaternionf2);
-		float r = livingEntity.yBodyRot;
-		float s = livingEntity.getYRot();
-		float t = livingEntity.getXRot();
-		float u = livingEntity.yHeadRotO;
-		float v = livingEntity.yHeadRot;
-		livingEntity.yBodyRot = 0.0F + p * 20.0F;
-		livingEntity.setYRot(0.0F + p * 40.0F);
-		livingEntity.setXRot(-q * 20.0F);
-		livingEntity.yHeadRot = livingEntity.getYRot();
-		livingEntity.yHeadRotO = livingEntity.getYRot();
-		float w = livingEntity.getScale();
-		Vector3f vector3f = new Vector3f(0.0F, livingEntity.getBbHeight() / 2.0F + f * w, 0.0F);
-		float x = m / w;
-		InventoryScreen.renderEntityInInventory(guiGraphics, i, j, k, l, x, vector3f, quaternionf, quaternionf2, livingEntity);
-		livingEntity.yBodyRot = r;
-		livingEntity.setYRot(s);
-		livingEntity.setXRot(t);
-		livingEntity.yHeadRotO = u;
-		livingEntity.yHeadRot = v;
-		guiGraphics.disableScissor();
+		EntityRenderState entityRenderState = extractRenderState(livingEntity);
+		if (entityRenderState instanceof LivingEntityRenderState livingEntityRenderState) {
+			livingEntityRenderState.bodyRot = 0.0F + p * 20.0F;
+			livingEntityRenderState.yRot = p * 20.0F;
+			if (livingEntityRenderState.pose != Pose.FALL_FLYING) {
+				livingEntityRenderState.xRot = -q * 20.0F;
+			} else {
+				livingEntityRenderState.xRot = 0.0F;
+			}
+
+			livingEntityRenderState.boundingBoxWidth = livingEntityRenderState.boundingBoxWidth / livingEntityRenderState.scale;
+			livingEntityRenderState.boundingBoxHeight = livingEntityRenderState.boundingBoxHeight / livingEntityRenderState.scale;
+			livingEntityRenderState.scale = 1.0F;
+		}
+
+		Vector3f vector3f = new Vector3f(0.0F, entityRenderState.boundingBoxHeight / 2.0F + f, 0.0F);
+		guiGraphics.submitEntityRenderState(entityRenderState, m, vector3f, quaternionf, quaternionf2, i, j, k, l);
     }
+	private static EntityRenderState extractRenderState(LivingEntity livingEntity) {
+		EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+		EntityRenderer<? super LivingEntity, ?> entityRenderer = entityRenderDispatcher.getRenderer(livingEntity);
+		EntityRenderState entityRenderState = entityRenderer.createRenderState(livingEntity, 1.0F);
+		entityRenderState.lightCoords = 15728880;
+		entityRenderState.shadowPieces.clear();
+		entityRenderState.outlineColor = 0;
+		return entityRenderState;
+	}
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {

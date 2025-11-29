@@ -17,7 +17,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -72,7 +72,7 @@ public class PathHelper {
         registerPathInfo("components.minecraft:attribute_modifiers", PathInfo.create(DataType.ListUnordered.of(
             PathInfo.create(DataType.CompoundStructured.of(Map.of(
                 "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_ATTRIBUTE)).getter(),
-                "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("minecraft:armor.body","minecraft:armor.boots","minecraft:armor.chestplate","minecraft:armor.helmet","minecraft:armor.leggings",Item.BASE_ATTACK_DAMAGE_ID.toString(),Item.BASE_ATTACK_SPEED_ID.toString()))).setInfo("Unique resource location used to update modifiers").getter(),
+                "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("minecraft:armor.body","minecraft:armor.boots","minecraft:armor.chestplate","minecraft:armor.helmet","minecraft:armor.leggings",Item.BASE_ATTACK_DAMAGE_ID.toString(),Item.BASE_ATTACK_SPEED_ID.toString()))).setInfo("Unique identifier used to update modifiers").getter(),
                 "amount", PathInfo.create(DataType.ElementLiteral.of(NbtType.DOUBLE)).getter(),
                 "operation", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("add_value","add_multiplied_base","add_multiplied_total"))).setInfo("add_value: base + amount1 + amount2\n\nadd_multiplied_base: base * (1 + amount1 + amount2)\n\nadd_multiplied_total: base * (1 + amount1) * (1 + amount2)").getter()
                 ),Map.of(
@@ -241,14 +241,14 @@ public class PathHelper {
             ),Map.of(
             "equip_sound", PathInfo.copyOf("sound_event_or_definition").setUnsetInfo(StringTag.valueOf("minecraft:item.armor.equip_generic")).getter(),
             "shearing_sound", PathInfo.copyOf("sound_event_or_definition").setUnsetInfo(StringTag.valueOf("minecraft:item.shears.snip")).getter(),
-            "asset_id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_EQUIPMENT)).setInfo("Resource location of an equipment model at `assets/<namespace>/equipment/<id>`").getter(),
+            "asset_id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_EQUIPMENT)).setInfo("Identifier of an equipment model at `assets/<namespace>/equipment/<id>`").getter(),
             "allowed_entities", PathInfo.copyOf("entity_id_tag_or_list").setUnsetInfo("Applies to all entity types").getter(),
             "can_be_sheared", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).getter(),
             "dispensable", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter(),
             "swappable", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("If the item can be equipped when interacting").setUnsetInfo(true).getter(),
             "damage_on_hurt", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter(),
             "equip_on_interact", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("If the item can be equipped on a mob when interacting").setUnsetInfo(true).getter(),
-            "camera_overlay", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Resource location of a texture at `assets/<namespace>/textures/<id>`").getter()
+            "camera_overlay", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Identifier of a texture at `assets/<namespace>/textures/<id>`").getter()
         ))).setIcon(Items.DIAMOND_CHESTPLATE));
 
         registerPathInfo("components.minecraft:firework_explosion", PathInfo.create(DataType.CompoundStructured.of(Map.of(
@@ -356,7 +356,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:max_stack_size", PathInfo.copyOf("item_count").setInfo("Integer 1-99").setIcon(Items.STONE));
 
-        registerPathInfo("components.minecraft:note_block_sound", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_SOUND_EVENT)).setInfo("Resource location of a sound event").setIcon(Items.PLAYER_HEAD));
+        registerPathInfo("components.minecraft:note_block_sound", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_SOUND_EVENT)).setInfo("Identifier of a sound event").setIcon(Items.PLAYER_HEAD));
 
         registerPathInfo("components.minecraft:ominous_bottle_amplifier", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0","1","2","3","4"))).setIcon(Items.OMINOUS_BOTTLE));
 
@@ -394,9 +394,9 @@ public class PathHelper {
                         "signature", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).getter()
                     ))).getter()
                 )).setInfo("List with a single compound entry for resolved skin information").getter(),
-                "texture", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Resource location of a texture at `assets/<namespace>/textures/<id>`").getter(),
-                "cape", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Resource location of a texture at `assets/<namespace>/textures/<id>`").getter(),
-                "elytra", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Resource location of a texture at `assets/<namespace>/textures/<id>`").getter(),
+                "texture", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Identifier of a texture at `assets/<namespace>/textures/<id>`").getter(),
+                "cape", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Identifier of a texture at `assets/<namespace>/textures/<id>`").getter(),
+                "elytra", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.ASSETS_TEXTURES)).setInfo("Identifier of a texture at `assets/<namespace>/textures/<id>`").getter(),
                 "model", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("wide","slim"))).getter()
             )),
             DataType.ElementLiteral.of(NbtType.STRING)
@@ -456,7 +456,7 @@ public class PathHelper {
             )).getter()
         ))).setIcon(Items.COMMAND_BLOCK));
 
-        registerPathInfo("components.minecraft:tooltip_style", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Resource location to reference tooltip sprites at `assets/<namespace>/textures/gui/sprites/tooltip/<id>_background` and `assets/<namespace>/textures/gui/sprites/tooltip/<id>_frame`").setIcon(Items.COMMAND_BLOCK));
+        registerPathInfo("components.minecraft:tooltip_style", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Identifier to reference tooltip sprites at `assets/<namespace>/textures/gui/sprites/tooltip/<id>_background` and `assets/<namespace>/textures/gui/sprites/tooltip/<id>_frame`").setIcon(Items.COMMAND_BLOCK));
 
         registerPathInfo("components.minecraft:trim", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
             "pattern", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_TRIM_PATTERN)).getter(),
@@ -468,7 +468,7 @@ public class PathHelper {
         registerPathInfo("components.minecraft:use_cooldown", PathInfo.create(DataType.CompoundStructured.of(Map.of(
             "seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).getter()
             ),Map.of(
-            "cooldown_group", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Resource location of an item ID or a custom identifier").setUnsetInfo("Current item ID is used").getter()
+            "cooldown_group", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Identifier of an item ID or a custom identifier").setUnsetInfo("Current item ID is used").getter()
         ))).setIcon(Items.ENDER_PEARL));
 
         registerPathInfo("components.minecraft:use_remainder", PathInfo.copyOf("item_stack"));
@@ -575,7 +575,7 @@ public class PathHelper {
                 "text", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'text' type - string text").getter(),
                 "keybind", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_KEYBIND)).setInfo("For 'keybind' type - string keybinding ID").getter(),
                 "translate", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_TRANSLATION_KEY)).setInfo("For 'translatable' type - string translation key").getter(),
-                "sprite", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_SPRITE)).setInfo("For 'object' type - Resource location of a sprite in 'atlas'").getter(),
+                "sprite", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_SPRITE)).setInfo("For 'object' type - Identifier of a sprite in 'atlas'").getter(),
                 "score", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
                     "name", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("@s","*",FortytwoEdit.USERNAME))).setInfo("Name, selector, or * to show each player their own score").getter(),
                     "objective", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Scoreboard objective").getter()
@@ -608,11 +608,11 @@ public class PathHelper {
                     ).setUnsetInfo("Inherit from parent text").setFlag(PathFlag.TEXT_COMPONENT_FIELD_COLOR).getter()),
                 Map.entry("shadow_color", PathInfo.copyOf("color_argb_int_or_list").getter()),
                 Map.entry("font", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.ASSETS_FONT))
-                    .setInfo(Component.empty().append("Resource location of a font at `assets/<namespace>/font/<id>`\n\nVanilla fonts:")
-                    .append(Component.empty().append("\n  default - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(ResourceLocation.withDefaultNamespace("default"))))))
-                    .append(Component.empty().append("\n  uniform - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(ResourceLocation.withDefaultNamespace("uniform"))))))
-                    .append(Component.empty().append("\n  alt - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(ResourceLocation.withDefaultNamespace("alt"))))))
-                    .append(Component.empty().append("\n  illageralt - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(ResourceLocation.withDefaultNamespace("illageralt"))))))
+                    .setInfo(Component.empty().append("Identifier of a font at `assets/<namespace>/font/<id>`\n\nVanilla fonts:")
+                    .append(Component.empty().append("\n  default - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(Identifier.withDefaultNamespace("default"))))))
+                    .append(Component.empty().append("\n  uniform - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(Identifier.withDefaultNamespace("uniform"))))))
+                    .append(Component.empty().append("\n  alt - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(Identifier.withDefaultNamespace("alt"))))))
+                    .append(Component.empty().append("\n  illageralt - ").append(Component.empty().append("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789").withStyle(Style.EMPTY.withFont(new FontDescription.Resource(Identifier.withDefaultNamespace("illageralt"))))))
                     ).setUnsetInfo("Inherit from parent text").getter()),
                 Map.entry("bold", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN))
                     .setInfo(Component.empty().append(Component.empty().append("true").withStyle(ChatFormatting.BOLD)).append("\nfalse")).setUnsetInfo("Inherit from parent text").getter()),
@@ -665,8 +665,8 @@ public class PathHelper {
                             ).setInfo("A single dialog ID, tag, or inline definition, or a list containing only dialog IDs or only inline definitions").getter())
                         )),
                         DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_DIALOG)
-                    ).setInfo("For 'show_dialog' action - resource location of dialog to open, or an inline dialog definition").getter(),
-                    "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'custom' action - resource location to send to server").getter(),
+                    ).setInfo("For 'show_dialog' action - identifier of dialog to open, or an inline dialog definition").getter(),
+                    "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'custom' action - identifier to send to server").getter(),
                     "payload", PathInfo.copyOf(PathInfo.ANY.getter()).setInfo("For 'custom' action - optional NBT to send to server").getter(),
                     "page", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).setInfo("For 'change_page' action - written book page to jump to").getter()
                 ))).setInfo("Action when clicked (only works in chat and written books)").getter()),
@@ -686,12 +686,12 @@ public class PathHelper {
                     PathInfoGetter.of("text_component")
                 )).setInfo("For 'translatable' type - list of text components for translate arguments").getter()),
 
-                Map.entry("atlas", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_ATLAS)).setInfo("For 'object' type - Resource location of a sprite atlas").setUnsetInfo(StringTag.valueOf("minecraft:blocks")).getter()),
+                Map.entry("atlas", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_ATLAS)).setInfo("For 'object' type - Identifier of a sprite atlas").setUnsetInfo(StringTag.valueOf("minecraft:blocks")).getter()),
 
                 Map.entry("separator", PathInfo.copyOf("text_component").setInfo("For 'selector' and 'nbt' types - text components to display between entries").setUnsetInfo(StringTag.valueOf(", ")).getter()),
 
                 Map.entry("source", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("block","entity","storage"))).setInfo("For 'nbt' type - data source to use. If unset, chooses based on the order:\n  entity\n  block\n  storage").getter()),
-                Map.entry("storage", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("foo:bar"))).setInfo("For 'nbt' type - resource location of storage to read data of").getter()),
+                Map.entry("storage", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("foo:bar"))).setInfo("For 'nbt' type - identifier of storage to read data of").getter()),
                 Map.entry("block", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("0 0 0","~ ~ ~","^ ^ ^"))).setInfo("For 'nbt' type - coordinates of block to read data of (can be absolute, relative, or local)").getter()),
                 Map.entry("entity", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("@s","@p","@r","@a","@e"))).setInfo("For 'nbt' type - entity selector to read data of").getter()),
                 Map.entry("interpret", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).setInfo("For 'nbt' type - if the data should be interpreted as a text component instead of displaying the NBT directly").getter())
@@ -1516,7 +1516,7 @@ public class PathHelper {
             public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
                 if(key.startsWith("!")) {
                     if(this.allowRemoved) {
-                        ResourceLocation componentId = BlackMagick.identifierOrNull(key.substring(1));
+                        Identifier componentId = BlackMagick.identifierOrNull(key.substring(1));
                         if(componentId != null && testRegisteredPathInfo("components."+componentId.toString())) {
                             ItemStack icon = getRegisteredPathInfo("components."+componentId.toString()).getIcon();
                             return PathInfo.create(DataType.Unit.create()).setInfo("Removed default component").setIcon(icon);
@@ -1526,7 +1526,7 @@ public class PathHelper {
                     }
                 }
                 else {
-                    ResourceLocation componentId = BlackMagick.identifierOrNull(key);
+                    Identifier componentId = BlackMagick.identifierOrNull(key);
                     if(componentId != null && testRegisteredPathInfo("components."+componentId.toString()))
                         return getRegisteredPathInfo("components."+componentId.toString());
                 }
@@ -1557,7 +1557,7 @@ public class PathHelper {
             }
     
             public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
-                ResourceLocation componentId = BlackMagick.identifierOrNull(key);
+                Identifier componentId = BlackMagick.identifierOrNull(key);
                 if(componentId != null && SuggestionHelper.DATA_ENCHANTMENT.getList().contains(componentId.toString())) {
                     int max = SuggestionHelper.getEnchantmentMaxLevel(key);
                     if(max>0)

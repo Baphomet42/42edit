@@ -20,7 +20,7 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
@@ -31,8 +31,8 @@ import baphomethlabs.fortytwoedit.gui.widget.WidgetUtil;
 
 public abstract class GenericScreen extends Screen {
 
-    protected static final ResourceLocation TEXTURE_GENERIC = ResourceLocation.fromNamespaceAndPath("42edit","gui/generic");
-    protected static final ResourceLocation TEXTURE_MENU_BAR = ResourceLocation.fromNamespaceAndPath("42edit","gui/menu_bar");
+    protected static final Identifier TEXTURE_GENERIC = Identifier.fromNamespaceAndPath("42edit","gui/generic");
+    protected static final Identifier TEXTURE_MENU_BAR = Identifier.fromNamespaceAndPath("42edit","gui/menu_bar");
     protected int backgroundWidth = 12*20;
     protected int backgroundHeight = 9*22;
     protected int x;// to_do rename to leftPos and topPos (see AbstractContainerScreen)
@@ -136,7 +136,7 @@ public abstract class GenericScreen extends Screen {
         return true;
     }
 
-    protected ResourceLocation getBackgroundTexture() {
+    protected Identifier getBackgroundTexture() {
         return TEXTURE_GENERIC;
     }
 
@@ -170,7 +170,7 @@ public abstract class GenericScreen extends Screen {
         this.renderTransparentBackground(context);
         this.renderBehindBackgroundTexture(context);
 
-        ResourceLocation backgroundTexture = getBackgroundTexture();
+        Identifier backgroundTexture = getBackgroundTexture();
         if(backgroundTexture != null)
 		    context.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, this.x, this.y, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
     }

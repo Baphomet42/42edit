@@ -14,6 +14,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.serialization.DynamicOps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.PlayerSkinRenderCache.RenderInfo;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.arguments.NbtPathArgument.NbtPath;
@@ -38,7 +39,9 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
@@ -61,7 +64,8 @@ public class BlackMagick {
      */
     public static void setItemMain(ItemStack item) {
         final Minecraft client = Minecraft.getInstance();
-        setItem(item,client.player.getInventory().getSelectedSlot(),36+client.player.getInventory().getSelectedSlot());
+        if(client.player != null)
+            setItem(item,client.player.getInventory().getSelectedSlot(),36+client.player.getInventory().getSelectedSlot());
     }
 
     /**
@@ -90,7 +94,7 @@ public class BlackMagick {
      */
     public static void setItem(ItemStack itemInput, int invSlot, int creativeSlot) {
         final Minecraft client = Minecraft.getInstance();
-        if(client.player.getAbilities().instabuild) {
+        if(client.player != null && client.player.getAbilities().instabuild) {
 
             ItemStack item = itemInput == null ? ItemStack.EMPTY : itemInput.copy();
 
@@ -458,11 +462,11 @@ public class BlackMagick {
             DynamicOps<Tag> dynamicOps = BlackMagick.getOps();
             return comps.stream().flatMap(component -> {
                 DataComponentType<?> dataComponentType = component.type();
-                ResourceLocation resourceLocation = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(dataComponentType);
+                Identifier componentIdentifier = BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(dataComponentType);
                 Optional<Tag> optional = component.encodeValue(dynamicOps).result();
-                if (resourceLocation == null || !optional.isPresent())
+                if (componentIdentifier == null || !optional.isPresent())
                     return Stream.empty();
-                return Stream.of("\"" + resourceLocation.toString() + "\":" + BlackMagick.nbtToSnbt(optional.get()));
+                return Stream.of("\"" + componentIdentifier.toString() + "\":" + BlackMagick.nbtToSnbt(optional.get()));
             }).collect(Collectors.joining(String.valueOf(',')));
         }
         return "";
@@ -733,9 +737,9 @@ public class BlackMagick {
         return newKey;
     }
 
-    public static ResourceLocation identifierOrNull(String id) {
+    public static Identifier identifierOrNull(String id) {
         try {
-            return ResourceLocation.parse(id);
+            return Identifier.parse(id);
         }
         catch(Exception ex) {}
         return null;
@@ -1153,6 +1157,18 @@ public class BlackMagick {
             }
         }
         return null;
+    }
+
+    public static void playClientSound(Identifier soundIdentifier, float pitch, float volume) {
+        final Minecraft minecraft = Minecraft.getInstance();
+        if(minecraft.player != null && minecraft.player.level() != null) {
+            try {
+                LocalPlayer player = minecraft.player;
+                player.level().playLocalSound(player.getX(), player.getY(), player.getZ(),
+                    SoundEvent.createVariableRangeEvent(soundIdentifier), SoundSource.MASTER, pitch, volume, false);
+            }
+            catch(Exception ex) {}
+        }
     }
 
     /**

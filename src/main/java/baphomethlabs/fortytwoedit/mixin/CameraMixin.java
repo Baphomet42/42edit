@@ -11,7 +11,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 
 @Mixin(Camera.class)
 public abstract class CameraMixin {
@@ -37,7 +37,7 @@ public abstract class CameraMixin {
     private float eyeHeightOld;
 
     @Inject(method = "setup", at = @At(value = "RETURN"), cancellable = true)
-    private void injectSetup(BlockGetter area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo c) {
+    private void injectSetup(Level level, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo c) {
         if(FortytwoEdit.isFreeLooking) {
             this.setRotation(FortytwoEdit.cameraRotation[0], FortytwoEdit.cameraRotation[1]);
             this.setPosition(

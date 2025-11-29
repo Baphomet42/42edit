@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.HotbarManager;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -38,15 +37,13 @@ import net.minecraft.nbt.LongArrayTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -141,7 +138,7 @@ public class ItemBuilderScreen extends GenericScreen {
         +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlN"
         +"LSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MjY0ODZmNDI0ODljZWYwMmM5ZTk4ZGQ4Y"
         +"mU1YTNmMzhlODc5MTQ3NTQzMjZlNzdjODM3YzFiMmJjYmE2NSINCiAgICB9DQogIH0NCn0=\"}]}}}")};
-    protected static final ResourceLocation DELETE_ITEM_OVERLAY = ResourceLocation.withDefaultNamespace("container/beacon/cancel");
+    protected static final Identifier DELETE_ITEM_OVERLAY = Identifier.withDefaultNamespace("container/beacon/cancel");
     protected static final int DELETE_ITEM_OVERLAY_SIZE = 16;
     private ArmorStand renderArmorStand;
     private ArmorStand renderArmorPose;
@@ -1395,29 +1392,6 @@ public class ItemBuilderScreen extends GenericScreen {
     //     }
     // }
 
-    /**
-     * Modified from {@link net.minecraft.client.gui.screens.inventory.BookViewScreen#getClickedComponentStyleAt}
-     */
-    private Style getBookTextStyleAt(List<FormattedCharSequence> page, int bookRenderX, int bookRenderY, double x, double y) {
-        if(page.isEmpty()) {
-            return null;
-        }
-        int i = Mth.floor(x - (double)bookRenderX - 36.0);
-        int j = Mth.floor(y - 2.0 - 30.0 - (double)bookRenderY);
-        if(i < 0 || j < 0) {
-            return null;
-        }
-        int k = Math.min(128 / this.font.lineHeight, page.size());
-        if(i <= 114 && j < this.minecraft.font.lineHeight * k + k) {
-            int l = j / this.minecraft.font.lineHeight;
-            if(l >= 0 && l < page.size()) {
-                FormattedCharSequence orderedText = page.get(l);
-                return this.minecraft.font.getSplitter().componentStyleAtWidth(orderedText, i);
-            }
-        }
-        return null;
-    }
-
     private void updateInvTab() {
         boolean changed = false;
         for(int i=0; i<cacheInv.length; i++) {
@@ -1997,9 +1971,9 @@ public class ItemBuilderScreen extends GenericScreen {
                     String inp = TAB_WIDGETS_SCROLL.get(i).get(j).btn()[0];
                     if(!inp.trim().equals("")) {
                         String sound = inp.trim();
-                        ResourceLocation soundId = BlackMagick.identifierOrNull(sound);
+                        Identifier soundId = BlackMagick.identifierOrNull(sound);
                         if(soundId != null)
-                            minecraft.player.playNotifySound(SoundEvent.createVariableRangeEvent(soundId), SoundSource.MASTER, 1, 1);
+                            BlackMagick.playClientSound(soundId, 1, 1);
                     }
                 }, SuggestionHelper.REGISTRY_SOUND_EVENT.getArray(),true));
             }
@@ -2010,7 +1984,7 @@ public class ItemBuilderScreen extends GenericScreen {
                     String inp = TAB_WIDGETS_SCROLL.get(i).get(j-1).btn()[0];
                     if(!inp.trim().equals("")) {
                         String sound = inp.trim();
-                        ResourceLocation soundId = BlackMagick.identifierOrNull(sound);
+                        Identifier soundId = BlackMagick.identifierOrNull(sound);
                         if(soundId != null) {
                             String soundDisplay = soundId.getNamespace().equals("minecraft") ? soundId.getPath() : soundId.toString();
                             ItemStack item = BlackMagick.itemFromString(
@@ -4081,7 +4055,7 @@ public class ItemBuilderScreen extends GenericScreen {
                                             }
                                         }
                                         try {
-                                            ResourceLocation.parse(idValue);
+                                            Identifier.parse(idValue);
                                         }
                                         catch(Exception ex) {
                                             setErrorMsg(ex.getMessage());
@@ -5369,14 +5343,14 @@ public class ItemBuilderScreen extends GenericScreen {
 
     class RowWidgetInvRow extends RowWidget {
 
-        private static final ResourceLocation[] PLAYER_ARMOR_SPRITES = new ResourceLocation[]{
+        private static final Identifier[] PLAYER_ARMOR_SPRITES = new Identifier[]{
             ItemSlotButton.SPRITE_FEET,
             ItemSlotButton.SPRITE_LEGS,
             ItemSlotButton.SPRITE_CHEST,
             ItemSlotButton.SPRITE_HEAD,
             ItemSlotButton.SPRITE_OFFHAND
         };
-        private static final ResourceLocation[] ARMOR_STAND_SPRITES = new ResourceLocation[]{
+        private static final Identifier[] ARMOR_STAND_SPRITES = new Identifier[]{
             ItemSlotButton.SPRITE_FEET,
             ItemSlotButton.SPRITE_LEGS,
             ItemSlotButton.SPRITE_CHEST,
@@ -5386,7 +5360,7 @@ public class ItemBuilderScreen extends GenericScreen {
             ItemSlotButton.SPRITE_MAINHAND,
             ItemSlotButton.SPRITE_OFFHAND
         };
-        private static final ResourceLocation SEL_SLOT = ResourceLocation.parse("hud/hotbar_selection");
+        private static final Identifier SEL_SLOT = Identifier.parse("hud/hotbar_selection");
         private boolean renderHotbarSel = false;
 
         /**
@@ -5449,7 +5423,7 @@ public class ItemBuilderScreen extends GenericScreen {
          * @param stacks
          * @param slotSprites
          */
-        public RowWidgetInvRow(ItemStack[] stacks, ResourceLocation[] slotSprites) {
+        public RowWidgetInvRow(ItemStack[] stacks, Identifier[] slotSprites) {
             this.btns = new Button[stacks.length];
             this.btnX = new int[btns.length];
 
@@ -5892,17 +5866,18 @@ public class ItemBuilderScreen extends GenericScreen {
                 txtFormat.render(context, mouseX, mouseY, delta);
 
                 if(textComponentPreviewBook) {
-                    // Modified from {@link net.minecraft.client.gui.screens.inventory.BookViewScreen#render}
-                    FormattedText stringVisitable = textComponentPreview;
-                    List<FormattedCharSequence> page = this.font.split(stringVisitable, 114);
-                    int l = Math.min(128 / this.font.lineHeight, page.size());
-                    for(int m = 0; m < l; m++) {
-                        FormattedCharSequence orderedText = page.get(m);
-                        context.drawString(this.font, orderedText, x + bookX + 36, y + bookY + 32 + m * this.font.lineHeight, 0xFF000000, false);
-                    }
-                    Style style = this.getBookTextStyleAt(page, x + bookX, y + bookY, mouseX, mouseY);
-                    if(style != null) {
-                        context.renderComponentHoverEffect(this.font, style, mouseX, mouseY);
+                    // Modified from {@link net.minecraft.client.gui.screens.inventory.BookViewScreen#visitText}
+                    FormattedText formattedText = ComponentUtils.mergeStyles(textComponentPreview, Style.EMPTY.withoutShadow().withColor(-16777216));
+                    List<FormattedCharSequence> cachedPageComponents = this.font.split(formattedText, 114);
+
+                    int i = x + bookX;
+                    int j = y + bookY;
+
+                    int k = Math.min(128 / 9, cachedPageComponents.size());
+
+                    for (int l = 0; l < k; l++) {
+                        FormattedCharSequence formattedCharSequence = (FormattedCharSequence)cachedPageComponents.get(l);
+                        context.textRenderer(GuiGraphics.HoveredTextEffects.TOOLTIP_AND_CURSOR).accept(i + 36, j + 30 + l * 9, formattedCharSequence);
                     }
                 }
                 else
@@ -5935,7 +5910,7 @@ public class ItemBuilderScreen extends GenericScreen {
     }
 
     @Override
-    protected ResourceLocation getBackgroundTexture() {
+    protected Identifier getBackgroundTexture() {
         return TEXTURE_MENU_BAR;
     }
 
@@ -5946,13 +5921,13 @@ public class ItemBuilderScreen extends GenericScreen {
     }
 
     @Override
-    public void resize(Minecraft client, int width, int height) {
+    public void resize(int width, int height) {
         if(!pauseSaveScroll && tabWidget != null) {
             tabScroll[tab] = tabWidget.scrollAmount();
             pauseSaveScroll = true;
         }
         resetSuggs();
-        super.resize(client, width, height);
+        super.resize(width, height);
         setErrorMsg(inpError);
     }
 

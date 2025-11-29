@@ -14,7 +14,7 @@ import net.minecraft.client.gui.contextualbar.LocatorBarRenderer;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.resources.WaypointStyle;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -30,7 +30,7 @@ public abstract class LocatorBarRendererMixin {
     private static boolean isUpsideDown = false;
     private static int size = 0;
 
-    @Inject(method = "method_70870", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIIII)V"), cancellable = true)
+    @Inject(method = "method_70870", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"), cancellable = true)
     public void injectRender(Entity entity, Level level, PartialTickSupplier partialTickSupplier, GuiGraphics guiGraphics, int i, TrackedWaypoint trackedWaypoint, CallbackInfo ci) {
 
         playerInfo = null;
@@ -53,10 +53,10 @@ public abstract class LocatorBarRendererMixin {
 
     }
 
-	@Redirect(method = "method_70870", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIIII)V"))
-	private void redirectBlitSprite(GuiGraphics guiGraphics, RenderPipeline renderPipeline, ResourceLocation resourceLocation, int i, int j, int k, int l, int m) {
+	@Redirect(method = "method_70870", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
+	private void redirectBlitSprite(GuiGraphics guiGraphics, RenderPipeline renderPipeline, Identifier identifier, int i, int j, int k, int l, int m) {
         if(playerInfo == null)
-            guiGraphics.blitSprite(renderPipeline, resourceLocation, i, j, k, l, m);
+            guiGraphics.blitSprite(renderPipeline, identifier, i, j, k, l, m);
         else {
             if(FortytwoEdit.mixinLocatorBarColor)
                 guiGraphics.fill(i-size, j-size, i+k+size, j+k+size, m);

@@ -3,7 +3,7 @@ package baphomethlabs.fortytwoedit.mixin;
 import java.util.Map;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
@@ -11,6 +11,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface TextureAtlasAccessor {
 
 	@Accessor("texturesByName")
-	Map<ResourceLocation, TextureAtlasSprite> getTexturesByName();
+	Map<Identifier, TextureAtlasSprite> getTexturesByName();
 
 }

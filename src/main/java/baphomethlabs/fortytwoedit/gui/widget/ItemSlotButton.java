@@ -5,34 +5,34 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemStack;
 
-public class ItemSlotButton extends Button {
+public class ItemSlotButton extends Button.Plain {
 
-    public static final ResourceLocation SPRITE_SLOT = ResourceLocation.withDefaultNamespace("container/slot");
-    public static final ResourceLocation SPRITE_HIGHLIGHT_BACK = ResourceLocation.withDefaultNamespace("container/slot_highlight_back");
-    public static final ResourceLocation SPRITE_HIGHLIGHT_FRONT = ResourceLocation.withDefaultNamespace("container/slot_highlight_front");
-    public static final ResourceLocation SPRITE_WARNING = ResourceLocation.withDefaultNamespace("world_list/warning_highlighted");
-    public static final ResourceLocation SPRITE_ERROR = ResourceLocation.withDefaultNamespace("world_list/error_highlighted");
-    public static final ResourceLocation SPRITE_FEET = InventoryMenu.EMPTY_ARMOR_SLOT_BOOTS;
-    public static final ResourceLocation SPRITE_LEGS = InventoryMenu.EMPTY_ARMOR_SLOT_LEGGINGS;
-    public static final ResourceLocation SPRITE_CHEST = InventoryMenu.EMPTY_ARMOR_SLOT_CHESTPLATE;
-    public static final ResourceLocation SPRITE_HEAD = InventoryMenu.EMPTY_ARMOR_SLOT_HELMET;
-    public static final ResourceLocation SPRITE_BODY = ResourceLocation.withDefaultNamespace("container/slot/horse_armor");
-    public static final ResourceLocation SPRITE_SADDLE = ResourceLocation.withDefaultNamespace("container/slot/saddle");
-    public static final ResourceLocation SPRITE_OFFHAND = InventoryMenu.EMPTY_ARMOR_SLOT_SHIELD;
-    public static final ResourceLocation SPRITE_MAINHAND = ResourceLocation.withDefaultNamespace("container/slot/sword");
+    public static final Identifier SPRITE_SLOT = Identifier.withDefaultNamespace("container/slot");
+    public static final Identifier SPRITE_HIGHLIGHT_BACK = Identifier.withDefaultNamespace("container/slot_highlight_back");
+    public static final Identifier SPRITE_HIGHLIGHT_FRONT = Identifier.withDefaultNamespace("container/slot_highlight_front");
+    public static final Identifier SPRITE_WARNING = Identifier.withDefaultNamespace("world_list/warning_highlighted");
+    public static final Identifier SPRITE_ERROR = Identifier.withDefaultNamespace("world_list/error_highlighted");
+    public static final Identifier SPRITE_FEET = InventoryMenu.EMPTY_ARMOR_SLOT_BOOTS;
+    public static final Identifier SPRITE_LEGS = InventoryMenu.EMPTY_ARMOR_SLOT_LEGGINGS;
+    public static final Identifier SPRITE_CHEST = InventoryMenu.EMPTY_ARMOR_SLOT_CHESTPLATE;
+    public static final Identifier SPRITE_HEAD = InventoryMenu.EMPTY_ARMOR_SLOT_HELMET;
+    public static final Identifier SPRITE_BODY = Identifier.withDefaultNamespace("container/slot/horse_armor");
+    public static final Identifier SPRITE_SADDLE = Identifier.withDefaultNamespace("container/slot/saddle");
+    public static final Identifier SPRITE_OFFHAND = InventoryMenu.EMPTY_ARMOR_SLOT_SHIELD;
+    public static final Identifier SPRITE_MAINHAND = Identifier.withDefaultNamespace("container/slot/sword");
 
     public static final int SLOT_HEIGHT = 20;
 
     protected ItemStack item;
     protected boolean showSlot = true;
     protected ItemError error = ItemError.NONE;
-    protected ResourceLocation overlay = null;
+    protected Identifier overlay = null;
     protected int overlaySize = 16;
-    protected ResourceLocation emptySlotSprite = null;
+    protected Identifier emptySlotSprite = null;
     protected final int size;
     
     private static final int SIZE_ITEM = 16;
@@ -51,7 +51,7 @@ public class ItemSlotButton extends Button {
         this(0, 0, size, item, onPress);
     }
 
-    public ItemSlotButton addEmptySlotSprite(ResourceLocation sprite) {
+    public ItemSlotButton addEmptySlotSprite(Identifier sprite) {
         this.emptySlotSprite = sprite;
         return this;
     }
@@ -73,7 +73,7 @@ public class ItemSlotButton extends Button {
         this.overlay = null;
     }
 
-    public void setOverlay(ResourceLocation sprite, int overlaySize) {
+    public void setOverlay(Identifier sprite, int overlaySize) {
         this.overlay = sprite;
         this.overlaySize = overlaySize;
     }
@@ -95,8 +95,8 @@ public class ItemSlotButton extends Button {
     }
 
 	@Override
-	protected void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
-		super.renderWidget(context, mouseX, mouseY, delta);
+	protected void renderContents(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        super.renderContents(context, mouseX, mouseY, delta);
 
         if(this.showSlot)
             context.blitSprite(RenderPipelines.GUI_TEXTURED,

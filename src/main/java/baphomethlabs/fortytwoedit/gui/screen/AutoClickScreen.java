@@ -1,7 +1,6 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import baphomethlabs.fortytwoedit.FortytwoEdit;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
@@ -23,15 +22,15 @@ public class AutoClickScreen extends GenericScreen {
         FortytwoEdit.quickScreen = AutoClickScreen::new;
         this.addBackButton();
 
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Use [On]"), Component.literal("Use [Off]")).withInitialValue(FortytwoEdit.autoClick).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle use key in auto click mode\n\nWhen on: auto click mode will hold the use key down"))).create(x+20,y+ROW_HEIGHT*2+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Use [On]"), Component.literal("Use [Off]"), FortytwoEdit.autoClick).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle use key in auto click mode\n\nWhen on: auto click mode will hold the use key down"))).create(x+20,y+ROW_HEIGHT*2+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick((boolean)trackOutput,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
             unsel();
         }));
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Mine [On]"), Component.literal("Mine [Off]")).withInitialValue(FortytwoEdit.autoMine).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle mine key in auto click mode\n\nWhen on: auto click mode will hold the mine key down"))).create(x+20,y+ROW_HEIGHT*3+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Mine [On]"), Component.literal("Mine [Off]"), FortytwoEdit.autoMine).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle mine key in auto click mode\n\nWhen on: auto click mode will hold the mine key down"))).create(x+20,y+ROW_HEIGHT*3+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,(boolean)trackOutput,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
             unsel();
         }));
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Attack [On]"), Component.literal("Attack [Off]")).withInitialValue(FortytwoEdit.autoAttack).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle auto attack in auto click mode\n\nWhen on: auto click mode will use the attack key once per cooldown (1500ms default)"))).create(x+20,y+ROW_HEIGHT*4+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Attack [On]"), Component.literal("Attack [Off]"), FortytwoEdit.autoAttack).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle auto attack in auto click mode\n\nWhen on: auto click mode will use the attack key once per cooldown (1500ms default)"))).create(x+20,y+ROW_HEIGHT*4+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,(boolean)trackOutput,FortytwoEdit.attackWait);
             unsel();
         }));
@@ -40,7 +39,7 @@ public class AutoClickScreen extends GenericScreen {
         this.txtAttackCooldown.setValue(""+FortytwoEdit.attackWait);
         this.txtAttackCooldown.setResponder(this::editTxtAttackCooldown);
         this.addRenderableWidget(this.txtAttackCooldown);
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Lock Screen [On]"), Component.literal("Lock Screen [Off]")).withInitialValue(FortytwoEdit.afkScreenLock).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle screen lock in auto click mode\n\nWhen on: mouse movement will be ignored and FPS will be reduced"))).create(x+20,y+ROW_HEIGHT*6+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Lock Screen [On]"), Component.literal("Lock Screen [Off]"), FortytwoEdit.afkScreenLock).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle screen lock in auto click mode\n\nWhen on: mouse movement will be ignored and FPS will be reduced"))).create(x+20,y+ROW_HEIGHT*6+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.readOptions();
             FortytwoEdit.afkScreenLock = (boolean)trackOutput;
             FortytwoEdit.updateOptions();
@@ -82,9 +81,9 @@ public class AutoClickScreen extends GenericScreen {
     }
 
     @Override
-    public void resize(Minecraft client, int width, int height) {
+    public void resize(int width, int height) {
         saveAll();
-        super.resize(client, width, height);
+        super.resize(width, height);
     }
 
     @Override

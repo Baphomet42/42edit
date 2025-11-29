@@ -8,7 +8,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import baphomethlabs.fortytwoedit.SuggestionHelper;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -69,7 +68,7 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
     }
 
     @Inject(method = "resize", at = @At("RETURN"), cancellable = true)
-    private void injectResize(Minecraft client, int width, int height, CallbackInfo ci) {
+    private void injectResize(int width, int height, CallbackInfo ci) {
         suggs = null;
     }
 

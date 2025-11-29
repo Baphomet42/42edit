@@ -14,7 +14,7 @@ public abstract class SubtitleOverlayMixin {
 
     @Inject(method = "onPlaySound", at = @At("HEAD"), cancellable = true)
     private void testSound(SoundInstance sound, WeighedSoundEvents soundSet, float range, CallbackInfo c) {
-        if(FortytwoEdit.autoFish && sound.getLocation().toString().equals("minecraft:entity.fishing_bobber.splash")) {
+        if(FortytwoEdit.autoFish && sound.getIdentifier().toString().equals("minecraft:entity.fishing_bobber.splash")) {
             FortytwoEdit.queueAutoFish();
         }
     }

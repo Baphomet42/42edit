@@ -6,7 +6,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.network.chat.Component;
 
-public class ModifierButton extends Button {
+public class ModifierButton extends Button.Plain {
 
 	protected final ModifierButton.OnPressInput onPressInput;
 

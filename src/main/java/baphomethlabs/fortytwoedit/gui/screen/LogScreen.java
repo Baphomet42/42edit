@@ -53,7 +53,7 @@ public class LogScreen extends GenericScreen {
         logFile = new File(minecraft.gameDirectory.getAbsolutePath()+"\\logs\\latest.log");
 
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Resume"),
-                Component.literal("Pause")).withInitialValue(paused).displayOnlyValue().withTooltip(val -> Tooltip.create(val ? Component.nullToEmpty("Unpause log and show new messages") : Component.nullToEmpty("Temporarily freeze new messages from appearing"))).create(x+GUI_SPACE+40+WID_SPACE,y+GUI_SPACE,40,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
+                Component.literal("Pause"), paused).displayOnlyValue().withTooltip(val -> Tooltip.create(val ? Component.nullToEmpty("Unpause log and show new messages") : Component.nullToEmpty("Temporarily freeze new messages from appearing"))).create(x+GUI_SPACE+40+WID_SPACE,y+GUI_SPACE,40,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             paused = (boolean)trackOutput;
             updateBox();
             unsel();
@@ -61,7 +61,7 @@ public class LogScreen extends GenericScreen {
         this.addRenderableWidget(new ModifierButton(Component.nullToEmpty("Clear"), (button, inputWithModifiers) -> btnClearLog(inputWithModifiers), x+backgroundWidth-GUI_SPACE-50-40-WID_SPACE,y+GUI_SPACE,40,WID_HEIGHT))
             .setTooltip(Tooltip.create(Component.nullToEmpty("Clear all logged messages\n\nShift click to restore all cleared messages")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("[42edit]"),
-                Component.literal("[All]")).withInitialValue(onlyMod).displayOnlyValue().create(x+backgroundWidth-GUI_SPACE-50,y+GUI_SPACE,50,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
+                Component.literal("[All]"), onlyMod).displayOnlyValue().create(x+backgroundWidth-GUI_SPACE-50,y+GUI_SPACE,50,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             onlyMod = (boolean)trackOutput;
             updateBox();
             unsel();
@@ -72,7 +72,7 @@ public class LogScreen extends GenericScreen {
         txtRegex.setValue(""+regexInput);
         txtRegex.setResponder(this::editTxtRegex);
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("[Regex]"),
-                Component.literal("[Search]")).withInitialValue(useRegex).displayOnlyValue().create(x+backgroundWidth-5-50-7,y+35+ROW_HEIGHT*6+1,50,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
+                Component.literal("[Search]"), useRegex).displayOnlyValue().create(x+backgroundWidth-5-50-7,y+35+ROW_HEIGHT*6+1,50,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
             useRegex = (boolean)trackOutput;
             updateBox();
             unsel();

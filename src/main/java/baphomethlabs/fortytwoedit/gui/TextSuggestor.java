@@ -283,7 +283,7 @@ public class TextSuggestor {
                 int suggsNum = lineNum + this.offset;
                 if(suggsNum >= 0 && suggsNum < this.suggestionList.size() && lineNum >= 0 && lineNum < TextSuggestor.this.suggestionLineLimit) {
                     this.select(suggsNum);
-                    guiGraphics.requestCursor(CursorTypes.POINTING_HAND);//to_do might no longer be needed if MC-302254 is fixed
+                    guiGraphics.requestCursor(CursorTypes.POINTING_HAND);
                 }
             }
 

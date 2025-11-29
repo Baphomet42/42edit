@@ -3,7 +3,6 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -40,7 +39,7 @@ public class HacksScreen extends GenericScreen {
         this.addBackButton();
 
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Mix [On]"),
-                Component.literal("Mix [Off]")).withInitialValue(FortytwoEdit.randoMode).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty(
+                Component.literal("Mix [Off]"), FortytwoEdit.randoMode).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty(
                 "Toggle mix mode\n\nWhen on: after placing a block, change to a random hotbar slot\n\n"
                 +"If numbers are specified, the random slot will be selected from those.\nExample: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)"))).create(x+20,y+ROW_HEIGHT*2+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
@@ -67,7 +66,7 @@ public class HacksScreen extends GenericScreen {
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Full Data"), button -> this.btnGetEntity(0)).bounds(x+20+80+WID_SPACE,y+ROW_HEIGHT*3+1,60,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Get Entity without removing position, uuid, etc.")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Xray [On]"),
-                Component.literal("Xray [Off]")).withInitialValue(FortytwoEdit.seeInvis).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle xray mode\n\nWhen on: all entities will glow through blocks"))).create(x+20,y+ROW_HEIGHT*4+1,100,WID_HEIGHT,
+                Component.literal("Xray [Off]"), FortytwoEdit.seeInvis).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle xray mode\n\nWhen on: all entities will glow through blocks"))).create(x+20,y+ROW_HEIGHT*4+1,100,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             //minecraft.levelRenderer.allChanged(); // to_do enable if invis block mixins are reimplemented
             FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
@@ -85,7 +84,7 @@ public class HacksScreen extends GenericScreen {
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Death Pos"), button -> this.btnDeathPos()).bounds(x+20,y+ROW_HEIGHT*5+1,100,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Print your last position of death (only you can see this)")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("   Auto Fish [On]"),
-                Component.literal("   Auto Fish [Off]")).withInitialValue(FortytwoEdit.autoFish).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on"))).create(x+20+100+WID_SPACE,y+ROW_HEIGHT*5+1,100,WID_HEIGHT,
+                Component.literal("   Auto Fish [Off]"), FortytwoEdit.autoFish).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on"))).create(x+20+100+WID_SPACE,y+ROW_HEIGHT*5+1,100,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             FortytwoEdit.autoFish = !FortytwoEdit.autoFish;
             unsel();
@@ -262,7 +261,7 @@ public class HacksScreen extends GenericScreen {
     protected void btnDeathPos() {
         if(minecraft.player.getLastDeathLocation().isPresent()) {
             GlobalPos pos = minecraft.player.getLastDeathLocation().get();
-            String coords = "Last death [X: "+pos.pos().getX()+", Y: "+pos.pos().getY()+", Z: "+pos.pos().getZ()+"] in "+pos.dimension().location().toString();
+            String coords = "Last death [X: "+pos.pos().getX()+", Y: "+pos.pos().getY()+", Z: "+pos.pos().getZ()+"] in "+pos.dimension().identifier().toString();
             minecraft.player.displayClientMessage(Component.nullToEmpty(coords),false);
             FortytwoEdit.showToast("Death Pos", "Death coords sent to chat");
         }
@@ -309,9 +308,9 @@ public class HacksScreen extends GenericScreen {
     }
 
     @Override
-    public void resize(Minecraft client, int width, int height) {
+    public void resize(int width, int height) {
         saveAll();
-        super.resize(client, width, height);
+        super.resize(width, height);
     }
 
     @Override

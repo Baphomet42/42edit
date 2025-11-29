@@ -5,7 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 public class ContainerTooltipComponent implements ClientTooltipComponent {
@@ -63,13 +63,13 @@ public class ContainerTooltipComponent implements ClientTooltipComponent {
     }
 
     static enum Sprite {
-        SLOT(ResourceLocation.parse("container/slot"), 18, 18);
+        SLOT(Identifier.parse("container/slot"), 18, 18);
 
-        public final ResourceLocation texture;
+        public final Identifier texture;
         public final int width;
         public final int height;
 
-        private Sprite(ResourceLocation texture, int width, int height) {
+        private Sprite(Identifier texture, int width, int height) {
             this.texture = texture;
             this.width = width;
             this.height = height;
