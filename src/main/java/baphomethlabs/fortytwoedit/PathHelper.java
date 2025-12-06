@@ -69,6 +69,15 @@ public class PathHelper {
             "components", PathInfo.create(DataType.CompoundComponentsMap.create()).setIcon(Items.STONE).getter()
         ))).setIcon(Items.STONE));
 
+        registerPathInfo("components.minecraft:attack_range", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
+            "min_reach", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.0f"))).setUnsetInfo(FloatTag.valueOf(0f)).getter(),
+            "max_reach", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("3.0f"))).setUnsetInfo(FloatTag.valueOf(3f)).getter(),
+            "min_creative_reach", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.0f"))).setUnsetInfo(FloatTag.valueOf(0f)).getter(),
+            "max_creative_reach", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("5.0f"))).setUnsetInfo(FloatTag.valueOf(5f)).getter(),
+            "hitbox_margin", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.3f"))).setUnsetInfo(FloatTag.valueOf(0.3f)).getter(),
+            "mob_factor", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("1.0f"))).setUnsetInfo(FloatTag.valueOf(1f)).getter()
+        ))).setIcon(Items.IRON_SPEAR));
+
         registerPathInfo("components.minecraft:attribute_modifiers", PathInfo.create(DataType.ListUnordered.of(
             PathInfo.create(DataType.CompoundStructured.of(Map.of(
                 "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_ATTRIBUTE)).getter(),
@@ -208,6 +217,8 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:damage", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0"))).setIcon(Items.DIAMOND_PICKAXE));
 
+        registerPathInfo("components.minecraft:damage_type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_DAMAGE_TYPE)).setIcon(Items.IRON_SPEAR));
+
         registerPathInfo("components.minecraft:damage_resistant", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
             "types", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_TAG_DAMAGE_TYPE)).getter()
         ))).setIcon(Items.NETHERITE_INGOT));
@@ -298,6 +309,8 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:jukebox_playable", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_JUKEBOX_SONG)).setIcon(Items.MUSIC_DISC_13));
 
+        registerPathInfo("components.minecraft:kinetic_weapon", PathInfo.create().setIcon(Items.IRON_SPEAR));
+
         registerPathInfo("components.minecraft:lock", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "items", PathInfoGetter.of("item_id_tag_or_list"),
             "count", PathInfo.create(// stores in specified form [data storage]
@@ -356,9 +369,13 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:max_stack_size", PathInfo.copyOf("item_count").setInfo("Integer 1-99").setIcon(Items.STONE));
 
+        registerPathInfo("components.minecraft:minimum_attack_charge", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.0f","1.0f"))).setInfo("Minimum percent of attack charge required to attack").setIcon(Items.IRON_SPEAR));
+
         registerPathInfo("components.minecraft:note_block_sound", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_SOUND_EVENT)).setInfo("Identifier of a sound event").setIcon(Items.PLAYER_HEAD));
 
         registerPathInfo("components.minecraft:ominous_bottle_amplifier", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0","1","2","3","4"))).setIcon(Items.OMINOUS_BOTTLE));
+
+        registerPathInfo("components.minecraft:piercing_weapon", PathInfo.create().setIcon(Items.IRON_SPEAR));
 
         registerPathInfo("components.minecraft:pot_decorations", PathInfo.create(DataType.ListStructured.of(
             SuggestionGetter.newInline("[\"minecraft:brick\",\"minecraft:brick\",\"minecraft:brick\",\"minecraft:brick\"]"),
@@ -434,6 +451,11 @@ public class PathHelper {
             ))).getter()
         )).setIcon(Items.SUSPICIOUS_STEW));
 
+        registerPathInfo("components.minecraft:swing_animation", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
+            "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_SWING_ANIMATION_TYPE)).setUnsetInfo(StringTag.valueOf("whack")).getter(),
+            "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("6"))).setUnsetInfo(IntTag.valueOf(6)).getter()
+        ))).setIcon(Items.IRON_SPEAR));
+
         registerPathInfo("components.minecraft:tool", PathInfo.create(DataType.CompoundStructured.of(Map.of(
             "rules", PathInfo.create(DataType.ListUnordered.of(
                 PathInfo.create(DataType.CompoundStructured.of(Map.of(
@@ -470,6 +492,12 @@ public class PathHelper {
             ),Map.of(
             "cooldown_group", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Identifier of an item ID or a custom identifier").setUnsetInfo("Current item ID is used").getter()
         ))).setIcon(Items.ENDER_PEARL));
+
+        registerPathInfo("components.minecraft:use_effects", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
+            "can_sprint", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).getter(),
+            "interact_vibrations", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter(),
+            "speed_multiplier", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.0f","0.2f","1.0f"))).setUnsetInfo(FloatTag.valueOf(0.2f)).getter()
+        ))).setIcon(Items.IRON_SPEAR));
 
         registerPathInfo("components.minecraft:use_remainder", PathInfo.copyOf("item_stack"));
 
@@ -569,6 +597,8 @@ public class PathHelper {
         registerPathInfo("components.minecraft:wolf/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_WOLF_SOUND_VARIANT)).setIcon(Items.WOLF_SPAWN_EGG));
 
         registerPathInfo("components.minecraft:wolf/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_WOLF_VARIANT)).setIcon(Items.WOLF_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:zombie_nautilus/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_ZOMBIE_NAUTILUS_VARIANT)).setIcon(Items.ZOMBIE_NAUTILUS_SPAWN_EGG));
 
         registerPathInfo("text_component", PathInfo.create(// list storage [data storage]
             DataType.CompoundStructured.of(Map.of(

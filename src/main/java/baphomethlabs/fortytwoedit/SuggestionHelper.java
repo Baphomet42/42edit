@@ -35,6 +35,7 @@ import net.minecraft.world.entity.animal.rabbit.Rabbit;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.SwingAnimationType;
 import net.minecraft.world.item.component.FireworkExplosion;
 import net.minecraft.world.item.component.MapItemColor;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -464,6 +465,16 @@ public class SuggestionHelper {
         return list;
     });
 
+    public static final SuggestionGetter LIST_SWING_ANIMATION_TYPE = registerSuggsList("LIST_SWING_ANIMATION_TYPE", () -> {
+        List<String> list = createOrGetCacheList("LIST_SWING_ANIMATION_TYPE",false);
+        if(list.isEmpty()) {
+            for(SwingAnimationType i : SwingAnimationType.values())
+                list.add(i.getSerializedName());
+            sortUnique(list);
+        }
+        return list;
+    });
+
     public static final SuggestionGetter LIST_TROPICAL_FISH_VARIANT = registerSuggsList("LIST_TROPICAL_FISH_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_TROPICAL_FISH_VARIANT",false);
         if(list.isEmpty()) {
@@ -648,6 +659,9 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter DATA_WOLF_VARIANT = registerSuggsList("DATA_WOLF_VARIANT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_WOLF_VARIANT",true),Registries.WOLF_VARIANT));
+
+    public static final SuggestionGetter DATA_ZOMBIE_NAUTILUS_VARIANT = registerSuggsList("DATA_ZOMBIE_NAUTILUS_VARIANT", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_ZOMBIE_NAUTILUS_VARIANT",true),Registries.ZOMBIE_NAUTILUS_VARIANT));
 
 
     // dynamic data tags lists
