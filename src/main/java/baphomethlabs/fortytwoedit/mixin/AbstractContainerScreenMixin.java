@@ -12,7 +12,7 @@ import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
@@ -50,7 +50,7 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
     protected abstract boolean showTooltipWithItemInHand(ItemStack stack);
 
     @Shadow
-    protected abstract void slotClicked(Slot slot, int slotId, int button, ClickType actionType);
+    protected abstract void slotClicked(final Slot slot, int slotId, final int buttonNum, final ContainerInput containerInput);
 
     @Shadow
     private Slot getHoveredSlot(double x, double y) {return null;}
@@ -105,16 +105,17 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
             if(slot != null && ((AbstractContainerMenu)this.menu).canTakeItemForPickAll(ItemStack.EMPTY, slot)) {
 
                 if(slot.hasItem()) {
-                    ItemStack stack = slot.getItem().copy();
-                    for(Slot slot2 : ((AbstractContainerMenu)this.menu).slots) {
-                        if(slot2 == null || !slot2.mayPickup(this.minecraft.player) || !slot2.hasItem() || slot2.container != slot.container || !AbstractContainerMenu.canItemQuickReplace(slot2, stack, true)) continue;
-                        this.slotClicked(slot2, slot2.index, 0, ClickType.QUICK_MOVE);
-                    }
-                }
-                else {
-                    for(Slot slot2 : ((AbstractContainerMenu)this.menu).slots) {
-                        if(slot2 == null || !slot2.mayPickup(this.minecraft.player) || !slot2.hasItem() || slot2.container != slot.container) continue;
-                        this.slotClicked(slot2, slot2.index, 0, ClickType.QUICK_MOVE);
+                    ItemStack quickMove = slot.getItem().copy();
+                    if (!quickMove.isEmpty()) {
+                        for (Slot target : this.menu.slots) {
+                            if (target != null
+                                && target.mayPickup(this.minecraft.player)
+                                && target.hasItem()
+                                && target.container == slot.container
+                                && AbstractContainerMenu.canItemQuickReplace(target, quickMove, true)) {
+                                this.slotClicked(target, target.index, 0, ContainerInput.QUICK_MOVE);
+                            }
+                        }
                     }
                 }
 

@@ -31,7 +31,7 @@ public abstract class MinecraftMixin {
         }
     }
 
-	@Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/FramerateLimitTracker;getFramerateLimit()I"))
+	@Redirect(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/FramerateLimitTracker;getFramerateLimit()I"))
 	private int redirectFramerate(FramerateLimitTracker inactivityFpsLimiter) {
         if(FortytwoEdit.autoClicker && FortytwoEdit.afkScreenLock && ((Minecraft)(Object)this).player != null) {
             return 10;

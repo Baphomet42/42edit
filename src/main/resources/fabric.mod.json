@@ -1,32 +1,32 @@
 {
-  "schemaVersion": 1,
-  "id": "fortytwoedit",
-  "version": "${version}",
-  "name": "42edit",
-  "description": "Blackest Magick in Practice",
-  "authors": [
-    "BaphomethLabs"
-  ],
-  "contact": {
-    "homepage": "https://baphomet42.github.io/",
-    "sources":  "https://github.com/Baphomet42/42edit"
-  },
-  "icon": "assets/42edit/textures/icon/mod.png",
-  "environment": "client",
-  "entrypoints": {
-    "client": [
-      "baphomethlabs.fortytwoedit.FortytwoEdit"
-    ]
-  },
-  "mixins": [
-    {
-      "config": "fortytwoedit.mixins.json",
-      "environment": "client"
+    "schemaVersion": 1,
+    "id": "fortytwoedit",
+    "version": "${version}",
+    "name": "42edit",
+    "description": "Blackest Magick in Practice",
+    "authors": [
+        "BaphomethLabs"
+    ],
+    "contact": {
+        "homepage": "https://baphomet42.github.io/",
+        "sources":  "https://github.com/Baphomet42/42edit"
+    },
+    "icon": "assets/42edit/textures/icon/mod.png",
+    "environment": "client",
+    "entrypoints": {
+        "client": [
+            "baphomethlabs.fortytwoedit.FortytwoEdit"
+        ]
+    },
+    "mixins": [
+        {
+            "config": "fortytwoedit.mixins.json",
+            "environment": "client"
+        }
+    ],
+    "depends": {
+        "fabricloader": ">=0.18.4",
+        "minecraft": "*",
+        "java": ">=25"
     }
-  ],
-  "depends": {
-    "fabricloader": ">=0.18.1",
-    "minecraft": "*",
-    "java": ">=21"
-  }
 }

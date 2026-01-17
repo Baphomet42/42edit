@@ -114,7 +114,6 @@ public class FortytwoEdit implements ClientModInitializer {
     // options
     private static CompoundTag optionsExtra = null;
     public static boolean mixinProfileDynamicTooltip = true;
-    public static boolean debugMixinHideBlockTags = false;
     public static boolean debugMixinRearrange = false;
 
     // chat icons
@@ -1238,7 +1237,6 @@ public class FortytwoEdit implements ClientModInitializer {
         options.getByte("chat_icons").ifPresent(b -> mixinChatProfileIcon = (b == 1));
         options.getByte("custom_cape_toggle").ifPresent(b -> showClientCape = (b == 1));
         options.getString("custom_cape").ifPresent(s -> selectedClientCape = s);
-        options.getByte("debug_screen_hide_tags").ifPresent(b -> debugMixinHideBlockTags = (b == 1));
         options.getByte("debug_screen_rearrange").ifPresent(b -> debugMixinRearrange = (b == 1));
         options.getByte("dynamic_profile_tooltip_info").ifPresent(b -> mixinProfileDynamicTooltip = (b == 1));
         options.getCompound("keybinds").ifPresent(c -> {
@@ -1284,7 +1282,6 @@ public class FortytwoEdit implements ClientModInitializer {
         options.remove("chat_icons");
         options.remove("custom_cape_toggle");
         options.remove("custom_cape");
-        options.remove("debug_screen_hide_tags");
         options.remove("debug_screen_rearrange");
         options.remove("dynamic_profile_tooltip_info");
         options.remove("item_warning_override");
@@ -1316,7 +1313,6 @@ public class FortytwoEdit implements ClientModInitializer {
         options.putBoolean("chat_icons",mixinChatProfileIcon);
         options.putBoolean("custom_cape_toggle",showClientCape);
         options.putString("custom_cape",selectedClientCape);
-        options.putBoolean("debug_screen_hide_tags",debugMixinHideBlockTags);
         options.putBoolean("debug_screen_rearrange",debugMixinRearrange);
         options.putBoolean("dynamic_profile_tooltip_info",mixinProfileDynamicTooltip);
         CompoundTag keysCompound = options.getCompoundOrEmpty("keybinds");

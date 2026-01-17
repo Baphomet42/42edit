@@ -99,21 +99,6 @@ public class SecretScreen extends GenericScreen {
             );
         }
         {
-            MutableComponent btnTxt = Component.empty().append("F3 Screen Hide Tags: ");
-            if(!FortytwoEdit.debugMixinHideBlockTags)
-                btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GRAY));
-            else
-                btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GREEN));
-            paneScroll().addRow(
-                WIDGET_UTIL.newButton(btnTxt, btn -> {
-                    FortytwoEdit.readOptions();
-                    FortytwoEdit.debugMixinHideBlockTags = !FortytwoEdit.debugMixinHideBlockTags;
-                    FortytwoEdit.updateOptions();
-                    reloadScreen();
-                }).setSize(CONFIG_BUTTON_WIDTH).setTooltip("Hide block tags in F3 screen.\n\nDefault: false").build()
-            );
-        }
-        {
             MutableComponent btnTxt = Component.empty().append("F3 Screen Rearrange: ");
             if(!FortytwoEdit.debugMixinRearrange)
                 btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GRAY));

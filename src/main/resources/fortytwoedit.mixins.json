@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "baphomethlabs.fortytwoedit.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "client": [
     "AbstractClientPlayerMixin",
     "AbstractContainerScreenMixin",
@@ -14,8 +14,6 @@
     "ClientMannequinMixin",
     "ClientTooltipComponentMixin",
     "CreativeModeInventoryScreenMixin",
-    "DebugEntryLookingAtBlockMixin",
-    "DebugEntryLookingAtFluidMixin",
     "DebugScreenEntryListMixin",
     "DecoratedPotPatternsAccessor",
     "GameRendererInvoker",
