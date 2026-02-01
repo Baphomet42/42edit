@@ -26,8 +26,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import baphomethlabs.fortytwoedit.BlackMagick.ParsedText;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
-import baphomethlabs.fortytwoedit.PathHelper.PathInfo;
-import baphomethlabs.fortytwoedit.PathHelper.PathNode;
 import baphomethlabs.fortytwoedit.gui.screen.GenericScreen;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilderScreen;
 import baphomethlabs.fortytwoedit.gui.screen.LogScreen;
@@ -855,21 +853,21 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     // common
-    public static final ItemStack HEAD42 = BlackMagick.itemFromString("{id:player_head,components:{profile:{name:\"42Richtofen42\","
+    public static final ItemStackPreset HEAD42 = ItemStackPreset.set("{id:player_head,components:{profile:{name:\"42Richtofen42\","
         +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlc"
         +"yIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lNDliNjliNWU3MzVlYjUyMmIyNGM2OTczNTQ5ZGRhODMzYjE1ZD"
         +"kxYjg3NDM1NjRjZmIxN2QwZjk2MWMwZjU0Ig0KICAgIH0NCiAgfQ0KfQ==\"}]}}}");
-    public static final CompoundTag BANNER42 = BlackMagick.validCompoundFromString("{id:red_banner,components:{banner_patterns:[{color:\"black\",pattern:\"minecraft:curly_border\"}"
+    public static final ItemStackPreset BANNER42 = ItemStackPreset.set("{id:red_banner,components:{banner_patterns:[{color:\"black\",pattern:\"minecraft:curly_border\"}"
         +",{color:\"black\",pattern:\"minecraft:bricks\"},{color:\"red\",pattern:\"minecraft:triangle_bottom\"},{color:\"black\",pattern:\"minecraft:triangle_bottom\"}"
         +",{color:\"purple\",pattern:\"minecraft:flower\"},{color:\"black\",pattern:\"minecraft:gradient\"}]}}");
-    public static final CompoundTag BANNERBRICK = BlackMagick.validCompoundFromString("{id:orange_banner,components:{banner_patterns:[{color:\"black\",pattern:\"minecraft:gradient\"}"
+    public static final ItemStackPreset BANNERBRICK = ItemStackPreset.set("{id:orange_banner,components:{banner_patterns:[{color:\"black\",pattern:\"minecraft:gradient\"}"
         +",{color:\"black\",pattern:\"minecraft:gradient\"},{color:\"black\",pattern:\"minecraft:gradient\"},{color:\"orange\",pattern:\"minecraft:triangles_bottom\"}"
         +",{color:\"red\",pattern:\"minecraft:bricks\"},{color:\"green\",pattern:\"minecraft:creeper\"}]}}");
-    public static final ItemStack ITEM_ERROR = BlackMagick.itemFromString("{id:player_head,components:{profile:{"
+    public static final ItemStackPreset ITEM_ERROR = ItemStackPreset.set("{id:player_head,components:{profile:{"
         +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcy"
         +"IgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hZTE4MjM2NzExOTYzMTMxNzY5MjM0Mzc4OGNkNWM4NTRjMTNiNDQ5"
         +"ZDM2ZTYyMmI4NTU0YTU2MzhlZDM4NTkzIg0KICAgIH0NCiAgfQ0KfQ==\"}]}}}");
-    public static final ItemStack ITEM_QUESTION = BlackMagick.itemFromString("{components:{\"minecraft:profile\":"
+    public static final ItemStackPreset ITEM_QUESTION = ItemStackPreset.set("{components:{\"minecraft:profile\":"
         +"{id:[I;1617833968,-310949822,-1653808685,840726584],name:\"MHF_Question\",properties:[{name:\"textures\",value:\"ewogICJzaWduYXR1cmVSZXF1aXJlZCIg"
         +"OiBmYWxzZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2QzNGUwNjNjYWZiNDY3Y"
         +"TVjOGRlNDNlYzc4NjE5Mzk5ZjM2OWY0YTUyNDM0ZGE4MDE3YTk4M2NkZDkyNTE2YTAiCiAgICB9CiAgfQp9\"}]}},count:1,id:\"minecraft:player_head\"}");
@@ -907,17 +905,6 @@ public class FortytwoEdit implements ClientModInitializer {
         refreshWebItems(false);
 
         FileTools.scanModFiles();
-
-        int foundComponentPaths = 0;
-        for(String c : SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
-            // this will log warnings if PathHelper doesnt include a vanilla component
-            PathInfo pi = PathHelper.getItemPath(null, PathNode.of("components"),PathNode.of(c));
-            if(!pi.isEmpty())
-                foundComponentPaths++;
-            else
-                FortytwoEdit.logWarn("No PathInfo found for component \""+c+"\"");
-        }
-        logInfo("Found PathInfo for "+foundComponentPaths+"/"+SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList().size()+" components");
 
         logInfo("42edit client initialized");
     }

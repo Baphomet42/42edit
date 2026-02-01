@@ -62,6 +62,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.BlackMagick.ParsedText;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.ItemStackPreset;
 import baphomethlabs.fortytwoedit.PathHelper;
 import baphomethlabs.fortytwoedit.SuggestionHelper;
 import baphomethlabs.fortytwoedit.PathHelper.NbtType;
@@ -81,9 +82,9 @@ public class ItemBuilderScreen extends GenericScreen {
     protected static final int TAB_SIZE = 24;
     protected static final int TAB_SPACING = 2;
     private static final int LEFT_TABS = 3;
-    protected static final Tab[] tabs = new Tab[]{new Tab(0,"Components",new ItemStack(Items.GOLDEN_SWORD)),
-        new Tab(1,"Presets",FortytwoEdit.HEAD42), new Tab(2,"Custom Data",new ItemStack(Items.COMMAND_BLOCK)),
-        new Tab(3,"Inventory",new ItemStack(Items.ENDER_CHEST)), new Tab(4,"Saved Items",new ItemStack(Items.JIGSAW)),
+    protected static final Tab[] tabs = new Tab[]{new Tab(0,"Components",ItemStackPreset.set(Items.GOLDEN_SWORD)),
+        new Tab(1,"Presets",FortytwoEdit.HEAD42), new Tab(2,"Custom Data",ItemStackPreset.set(Items.COMMAND_BLOCK)),
+        new Tab(3,"Inventory",ItemStackPreset.set(Items.ENDER_CHEST)), new Tab(4,"Saved Items",ItemStackPreset.set(Items.JIGSAW)),
         new Tab()};
     protected static final int CACHE_TAB_MAIN = 0;
     protected static final int CACHE_TAB_PRESETS = 1;
@@ -129,12 +130,12 @@ public class ItemBuilderScreen extends GenericScreen {
         .append(grayWhiteText("","\n(Mostly Harmless)")));
     private static final Tooltip TOOLTIP_LOCAL_ITEMS =
         Tooltip.create(grayWhiteText("Local Items","\n\nSave items for later without using up your saved hotbars"));
-    private static final ItemStack[] SAVED_TAB_MODE_ITEMS = new ItemStack[]{BlackMagick.itemFromString(
+    private static final ItemStackPreset[] SAVED_TAB_MODE_ITEMS = new ItemStackPreset[]{ItemStackPreset.set(
         "{id:player_head,components:{profile:{properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQ"
         +"iIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pb"
         +"mVjcmFmdC5uZXQvdGV4dHVyZS9iZDlmMThjOWQ4NWY5MmY3MmY4NjRkNjdjMTM2N2U5YTQ1ZGMxMGYzNzE1NDljNDZhNGQ0ZGQ5ZTRmMTN"
         +"mZjQiDQogICAgfQ0KICB9DQp9\"}]}}}"),
-        BlackMagick.itemFromString("{id:player_head,components:{profile:{"
+        ItemStackPreset.set("{id:player_head,components:{profile:{"
         +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlN"
         +"LSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MjY0ODZmNDI0ODljZWYwMmM5ZTk4ZGQ4Y"
         +"mU1YTNmMzhlODc5MTQ3NTQzMjZlNzdjODM3YzFiMmJjYmE2NSINCiAgICB9DQogIH0NCn0=\"}]}}}")};
@@ -167,8 +168,8 @@ public class ItemBuilderScreen extends GenericScreen {
     private boolean hslLock = false;
     private boolean editorOutputLocked = false;
     private Set<AbstractWidget> editorLockedWidget = Sets.newHashSet();
-    private static final ItemStack[] RGB_ITEMS = //to_do old code
-        new ItemStack[]{new ItemStack(Items.LEATHER_CHESTPLATE),new ItemStack(Items.POTION),new ItemStack(Items.FILLED_MAP)};
+    private static final ItemStackPreset[] RGB_ITEMS = //to_do old code
+        new ItemStackPreset[]{ItemStackPreset.set(Items.LEATHER_CHESTPLATE),ItemStackPreset.set(Items.POTION),ItemStackPreset.set(Items.FILLED_MAP)};
     private Component textComponentPreview = null;
     private boolean textComponentPreviewBook = false;
     private static double[] tabScroll = new double[tabs.length];
@@ -177,8 +178,8 @@ public class ItemBuilderScreen extends GenericScreen {
     protected Map<String,Double> nbtEditScroll = Maps.newHashMap();
     protected boolean nbtEditScrollNow = false;
     protected static NbtEditStyle nbtEditStyle = NbtEditStyle.TEMPLATE;
-    protected static final ItemStack[] NBT_EDIT_STYLE_ITEMS =
-        new ItemStack[]{new ItemStack(Items.KNOWLEDGE_BOOK),new ItemStack(Items.COMMAND_BLOCK),new ItemStack(Items.NAME_TAG)};
+    protected static final ItemStackPreset[] NBT_EDIT_STYLE_ITEMS =
+        new ItemStackPreset[]{ItemStackPreset.set(Items.KNOWLEDGE_BOOK),ItemStackPreset.set(Items.COMMAND_BLOCK),ItemStackPreset.set(Items.NAME_TAG)};
     private boolean bannerShield = false;
     private static ArmorStand bannerChangePreview = null;
     protected boolean showBannerPreview = false;
@@ -205,6 +206,17 @@ public class ItemBuilderScreen extends GenericScreen {
                     "\"\n\nFonts\ndefault- ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789\nuniform- \",{text:\"ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789\",font:\"uniform\"},"+
                     "\"\nalt- \",{text:\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\",font:\"alt\"},\"\nillageralt- \","+
                     "{text:\"ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789\",font:\"illageralt\"}]").text());
+
+                int foundComponentPaths = 0;
+                for(String c : SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
+                    // this will log warnings if PathHelper doesnt include a vanilla component
+                    PathInfo pi = PathHelper.getItemPath(null, PathNode.of("components"),PathNode.of(c));
+                    if(!pi.isEmpty())
+                        foundComponentPaths++;
+                    else
+                        FortytwoEdit.logWarn("No PathInfo found for component \""+c+"\"");
+                }
+                FortytwoEdit.logInfo("Found PathInfo for "+foundComponentPaths+"/"+SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList().size()+" components");
             }
 
             if(tabs[tab].hideTabs())
@@ -258,7 +270,7 @@ public class ItemBuilderScreen extends GenericScreen {
                             tabX = x+backgroundWidth;
                             tabY = y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(posNum-LEFT_TABS);
                         }
-                        ItemSlotButton w = new ItemSlotButton(tabX, tabY, TAB_SIZE, tabs[i].display(), btn -> this.btnTab(tabNum));
+                        ItemSlotButton w = new ItemSlotButton(tabX, tabY, TAB_SIZE, tabs[i].display().get(), btn -> this.btnTab(tabNum));
                         w.setTooltip(Tooltip.create(Component.nullToEmpty(tabs[i].lbl())));
                         w.showSlot(false);
                         if(tab==i)
@@ -602,13 +614,13 @@ public class ItemBuilderScreen extends GenericScreen {
             Button btnMode = (Button)widgetCacheGet(WidgetCacheType.BTN_SAVED_MODE);
             if(viewBlackMarket) {
                 btnSource.setTooltip(TOOLTIP_BLACK_MARKET);
-                btnSource.setItem(SAVED_TAB_MODE_ITEMS[1]);
+                btnSource.setItem(SAVED_TAB_MODE_ITEMS[1].get());
                 btnMode.setTooltip(Tooltip.create(Component.nullToEmpty("Refresh from Web")));
                 btnMode.setMessage(Component.nullToEmpty(UNICODE_REFRESH));
             }
             else {
                 btnSource.setTooltip(TOOLTIP_LOCAL_ITEMS);
-                btnSource.setItem(SAVED_TAB_MODE_ITEMS[0]);
+                btnSource.setItem(SAVED_TAB_MODE_ITEMS[0].get());
                 if(savedModeSet) {
                     btnMode.setTooltip(Tooltip.create(Component.nullToEmpty("C - Save to slot")));
                     btnMode.setMessage(Component.nullToEmpty("C"));
@@ -815,9 +827,9 @@ public class ItemBuilderScreen extends GenericScreen {
         if(!editorLocked) {
             editorLocked = true;
 
-            RGB_ITEMS[0] = BlackMagick.itemFromString("{id:leather_chestplate,components:{dyed_color:"+getRgbDec(0)+"}}");
-            RGB_ITEMS[1] = BlackMagick.itemFromString("{id:potion,components:{potion_contents:{custom_color:"+getRgbDec(0)+"}}}");
-            RGB_ITEMS[2] = BlackMagick.itemFromString("{id:filled_map,components:{map_color:"+getRgbDec(0)+"}}");
+            RGB_ITEMS[0] = ItemStackPreset.set("{id:leather_chestplate,components:{dyed_color:"+getRgbDec(0)+"}}");
+            RGB_ITEMS[1] = ItemStackPreset.set("{id:potion,components:{potion_contents:{custom_color:"+getRgbDec(0)+"}}}");
+            RGB_ITEMS[2] = ItemStackPreset.set("{id:filled_map,components:{map_color:"+getRgbDec(0)+"}}");
 
             for(int rgbNum=0; rgbNum<colorSets.length; rgbNum++) {
                 for(EditBox w : colorHexTxts.get(rgbNum)) {
@@ -2133,7 +2145,7 @@ public class ItemBuilderScreen extends GenericScreen {
                                 }
 
                                 try {
-                                    item = ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(inp)).createItemStack(1,false);
+                                    item = ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(inp)).createItemStack(1);
                                 }
                                 catch(Exception ex) {
                                     if(ex instanceof CommandSyntaxException ex2) {
@@ -2146,6 +2158,9 @@ public class ItemBuilderScreen extends GenericScreen {
 
                                 if(!item.isEmpty()) {
                                     item.setCount(count);
+                                    if(item.getCount() > item.getMaxStackSize()) {
+                                        item.setCount(item.getMaxStackSize());
+                                    }
                                     btnGive.active = true;
                                     btnGive.setTooltip(Tooltip.create(
                                         grayWhiteText("Set current item to:\n",BlackMagick.nbtToColorfulText(BlackMagick.itemToNbtStorage(item)))));
@@ -2239,11 +2254,15 @@ public class ItemBuilderScreen extends GenericScreen {
                                 }
 
                                 try {
-                                    item = ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(inp)).createItemStack(1,false);
+                                    item = ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(inp)).createItemStack(1);
                                 } catch(Exception ex) {}
 
-                                if(!item.isEmpty())
+                                if(!item.isEmpty()) {
                                     item.setCount(count);
+                                    if(item.getCount() > item.getMaxStackSize()) {
+                                        item.setCount(item.getMaxStackSize());
+                                    }
+                                }
                             }
 
                             BlackMagick.setItemMain(item);
@@ -2730,21 +2749,21 @@ public class ItemBuilderScreen extends GenericScreen {
                 }
         }
 
-        ItemSlotButton btnStyleTemplate = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[0], btn -> {
+        ItemSlotButton btnStyleTemplate = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[0].get(), btn -> {
             nbtEditStyle = NbtEditStyle.TEMPLATE;
             nbtEditRefreshScreen();
         }).showSlot(false);
         btnStyleTemplate.setTooltip(Tooltip.create(grayWhiteText("Style: ","Template")));
         addTabWidgetLocked(tabNum, new PosWidget(btnStyleTemplate,0-TAB_SIZE,30+TAB_OFFSET));
 
-        ItemSlotButton btnStyleNbt = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[1], btn -> {
+        ItemSlotButton btnStyleNbt = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[1].get(), btn -> {
             nbtEditStyle = NbtEditStyle.NBT;
             nbtEditRefreshScreen();
         }).showSlot(false);
         btnStyleNbt.setTooltip(Tooltip.create(grayWhiteText("Style: ","NBT")));
         addTabWidgetLocked(tabNum, new PosWidget(btnStyleNbt,0-TAB_SIZE,30+TAB_OFFSET+1*(TAB_SPACING+TAB_SIZE)));
         
-        ItemSlotButton btnStyleSnbt = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[2], btn -> {
+        ItemSlotButton btnStyleSnbt = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[2].get(), btn -> {
             nbtEditStyle = NbtEditStyle.SNBT;
             nbtEditRefreshScreen();
         }).showSlot(false);
@@ -3828,7 +3847,7 @@ public class ItemBuilderScreen extends GenericScreen {
     class RowWidgetComponent extends RowWidget {
 
         private static final Tooltip TT_SET = Tooltip.create(Component.nullToEmpty("Set component"));
-        private static final ItemStack DEFAULT_COMPONENT_ICON = FortytwoEdit.ITEM_QUESTION;
+        private static final ItemStack DEFAULT_COMPONENT_ICON = FortytwoEdit.ITEM_QUESTION.get();
         private static final int ROW_LEFT_ICON = 10;
 
         /**
@@ -5204,7 +5223,7 @@ public class ItemBuilderScreen extends GenericScreen {
                     SavedItem current = SavedItem.build(viewBlackMarket ? FortytwoEdit.webItems.get(savedRow*9+i) : savedItems.get(savedRow*9+i));
                     if(current.stack()==null) {
                         w.setTooltip(makeItemTooltip(current.storedString()));
-                        w.setItem(FortytwoEdit.ITEM_ERROR);
+                        w.setItem(FortytwoEdit.ITEM_ERROR.get());
                         w.setError(ItemSlotButton.ItemError.ERROR);
                     }
                     else {
@@ -5299,7 +5318,7 @@ public class ItemBuilderScreen extends GenericScreen {
                     }
                     if(disabled) {
                         tt = Tooltip.create(errorText("Pattern disabled: "+vals[i]));
-                        stacks[i] = FortytwoEdit.ITEM_ERROR;
+                        stacks[i] = FortytwoEdit.ITEM_ERROR.get();
                         stackWarns[i] = true;
                     }
                 }
@@ -5776,14 +5795,14 @@ public class ItemBuilderScreen extends GenericScreen {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    private record Tab(int pos, String lbl, ItemStack display, boolean hideTabs) {
+    private record Tab(int pos, String lbl, ItemStackPreset display, boolean hideTabs) {
 
-        public Tab(int pos, String lbl, ItemStack display) {
+        public Tab(int pos, String lbl, ItemStackPreset display) {
             this(pos,lbl,display,false);
         }
 
         public Tab() {
-            this(-1,"",ItemStack.EMPTY,true);
+            this(-1,"",ItemStackPreset.set(ItemStack.EMPTY),true);
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
