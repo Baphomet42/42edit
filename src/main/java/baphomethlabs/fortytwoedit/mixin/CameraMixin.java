@@ -1,17 +1,14 @@
 package baphomethlabs.fortytwoedit.mixin;
 
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.Camera;
-import net.minecraft.util.Mth;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.item.SpyglassItem;
 
 @Mixin(Camera.class)
 public abstract class CameraMixin {
@@ -36,32 +33,26 @@ public abstract class CameraMixin {
     @Shadow
     private float eyeHeightOld;
 
-    @Inject(method = "setup", at = @At(value = "RETURN"), cancellable = true)
-    private void injectSetup(Level level, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo c) {
-        if(FortytwoEdit.isFreeLooking) {
-            this.setRotation(FortytwoEdit.cameraRotation[0], FortytwoEdit.cameraRotation[1]);
-            this.setPosition(
-                Mth.lerp((double)tickDelta, focusedEntity.xo, focusedEntity.getX()),
-                Mth.lerp((double)tickDelta, focusedEntity.yo, focusedEntity.getY()) + Mth.lerp(tickDelta, this.eyeHeightOld, this.eyeHeight),
-                Mth.lerp((double)tickDelta, focusedEntity.zo, focusedEntity.getZ())
-            );
-
-            float g = 4.0F;
-			float h = 1.0F;
-			if (focusedEntity instanceof LivingEntity livingEntity) {
-				h = livingEntity.getScale();
-				g = (float)livingEntity.getAttributeValue(Attributes.CAMERA_DISTANCE);
-			}
-
-			float i = h;
-			float j = g;
-			if (focusedEntity.isPassenger() && focusedEntity.getVehicle() instanceof LivingEntity livingEntity2) {
-				i = livingEntity2.getScale();
-				j = (float)livingEntity2.getAttributeValue(Attributes.CAMERA_DISTANCE);
-			}
-
-			this.move(-this.getMaxZoom(Math.max(h * g, i * j)), 0.0F, 0.0F);
+    @Redirect(method = "tickFov", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;getFieldOfViewModifier(ZF)F"))
+    private float injectTickFov(AbstractClientPlayer player, boolean firstPerson, float effectScale) {
+        if(FortytwoEdit.zoomed) {
+            return SpyglassItem.ZOOM_FOV_MODIFIER;
         }
+        return player.getFieldOfViewModifier(firstPerson, effectScale);
     }
+
+	@Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewXRot(F)F"))
+	private float redirectAlignWithEntityGetViewXRot(Entity entity, float partialTicks) {
+        if(FortytwoEdit.isFreeLooking)
+            return FortytwoEdit.cameraRotation[1];
+        return entity.getViewXRot(partialTicks);
+	}
+
+	@Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewYRot(F)F"))
+	private float redirectAlignWithEntityGetViewYRot(Entity entity, float partialTicks) {
+        if(FortytwoEdit.isFreeLooking)
+            return FortytwoEdit.cameraRotation[0];
+        return entity.getViewYRot(partialTicks);
+	}
 
 }

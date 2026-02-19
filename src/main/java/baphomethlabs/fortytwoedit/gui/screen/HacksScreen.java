@@ -251,18 +251,18 @@ public class HacksScreen extends GenericScreen {
     }
 
     private void reportInvis(Entity entity) {
-        minecraft.player.displayClientMessage(
+        BlackMagick.sendClientChat(
             Component.empty().append(entity.getName()).append(" ["+entity.getBlockX()+", "+entity.getBlockY()+", "+entity.getBlockZ()+"]")
             .withStyle(style -> style.withHoverEvent(
             new HoverEvent.ShowEntity(new HoverEvent.EntityTooltipInfo(entity.getType(), entity.getUUID(), entity.getName())))
-            .withClickEvent(new ClickEvent.SuggestCommand("/tp @s "+entity.getBlockX() + " " + entity.getBlockY() + " " + entity.getBlockZ()))),false);
+            .withClickEvent(new ClickEvent.SuggestCommand("/tp @s "+entity.getBlockX() + " " + entity.getBlockY() + " " + entity.getBlockZ()))));
     }
 
     protected void btnDeathPos() {
         if(minecraft.player.getLastDeathLocation().isPresent()) {
             GlobalPos pos = minecraft.player.getLastDeathLocation().get();
             String coords = "Last death [X: "+pos.pos().getX()+", Y: "+pos.pos().getY()+", Z: "+pos.pos().getZ()+"] in "+pos.dimension().identifier().toString();
-            minecraft.player.displayClientMessage(Component.nullToEmpty(coords),false);
+            BlackMagick.sendClientChat(coords);
             FortytwoEdit.showToast("Death Pos", "Death coords sent to chat");
         }
         else {

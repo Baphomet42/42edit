@@ -38,12 +38,12 @@ import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.GuiMessage;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.multiplayer.chat.GuiMessage;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.ClientAsset;
@@ -188,7 +188,7 @@ public class FortytwoEdit implements ClientModInitializer {
         
         Component testComponent = CHAT_ICON_COMPONENT_CACHE.get(mapKey);
         if(testComponent != null) {
-            GuiMessage newMessage = new GuiMessage(guiMessage.addedTime(), testComponent, guiMessage.signature(), guiMessage.tag());
+            GuiMessage newMessage = new GuiMessage(guiMessage.addedTime(), testComponent, guiMessage.signature(), guiMessage.source(), guiMessage.tag());
             CHAT_ICON_MESSAGE_CACHE.put(mapKey,newMessage);
             chatCache(mapKey);
             return newMessage;
@@ -264,7 +264,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
             testComponent = CHAT_ICON_COMPONENT_CACHE.get(mapKey);
             if(testComponent != null) {
-                GuiMessage newMessage = new GuiMessage(guiMessage.addedTime(), testComponent, guiMessage.signature(), guiMessage.tag());
+                GuiMessage newMessage = new GuiMessage(guiMessage.addedTime(), testComponent, guiMessage.signature(), guiMessage.source(), guiMessage.tag());
                 CHAT_ICON_MESSAGE_CACHE.put(mapKey,newMessage);
                 chatCache(mapKey);
                 return newMessage;

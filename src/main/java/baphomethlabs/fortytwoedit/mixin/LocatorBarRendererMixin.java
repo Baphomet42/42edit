@@ -30,7 +30,7 @@ public abstract class LocatorBarRendererMixin {
     private static boolean isUpsideDown = false;
     private static int size = 0;
 
-    @Inject(method = "method_70870", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"), cancellable = true)
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"), cancellable = true)
     public void injectRender(Entity entity, Level level, PartialTickSupplier partialTickSupplier, GuiGraphics guiGraphics, int i, TrackedWaypoint trackedWaypoint, CallbackInfo ci) {
 
         playerInfo = null;
@@ -53,7 +53,7 @@ public abstract class LocatorBarRendererMixin {
 
     }
 
-	@Redirect(method = "method_70870", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
+	@Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
 	private void redirectBlitSprite(GuiGraphics guiGraphics, RenderPipeline renderPipeline, Identifier identifier, int i, int j, int k, int l, int m) {
         if(playerInfo == null)
             guiGraphics.blitSprite(renderPipeline, identifier, i, j, k, l, m);

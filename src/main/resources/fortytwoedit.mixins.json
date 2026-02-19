@@ -17,7 +17,6 @@
     "DebugScreenEntryListMixin",
     "DecoratedPotPatternsAccessor",
     "GameRendererInvoker",
-    "GameRendererMixin",
     "GuiMixin",
     "HotbarManagerAccessor",
     "KeyBindsListMixin",

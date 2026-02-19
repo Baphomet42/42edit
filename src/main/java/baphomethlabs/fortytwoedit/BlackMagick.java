@@ -1171,6 +1171,15 @@ public class BlackMagick {
         }
     }
 
+    public static void sendClientChat(String string) {
+        sendClientChat(Component.nullToEmpty(string));
+    }
+
+    public static void sendClientChat(Component component) {
+        final Minecraft minecraft = Minecraft.getInstance();
+        minecraft.gui.getChat().addClientSystemMessage(component);
+    }
+
     /**
      * Display element differences with colored text.
      * 
