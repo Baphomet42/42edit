@@ -21,17 +21,17 @@ public abstract class ClientMannequinMixin extends Mannequin {
 
     @Inject(method = "getSkin", at = @At("RETURN"), cancellable = true)
     public void injectSkin(CallbackInfoReturnable<PlayerSkin> cir) {
-        if(this.getProfile() != null) {
+        if (this.getProfile() != null) {
             ResolvableProfile resolvableProfile = this.getProfile();
-            if(resolvableProfile.skinPatch() != null) {
+            if (resolvableProfile.skinPatch() != null) {
                 PlayerSkin.Patch overrides = resolvableProfile.skinPatch();
-                if(overrides.body().isPresent() || overrides.cape().isPresent() || overrides.elytra().isPresent() || overrides.model().isPresent())
+                if (overrides.body().isPresent() || overrides.cape().isPresent() || overrides.elytra().isPresent() || overrides.model().isPresent())
                     return;
             }
             String name = BlackMagick.getDynamicProfileName(resolvableProfile);
-            if(name != null && !name.isEmpty()) {
+            if (name != null && !name.isEmpty()) {
                 PlayerSkin skin = CapeScreen.injectSkinLogic(name, cir.getReturnValue());
-                if(skin != null) {
+                if (skin != null) {
                     cir.setReturnValue(skin);
                 }
             }

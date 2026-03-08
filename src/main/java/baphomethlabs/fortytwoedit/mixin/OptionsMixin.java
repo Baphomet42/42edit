@@ -26,7 +26,7 @@ public abstract class OptionsMixin {
 	private KeyMapping[] removeModBindings(Options gameOptions) {
 		List<KeyMapping> allKeysList = Lists.newArrayList(keyMappings);
 
-        for(KeyMapping k : FortytwoEdit.KEYBINDS)
+        for (KeyMapping k : FortytwoEdit.KEYBINDS)
             allKeysList.remove(k);
 
 		return allKeysList.toArray(new KeyMapping[0]);

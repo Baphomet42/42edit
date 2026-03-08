@@ -52,7 +52,7 @@ public class TextSuggestor {
     }
 
     public boolean keyPressed(KeyEvent keyEvent) {
-        if(this.suggestionsWindow != null && this.suggestionsWindow.keyPressed(keyEvent)) {
+        if (this.suggestionsWindow != null && this.suggestionsWindow.keyPressed(keyEvent)) {
             return true;
         }
         return false;
@@ -67,7 +67,7 @@ public class TextSuggestor {
     }
 
     public void showSuggestions() {
-        if(suggsArr.length > 0) {
+        if (suggsArr.length > 0) {
             this.suggestionsWindow = new TextSuggestor.SuggestionsList(this.sortSuggestions(suggsArr));
         }
     }
@@ -82,19 +82,19 @@ public class TextSuggestor {
         List<SuggestionEntry> list2 = Lists.newArrayList();
         List<SuggestionEntry> list3 = Lists.newArrayList();
         list.add(SuggestionEntry.of(this.font, this.input.getValue(), ChatFormatting.GRAY, ChatFormatting.ITALIC));
-        for(String suggestion : suggestions) {
-            if(suggestion.length() > 0 && searchTerm.length() > 0) {
-                if(testSuggsMatch(suggestion.toLowerCase(), searchTerm, true)) {
+        for (String suggestion : suggestions) {
+            if (suggestion.length() > 0 && searchTerm.length() > 0) {
+                if (testSuggsMatch(suggestion.toLowerCase(), searchTerm, true)) {
                     list.add(SuggestionEntry.of(this.font, suggestion, searchTerm, ChatFormatting.BOLD));
                 }
-                else if(testSuggsMatch(suggestion.toLowerCase(), searchTerm, false)) {
+                else if (testSuggsMatch(suggestion.toLowerCase(), searchTerm, false)) {
                     list2.add(SuggestionEntry.of(this.font, suggestion, searchTerm, ChatFormatting.BOLD));
                 }
             }
             list3.add(searchTerm.length() > 0 ? SuggestionEntry.of(this.font, suggestion, ChatFormatting.GRAY) : SuggestionEntry.of(this.font, suggestion));
         }
         list.addAll(list2);
-        if(list.size() > 1) // the `1` accounts for the this.input.getValue() entry above
+        if (list.size() > 1) // the `1` accounts for the this.input.getValue() entry above
             list.add(SuggestionEntry.of(this.font, this.input.getValue(), Component.empty()));
         list.addAll(list3);
         return list;
@@ -104,44 +104,44 @@ public class TextSuggestor {
     protected static final String SEARCH_WRAPPERS = "\"'";
 
     protected static boolean testSuggsMatch(String suggestion, String searchTerm, boolean starting) {
-        if((starting && suggestion.startsWith(searchTerm))
+        if ((starting && suggestion.startsWith(searchTerm))
         || (!starting && suggestion.contains(searchTerm)))
             return true;
 
         String searchWrapper = "";
         String suggsWrapper = "";
-        if(suggestion.length() > 1 && SEARCH_WRAPPERS.contains(suggestion.substring(0,1))) {
+        if (suggestion.length() > 1 && SEARCH_WRAPPERS.contains(suggestion.substring(0,1))) {
             suggsWrapper = suggestion.substring(0,1);
             suggestion = suggestion.substring(1);
         }
-        if(searchTerm.length() > 1 && SEARCH_WRAPPERS.contains(searchTerm.substring(0,1))) {
+        if (searchTerm.length() > 1 && SEARCH_WRAPPERS.contains(searchTerm.substring(0,1))) {
             searchWrapper = searchTerm.substring(0,1);
             searchTerm = searchTerm.substring(1);
 
-            if(!suggsWrapper.equals(searchWrapper))
+            if (!suggsWrapper.equals(searchWrapper))
                 return false;
         }
 
-        if((starting && suggestion.startsWith(searchTerm))
+        if ((starting && suggestion.startsWith(searchTerm))
         || (!starting && suggestion.contains(searchTerm)))
             return true;
 
         String searchPrefix = "";
         String suggsPrefix = "";
-        if(suggestion.length() > 1 && SEARCH_PREFIXES.contains(suggestion.substring(0,1))) {
+        if (suggestion.length() > 1 && SEARCH_PREFIXES.contains(suggestion.substring(0,1))) {
             suggsPrefix = suggestion.substring(0,1);
             suggestion = suggestion.substring(1);
         }
-        if(searchTerm.length() > 1 && SEARCH_PREFIXES.contains(searchTerm.substring(0,1))) {
+        if (searchTerm.length() > 1 && SEARCH_PREFIXES.contains(searchTerm.substring(0,1))) {
             searchPrefix = searchTerm.substring(0,1);
             searchTerm = searchTerm.substring(1);
 
-            if(!suggsPrefix.equals(searchPrefix))
+            if (!suggsPrefix.equals(searchPrefix))
                 return false;
         }
 
-        if(!searchTerm.contains(":") && suggestion.contains(":") && (suggestion.length() > suggestion.indexOf(":") + 1)) {
-            if((starting && suggestion.substring(suggestion.indexOf(":") + 1).startsWith(searchTerm))
+        if (!searchTerm.contains(":") && suggestion.contains(":") && (suggestion.length() > suggestion.indexOf(":") + 1)) {
+            if ((starting && suggestion.substring(suggestion.indexOf(":") + 1).startsWith(searchTerm))
             || (!starting && suggestion.substring(suggestion.indexOf(":") + 1).contains(searchTerm)))
                 return true;
         }
@@ -151,7 +151,7 @@ public class TextSuggestor {
     }
 
 	public void refresh() {
-        if(!keepSuggestions) {
+        if (!keepSuggestions) {
             this.suggestionsWindow = null;
             this.showSuggestions();
         }
@@ -162,7 +162,7 @@ public class TextSuggestor {
     }
 
     public boolean renderSuggestions(GuiGraphics guiGraphics, int i, int j) {
-        if(this.suggestionsWindow != null) {
+        if (this.suggestionsWindow != null) {
             this.suggestionsWindow.render(guiGraphics, i, j);
             return true;
         }
@@ -172,7 +172,7 @@ public class TextSuggestor {
     protected record SuggestionEntry(String raw, Component formatted) {
 
         public static SuggestionEntry of(Font font, String raw, Component formatted) {
-            while(font.width(formatted) < MIN_WIDTH) {
+            while (font.width(formatted) < MIN_WIDTH) {
                 formatted = formatted.copy().append(" ");
             }
             return new SuggestionEntry(raw, formatted);
@@ -190,9 +190,9 @@ public class TextSuggestor {
             MutableComponent formatted = Component.empty();
             String parseString = raw;
 
-            for(int i=0; i<SEARCH_WRAPPERS.length(); i++) {
-                if(parseString.startsWith(SEARCH_WRAPPERS.substring(i,i+1))) {
-                    if(searchTerm.startsWith(SEARCH_WRAPPERS.substring(i,i+1))) {
+            for (int i=0; i<SEARCH_WRAPPERS.length(); i++) {
+                if (parseString.startsWith(SEARCH_WRAPPERS.substring(i,i+1))) {
+                    if (searchTerm.startsWith(SEARCH_WRAPPERS.substring(i,i+1))) {
                         formatted.append(Component.nullToEmpty(SEARCH_WRAPPERS.substring(i,i+1)).copy().withStyle(matching));
                         searchTerm = searchTerm.substring(1);
                     }
@@ -203,9 +203,9 @@ public class TextSuggestor {
                     break;
                 }
             }
-            for(int i=0; i<SEARCH_PREFIXES.length(); i++) {
-                if(parseString.startsWith(SEARCH_PREFIXES.substring(i,i+1))) {
-                    if(searchTerm.startsWith(SEARCH_PREFIXES.substring(i,i+1))) {
+            for (int i=0; i<SEARCH_PREFIXES.length(); i++) {
+                if (parseString.startsWith(SEARCH_PREFIXES.substring(i,i+1))) {
+                    if (searchTerm.startsWith(SEARCH_PREFIXES.substring(i,i+1))) {
                         formatted.append(Component.nullToEmpty(SEARCH_PREFIXES.substring(i,i+1)).copy().withStyle(matching));
                         searchTerm = searchTerm.substring(1);
                     }
@@ -217,12 +217,12 @@ public class TextSuggestor {
                 }
             }
 
-            while(parseString.length() > 0 && searchTerm.length() > 0) {
+            while (parseString.length() > 0 && searchTerm.length() > 0) {
                 int index = parseString.toLowerCase().indexOf(searchTerm.toLowerCase());
-                if(index == -1) {
+                if (index == -1) {
                     break;
                 }
-                else if(index == 0) {
+                else if (index == 0) {
                     formatted.append(Component.nullToEmpty(parseString.substring(0,searchTerm.length())).copy().withStyle(matching));
                     parseString = parseString.substring(searchTerm.length());
                 }
@@ -233,7 +233,7 @@ public class TextSuggestor {
 
             }
 
-            if(parseString.length() > 0)
+            if (parseString.length() > 0)
                 formatted.append(Component.nullToEmpty(parseString));
 
             return SuggestionEntry.of(font, raw, formatted);
@@ -263,10 +263,10 @@ public class TextSuggestor {
 
             List<ClientTooltipComponent> tooltipList = Lists.newArrayList();
             int maxWidth = MIN_WIDTH;
-            for(int n = 0; n < k; n++) {
+            for (int n = 0; n < k; n++) {
                 SuggestionEntry suggestion = this.suggestionList.get(n + this.offset);
                 Component text = suggestion.formatted();
-                if(n + this.offset == this.current)
+                if (n + this.offset == this.current)
                     text = text.copy().withStyle(ChatFormatting.YELLOW);
                 tooltipList.add(ClientTooltipComponent.create(text.getVisualOrderText()));
                 maxWidth = Math.max(maxWidth, TextSuggestor.this.font.width(text));
@@ -278,10 +278,10 @@ public class TextSuggestor {
             rect.setX(vec.x()-WIDTH_PADDING);
             rect.setY(vec.y());
 
-            if(this.rect.contains(i, j)) {
+            if (this.rect.contains(i, j)) {
                 int lineNum = (j - this.rect.getY()) / LINE_HEIGHT;
                 int suggsNum = lineNum + this.offset;
-                if(suggsNum >= 0 && suggsNum < this.suggestionList.size() && lineNum >= 0 && lineNum < TextSuggestor.this.suggestionLineLimit) {
+                if (suggsNum >= 0 && suggsNum < this.suggestionList.size() && lineNum >= 0 && lineNum < TextSuggestor.this.suggestionLineLimit) {
                     this.select(suggsNum);
                     guiGraphics.requestCursor(CursorTypes.POINTING_HAND);
                 }
@@ -310,13 +310,13 @@ public class TextSuggestor {
         }
 
         public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
-            if(!this.rect.contains((int)mouseButtonEvent.x(), (int)mouseButtonEvent.y())) {
+            if (!this.rect.contains((int)mouseButtonEvent.x(), (int)mouseButtonEvent.y())) {
                 return false;
             }
 
             int lineNum = ((int)mouseButtonEvent.y() - this.rect.getY()) / LINE_HEIGHT;
             int suggsNum = lineNum + this.offset;
-            if(suggsNum >= 0 && suggsNum < this.suggestionList.size() && lineNum >= 0 && lineNum < TextSuggestor.this.suggestionLineLimit) {
+            if (suggsNum >= 0 && suggsNum < this.suggestionList.size() && lineNum >= 0 && lineNum < TextSuggestor.this.suggestionLineLimit) {
                 this.select(suggsNum);
                 this.useSuggestion();
             }
@@ -326,7 +326,7 @@ public class TextSuggestor {
 
         public boolean mouseScrolled(double d) {
             int j = (int)TextSuggestor.this.client.mouseHandler.getScaledYPos(TextSuggestor.this.client.getWindow());
-            if(this.rect.getY() <= j && j <= this.rect.getY()+this.rect.getHeight()) {
+            if (this.rect.getY() <= j && j <= this.rect.getY()+this.rect.getHeight()) {
                 this.offset = Mth.clamp((int)(this.offset - d), 0, Math.max(this.suggestionList.size() - TextSuggestor.this.suggestionLineLimit, 0));
                 return true;
             }
@@ -334,29 +334,29 @@ public class TextSuggestor {
         }
 
         public boolean keyPressed(KeyEvent keyEvent) {
-            if(keyEvent.key() == 265) {//arrow up
+            if (keyEvent.key() == 265) {//arrow up
                 this.cycle(-1);
                 this.tabCycles = false;
                 return true;
             }
-            if(keyEvent.key() == 264) {//arrow down
+            if (keyEvent.key() == 264) {//arrow down
                 this.cycle(1);
                 this.tabCycles = false;
                 return true;
             }
-            if(keyEvent.key() == 258) {//tab
-                if(this.tabCycles) {
+            if (keyEvent.key() == 258) {//tab
+                if (this.tabCycles) {
                     this.cycle(keyEvent.hasShiftDown() ? -1 : 1);
                 }
                 this.useSuggestion();
                 return true;
             }
-            if(keyEvent.key() == GLFW.GLFW_KEY_ENTER || keyEvent.key() == GLFW.GLFW_KEY_KP_ENTER) {//enter
+            if (keyEvent.key() == GLFW.GLFW_KEY_ENTER || keyEvent.key() == GLFW.GLFW_KEY_KP_ENTER) {//enter
                 this.useSuggestion();
                 TextSuggestor.this.hide();
                 return true;
             }
-            if(keyEvent.key() == 256) {//escape
+            if (keyEvent.key() == 256) {//escape
                 TextSuggestor.this.hide();
                 return true;
             }
@@ -367,12 +367,12 @@ public class TextSuggestor {
             this.select(this.current + i);
             int j = this.offset;
             int k = this.offset + TextSuggestor.this.suggestionLineLimit - 1;
-            if(this.current < j + SUGGS_PADDING) {
+            if (this.current < j + SUGGS_PADDING) {
                 this.offset = Mth.clamp(
                     this.current - SUGGS_PADDING,
                     0, Math.max(this.suggestionList.size() - TextSuggestor.this.suggestionLineLimit, 0)
                 );
-            } else if(this.current > k - SUGGS_PADDING) {
+            } else if (this.current > k - SUGGS_PADDING) {
                 this.offset = Mth.clamp(
                     this.current + SUGGS_PADDING + TextSuggestor.this.lineStartOffset - TextSuggestor.this.suggestionLineLimit,
                     0, Math.max(this.suggestionList.size() - TextSuggestor.this.suggestionLineLimit, 0)
@@ -382,10 +382,10 @@ public class TextSuggestor {
 
         public void select(int i) {
             this.current = i;
-            if(this.current < 0) {
+            if (this.current < 0) {
                 this.current = 0;
             }
-            if(this.current >= this.suggestionList.size()) {
+            if (this.current >= this.suggestionList.size()) {
                 this.current = this.suggestionList.size() - 1;
             }
         }

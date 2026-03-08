@@ -94,7 +94,7 @@ public abstract class GenericScreen extends Screen {
     public static List<FormattedCharSequence> setCurrentTooltip(Component text) {
         prevTooltipTime = System.currentTimeMillis();
         String newTooltipNbt = BlackMagick.textComponentToSnbt(text);
-        if(prevTooltipNbt == null || !prevTooltipNbt.equals(newTooltipNbt)) {
+        if (prevTooltipNbt == null || !prevTooltipNbt.equals(newTooltipNbt)) {
             prevTooltipNbt = newTooltipNbt;
             prevTooltipRaw = BlackMagick.textComponentToStringLiteral(text);
             prevTooltipScroll = 0;
@@ -116,14 +116,14 @@ public abstract class GenericScreen extends Screen {
 
     public GenericScreen(String title) {
         super(title == null ? GameNarrator.NO_TITLE : Component.nullToEmpty(title));
-        if(title != null)
+        if (title != null)
             hasTitle = true;
         WIDGET_UTIL = createWidgetUtil();
     }
 
     public GenericScreen(Component title) {
         super(title == null ? GameNarrator.NO_TITLE : title);
-        if(title != null)
+        if (title != null)
             hasTitle = true;
         WIDGET_UTIL = createWidgetUtil();
     }
@@ -171,13 +171,13 @@ public abstract class GenericScreen extends Screen {
         this.renderBehindBackgroundTexture(context);
 
         Identifier backgroundTexture = getBackgroundTexture();
-        if(backgroundTexture != null)
+        if (backgroundTexture != null)
 		    context.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, this.x, this.y, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
     }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
-        if(super.mouseClicked(mouseButtonEvent, doubleTap))
+        if (super.mouseClicked(mouseButtonEvent, doubleTap))
             return true;
         unsel();
         return false;
@@ -185,18 +185,18 @@ public abstract class GenericScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent keyEvent) {
-        if(suggs == null && System.currentTimeMillis()-prevTooltipTime < 100) {
-            if(keyEvent.hasControlDown() && keyEvent.key() == GLFW.GLFW_KEY_C) {
-                if(prevTooltipNbt != null) {
-                    if(keyEvent.hasAltDown()) {
-                        if(System.currentTimeMillis() - prevTooltipCopyTime > TOOLTIP_COPY_COOLDOWN || !prevTooltipNbt.equals(FortytwoEdit.getClipboard())) {
+        if (suggs == null && System.currentTimeMillis()-prevTooltipTime < 100) {
+            if (keyEvent.hasControlDown() && keyEvent.key() == GLFW.GLFW_KEY_C) {
+                if (prevTooltipNbt != null) {
+                    if (keyEvent.hasAltDown()) {
+                        if (System.currentTimeMillis() - prevTooltipCopyTime > TOOLTIP_COPY_COOLDOWN || !prevTooltipNbt.equals(FortytwoEdit.getClipboard())) {
                             FortytwoEdit.setClipboard(prevTooltipNbt);
                             FortytwoEdit.showToast("Clipboard", "Tooltip component copied");
                             prevTooltipCopyTime = System.currentTimeMillis();
                         }
                     }
                     else {
-                        if(System.currentTimeMillis() - prevTooltipCopyTime > TOOLTIP_COPY_COOLDOWN || !prevTooltipRaw.equals(FortytwoEdit.getClipboard())) {
+                        if (System.currentTimeMillis() - prevTooltipCopyTime > TOOLTIP_COPY_COOLDOWN || !prevTooltipRaw.equals(FortytwoEdit.getClipboard())) {
                             FortytwoEdit.setClipboard(prevTooltipRaw);
                             FortytwoEdit.showToast("Clipboard", "Tooltip text copied");
                             prevTooltipCopyTime = System.currentTimeMillis();
@@ -205,30 +205,30 @@ public abstract class GenericScreen extends Screen {
                 }
                 return true;
             }
-            if(keyEvent.hasControlDown() && keyEvent.key() == GLFW.GLFW_KEY_PAGE_UP) {
-                if(keyEvent.hasAltDown()) {
-                    if(prevTooltipScroll != 0) {
+            if (keyEvent.hasControlDown() && keyEvent.key() == GLFW.GLFW_KEY_PAGE_UP) {
+                if (keyEvent.hasAltDown()) {
+                    if (prevTooltipScroll != 0) {
                         prevTooltipScroll = 0;
                         prevTooltipCache = null;
                     }
                 }
                 else {
-                    if(prevTooltipScroll > 0) {
+                    if (prevTooltipScroll > 0) {
                         prevTooltipScroll--;
                         prevTooltipCache = null;
                     }
                 }
                 return true;
             }
-            if(keyEvent.hasControlDown() && keyEvent.key() == GLFW.GLFW_KEY_PAGE_DOWN) {
-                if(keyEvent.hasAltDown()) {
-                    if(prevTooltipScroll != Integer.MAX_VALUE) {
+            if (keyEvent.hasControlDown() && keyEvent.key() == GLFW.GLFW_KEY_PAGE_DOWN) {
+                if (keyEvent.hasAltDown()) {
+                    if (prevTooltipScroll != Integer.MAX_VALUE) {
                         prevTooltipScroll = Integer.MAX_VALUE;
                         prevTooltipCache = null;
                     }
                 }
                 else {
-                    if(prevTooltipScroll < Integer.MAX_VALUE) {
+                    if (prevTooltipScroll < Integer.MAX_VALUE) {
                         prevTooltipScroll++;
                         prevTooltipCache = null;
                     }
@@ -236,11 +236,11 @@ public abstract class GenericScreen extends Screen {
                 return true;
             }
         }
-        if(super.keyPressed(keyEvent)) {
+        if (super.keyPressed(keyEvent)) {
             return true;
         }
-        if(FortytwoEdit.keyMagickGui.matches(keyEvent) || minecraft.options.keyInventory.matches(keyEvent)) {
-            if(shouldCloseOnKeybind()) {
+        if (FortytwoEdit.keyMagickGui.matches(keyEvent) || minecraft.options.keyInventory.matches(keyEvent)) {
+            if (shouldCloseOnKeybind()) {
                 this.onClose();
                 return true;
             }
@@ -259,10 +259,10 @@ public abstract class GenericScreen extends Screen {
 
     protected void reloadScreen() {
         double scroll = 0;
-        if(SCROLL_PANE != null)
+        if (SCROLL_PANE != null)
             scroll = SCROLL_PANE.scrollAmount();
         this.rebuildWidgets();
-        if(SCROLL_PANE != null)
+        if (SCROLL_PANE != null)
             SCROLL_PANE.setScrollAmount(scroll);
     }
 
@@ -277,13 +277,13 @@ public abstract class GenericScreen extends Screen {
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        if(hasTitle)
+        if (hasTitle)
             context.drawCenteredString(this.font, this.getTitle(), this.width / 2, y+11, TEXT_COLOR);
     }
 
     @Override
     public void tick() {
-        if(unsel) {
+        if (unsel) {
             clearFocus();
             unsel = false;
         }
@@ -326,7 +326,7 @@ public abstract class GenericScreen extends Screen {
 
         public ScrollRow addRow(PosWidget... posWidgets) {
             ScrollRow row = new ScrollRow(NARROW);
-            for(PosWidget pw : posWidgets) {
+            for (PosWidget pw : posWidgets) {
                 row.add(pw);
             }
             return addRow(row);
@@ -334,7 +334,7 @@ public abstract class GenericScreen extends Screen {
 
         public ScrollRow addRow(AbstractWidget... widgets) {
             ScrollRow row = new ScrollRow(NARROW);
-            for(AbstractWidget w : widgets) {
+            for (AbstractWidget w : widgets) {
                 row.add(w);
             }
             return addRow(row);
@@ -355,19 +355,19 @@ public abstract class GenericScreen extends Screen {
         public ScrollRow addRow(Component title, boolean centered) {
             ScrollRow row = new ScrollRow(NARROW);
             row.add(new MultiLineTextWidget(Component.empty().withColor(LABEL_COLOR).append(title), GenericScreen.this.font), true, MULTI_LINE_TEXT_WIDGET_Y_OFFSET);
-            if(centered)
+            if (centered)
                 row.center();
             return addRow(row);
         }
 
         public ScrollRow getRow() {
-            if(this.children().isEmpty())
+            if (this.children().isEmpty())
                 this.addRow();
             return this.children().getLast();
         }
 
         public void centerAll() {
-            for(ScrollRow row : this.children()) {
+            for (ScrollRow row : this.children()) {
                 row.center();
             }
         }
@@ -380,7 +380,7 @@ public abstract class GenericScreen extends Screen {
 
         @Override
         public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
-            if(super.mouseClicked(mouseButtonEvent, doubleTap))
+            if (super.mouseClicked(mouseButtonEvent, doubleTap))
                 return true;
             unsel();
             return false;
@@ -403,7 +403,7 @@ public abstract class GenericScreen extends Screen {
 
         private void set(int i, PosWidget posWidget) {
             childrenCache.clear();
-            if(i==-1)
+            if (i==-1)
                 children.add(posWidget);
             else
                 children.set(i, posWidget);
@@ -434,36 +434,36 @@ public abstract class GenericScreen extends Screen {
             int right = getRight();
             int offset = ((backgroundWidth - (right - left)) / 2) + SCROLL_ROW_LEFT_OFFSET - left;
             
-            for(int i=0; i<children.size(); i++) {
+            for (int i=0; i<children.size(); i++) {
                 set(i, PosWidget.create(children.get(i).w(), children.get(i).x() + offset, children.get(i).y()));
             }
         }
 
         private int getLeft() {
             int temp = 0;
-            if(!this.children.isEmpty())
+            if (!this.children.isEmpty())
                 temp = this.children.get(0).x();
-            for(PosWidget pw : this.children)
-                if(pw.x() < temp)
+            for (PosWidget pw : this.children)
+                if (pw.x() < temp)
                     temp = pw.x();
             return temp;
         }
 
         private int getRight() {
             int temp = 0;
-            if(!this.children.isEmpty())
+            if (!this.children.isEmpty())
                 temp = this.children.get(0).x() + this.children.get(0).w().getWidth();
-            for(PosWidget pw : this.children) {
+            for (PosWidget pw : this.children) {
                 int thisRight = pw.x() + pw.w().getWidth();
-                if(thisRight > temp)
+                if (thisRight > temp)
                     temp = thisRight;
             }
             return temp;
         }
 
         private List<AbstractWidget> getChildrenCache() {
-            if(childrenCache.isEmpty()) {
-                for(PosWidget pw : this.children)
+            if (childrenCache.isEmpty()) {
+                for (PosWidget pw : this.children)
                     childrenCache.add(pw.w());
             }
             return this.childrenCache;
@@ -481,7 +481,7 @@ public abstract class GenericScreen extends Screen {
 
         @Override
         public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
-            if(super.mouseClicked(mouseButtonEvent, doubleTap))
+            if (super.mouseClicked(mouseButtonEvent, doubleTap))
                 return true;
             unsel();
             return false;
@@ -489,7 +489,7 @@ public abstract class GenericScreen extends Screen {
 
         @Override
         public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            for(PosWidget posWidget : this.children) {
+            for (PosWidget posWidget : this.children) {
                 posWidget.repositionInRow(this);
                 posWidget.w().render(context, mouseX, mouseY, tickDelta);
             }

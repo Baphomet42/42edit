@@ -37,10 +37,10 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
     private void injectInit(CallbackInfo c) {
         nameEdit.setResponder(value -> {
 
-            if(loadButton.visible) {
+            if (loadButton.visible) {
                 //SuggestionHelper.clearDynamicListCaches(); to_do uncomment if list made dynamic
 
-                if(suggs != null)
+                if (suggs != null)
                     suggs.refresh();
                 else {
                     suggs = new TextSuggestor(minecraft, nameEdit, font);
@@ -48,7 +48,7 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
                 }
 
             }
-            else if(suggs != null)
+            else if (suggs != null)
                 suggs = null;
 
         });
@@ -56,13 +56,13 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
 
     @Inject(method = "render", at = @At("TAIL"), cancellable = true)
     private void injectRender(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo c) {
-        if(suggs != null)
+        if (suggs != null)
             suggs.render(context, mouseX, mouseY);
     }
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void injectKeyPressed(KeyEvent keyEvent, CallbackInfoReturnable<Boolean> cir) {
-        if(suggs != null && suggs.keyPressed(keyEvent)) {
+        if (suggs != null && suggs.keyPressed(keyEvent)) {
             cir.setReturnValue(true);
         }
     }
@@ -74,7 +74,7 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        if(suggs != null && suggs.mouseScrolled(verticalAmount)) {
+        if (suggs != null && suggs.mouseScrolled(verticalAmount)) {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
@@ -82,10 +82,16 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
-        if(suggs != null && suggs.mouseClicked(mouseButtonEvent, doubleTap)) {
+        if (suggs != null && suggs.mouseClicked(mouseButtonEvent, doubleTap)) {
             return true;
         }
-        suggs = null;
+        if (suggs == null && loadButton.visible && nameEdit.isHovered()) {
+            suggs = new TextSuggestor(minecraft, nameEdit, font);
+            suggs.setSuggestions(SuggestionHelper.DATA_STRUCTURE.getArray());
+        }
+        else {
+            suggs = null;
+        }
         return super.mouseClicked(mouseButtonEvent, doubleTap);
     }
 

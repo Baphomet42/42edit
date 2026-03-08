@@ -42,8 +42,8 @@ public class ContainerTooltipComponent implements ClientTooltipComponent {
         int i = columnCount;
         int j = rowCount;
         int k = 0;
-        for(int l = 0; l < j; ++l) {
-            for(int m = 0; m < i; ++m) {
+        for (int l = 0; l < j; ++l) {
+            for (int m = 0; m < i; ++m) {
                 int n = x + m * 18 + 1;
                 int o = y + l * 18 + 1;
                 this.drawSlot(n, o, k++, context, textRenderer);

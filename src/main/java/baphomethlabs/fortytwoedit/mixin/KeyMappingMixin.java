@@ -17,40 +17,40 @@ public abstract class KeyMappingMixin {
     @Inject(method = "click", at = @At("TAIL"))
     private static void detectKeyPress(InputConstants.Key key, CallbackInfo c) {
 
-        if(FortytwoEdit.keyMod.isDown() && !FortytwoEdit.keySpamClick.isDown()) {
+        if (FortytwoEdit.keyMod.isDown() && !FortytwoEdit.keySpamClick.isDown()) {
             final Minecraft client = Minecraft.getInstance();
 
-            if(key.equals(((KeyMappingAccessor)client.options.keyAttack).getBoundKey())) {
+            if (key.equals(((KeyMappingAccessor)client.options.keyAttack).getBoundKey())) {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
-                if(FortytwoEdit.randoMode)
+                if (FortytwoEdit.randoMode)
                     FortytwoEdit.changeRandoSlot();
                 client.options.keyAttack.setDown(false);
             }
-            else if(key.equals(((KeyMappingAccessor)client.options.keyPickItem).getBoundKey())) {
+            else if (key.equals(((KeyMappingAccessor)client.options.keyPickItem).getBoundKey())) {
                 ItemStack item = FortytwoEdit.copyLookAt();
-                if(item != null && !item.isEmpty() && client.player.getAbilities().instabuild) {
+                if (item != null && !item.isEmpty() && client.player.getAbilities().instabuild) {
                     BlackMagick.setItemMain(item);
-                    while(client.options.keyPickItem.consumeClick()) {}
+                    while (client.options.keyPickItem.consumeClick()) {}
                     client.options.keyPickItem.setDown(false);
                 }
             }
 
         }
-        else if(FortytwoEdit.autoClicker && !FortytwoEdit.suppressKeybind) {
+        else if (FortytwoEdit.autoClicker && !FortytwoEdit.suppressKeybind) {
             final Minecraft client = Minecraft.getInstance();
             boolean stopAutoClicker = false;
 
-            if((FortytwoEdit.autoMine || FortytwoEdit.autoAttack) && key.equals(((KeyMappingAccessor)client.options.keyAttack).getBoundKey()))
+            if ((FortytwoEdit.autoMine || FortytwoEdit.autoAttack) && key.equals(((KeyMappingAccessor)client.options.keyAttack).getBoundKey()))
                 stopAutoClicker = true;
-            else if(FortytwoEdit.autoClick && key.equals(((KeyMappingAccessor)client.options.keyUse).getBoundKey()))
+            else if (FortytwoEdit.autoClick && key.equals(((KeyMappingAccessor)client.options.keyUse).getBoundKey()))
                 stopAutoClicker = true;
 
-            if(stopAutoClicker) {
+            if (stopAutoClicker) {
                 FortytwoEdit.autoClicker = false;
                 client.options.keyUse.setDown(false);
                 client.options.keyAttack.setDown(false);
-                while(client.options.keyUse.consumeClick()) {}
-                while(client.options.keyAttack.consumeClick()) {}
+                while (client.options.keyUse.consumeClick()) {}
+                while (client.options.keyAttack.consumeClick()) {}
             }
 
         }

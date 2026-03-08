@@ -26,9 +26,9 @@ public abstract class DebugScreenEntryListMixin {
     
     @Inject(method = "rebuildCurrentList", at = @At("RETURN"), cancellable = true)
 	public void injectRebuildCurrentList(CallbackInfo ci) {
-        if(FortytwoEdit.debugMixinRearrange) {
-            for(Identifier rl : MOVE_LAST) {
-                if(currentlyEnabled.contains(rl)) {
+        if (FortytwoEdit.debugMixinRearrange) {
+            for (Identifier rl : MOVE_LAST) {
+                if (currentlyEnabled.contains(rl)) {
                     currentlyEnabled.remove(rl);
                     currentlyEnabled.add(rl);
                 }

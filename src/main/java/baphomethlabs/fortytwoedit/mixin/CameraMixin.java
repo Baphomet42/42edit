@@ -35,7 +35,7 @@ public abstract class CameraMixin {
 
     @Redirect(method = "tickFov", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;getFieldOfViewModifier(ZF)F"))
     private float injectTickFov(AbstractClientPlayer player, boolean firstPerson, float effectScale) {
-        if(FortytwoEdit.zoomed) {
+        if (FortytwoEdit.zoomed) {
             return SpyglassItem.ZOOM_FOV_MODIFIER;
         }
         return player.getFieldOfViewModifier(firstPerson, effectScale);
@@ -43,14 +43,14 @@ public abstract class CameraMixin {
 
 	@Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewXRot(F)F"))
 	private float redirectAlignWithEntityGetViewXRot(Entity entity, float partialTicks) {
-        if(FortytwoEdit.isFreeLooking)
+        if (FortytwoEdit.isFreeLooking)
             return FortytwoEdit.cameraRotation[1];
         return entity.getViewXRot(partialTicks);
 	}
 
 	@Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewYRot(F)F"))
 	private float redirectAlignWithEntityGetViewYRot(Entity entity, float partialTicks) {
-        if(FortytwoEdit.isFreeLooking)
+        if (FortytwoEdit.isFreeLooking)
             return FortytwoEdit.cameraRotation[0];
         return entity.getViewYRot(partialTicks);
 	}

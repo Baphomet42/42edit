@@ -25,14 +25,14 @@ public abstract class ClientLanguageMixin {
         newTranslations.putAll(((ClientLanguageAccessor)clientLanguage).getTranslations());
 
         Map<String,String> modTranslations = Maps.newHashMap();
-        for(String lang : list) {
+        for (String lang : list) {
             InputStream stream = FortytwoEdit.getAssetsLang(lang);
-            if(stream != null)
+            if (stream != null)
                 Language.loadFromJson(stream,modTranslations::put);
         }
 
-        for(String key : modTranslations.keySet()) {
-            if(!newTranslations.containsKey(key))
+        for (String key : modTranslations.keySet()) {
+            if (!newTranslations.containsKey(key))
                 newTranslations.put(key,modTranslations.get(key));
         }
 

@@ -79,28 +79,28 @@ public class SuggestionHelper {
 
         public List<String> getList(boolean snbt) {
             List<String> list = Lists.newArrayList();
-            if(snbt) {
-                if(inlinedSuggs != null) {
-                    if(isSnbt)
+            if (snbt) {
+                if (inlinedSuggs != null) {
+                    if (isSnbt)
                         list.addAll(Set.of(inlinedSuggs));
                     else
                         list.addAll(BlackMagick.formatStringSuggs(List.of(inlinedSuggs)));
                 }
-                if(listMapKey != null && SUGGS_LIST_METHODS.containsKey(listMapKey)) {
-                    if(isSnbt)
+                if (listMapKey != null && SUGGS_LIST_METHODS.containsKey(listMapKey)) {
+                    if (isSnbt)
                         list.addAll(SUGGS_LIST_METHODS.get(listMapKey).get());
                     else
                         list.addAll(BlackMagick.formatStringSuggs(SUGGS_LIST_METHODS.get(listMapKey).get()));
                 }
             }
             else {
-                if(inlinedSuggs != null && !isSnbt)
+                if (inlinedSuggs != null && !isSnbt)
                     list.addAll(Set.of(inlinedSuggs));
-                if(listMapKey != null && !isSnbt && SUGGS_LIST_METHODS.containsKey(listMapKey))
+                if (listMapKey != null && !isSnbt && SUGGS_LIST_METHODS.containsKey(listMapKey))
                     list.addAll(SUGGS_LIST_METHODS.get(listMapKey).get());
             }
-            if(joinedLists != null)
-                for(SuggestionGetter s : joinedLists)
+            if (joinedLists != null)
+                for (SuggestionGetter s : joinedLists)
                     list.addAll(s.getList(snbt));
             sortUnique(list);
             return list;
@@ -126,12 +126,12 @@ public class SuggestionHelper {
     private static final Map<String,Supplier<List<String>>> SUGGS_LIST_METHODS = Maps.newHashMap();
 
     public static void clearCacheInfo() {
-        for(String key : LIST_CACHES.keySet())
+        for (String key : LIST_CACHES.keySet())
             LIST_CACHES.get(key).clear();
     }
 
     public static void clearDynamicListCaches() {
-        for(String key : DYNAMIC_LIST_CACHES)
+        for (String key : DYNAMIC_LIST_CACHES)
             LIST_CACHES.get(key).clear();
     }
 
@@ -139,8 +139,8 @@ public class SuggestionHelper {
         clearCacheInfo();
         int successCount = 0;
         int totalCount = 0;
-        for(String list : SUGGS_LIST_METHODS.keySet()) {
-            if(SUGGS_LIST_METHODS.get(list).get().isEmpty())
+        for (String list : SUGGS_LIST_METHODS.keySet()) {
+            if (SUGGS_LIST_METHODS.get(list).get().isEmpty())
                 FortytwoEdit.logWarn("Unable to fetch suggestions list: "+list);
             else
                 successCount++;
@@ -151,11 +151,11 @@ public class SuggestionHelper {
 
     protected static List<String> createOrGetCacheList(String name, boolean isDynamic) {
         // helpful regex search `createOrGetCacheList\(.*true\)` or `createOrGetCacheList\(.*false\)`
-        if(LIST_CACHES.containsKey(name))
+        if (LIST_CACHES.containsKey(name))
             return LIST_CACHES.get(name);
         List<String> list = Lists.newArrayList();
         LIST_CACHES.put(name,list);
-        if(isDynamic)
+        if (isDynamic)
             DYNAMIC_LIST_CACHES.add(name);
         return list;
     }
@@ -189,10 +189,10 @@ public class SuggestionHelper {
     public static List<List<String>> getBlockStates(Item item) {
         List<List<String>> states = Lists.newArrayList();
         BlockState blockState = Block.byItem(item).defaultBlockState();
-        for(Map.Entry<Property<?>, Comparable<?>> entry : blockState.getValues().entrySet()) {
+        for (Map.Entry<Property<?>, Comparable<?>> entry : blockState.getValues().entrySet()) {
             List<String> list = Lists.newArrayList();
             list.add(entry.getKey().getName());
-            for(Comparable<?> val : entry.getKey().getPossibleValues()) {
+            for (Comparable<?> val : entry.getKey().getPossibleValues()) {
                 list.add((String)Util.getPropertyName(entry.getKey(), val));
             }
             states.add(list);
@@ -209,9 +209,9 @@ public class SuggestionHelper {
         int max = -1;
         try {
             Enchantment ench = BlackMagick.getRegistryAccess().lookup(Registries.ENCHANTMENT).get().getValue(Identifier.parse(key));
-            if(ench != null)
+            if (ench != null)
                 max = ench.getMaxLevel();
-        } catch(Exception ex) {}
+        } catch (Exception ex) {}
         return max;
     }
 
@@ -227,13 +227,13 @@ public class SuggestionHelper {
     public static int[] getContainerSize(Item item) {
 
         Identifier identifier = BlackMagick.identifierOrNull(item.toString());
-        if(identifier != null) {
+        if (identifier != null) {
             String id = identifier.toString();
 
-            if(id.startsWith("minecraft:") && id.endsWith("shulker_box"))
+            if (id.startsWith("minecraft:") && id.endsWith("shulker_box"))
                 return new int[]{3,9};
 
-            switch(id) {
+            switch (id) {
                 case "minecraft:chest":
                 case "minecraft:trapped_chest":
                 case "minecraft:barrel":
@@ -267,8 +267,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_ATTRIBUTE_MODIFIER_SLOT = registerSuggsList("LIST_ATTRIBUTE_MODIFIER_SLOT", () -> {
         List<String> list = createOrGetCacheList("LIST_ATTRIBUTE_MODIFIER_SLOT",false);
-        if(list.isEmpty()) {
-            for(EquipmentSlotGroup i : EquipmentSlotGroup.values())
+        if (list.isEmpty()) {
+            for (EquipmentSlotGroup i : EquipmentSlotGroup.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -277,8 +277,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_AXOLOTL_VARIANT = registerSuggsList("LIST_AXOLOTL_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_AXOLOTL_VARIANT",false);
-        if(list.isEmpty()) {
-            for(Axolotl.Variant i : Axolotl.Variant.values())
+        if (list.isEmpty()) {
+            for (Axolotl.Variant i : Axolotl.Variant.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -290,9 +290,9 @@ public class SuggestionHelper {
      */
     public static final SuggestionGetter LIST_DATA_COMPONENT_TYPE = registerSuggsList("LIST_DATA_COMPONENT_TYPE", () -> {
         List<String> list = createOrGetCacheList("LIST_DATA_COMPONENT_TYPE",false);
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             BuiltInRegistries.DATA_COMPONENT_TYPE.forEach(i -> {
-                if(!i.isTransient())
+                if (!i.isTransient())
                     list.add(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
             });
             sortUnique(list);
@@ -305,9 +305,9 @@ public class SuggestionHelper {
      */
     public static final SuggestionGetter LIST_DATA_COMPONENT_TYPE_OR_REMOVED = registerSuggsList("LIST_DATA_COMPONENT_TYPE_OR_REMOVED", () -> {
         List<String> list = createOrGetCacheList("LIST_DATA_COMPONENT_TYPE_OR_REMOVED",false);
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             BuiltInRegistries.DATA_COMPONENT_TYPE.forEach(i -> {
-                if(!i.isTransient()) {
+                if (!i.isTransient()) {
                     list.add(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
                     list.add("!"+BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
                 }
@@ -319,8 +319,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_DYE_COLOR = registerSuggsList("LIST_DYE_COLOR", () -> {
         List<String> list = createOrGetCacheList("LIST_DYE_COLOR",false);
-        if(list.isEmpty()) {
-            for(DyeColor i : DyeColor.values())
+        if (list.isEmpty()) {
+            for (DyeColor i : DyeColor.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -329,8 +329,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_EQUIPMENT_SLOT = registerSuggsList("LIST_EQUIPMENT_SLOT", () -> {
         List<String> list = createOrGetCacheList("LIST_EQUIPMENT_SLOT",false);
-        if(list.isEmpty()) {
-            for(EquipmentSlot i : EquipmentSlot.values())
+        if (list.isEmpty()) {
+            for (EquipmentSlot i : EquipmentSlot.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -339,8 +339,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_FIREWORK_EXPLOSION_COMPONENT_TYPE = registerSuggsList("LIST_FIREWORK_EXPLOSION_COMPONENT_TYPE", () -> {
         List<String> list = createOrGetCacheList("LIST_FIREWORK_EXPLOSION_COMPONENT_TYPE",false);
-        if(list.isEmpty()) {
-            for(FireworkExplosion.Shape i : FireworkExplosion.Shape.values())
+        if (list.isEmpty()) {
+            for (FireworkExplosion.Shape i : FireworkExplosion.Shape.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -349,9 +349,9 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_FORMATTING_COLOR = registerSuggsList("LIST_FORMATTING_COLOR", () -> {
         List<String> list = createOrGetCacheList("LIST_FORMATTING_COLOR",false);
-        if(list.isEmpty()) {
-            for(String i : ChatFormatting.getNames(true, false))
-                if(!i.equals("reset"))
+        if (list.isEmpty()) {
+            for (String i : ChatFormatting.getNames(true, false))
+                if (!i.equals("reset"))
                     list.add(i);
             sortUnique(list);
         }
@@ -360,8 +360,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_FOX_VARIANT = registerSuggsList("LIST_FOX_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_FOX_VARIANT",false);
-        if(list.isEmpty()) {
-            for(Fox.Variant i : Fox.Variant.values())
+        if (list.isEmpty()) {
+            for (Fox.Variant i : Fox.Variant.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -370,8 +370,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_HORSE_VARIANT = registerSuggsList("LIST_HORSE_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_HORSE_VARIANT",false);
-        if(list.isEmpty()) {
-            for(Variant i : Variant.values())
+        if (list.isEmpty()) {
+            for (Variant i : Variant.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -380,9 +380,9 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_KEYBIND = registerSuggsList("LIST_KEYBIND", () -> {
         List<String> list = createOrGetCacheList("LIST_KEYBIND",false);
-        if(list.isEmpty()) {
-            for(String i : KeyMappingAccessor.getKeysList().keySet())
-                if(!i.startsWith("42edit."))
+        if (list.isEmpty()) {
+            for (String i : KeyMappingAccessor.getKeysList().keySet())
+                if (!i.startsWith("42edit."))
                     list.add(i);
             sortUnique(list);
         }
@@ -391,8 +391,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_LLAMA_VARIANT = registerSuggsList("LIST_LLAMA_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_LLAMA_VARIANT",false);
-        if(list.isEmpty()) {
-            for(Llama.Variant i : Llama.Variant.values())
+        if (list.isEmpty()) {
+            for (Llama.Variant i : Llama.Variant.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -401,11 +401,11 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_MAP_COLOR = registerSuggsListSnbt("LIST_MAP_COLOR", () -> {
         List<String> list = createOrGetCacheList("LIST_MAP_COLOR",false);
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             list.add(""+MapItemColor.DEFAULT.rgb());
-            for(Identifier i : BuiltInRegistries.MAP_DECORATION_TYPE.keySet()) {
+            for (Identifier i : BuiltInRegistries.MAP_DECORATION_TYPE.keySet()) {
                 MapDecorationType t = BuiltInRegistries.MAP_DECORATION_TYPE.get(i).get().value();
-                if(t.hasMapColor()) {
+                if (t.hasMapColor()) {
                     list.add(""+t.mapColor());
                 }
             }
@@ -416,8 +416,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_MOOSHROOM_VARIANT = registerSuggsList("LIST_MOOSHROOM_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_MOOSHROOM_VARIANT",false);
-        if(list.isEmpty()) {
-            for(MushroomCow.Variant i : MushroomCow.Variant.values())
+        if (list.isEmpty()) {
+            for (MushroomCow.Variant i : MushroomCow.Variant.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -426,8 +426,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_PARROT_VARIANT = registerSuggsList("LIST_PARROT_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_PARROT_VARIANT",false);
-        if(list.isEmpty()) {
-            for(Parrot.Variant i : Parrot.Variant.values())
+        if (list.isEmpty()) {
+            for (Parrot.Variant i : Parrot.Variant.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -436,9 +436,9 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_POTION_CUSTOM_NAME = registerSuggsList("LIST_POTION_CUSTOM_NAME", () -> {
         List<String> list = createOrGetCacheList("LIST_POTION_CUSTOM_NAME",false);
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             list.add("empty");
-            for(Identifier i : BuiltInRegistries.POTION.keySet())
+            for (Identifier i : BuiltInRegistries.POTION.keySet())
                 list.add(BuiltInRegistries.POTION.get(i).get().value().name());
             sortUnique(list);
         }
@@ -447,8 +447,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_RABBIT_VARIANT = registerSuggsList("LIST_RABBIT_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_RABBIT_VARIANT",false);
-        if(list.isEmpty()) {
-            for(Rabbit.Variant i : Rabbit.Variant.values())
+        if (list.isEmpty()) {
+            for (Rabbit.Variant i : Rabbit.Variant.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -457,8 +457,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_SALMON_VARIANT = registerSuggsList("LIST_SALMON_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_SALMON_VARIANT",false);
-        if(list.isEmpty()) {
-            for(Salmon.Variant i : Salmon.Variant.values())
+        if (list.isEmpty()) {
+            for (Salmon.Variant i : Salmon.Variant.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -467,8 +467,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_SWING_ANIMATION_TYPE = registerSuggsList("LIST_SWING_ANIMATION_TYPE", () -> {
         List<String> list = createOrGetCacheList("LIST_SWING_ANIMATION_TYPE",false);
-        if(list.isEmpty()) {
-            for(SwingAnimationType i : SwingAnimationType.values())
+        if (list.isEmpty()) {
+            for (SwingAnimationType i : SwingAnimationType.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -477,8 +477,8 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_TROPICAL_FISH_VARIANT = registerSuggsList("LIST_TROPICAL_FISH_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_TROPICAL_FISH_VARIANT",false);
-        if(list.isEmpty()) {
-            for(TropicalFish.Pattern i : TropicalFish.Pattern.values())
+        if (list.isEmpty()) {
+            for (TropicalFish.Pattern i : TropicalFish.Pattern.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -490,8 +490,8 @@ public class SuggestionHelper {
      */
     public static final SuggestionGetter LIST_USE_ACTION = registerSuggsList("LIST_USE_ACTION", () -> {
         List<String> list = createOrGetCacheList("LIST_USE_ACTION",false);
-        if(list.isEmpty()) {
-            for(ItemUseAnimation i : ItemUseAnimation.values())
+        if (list.isEmpty()) {
+            for (ItemUseAnimation i : ItemUseAnimation.values())
                 list.add(i.getSerializedName());
             sortUnique(list);
         }
@@ -503,9 +503,9 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_ATLAS = registerSuggsList("LIST_ATLAS", () -> {
         List<String> list = createOrGetCacheList("LIST_ATLAS",true);
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
-            if(client.getAtlasManager() != null) {
+            if (client.getAtlasManager() != null) {
                 client.getAtlasManager().forEach((identifier, atlasEntry) -> {
                     list.add(identifier.toString());
                 });
@@ -517,9 +517,9 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_SPRITE = registerSuggsList("LIST_SPRITE", () -> {
         List<String> list = createOrGetCacheList("LIST_SPRITE",true);
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
-            if(client.getAtlasManager() != null) {
+            if (client.getAtlasManager() != null) {
                 client.getAtlasManager().forEach((identifier, atlasEntry) -> {
                     ((TextureAtlasAccessor)atlasEntry).getTexturesByName().forEach((textureLocation, textureSprite) -> {
                         list.add(textureLocation.toString());
@@ -533,11 +533,11 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter LIST_TRANSLATION_KEY = registerSuggsList("LIST_TRANSLATION_KEY", () -> {
         List<String> list = createOrGetCacheList("LIST_TRANSLATION_KEY",true);
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             final Language lang = Language.getInstance();
-            if(lang instanceof ClientLanguage) {
-                for(String i : ((ClientLanguageAccessor)lang).getTranslations().keySet())
-                    if(!i.startsWith("42edit."))
+            if (lang instanceof ClientLanguage) {
+                for (String i : ((ClientLanguageAccessor)lang).getTranslations().keySet())
+                    if (!i.startsWith("42edit."))
                         list.add(i);
                 sortUnique(list);
             }
@@ -549,8 +549,8 @@ public class SuggestionHelper {
     // static registry lists
 
     private static List<String> getRegistryIfEmpty(List<String> list, Registry<?> registryRef) {
-        if(list.isEmpty()) {
-            for(Identifier i : registryRef.keySet())
+        if (list.isEmpty()) {
+            for (Identifier i : registryRef.keySet())
                 list.add(i.toString());
             sortUnique(list);
         }
@@ -600,11 +600,11 @@ public class SuggestionHelper {
     // dynamic data lists
 
     private static List<String> getDataIfEmpty(List<String> list, ResourceKey<? extends Registry<?>> registryRef) {
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
-            if(client.level != null)
+            if (client.level != null)
                 BlackMagick.getRegistryAccess(client).lookup(registryRef).ifPresent(reg -> {
-                    for(Identifier i : reg.keySet())
+                    for (Identifier i : reg.keySet())
                         list.add(i.toString());
                 });
             sortUnique(list);
@@ -615,11 +615,20 @@ public class SuggestionHelper {
     public static final SuggestionGetter DATA_BANNER_PATTERN = registerSuggsList("DATA_BANNER_PATTERN", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_BANNER_PATTERN",true),Registries.BANNER_PATTERN));
 
+    public static final SuggestionGetter DATA_CAT_SOUND_VARIANT = registerSuggsList("DATA_CAT_SOUND_VARIANT", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_CAT_SOUND_VARIANT",true),Registries.CAT_SOUND_VARIANT));
+
     public static final SuggestionGetter DATA_CAT_VARIANT = registerSuggsList("DATA_CAT_VARIANT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_CAT_VARIANT",true),Registries.CAT_VARIANT));
 
+    public static final SuggestionGetter DATA_CHICKEN_SOUND_VARIANT = registerSuggsList("DATA_CHICKEN_SOUND_VARIANT", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_CHICKEN_SOUND_VARIANT",true),Registries.CHICKEN_SOUND_VARIANT));
+
     public static final SuggestionGetter DATA_CHICKEN_VARIANT = registerSuggsList("DATA_CHICKEN_VARIANT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_CHICKEN_VARIANT",true),Registries.CHICKEN_VARIANT));
+
+    public static final SuggestionGetter DATA_COW_SOUND_VARIANT = registerSuggsList("DATA_COW_SOUND_VARIANT", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_COW_SOUND_VARIANT",true),Registries.COW_SOUND_VARIANT));
 
     public static final SuggestionGetter DATA_COW_VARIANT = registerSuggsList("DATA_COW_VARIANT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_COW_VARIANT",true),Registries.COW_VARIANT));
@@ -645,6 +654,9 @@ public class SuggestionHelper {
     public static final SuggestionGetter DATA_PAINTING_VARIANT = registerSuggsList("DATA_PAINTING_VARIANT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_PAINTING_VARIANT",true),Registries.PAINTING_VARIANT));
 
+    public static final SuggestionGetter DATA_PIG_SOUND_VARIANT = registerSuggsList("DATA_PIG_SOUND_VARIANT", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_PIG_SOUND_VARIANT",true),Registries.PIG_SOUND_VARIANT));
+
     public static final SuggestionGetter DATA_PIG_VARIANT = registerSuggsList("DATA_PIG_VARIANT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_PIG_VARIANT",true),Registries.PIG_VARIANT));
 
@@ -667,9 +679,9 @@ public class SuggestionHelper {
     // dynamic data tags lists
 
     private static List<String> getTagsIfEmpty(List<String> list, ResourceKey<? extends Registry<?>> registryRef) {
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
-            if(client.level != null)
+            if (client.level != null)
                 BlackMagick.getRegistryAccess(client).lookup(registryRef).ifPresent(reg -> {
                     reg.listTagIds().forEach(tag -> {
                         list.add("#"+tag.location().toString());
@@ -708,11 +720,11 @@ public class SuggestionHelper {
     // dynamic data tags entry lists
 
     private static List<String> getItemsInTag(List<String> list, String tag) {
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
-            if(client.level != null)
+            if (client.level != null)
                 BlackMagick.getRegistryAccess(client).lookup(Registries.ITEM).ifPresent(reg -> {
-                    for(Holder<Item> itemHolder : reg.getTagOrEmpty(TagKey.create(Registries.ITEM,Identifier.parse(tag)))) {
+                    for (Holder<Item> itemHolder : reg.getTagOrEmpty(TagKey.create(Registries.ITEM,Identifier.parse(tag)))) {
                         list.add(itemHolder.value().toString());
                     }
                 });
@@ -728,16 +740,16 @@ public class SuggestionHelper {
     // static data lists from vanilla
 
     private static List<String> getVanillaDataIfEmpty(List<String> list, String path, String suffix) {
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             try {
                 Map<Identifier,IoSupplier<InputStream>> map = Maps.newHashMap();
                 final String namespace = "minecraft";
                 ServerPacksSource.createVanillaPackSource().listResources(PackType.SERVER_DATA, namespace, path, map::putIfAbsent);
                 map.keySet().forEach(i -> {
                     String temp = i.toString();
-                    if(temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
+                    if (temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
                         temp = namespace+":"+temp.substring(namespace.length()+1+path.length()+1,temp.length()-suffix.length());
-                        if(path.startsWith("tags/"))
+                        if (path.startsWith("tags/"))
                             temp = "#"+temp;
                         list.add(temp);
                     }
@@ -745,21 +757,21 @@ public class SuggestionHelper {
                         FortytwoEdit.logWarn("Failed to add data path to list: "+i.toString());
                     }
                 });
-            } catch(Exception ex) {}
+            } catch (Exception ex) {}
             sortUnique(list);
         }
         return list;
     }
 
     // private static List<String> setCommandSuggs(List<String> list, String cmd) { to_do live command suggs
-    //     if(list.isEmpty()) {
+    //     if (list.isEmpty()) {
     //         final MinecraftClient client = MinecraftClient.getInstance();
     //         CommandDispatcher<CommandSource> commandDispatcher = client.player.networkHandler.getCommandDispatcher();
     //         ParseResults<CommandSource> cmdSuggsParse = commandDispatcher.parse(cmd, (CommandSource)client.player.networkHandler.getCommandSource());
     //         CompletableFuture<Suggestions> cmdSuggsPendingSuggestions = commandDispatcher.getCompletionSuggestions(cmdSuggsParse, cmd.length());
     //         cmdSuggsPendingSuggestions.thenRun(() -> {
     //             Suggestions suggestions;
-    //             if(cmdSuggsPendingSuggestions.isDone() && !(suggestions = cmdSuggsPendingSuggestions.join()).isEmpty()) {
+    //             if (cmdSuggsPendingSuggestions.isDone() && !(suggestions = cmdSuggsPendingSuggestions.join()).isEmpty()) {
     //                 list.clear();
     //                 for (Suggestion suggestion : suggestions.getList())
     //                     list.add(suggestion.getText());
@@ -796,15 +808,15 @@ public class SuggestionHelper {
     // static assets lists from vanilla
 
     private static List<String> getVanillaAssetsIfEmpty(List<String> list, String path, String suffix) {
-        if(list.isEmpty()) {
+        if (list.isEmpty()) {
             try {
                 Map<Identifier,IoSupplier<InputStream>> map = Maps.newHashMap();
                 final String namespace = "minecraft";
                 ServerPacksSource.createVanillaPackSource().listResources(PackType.CLIENT_RESOURCES, namespace, path, map::putIfAbsent);
                 map.keySet().forEach(i -> {
                     String temp = i.toString();
-                    if(!temp.endsWith(suffix+MCMETA_SUFFIX)) {
-                        if(temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
+                    if (!temp.endsWith(suffix+MCMETA_SUFFIX)) {
+                        if (temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
                             temp = namespace+":"+temp.substring(namespace.length()+1+path.length()+1,temp.length()-suffix.length());
                             list.add(temp);
                         }
@@ -813,7 +825,7 @@ public class SuggestionHelper {
                         }
                     }
                 });
-            } catch(Exception ex) {}
+            } catch (Exception ex) {}
             sortUnique(list);
         }
         return list;

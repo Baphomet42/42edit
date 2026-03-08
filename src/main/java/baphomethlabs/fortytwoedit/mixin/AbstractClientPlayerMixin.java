@@ -20,9 +20,9 @@ public abstract class AbstractClientPlayerMixin {
     public void injectSkin(CallbackInfoReturnable<PlayerSkin> cir) {
 
         PlayerInfo playerEntry = this.getPlayerInfo();
-        if(playerEntry != null) {
+        if (playerEntry != null) {
             PlayerSkin skin = CapeScreen.injectSkinLogic(playerEntry.getProfile().name(), cir.getReturnValue());
-            if(skin != null) {
+            if (skin != null) {
                 cir.setReturnValue(skin);
             }
         }

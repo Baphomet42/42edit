@@ -10,7 +10,7 @@ public class StringUtilMixin {
 
     @ModifyVariable(method = "isAllowedChatCharacter", at = @At("HEAD"), argsOnly = true)
     private static int modifyIsAllowedChatCharacter(int chr) {
-        if(chr == '\u00a7')
+        if (chr == '\u00a7')
             return 'S';
         return chr;
     }

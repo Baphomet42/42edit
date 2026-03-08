@@ -1,9 +1,9 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -11,7 +11,7 @@ import net.minecraft.world.item.Items;
 
 public class AutoClickScreen extends GenericScreen {
 
-    protected EditBox txtAttackCooldown;
+    protected SmartEditBox txtAttackCooldown;
     protected boolean unsaved = false;
 
     public AutoClickScreen() {}
@@ -34,7 +34,7 @@ public class AutoClickScreen extends GenericScreen {
             FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,(boolean)trackOutput,FortytwoEdit.attackWait);
             unsel();
         }));
-        this.txtAttackCooldown = new EditBox(this.font,x+WID_SPACE+20+100+1,y+ROW_HEIGHT*5+1,40-2,WID_HEIGHT,Component.nullToEmpty(""));
+        this.txtAttackCooldown = new SmartEditBox(this.font,x+WID_SPACE+20+100+1,y+ROW_HEIGHT*5+1,40-2,WID_HEIGHT,Component.nullToEmpty(""));
         this.txtAttackCooldown.setMaxLength(4);
         this.txtAttackCooldown.setValue(""+FortytwoEdit.attackWait);
         this.txtAttackCooldown.setResponder(this::editTxtAttackCooldown);
@@ -52,15 +52,15 @@ public class AutoClickScreen extends GenericScreen {
     }
 
     protected void setTxtAttackCooldown() {
-        if(unsaved) {
+        if (unsaved) {
             String inp = "";
-            if(txtAttackCooldown.getValue() != null)
+            if (txtAttackCooldown.getValue() != null)
                 inp = txtAttackCooldown.getValue();
             int attackWait = 1500;
             inp = inp.replaceAll("[^0-9]","");
             try {
                 attackWait=Integer.parseInt(inp);
-            } catch(NumberFormatException ex) {}
+            } catch (NumberFormatException ex) {}
             FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,attackWait);
             unsaved = false;
         }
@@ -99,7 +99,7 @@ public class AutoClickScreen extends GenericScreen {
 
     @Override
     public void tick() {
-        if(!txtAttackCooldown.canConsumeInput())
+        if (!txtAttackCooldown.canConsumeInput())
             setTxtAttackCooldown();
 
         super.tick();

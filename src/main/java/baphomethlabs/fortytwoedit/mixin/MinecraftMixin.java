@@ -26,14 +26,14 @@ public abstract class MinecraftMixin {
 
     @Inject(method = "shouldEntityAppearGlowing", at = @At("RETURN"), cancellable = true)
     private void setGlow(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        if(FortytwoEdit.xrayEntity) {
+        if (FortytwoEdit.xrayEntity) {
             cir.setReturnValue(true);
         }
     }
 
 	@Redirect(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/FramerateLimitTracker;getFramerateLimit()I"))
 	private int redirectFramerate(FramerateLimitTracker inactivityFpsLimiter) {
-        if(FortytwoEdit.autoClicker && FortytwoEdit.afkScreenLock && ((Minecraft)(Object)this).player != null) {
+        if (FortytwoEdit.autoClicker && FortytwoEdit.afkScreenLock && ((Minecraft)(Object)this).player != null) {
             return 10;
         }
         return inactivityFpsLimiter.getFramerateLimit();

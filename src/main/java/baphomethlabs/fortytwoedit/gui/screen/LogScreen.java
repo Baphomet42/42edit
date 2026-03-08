@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.input.InputWithModifiers;
@@ -16,6 +15,7 @@ import net.minecraft.network.chat.Component;
 import com.google.common.collect.Lists;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.widget.ModifierButton;
+import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
 
 public class LogScreen extends GenericScreen {
 
@@ -32,7 +32,7 @@ public class LogScreen extends GenericScreen {
     private static boolean paused = false;
     private static boolean onlyMod = false;
 
-    protected EditBox txtRegex;
+    protected SmartEditBox txtRegex;
     private static String regexInput = "";
     private static boolean useRegex = false;
     private static final String REGEX_STRING_ENDS_DOLLAR = ".*[^\\\\](\\\\\\\\)*\\$$";
@@ -67,7 +67,7 @@ public class LogScreen extends GenericScreen {
             unsel();
         }));
         box = this.addRenderableWidget(MultiLineEditBox.builder().setX(x+15-3).setY(y+35).build(minecraft.font, 240-24, ROW_HEIGHT*6, Component.nullToEmpty("")));
-        txtRegex = new EditBox(this.font,x+15-3,y+35+ROW_HEIGHT*6+1,160,WID_HEIGHT,Component.nullToEmpty(""));
+        txtRegex = new SmartEditBox(this.font,x+15-3,y+35+ROW_HEIGHT*6+1,160,WID_HEIGHT,Component.nullToEmpty(""));
         txtRegex.setMaxLength(MAX_TEXT_LENGTH);
         txtRegex.setValue(""+regexInput);
         txtRegex.setResponder(this::editTxtRegex);
@@ -88,35 +88,35 @@ public class LogScreen extends GenericScreen {
 
         boolean firstLog = true;
         String regexError = null;
-        for(int i=logStart; i<logList.size(); i++) {
+        for (int i=logStart; i<logList.size(); i++) {
 
-            if(regexInput.length()>0) {
+            if (regexInput.length()>0) {
                 boolean matchRegex = false;
-                if(useRegex) {
+                if (useRegex) {
                     try {
                         String regexMod = regexInput + "";
                         "".matches(regexMod); // used to get errors on original input regex
 
-                        if(!regexMod.startsWith("^"))
+                        if (!regexMod.startsWith("^"))
                             regexMod = ".*"+regexMod;
-                        if(!regexMod.matches(REGEX_STRING_ENDS_DOLLAR))
+                        if (!regexMod.matches(REGEX_STRING_ENDS_DOLLAR))
                             regexMod = regexMod+".*";
 
-                        if(logList.get(i).searchLine().matches(regexMod))
+                        if (logList.get(i).searchLine().matches(regexMod))
                             matchRegex = true;
                     }
-                    catch(Exception ex) {
+                    catch (Exception ex) {
                         regexError = ex.getMessage();
                     }
                 }
-                else if(logList.get(i).searchLine().toLowerCase().contains(regexInput.toLowerCase()))
+                else if (logList.get(i).searchLine().toLowerCase().contains(regexInput.toLowerCase()))
                     matchRegex = true;
 
-                if(!matchRegex)
+                if (!matchRegex)
                     continue;
             }
 
-            if(!firstLog)
+            if (!firstLog)
                 sb.append("\n\n");
             else
                 firstLog = false;
@@ -124,11 +124,11 @@ public class LogScreen extends GenericScreen {
             sb.append(logList.get(i).formattedLine());
         }
         // end log box with empty line unless no lines were added
-        if(!firstLog)
+        if (!firstLog)
             sb.append("\n");
 
-        if(regexError != null) {
-            if(regexError.length()>1 && regexError.endsWith("^"))
+        if (regexError != null) {
+            if (regexError.length()>1 && regexError.endsWith("^"))
                 regexError = regexError.substring(0,regexError.length()-1).trim();
             sb = new StringBuilder(ss+"cInvalid Regex\n\n"+regexError.replace("\r",""));
         }
@@ -137,7 +137,7 @@ public class LogScreen extends GenericScreen {
     }
 
     protected void editTxtRegex(String text) {
-        if(!text.equals(regexInput)) {
+        if (!text.equals(regexInput)) {
             regexInput = text;
             updateBox();
         }
@@ -161,11 +161,11 @@ public class LogScreen extends GenericScreen {
             String timestamp = null;
             LogType logType = null;
 
-            if(line.matches("^\\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\] .+")) {
+            if (line.matches("^\\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\] .+")) {
                 timestamp = line.substring(0,line.indexOf("]")+1);
                 line = line.replaceFirst("^\\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\] ","");
 
-                if(line.matches("^\\[[^/\\]]+/[A-Z]+\\]:? .+")) {
+                if (line.matches("^\\[[^/\\]]+/[A-Z]+\\]:? .+")) {
                     logType = LogType.build(line.substring(line.indexOf("/")+1,line.indexOf("]")));
                     line = line.replaceFirst("^\\[[^/\\]]+/[A-Z]+\\]:? ","");
                 }
@@ -180,18 +180,18 @@ public class LogScreen extends GenericScreen {
             StringBuilder formattedLine = new StringBuilder();
             StringBuilder searchLine = new StringBuilder();
 
-            if(timestamp != null) {
+            if (timestamp != null) {
                 formattedLine.append(ss).append("9").append(timestamp).append(ss).append("r ");
                 searchLine.append(timestamp).append(" ");
             }
 
-            if(type != null) {
+            if (type != null) {
                 formattedLine.append(ss).append(type.formatCode()).append(type.text()).append(ss).append("r ");
                 searchLine.append(type.text()).append(" ");
             }
 
             String formatMessage = message.replace("\t","  ");
-            if(timestamp != null && type != null && formatMessage.matches("^\\([^)]+\\) .+")) {
+            if (timestamp != null && type != null && formatMessage.matches("^\\([^)]+\\) .+")) {
                 formattedLine.append(ss).append("3").append(formatMessage.substring(0,formatMessage.indexOf(")")+1)).append(ss).append("r ");
                 searchLine.append(formatMessage.substring(0,formatMessage.indexOf(")")+1)).append(" ");
 
@@ -213,8 +213,8 @@ public class LogScreen extends GenericScreen {
         public static final LogType UNKNOWN = new LogType("[UNKNOWN]","f");
 
         public static LogType build(String text) {
-            if(text != null && text.length()>0) {
-                switch(text) {
+            if (text != null && text.length()>0) {
+                switch (text) {
                     case "INFO": return LogType.INFO;
                     case "WARN": return LogType.WARN;
                     case "ERROR": return LogType.ERROR;
@@ -246,7 +246,7 @@ public class LogScreen extends GenericScreen {
     }
 
     private void btnClearLog(InputWithModifiers inputWithModifiers) {
-        if(inputWithModifiers.hasShiftDown()) {
+        if (inputWithModifiers.hasShiftDown()) {
             unhideAllLogged();
         }
         else {
@@ -279,36 +279,36 @@ public class LogScreen extends GenericScreen {
 
     @Override
     public void tick() {
-        if(!paused) {
+        if (!paused) {
 
-            if(!MOD_LOG_QUEUE.isEmpty()) {
-                for(int i=0; i<MOD_LOG_QUEUE.size(); i++) {
+            if (!MOD_LOG_QUEUE.isEmpty()) {
+                for (int i=0; i<MOD_LOG_QUEUE.size(); i++) {
                     MOD_LOG.add(MOD_LOG_QUEUE.get(i));
                 }
                 MOD_LOG_QUEUE.clear();
-                if(onlyMod)
+                if (onlyMod)
                     updateBox();
             }
 
-            if(System.currentTimeMillis()-lastCheck >= UPDATE_WAIT_MS) {
-                if(clearFullLogCache) {
+            if (System.currentTimeMillis()-lastCheck >= UPDATE_WAIT_MS) {
+                if (clearFullLogCache) {
                     clearFullLogCache = false;
                     refreshVariousOnTick();
                     updateBox();
                 }
 
                 lastCheck = System.currentTimeMillis();
-                if(logFile.lastModified()>lastUpdate) {
+                if (logFile.lastModified()>lastUpdate) {
                     lastUpdate = logFile.lastModified();
 
                     try(BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
                         String line;
                         int i = 0;
-                        while((line = reader.readLine()) != null) {
-                            if(i>=fullLogLines) {
+                        while ((line = reader.readLine()) != null) {
+                            if (i>=fullLogLines) {
                                 LogMessage temp = LogMessage.build(line);
 
-                                if(temp.timestamp() != null || FULL_LOG.isEmpty())
+                                if (temp.timestamp() != null || FULL_LOG.isEmpty())
                                     FULL_LOG.add(temp);
                                 else {
                                     LogMessage lastLog = FULL_LOG.getLast();
@@ -320,11 +320,11 @@ public class LogScreen extends GenericScreen {
                             i++;
                         }
                     }
-                    catch(Exception ex) {
+                    catch (Exception ex) {
                         logModLog(LogType.ERROR, "Failed to read vanilla log file: " + (logFile == null ? "null" : logFile.getPath()));
                     }
 
-                    if(!onlyMod)
+                    if (!onlyMod)
                         updateBox();
                 }
             }

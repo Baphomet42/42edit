@@ -12,7 +12,7 @@ public abstract class ItemStackPreset {
     private ItemStackPreset() {}
 
     public ItemStack get() {
-        if(!isCached) {
+        if (!isCached) {
             resolve();
         }
         return stack;

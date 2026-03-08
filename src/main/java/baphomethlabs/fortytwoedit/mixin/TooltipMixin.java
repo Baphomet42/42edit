@@ -30,35 +30,35 @@ public abstract class TooltipMixin {
 
     @Inject(method = "toCharSequence", at = @At("RETURN"), cancellable = true)
     private void injectToCharSequence(Minecraft client, CallbackInfoReturnable<List<FormattedCharSequence>> cir) {
-        if(client.screen != null && client.screen instanceof GenericScreen) {
+        if (client.screen != null && client.screen instanceof GenericScreen) {
             List<FormattedCharSequence> cacheTooltip = GenericScreen.setCurrentTooltip(message);
-            if(cacheTooltip != null)
+            if (cacheTooltip != null)
                 cir.setReturnValue(cacheTooltip);
-            else if(client.font.split(message, small).size()>lineSwap) {
+            else if (client.font.split(message, small).size()>lineSwap) {
 
                 int largeSafe = Math.min(large,client.screen.width-safeZone);
                 int mediumSafe = Math.min(medium,client.screen.width-safeZone);
 
-                if(client.font.split(message, largeSafe).size()>lineSwap) {
+                if (client.font.split(message, largeSafe).size()>lineSwap) {
                     List<FormattedCharSequence> linesImmutable = client.font.split(message, client.screen.width-safeZone);
                     List<FormattedCharSequence> lines = Lists.newArrayList();
                     int maxLines = Math.max(lineSwap,((client.screen.height-safeZone)/10)-1);//10 pixels per line, -1 line gives space to see hotbar
-                    for(FormattedCharSequence t : linesImmutable)
+                    for (FormattedCharSequence t : linesImmutable)
                         lines.add(t);
-                    if(lines.size()>maxLines) {
+                    if (lines.size()>maxLines) {
                         int originalLines = lines.size();
                         int startLine = 1;
                         int endLine = lines.size();
 
-                        for(int i=0; i<GenericScreen.getCurrentTooltipScroll(); i++)
-                            if(lines.size()>maxLines-1) {
+                        for (int i=0; i<GenericScreen.getCurrentTooltipScroll(); i++)
+                            if (lines.size()>maxLines-1) {
                                 lines.remove(0);
                                 startLine++;
                             }
                             else
                                 break;
                         GenericScreen.setCurrentTooltipScroll(startLine - 1);
-                        while(lines.size()>maxLines-1) {
+                        while (lines.size()>maxLines-1) {
                             lines.remove(lines.size()-1);
                             endLine--;
                         }
@@ -71,7 +71,7 @@ public abstract class TooltipMixin {
                     }
                     cir.setReturnValue(lines);
                 }
-                else if(client.font.split(message, mediumSafe).size()>lineSwap)
+                else if (client.font.split(message, mediumSafe).size()>lineSwap)
                     cir.setReturnValue(client.font.split(message, largeSafe));
                 else
                     cir.setReturnValue(client.font.split(message, mediumSafe));

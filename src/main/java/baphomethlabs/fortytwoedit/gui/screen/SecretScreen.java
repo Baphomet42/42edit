@@ -42,7 +42,7 @@ public class SecretScreen extends GenericScreen {
         paneScroll().addRow("Config");
         {
             MutableComponent btnTxt = Component.empty().append("Chat Icons: ");
-            if(!FortytwoEdit.mixinChatProfileIcon)
+            if (!FortytwoEdit.mixinChatProfileIcon)
                 btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GRAY));
             else
                 btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GREEN));
@@ -57,7 +57,7 @@ public class SecretScreen extends GenericScreen {
         }
         {
             MutableComponent btnTxt = Component.empty().append("Locator Bar Skin: ");
-            if(FortytwoEdit.mixinLocatorBarModeDefault())
+            if (FortytwoEdit.mixinLocatorBarModeDefault())
                 btnTxt.append(Component.empty().append(FortytwoEdit.mixinLocatorBarMode).withStyle(ChatFormatting.GRAY));
             else
                 btnTxt.append(Component.empty().append(FortytwoEdit.mixinLocatorBarMode).withStyle(ChatFormatting.GREEN));
@@ -70,7 +70,7 @@ public class SecretScreen extends GenericScreen {
         }
         {
             MutableComponent btnTxt = Component.empty().append("Locator Bar Skin Border: ");
-            if(!FortytwoEdit.mixinLocatorBarColor)
+            if (!FortytwoEdit.mixinLocatorBarColor)
                 btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GREEN));
             else
                 btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GRAY));
@@ -85,7 +85,7 @@ public class SecretScreen extends GenericScreen {
         }
         {
             MutableComponent btnTxt = Component.empty().append("Profile Tooltip Info: ");
-            if(!FortytwoEdit.mixinProfileDynamicTooltip)
+            if (!FortytwoEdit.mixinProfileDynamicTooltip)
                 btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GRAY));
             else
                 btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GREEN));
@@ -100,7 +100,7 @@ public class SecretScreen extends GenericScreen {
         }
         {
             MutableComponent btnTxt = Component.empty().append("F3 Screen Rearrange: ");
-            if(!FortytwoEdit.debugMixinRearrange)
+            if (!FortytwoEdit.debugMixinRearrange)
                 btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GRAY));
             else
                 btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GREEN));
@@ -116,22 +116,22 @@ public class SecretScreen extends GenericScreen {
     }
 
     protected void flipTextBox() {
-        if(txtUpsideDown != null) {
+        if (txtUpsideDown != null) {
             String txt = txtUpsideDown.getValue();
             boolean isJson = false;
-            if(txt.startsWith("{") && txt.endsWith("}")) {
+            if (txt.startsWith("{") && txt.endsWith("}")) {
                 CompoundTag nbt = BlackMagick.validCompoundFromString(txt);
-                if(!nbt.isEmpty()) {
+                if (!nbt.isEmpty()) {
                     isJson = true;
                     StringBuilder json = new StringBuilder();
                     List<String> sortKeys = BlackMagick.sortSet(nbt.keySet());
                     boolean firstEntry = true;
                     json.append("{");
-                    for(String k : sortKeys) {
+                    for (String k : sortKeys) {
                         Tag el = nbt.get(k);
-                        if(el.getId() == Tag.TAG_STRING && !k.contains("\"")) {
+                        if (el.getId() == Tag.TAG_STRING && !k.contains("\"")) {
                             String flip = flipString(((StringTag)el).asString().get()).replace("\"","\\\"");
-                            if(!firstEntry)
+                            if (!firstEntry)
                                 json.append(",");
                             else
                                 firstEntry = false;
@@ -143,11 +143,11 @@ public class SecretScreen extends GenericScreen {
                         }
                     }
                     json.append("\n}");
-                    if(isJson)
+                    if (isJson)
                         txtUpsideDown.setValue(json.toString());
                 }
             }
-            if(!isJson) {
+            if (!isJson) {
                 txtUpsideDown.setValue(flipString(txt));
             }
         }
@@ -156,14 +156,14 @@ public class SecretScreen extends GenericScreen {
 
     protected static String flipString(String text) {
         StringBuilder sb = new StringBuilder(text.length());
-        for(int i=text.length()-1; i>=0; i--)
+        for (int i=text.length()-1; i>=0; i--)
             sb.append(flipChar(text.charAt(i)));
         return sb.toString();
     }
 
     protected static char flipChar(char character) {
         int c = UPSIDE_DOWN_REF.indexOf(character);
-        if(c>=0)
+        if (c>=0)
             return UPSIDE_DOWN_CHARS.charAt(c);
         FortytwoEdit.logWarn("Failed to flip char: "+character);
         return character;

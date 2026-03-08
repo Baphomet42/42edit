@@ -58,7 +58,7 @@ public class WidgetUtil {
     public static int sizeFromName(GenericScreen screen, Component text, int maxWidth) {
         int size = 40;
         int min = screen.getFont().width(text)+4;
-        while(min>size && size<maxWidth) {
+        while (min>size && size<maxWidth) {
             size += 20;
         }
         return size;

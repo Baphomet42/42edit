@@ -119,7 +119,7 @@ public class CapeScreen extends GenericScreen {
                 + "&n=" + minecraft.getUser().getName()
                 + "&s=" + randomId);
         }
-        catch(Exception ex) {
+        catch (Exception ex) {
             FortytwoEdit.showToast("Failed to edit cape","Could not open OptiFine cape editor webpage");
         }
         unsel();
@@ -143,33 +143,33 @@ public class CapeScreen extends GenericScreen {
         boolean changed = false;
 
         //cape
-        if(FortytwoEdit.opticapesWorking && FortytwoEdit.opticapesOn) {
-            if(FortytwoEdit.capeCached(name)) {
+        if (FortytwoEdit.opticapesWorking && FortytwoEdit.opticapesOn) {
+            if (FortytwoEdit.capeCached(name)) {
                 Identifier id = Identifier.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
                 cape = new ClientAsset.ResourceTexture(id, id);
                 elytra = cape;
                 changed = true;
             }
-            else if(!FortytwoEdit.nameCached(name) && FortytwoEdit.capeTimeCheck()) {
+            else if (!FortytwoEdit.nameCached(name) && FortytwoEdit.capeTimeCheck()) {
                 FortytwoEdit.tryLoadCape(name);
             }
         }
-        if(FortytwoEdit.showClientCape && name.equals(FortytwoEdit.USERNAME)) {
+        if (FortytwoEdit.showClientCape && name.equals(FortytwoEdit.USERNAME)) {
             cape = FortytwoEdit.getClientCape();
             elytra = cape;
             changed = true;
         }
 
         //skin
-        if(FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && name.equals(FortytwoEdit.USERNAME)) {
+        if (FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && name.equals(FortytwoEdit.USERNAME)) {
             body = FortytwoEdit.CUSTOM_SKIN_TEXTURE;
             changed = true;
         }
 
 
         //model
-        if(FortytwoEdit.showClientSkin && name.equals(FortytwoEdit.USERNAME)) {
-            if(FortytwoEdit.clientSkinSlim)
+        if (FortytwoEdit.showClientSkin && name.equals(FortytwoEdit.USERNAME)) {
+            if (FortytwoEdit.clientSkinSlim)
                 model = PlayerModelType.SLIM;
             else
                 model = PlayerModelType.WIDE;
@@ -177,7 +177,7 @@ public class CapeScreen extends GenericScreen {
             changed = true;
         }
 
-        if(changed) {
+        if (changed) {
             return new PlayerSkin(body, cape, elytra, model, false);
         }
 
@@ -188,10 +188,10 @@ public class CapeScreen extends GenericScreen {
     public void onFilesDrop(List<Path> paths) {
         try {
             File file = paths.get(0).toFile();
-            if(file.isFile() && file.getName().endsWith(".png")) {
+            if (file.isFile() && file.getName().endsWith(".png")) {
                 BufferedImage skin = ImageIO.read(file);
-                if((skin.getWidth()==64 && skin.getHeight()==64) || (skin.getWidth()==128 && skin.getHeight()==128)) {
-                    if(FortytwoEdit.setCustomSkin(file)) {
+                if ((skin.getWidth()==64 && skin.getHeight()==64) || (skin.getWidth()==128 && skin.getHeight()==128)) {
+                    if (FortytwoEdit.setCustomSkin(file)) {
                         FortytwoEdit.showToast("Custom skin loaded",file.getName());
                         reloadScreen();
                         return;
@@ -207,7 +207,7 @@ public class CapeScreen extends GenericScreen {
                 FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE,"File type must be a PNG");
                 return;
             }
-        } catch(Exception ex) {}
+        } catch (Exception ex) {}
         FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE,"File could not be read");
     }
 

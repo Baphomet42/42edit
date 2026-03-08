@@ -6,7 +6,6 @@ import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
@@ -23,11 +22,12 @@ import com.google.common.collect.Lists;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FileTools;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
 
 public class HacksScreen extends GenericScreen {
 
     protected Button btnWgtFindInvis;
-    protected EditBox txtRando;
+    protected SmartEditBox txtRando;
     protected boolean unsaved = false;
 
     public HacksScreen() {}
@@ -44,17 +44,17 @@ public class HacksScreen extends GenericScreen {
                 +"If numbers are specified, the random slot will be selected from those.\nExample: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)"))).create(x+20,y+ROW_HEIGHT*2+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
             setTxtRando();
-            if(!(boolean)trackOutput)
+            if (!(boolean)trackOutput)
                 FortytwoEdit.randoMode = false;
-            else if((boolean)trackOutput && FortytwoEdit.randoSlots != null)
+            else if ((boolean)trackOutput && FortytwoEdit.randoSlots != null)
                 FortytwoEdit.randoMode = true;
             unsel();
         }));
-        this.txtRando = new EditBox(this.font,x+20+80+WID_SPACE,y+44+1,100-2,WID_HEIGHT,Component.nullToEmpty(""));
+        this.txtRando = new SmartEditBox(this.font,x+20+80+WID_SPACE,y+44+1,100-2,WID_HEIGHT,Component.nullToEmpty(""));
         this.txtRando.setMaxLength(15);
-        if(FortytwoEdit.randoSlots != null) {
+        if (FortytwoEdit.randoSlots != null) {
             String keys = "";
-            for(int i: FortytwoEdit.randoSlots) {
+            for (int i: FortytwoEdit.randoSlots) {
                 keys += i;
             }
             txtRando.setValue(keys);
@@ -75,7 +75,7 @@ public class HacksScreen extends GenericScreen {
         }));
         btnWgtFindInvis = this.addRenderableWidget(Button.builder(Component.nullToEmpty("Find Invis Entities"),
             button -> this.btnFindInvis()).bounds(x+20+100+WID_SPACE,y+ROW_HEIGHT*4+1,100,WID_HEIGHT).build());
-        if(!minecraft.player.getAbilities().instabuild) {
+        if (!minecraft.player.getAbilities().instabuild) {
             btnWgtFindInvis.active = false;
             btnWgtFindInvis.setTooltip(TT_CREATIVE);
         }
@@ -104,16 +104,16 @@ public class HacksScreen extends GenericScreen {
     }
 
     protected void setTxtRando() {
-        if(unsaved) {
+        if (unsaved) {
             FortytwoEdit.randoSlots = null;
-            if(txtRando.getValue() != null && !txtRando.getValue().equals("")) {
+            if (txtRando.getValue() != null && !txtRando.getValue().equals("")) {
                 String inp = txtRando.getValue().replaceAll("[^1-9]","");
-                if(inp.length()>0) {
+                if (inp.length()>0) {
                     int[] slots = new int[inp.length()];
-                    for(int i=0; i<slots.length; i++) {
+                    for (int i=0; i<slots.length; i++) {
                         try {
                             slots[i]=Integer.parseInt(""+inp.charAt(i));
-                        } catch(NumberFormatException ex) {}
+                        } catch (NumberFormatException ex) {}
                     }
                     FortytwoEdit.randoSlots = slots;
                 }
@@ -132,9 +132,9 @@ public class HacksScreen extends GenericScreen {
         double y = minecraft.player.getY();
         double z = minecraft.player.getZ();
         double range = 2.5;
-        while(entities.hasNext()) {
+        while (entities.hasNext()) {
             Entity current = entities.next();
-            if(current.getType() != EntityType.PLAYER
+            if (current.getType() != EntityType.PLAYER
             && current.getX()>x-range && current.getX()<x+range
             && current.getY()>y-range && current.getY()<y+range
             && current.getZ()>z-range && current.getZ()<z+range) {
@@ -142,13 +142,13 @@ public class HacksScreen extends GenericScreen {
                 CompoundTag components = new CompoundTag();
                 nbt.put("components",components);
                 CompoundTag entityData = new CompoundTag();
-                if((new EntityDataAccessor(current)).getData()!=null)
+                if ((new EntityDataAccessor(current)).getData()!=null)
                     entityData = (new EntityDataAccessor(current)).getData();
                 components.put("entity_data",entityData);
-                if(current.getType() == EntityType.ARMOR_STAND) {
+                if (current.getType() == EntityType.ARMOR_STAND) {
                     nbt.putString("id","minecraft:armor_stand");
                     entityData.putString("id","minecraft:armor_stand");
-                    if(mode == 1) {
+                    if (mode == 1) {
                         entityData.remove("Brain");
                         entityData.remove("Health");
                     }
@@ -159,7 +159,7 @@ public class HacksScreen extends GenericScreen {
                     components.putString("minecraft:item_name","Custom "
                         +BlackMagick.textComponentToStringLiteral(current.getType().getDescription())+" Spawn Egg");
                 }
-                if(mode == 1) {
+                if (mode == 1) {
                     entityData.remove("Air");
                     entityData.remove("FallDistance");
                     entityData.remove("Fire");
@@ -183,24 +183,24 @@ public class HacksScreen extends GenericScreen {
                 items.add(nbt);
             }
         }
-        if(!items.isEmpty()) {
+        if (!items.isEmpty()) {
             CompoundTag nbt = new CompoundTag();
             nbt.putString("id","bundle");
             CompoundTag components = new CompoundTag();
             nbt.put("components",components);
             ListTag bundle = new ListTag();
             components.put("bundle_contents",bundle);
-            for(int i=0; i<items.size(); i++) {
+            for (int i=0; i<items.size(); i++) {
                 bundle.add(items.get(i));
             }
             ItemStack item = BlackMagick.itemFromNbt(nbt);
-            if(items.size()==1)
+            if (items.size()==1)
                 item = BlackMagick.itemFromNbt(BlackMagick.validCompound(bundle.get(0)));
 
             FortytwoEdit.setClipboard(BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(item)));
             FortytwoEdit.showToast("Get Entity","Entity data copied");
 
-            if(minecraft.player.getAbilities().instabuild && !item.isEmpty()) {
+            if (minecraft.player.getAbilities().instabuild && !item.isEmpty()) {
                 BlackMagick.setItemMain(item);
             }
         }
@@ -211,35 +211,35 @@ public class HacksScreen extends GenericScreen {
     }
 
     protected void btnFindInvis() {
-        if(minecraft.player.getAbilities().instabuild) {
+        if (minecraft.player.getAbilities().instabuild) {
             int found = 0;
             Iterator<Entity> entities = minecraft.level.entitiesForRendering().iterator();
-            while(entities.hasNext()) {
+            while (entities.hasNext()) {
                 Entity current = entities.next();
-                if(current.getType() == EntityType.ARMOR_STAND) {
+                if (current.getType() == EntityType.ARMOR_STAND) {
                     CompoundTag nbt = new CompoundTag();
-                    if((new EntityDataAccessor(current)).getData()!=null)
+                    if ((new EntityDataAccessor(current)).getData()!=null)
                         nbt = (new EntityDataAccessor(current)).getData();
-                    if((nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1)
+                    if ((nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1)
                     && !(nbt.getByte("CustomNameVisible").isPresent() && nbt.getByte("CustomNameVisible").get()==1)
                     && !nbt.getCompound("equipment").isPresent()) {
                         reportInvis(current);
                         found++;
                     }
                 }
-                else if(current.getType() == EntityType.ITEM_FRAME || current.getType() == EntityType.GLOW_ITEM_FRAME) {
+                else if (current.getType() == EntityType.ITEM_FRAME || current.getType() == EntityType.GLOW_ITEM_FRAME) {
                     CompoundTag nbt = new CompoundTag();
-                    if((new EntityDataAccessor(current)).getData()!=null)
+                    if ((new EntityDataAccessor(current)).getData()!=null)
                         nbt = (new EntityDataAccessor(current)).getData();
-                    if(nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1) {
-                        if(!nbt.contains("Item")) {
+                    if (nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1) {
+                        if (!nbt.contains("Item")) {
                             reportInvis(current);
                             found++;
                         }
                     }
                 }
             }
-            if(found>0)
+            if (found>0)
                 FortytwoEdit.showToast("Find Invis","Found "+found+" invisible entities");
             else
                 FortytwoEdit.showToast("Find Invis","No invisible entities detected");
@@ -259,7 +259,7 @@ public class HacksScreen extends GenericScreen {
     }
 
     protected void btnDeathPos() {
-        if(minecraft.player.getLastDeathLocation().isPresent()) {
+        if (minecraft.player.getLastDeathLocation().isPresent()) {
             GlobalPos pos = minecraft.player.getLastDeathLocation().get();
             String coords = "Last death [X: "+pos.pos().getX()+", Y: "+pos.pos().getY()+", Z: "+pos.pos().getZ()+"] in "+pos.dimension().identifier().toString();
             BlackMagick.sendClientChat(coords);
@@ -326,7 +326,7 @@ public class HacksScreen extends GenericScreen {
 
     @Override
     public void tick() {
-        if(!txtRando.canConsumeInput())
+        if (!txtRando.canConsumeInput())
             setTxtRando();
 
         super.tick();

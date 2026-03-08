@@ -32,14 +32,14 @@ public class PathHelper {
 
     public static PathInfo getPath(Tag element, PathInfo context, PathNode... path) {
         List<PathNode> currentPath = Lists.newArrayList();
-        if(path != null)
+        if (path != null)
             currentPath.addAll(List.of(path));
         PathInfo currentContext = context;
-        while(!currentPath.isEmpty() && currentContext != null && !currentContext.isEmpty()) {
+        while (!currentPath.isEmpty() && currentContext != null && !currentContext.isEmpty()) {
             currentContext = currentContext.getNode(element, currentPath.get(0));
             currentPath.remove(0);
         }
-        if(currentPath.isEmpty() && currentContext != null && !currentContext.isEmpty())
+        if (currentPath.isEmpty() && currentContext != null && !currentContext.isEmpty())
             return currentContext;
         return PathInfo.EMPTY;
     }
@@ -230,6 +230,8 @@ public class PathHelper {
         ))).setIcon(Items.TOTEM_OF_UNDYING));
 
         registerPathInfo("components.minecraft:debug_stick_state", PathInfo.create().setIcon(Items.DEBUG_STICK));
+
+        registerPathInfo("components.minecraft:dye", PathInfo.copyOf("dye_color").setIcon(Items.RED_DYE));
 
         registerPathInfo("components.minecraft:dyed_color", PathInfo.copyOf("color_rgb_int_or_list").setIcon(Items.LEATHER_CHESTPLATE));
 
@@ -554,9 +556,15 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:cat/collar", PathInfo.copyOf("dye_color").setIcon(Items.CAT_SPAWN_EGG));
 
+        registerPathInfo("components.minecraft:cat/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_CAT_SOUND_VARIANT)).setIcon(Items.CAT_SPAWN_EGG));
+
         registerPathInfo("components.minecraft:cat/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_CAT_VARIANT)).setIcon(Items.CAT_SPAWN_EGG));
 
+        registerPathInfo("components.minecraft:chicken/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_CHICKEN_SOUND_VARIANT)).setIcon(Items.CHICKEN_SPAWN_EGG));
+
         registerPathInfo("components.minecraft:chicken/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_CHICKEN_VARIANT)).setIcon(Items.CHICKEN_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:cow/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_COW_SOUND_VARIANT)).setIcon(Items.COW_SPAWN_EGG));
 
         registerPathInfo("components.minecraft:cow/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_COW_VARIANT)).setIcon(Items.COW_SPAWN_EGG));
 
@@ -573,6 +581,8 @@ public class PathHelper {
         registerPathInfo("components.minecraft:painting/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_PAINTING_VARIANT)).setIcon(Items.PAINTING));
 
         registerPathInfo("components.minecraft:parrot/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_PARROT_VARIANT)).setIcon(Items.PARROT_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:pig/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_PIG_SOUND_VARIANT)).setIcon(Items.PIG_SPAWN_EGG));
 
         registerPathInfo("components.minecraft:pig/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_PIG_VARIANT)).setIcon(Items.PIG_SPAWN_EGG));
 
@@ -851,20 +861,20 @@ public class PathHelper {
     private static final Map<String, PathInfo> PATH_INFO_REF_MAP = Maps.newHashMap();
 
     protected static boolean testRegisteredPathInfo(String refKey) {
-        if(PATH_INFO_REF_MAP.isEmpty())
+        if (PATH_INFO_REF_MAP.isEmpty())
             buildPathInfos();
         return PATH_INFO_REF_MAP.containsKey(refKey);
     }
 
     protected static PathInfo getRegisteredPathInfo(String refKey) {
-        if(testRegisteredPathInfo(refKey))
+        if (testRegisteredPathInfo(refKey))
             return PATH_INFO_REF_MAP.get(refKey);
         FortytwoEdit.logWarn("PathInfo map is missing a registered key: "+refKey);
         return PathInfo.EMPTY;
     }
 
     protected static PathInfoGetter registerPathInfo(String refKey, PathInfo pi) {
-        if(PATH_INFO_REF_MAP.containsKey(refKey))
+        if (PATH_INFO_REF_MAP.containsKey(refKey))
             FortytwoEdit.logWarn("Duplicate PathInfo registry key detected: "+refKey);
         PATH_INFO_REF_MAP.put(refKey, pi);
         return PathInfoGetter.of(refKey);
@@ -976,7 +986,7 @@ public class PathHelper {
         }
 
         public PathInfo setUnsetInfo(Tag defaultElement) {
-            if(defaultElement != null) {
+            if (defaultElement != null) {
                 this.infoUnset = Component.empty().append("Defaults to ")
                     .append(BlackMagick.nbtToColorfulText(defaultElement));
             }
@@ -1167,21 +1177,21 @@ public class PathHelper {
             boolean foundCompound = false;
             boolean foundList = false;
             boolean foundElement = false;
-            for(PathInfoSupplier pi : info) {
-                if(pi instanceof PathInfoSupplierCompound pi2) {
-                    if(foundCompound)
+            for (PathInfoSupplier pi : info) {
+                if (pi instanceof PathInfoSupplierCompound pi2) {
+                    if (foundCompound)
                         FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierCompound");
                     else
                         newInfo.setCompoundInfo(pi2);
                 }
-                else if(pi instanceof PathInfoSupplierList pi2) {
-                    if(foundList)
+                else if (pi instanceof PathInfoSupplierList pi2) {
+                    if (foundList)
                         FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierList");
                     else
                         newInfo.setListInfo(pi2);
                 }
-                else if(pi instanceof PathInfoSupplierElement pi2) {
-                    if(foundElement)
+                else if (pi instanceof PathInfoSupplierElement pi2) {
+                    if (foundElement)
                         FortytwoEdit.logWarn("Tried to add duplicate PathInfoSupplierElement");
                     else
                         newInfo.setElementInfo(pi2);
@@ -1209,7 +1219,7 @@ public class PathHelper {
         }
 
         private void setSupplierInfo(PathInfoSupplier info) {
-            if(!this.setDefaultPathType) {
+            if (!this.setDefaultPathType) {
                 this.defaultPathType = info.getPathType();
                 this.setDefaultPathType = true;
             }
@@ -1217,8 +1227,8 @@ public class PathHelper {
         }
 
         public PathInfo getNode(Tag element, PathNode node) {
-            if(node.isKey) {
-                if(element != null && element.getId()==Tag.TAG_COMPOUND)
+            if (node.isKey) {
+                if (element != null && element.getId()==Tag.TAG_COMPOUND)
                     return getCompoundKeyInfo((CompoundTag)element, node.key());
                 return getCompoundKeyInfo(null, node.key());
             }
@@ -1228,19 +1238,19 @@ public class PathHelper {
         }
 
         public List<NbtType> getNbtTypes() {
-            if(!cacheAllNbtTypes) {
+            if (!cacheAllNbtTypes) {
                 cacheAllNbtTypes = true;
                 
                 allNbtTypes.clear();
-                if(this.isUnstructured || (elementSupplier != null && elementSupplier.getNbtType()==NbtType.ANY)) {
+                if (this.isUnstructured || (elementSupplier != null && elementSupplier.getNbtType()==NbtType.ANY)) {
                     allNbtTypes.add(NbtType.ANY);
                 }
                 else {
-                    if(compoundSupplier != null)
+                    if (compoundSupplier != null)
                         allNbtTypes.add(NbtType.COMPOUND);
-                    if(listSupplier != null)
+                    if (listSupplier != null)
                         allNbtTypes.add(NbtType.LIST);
-                    if(elementSupplier != null) {
+                    if (elementSupplier != null) {
                         allNbtTypes.remove(elementSupplier.getNbtType());
                         allNbtTypes.add(elementSupplier.getNbtType());
                     }
@@ -1255,8 +1265,8 @@ public class PathHelper {
         }
 
         public boolean hasPathType(PathType type) {
-            if(this.isUnstructured) {
-                switch(type) {
+            if (this.isUnstructured) {
+                switch (type) {
                     case ELEMENT:
                     case STRING:
                     case COMPOUND:
@@ -1267,79 +1277,79 @@ public class PathHelper {
                         return false;
                 }
             }
-            if(compoundSupplier != null && compoundSupplier.getPathType() == type)
+            if (compoundSupplier != null && compoundSupplier.getPathType() == type)
                 return true;
-            if(listSupplier != null && listSupplier.getPathType() == type)
+            if (listSupplier != null && listSupplier.getPathType() == type)
                 return true;
-            if(elementSupplier != null && elementSupplier.getPathType() == type)
+            if (elementSupplier != null && elementSupplier.getPathType() == type)
                 return true;
             return false;
         }
 
         public SuggestionGetter getSuggs() {
-            if(!cacheAllSuggs) {
+            if (!cacheAllSuggs) {
                 cacheAllSuggs = true;
 
                 List<SuggestionGetter> suggsList = Lists.newArrayList();
-                if(compoundSupplier != null) {
+                if (compoundSupplier != null) {
                     SuggestionGetter thisSuggs = compoundSupplier.getSuggs();
-                    if(thisSuggs != null && !thisSuggs.isEmpty())
+                    if (thisSuggs != null && !thisSuggs.isEmpty())
                         suggsList.add(thisSuggs);
                 }
-                if(listSupplier != null) {
+                if (listSupplier != null) {
                     SuggestionGetter thisSuggs = listSupplier.getSuggs();
-                    if(thisSuggs != null && !thisSuggs.isEmpty())
+                    if (thisSuggs != null && !thisSuggs.isEmpty())
                         suggsList.add(thisSuggs);
                 }
-                if(elementSupplier != null) {
+                if (elementSupplier != null) {
                     SuggestionGetter thisSuggs = elementSupplier.getSuggs();
-                    if(thisSuggs != null && !thisSuggs.isEmpty())
+                    if (thisSuggs != null && !thisSuggs.isEmpty())
                         suggsList.add(thisSuggs);
                 }
-                if(!suggsList.isEmpty())
+                if (!suggsList.isEmpty())
                     allSuggs = SuggestionGetter.newJoined(suggsList.toArray(new SuggestionGetter[0]));
             }
             return allSuggs;
         }
 
         public Set<String> getCompoundKeys(CompoundTag compound) {
-            if(compoundSupplier != null)
+            if (compoundSupplier != null)
                 return compoundSupplier.getCompoundKeys(compound);
             return Set.of();
         }
 
         public String getCompoundKeyLabel(CompoundTag compound, String key) {
-            if(compoundSupplier != null)
+            if (compoundSupplier != null)
                 return compoundSupplier.getCompoundKeyLabel(compound, key);
             return COMPOUND_KEY_UNKNOWN_LABEL;
         }
 
         public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
-            if(this.isUnstructured)
+            if (this.isUnstructured)
                 return PathInfo.ANY;
-            if(compoundSupplier != null)
+            if (compoundSupplier != null)
                 return compoundSupplier.getCompoundKeyInfo(compound, key);
             return PathInfo.EMPTY;
         }
 
         public PathInfo getListIndexInfo(int index) {
-            if(this.isUnstructured)
+            if (this.isUnstructured)
                 return PathInfo.ANY;
-            if(listSupplier != null)
+            if (listSupplier != null)
                 return listSupplier.getListIndexInfo(index);
             return PathInfo.EMPTY;
         }
 
         public int getListSize() {
-            if(listSupplier != null)
+            if (listSupplier != null)
                 return listSupplier.getListSize();
             return -1;
         }
 
         public boolean showCompoundNewKeyRow() {
-            if(this.isUnstructured)
+            if (this.isUnstructured)
                 return true;
-            if(compoundSupplier != null)
+            if (compoundSupplier != null)
                 return compoundSupplier.showNewKeyRow();
             return false;
         }
@@ -1424,16 +1434,16 @@ public class PathHelper {
                 this.keyInfo = Maps.newHashMap();
                 this.requiredKeys = Sets.newHashSet();
                 this.optionalKeys = Sets.newHashSet();
-                if(optional != null)
-                    for(String s : optional.keySet()) {
+                if (optional != null)
+                    for (String s : optional.keySet()) {
                         this.keyInfo.put(s, optional.get(s));
                         this.optionalKeys.add(s);
                     }
-                if(required != null)
-                    for(String s : required.keySet()) {
+                if (required != null)
+                    for (String s : required.keySet()) {
                         this.keyInfo.put(s, required.get(s));
                         this.requiredKeys.add(s);
-                        if(this.optionalKeys.contains(s)) {
+                        if (this.optionalKeys.contains(s)) {
                             FortytwoEdit.logWarn("PathInfoComoundStructured tried to create 2 PathInfo's for key: "+s);
                             this.optionalKeys.remove(s);
                         }
@@ -1460,15 +1470,15 @@ public class PathHelper {
             }
 
             public String getCompoundKeyLabel(CompoundTag compound, String key) {
-                if(requiredKeys.contains(key))
+                if (requiredKeys.contains(key))
                     return PathInfo.COMPOUND_KEY_REQUIRED_LABEL;
-                else if(optionalKeys.contains(key))
+                else if (optionalKeys.contains(key))
                     return PathInfo.COMPOUND_KEY_OPTIONAL_LABEL;
                 return PathInfo.COMPOUND_KEY_UNKNOWN_LABEL;
             }
     
             public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
-                if(this.keyInfo.containsKey(key))
+                if (this.keyInfo.containsKey(key))
                     return this.keyInfo.get(key).get();
                 return PathInfo.EMPTY;
             }
@@ -1523,20 +1533,20 @@ public class PathHelper {
             }
 
             public String getCompoundKeyLabel(CompoundTag compound, String key) {
-                if(getCompoundKeyInfo(compound,key).isEmpty()) {
+                if (getCompoundKeyInfo(compound,key).isEmpty()) {
                     return PathInfo.COMPOUND_KEY_UNKNOWN_LABEL;
                 }
 
-                if(!this.allowRemoved) {
-                    if(key.startsWith("!"))
+                if (!this.allowRemoved) {
+                    if (key.startsWith("!"))
                         return PathInfo.COMPOUND_KEY_UNKNOWN_LABEL;
                     return PathInfo.COMPOUND_KEY_OPTIONAL_LABEL;
                 }
 
-                if(!key.contains(":"))
+                if (!key.contains(":"))
                     return PathInfo.COMPOUND_KEY_MISSING_NAMESPACE_LABEL;
-                if(compound != null && compound.get(key) != null) {
-                    if(key.startsWith("!"))
+                if (compound != null && compound.get(key) != null) {
+                    if (key.startsWith("!"))
                         return PathInfo.COMPOUND_KEY_REMOVED_COMPONENTS_LABEL;
                     return PathInfo.COMPOUND_KEY_SET_COMPONENTS_LABEL;
                 }
@@ -1544,20 +1554,20 @@ public class PathHelper {
             }
     
             public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
-                if(key.startsWith("!")) {
-                    if(this.allowRemoved) {
+                if (key.startsWith("!")) {
+                    if (this.allowRemoved) {
                         Identifier componentId = BlackMagick.identifierOrNull(key.substring(1));
-                        if(componentId != null && testRegisteredPathInfo("components."+componentId.toString())) {
+                        if (componentId != null && testRegisteredPathInfo("components."+componentId.toString())) {
                             ItemStack icon = getRegisteredPathInfo("components."+componentId.toString()).getIcon();
                             return PathInfo.create(DataType.Unit.create()).setInfo("Removed default component").setIcon(icon);
                         }
-                        if(componentId != null && SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList().contains(componentId.toString()))
+                        if (componentId != null && SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList().contains(componentId.toString()))
                             return PathInfo.create(DataType.Unit.create()).setInfo("Removed default component");
                     }
                 }
                 else {
                     Identifier componentId = BlackMagick.identifierOrNull(key);
-                    if(componentId != null && testRegisteredPathInfo("components."+componentId.toString()))
+                    if (componentId != null && testRegisteredPathInfo("components."+componentId.toString()))
                         return getRegisteredPathInfo("components."+componentId.toString());
                 }
                 return PathInfo.EMPTY;
@@ -1578,19 +1588,19 @@ public class PathHelper {
             }
 
             public String getCompoundKeyLabel(CompoundTag compound, String key) {
-                if(getCompoundKeyInfo(compound,key).isEmpty()) {
+                if (getCompoundKeyInfo(compound,key).isEmpty()) {
                     return PathInfo.COMPOUND_KEY_UNKNOWN_LABEL;
                 }
-                if(!key.contains(":"))
+                if (!key.contains(":"))
                     return PathInfo.COMPOUND_KEY_MISSING_NAMESPACE_LABEL;
                 return "Enchantments";
             }
     
             public PathInfo getCompoundKeyInfo(CompoundTag compound, String key) {
                 Identifier componentId = BlackMagick.identifierOrNull(key);
-                if(componentId != null && SuggestionHelper.DATA_ENCHANTMENT.getList().contains(componentId.toString())) {
+                if (componentId != null && SuggestionHelper.DATA_ENCHANTMENT.getList().contains(componentId.toString())) {
                     int max = SuggestionHelper.getEnchantmentMaxLevel(key);
-                    if(max>0)
+                    if (max>0)
                         return PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt(BlackMagick.getIntRangeArray(1, max))))
                             .setInfo("Max level: "+max);
                 }
@@ -1700,14 +1710,14 @@ public class PathHelper {
             }
 
             public PathInfo getListIndexInfo(int index) {
-                if(index >= 0 && index < entryInfos.length)
+                if (index >= 0 && index < entryInfos.length)
                     return entryInfos[index].get();
                 return PathInfo.EMPTY;
             }
 
             @Override
             public SuggestionGetter getSuggs() {
-                if(this.listSuggs != null)
+                if (this.listSuggs != null)
                     return this.listSuggs;
                 return super.getSuggs();
             }
@@ -1737,9 +1747,9 @@ public class PathHelper {
     
             public static ElementLiteral of(NbtType nbtType, SuggestionGetter suggs) {
                 PathType thisPathType = PathType.ELEMENT;
-                if(nbtType==NbtType.BOOLEAN)
+                if (nbtType==NbtType.BOOLEAN)
                     thisPathType = PathType.BOOLEAN;
-                else if(nbtType==NbtType.STRING)
+                else if (nbtType==NbtType.STRING)
                     thisPathType = PathType.STRING;
                 return new ElementLiteral(nbtType, thisPathType, suggs);
             }
@@ -1828,7 +1838,7 @@ public class PathHelper {
      * @return corresponding NbtType or NbtType.UNKNOWN
      */
     public static NbtType nbtTypeFromByte(byte nbtType) {
-        switch(nbtType) {
+        switch (nbtType) {
             case Tag.TAG_BYTE : return NbtType.BYTE;
             case Tag.TAG_SHORT : return NbtType.SHORT;
             case Tag.TAG_INT : return NbtType.INT;
@@ -1858,13 +1868,13 @@ public class PathHelper {
         }
 
         public String getCompoundKey() {
-            if(isKey) {
+            if (isKey) {
                 return BlackMagick.validCompoundKey(key);
             }
             return null;
         }
         public String getPathKey() {
-            if(isKey) {
+            if (isKey) {
                 return BlackMagick.validPathKey(key);
             }
             return null;
@@ -1873,13 +1883,13 @@ public class PathHelper {
         public static String resolvePath(PathNode[] path) {
             StringBuilder sb = new StringBuilder();
             boolean first = true;
-            for(PathNode node : path) {
-                if(first)
+            for (PathNode node : path) {
+                if (first)
                     first = false;
-                else if(node.isKey())
+                else if (node.isKey())
                     sb.append(".");
                 
-                if(node.isKey())
+                if (node.isKey())
                     sb.append(node.getPathKey());
                 else
                     sb.append("["+node.index()+"]");
@@ -1888,56 +1898,56 @@ public class PathHelper {
         }
 
         public static PathNode[] parsePath(String path) {
-            if(path == null || path.isEmpty() || path.equals("{}"))
+            if (path == null || path.isEmpty() || path.equals("{}"))
                 return new PathNode[0];
 
             List<PathNode> nodeList = Lists.newArrayList();
             String edit = path;
             boolean valid = true;
-            while(!edit.isEmpty() && valid) {
+            while (!edit.isEmpty() && valid) {
                 valid = false;
-                if(!nodeList.isEmpty() && edit.charAt(0)=='[') {
-                    if(edit.contains("]")) {
+                if (!nodeList.isEmpty() && edit.charAt(0)=='[') {
+                    if (edit.contains("]")) {
                         String thisNode = edit.substring(1,edit.indexOf("]"));
                         edit = edit.substring(edit.indexOf("]")+1);
                         try {
                             int index = Integer.parseInt(thisNode);
-                            if(index>=0) {
+                            if (index>=0) {
                                 nodeList.add(PathNode.of(index));
                                 valid = true;
                                 continue;
                             }
-                        } catch(Exception ex) {}
+                        } catch (Exception ex) {}
                     }
                 }
-                else if(nodeList.isEmpty() || edit.charAt(0)=='.') {
-                    if(nodeList.isEmpty() && edit.charAt(0)=='.') {
+                else if (nodeList.isEmpty() || edit.charAt(0)=='.') {
+                    if (nodeList.isEmpty() && edit.charAt(0)=='.') {
                         valid = false;
                         break;
                     }
-                    if(edit.charAt(0)=='.') {
+                    if (edit.charAt(0)=='.') {
                         edit = edit.substring(1);
-                        if(edit.isEmpty()) {
+                        if (edit.isEmpty()) {
                             valid = true;
                             break;
                         }
                     }
-                    if(edit.charAt(0)=='"' || edit.charAt(0)=='\'') {
+                    if (edit.charAt(0)=='"' || edit.charAt(0)=='\'') {
                         char quoteChar = edit.charAt(0);
                         edit = edit.substring(1);
                         StringBuilder thisKey = new StringBuilder();
                         boolean repeatSearch = true;
-                        while(!edit.isEmpty() && repeatSearch) {
+                        while (!edit.isEmpty() && repeatSearch) {
                             repeatSearch = false;
-                            if(edit.charAt(0)=='\\') {
-                                if(edit.length()>1) {
+                            if (edit.charAt(0)=='\\') {
+                                if (edit.length()>1) {
                                     thisKey.append(edit.charAt(1));
                                     edit = edit.substring(2);
                                     repeatSearch = true;
                                 }
                             }
-                            else if(edit.charAt(0)==quoteChar) {
-                                if(thisKey.length()>0) {
+                            else if (edit.charAt(0)==quoteChar) {
+                                if (thisKey.length()>0) {
                                     nodeList.add(PathNode.of(thisKey.toString()));
                                     edit = edit.substring(1);
                                     valid = true;
@@ -1953,11 +1963,11 @@ public class PathHelper {
                     }
                     else {
                         StringBuilder thisKey = new StringBuilder();
-                        while(!edit.isEmpty() && isAllowedInUnquotedName(edit.charAt(0))) {
+                        while (!edit.isEmpty() && isAllowedInUnquotedName(edit.charAt(0))) {
                             thisKey.append(edit.charAt(0));
                             edit = edit.substring(1);
                         }
-                        if(thisKey.length()>0) {
+                        if (thisKey.length()>0) {
                             nodeList.add(PathNode.of(thisKey.toString()));
                             valid = true;
                         }
@@ -1965,7 +1975,7 @@ public class PathHelper {
                 }
             }
 
-            if(valid && !nodeList.isEmpty())
+            if (valid && !nodeList.isEmpty())
                 return nodeList.toArray(new PathNode[0]);
             
             return null;
@@ -1990,7 +2000,7 @@ public class PathHelper {
         }
 
         public PathInfo get() {
-            if(inlined != null)
+            if (inlined != null)
                 return inlined;
             return getRegisteredPathInfo(refKey);
         }

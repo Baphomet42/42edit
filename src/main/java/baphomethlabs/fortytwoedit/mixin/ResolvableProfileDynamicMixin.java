@@ -26,15 +26,15 @@ public abstract class ResolvableProfileDynamicMixin {
     public void injectAddToTooltip(
         Item.TooltipContext tooltipContext, Consumer<Component> consumer, TooltipFlag tooltipFlag, DataComponentGetter dataComponentGetter, CallbackInfo ci
     ) {
-        if(FortytwoEdit.mixinProfileDynamicTooltip) {
+        if (FortytwoEdit.mixinProfileDynamicTooltip) {
             String dynamicName = BlackMagick.getDynamicUUIDProfileName((ResolvableProfile.Dynamic)(Object)this);
-            if(dynamicName != null && !dynamicName.isEmpty()) {
+            if (dynamicName != null && !dynamicName.isEmpty()) {
                 consumer.accept(Component.empty().append(DYNAMIC_TOOLTIP).append(Component.empty().append(" UUID ("+dynamicName+")").setStyle(DYNAMIC_TOOLTIP.getStyle())));
                 ci.cancel();
             }
             else {
                 dynamicName = BlackMagick.getDynamicProfileName((ResolvableProfile.Dynamic)(Object)this);
-                if(dynamicName != null && !dynamicName.isEmpty()) {
+                if (dynamicName != null && !dynamicName.isEmpty()) {
                     consumer.accept(Component.empty().append(DYNAMIC_TOOLTIP).append(Component.empty().append(" name ("+dynamicName+")").setStyle(DYNAMIC_TOOLTIP.getStyle())));
                     ci.cancel();
                 }

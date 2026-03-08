@@ -23,24 +23,24 @@ public class ItemHistoryScreen extends GenericScreen {
         setupScrollPane(false, true);
 
         ListTag history = FortytwoEdit.getItemHist();
-        if(history.isEmpty())
+        if (history.isEmpty())
             paneScroll().addRow("No item history to show");
         else
             paneScroll().addRow("Showing recent " + history.size() + " item(s)");
 
-        for(int i=0; i<FortytwoEdit.ITEM_HIST_ROWS; i++) {
+        for (int i=0; i<FortytwoEdit.ITEM_HIST_ROWS; i++) {
             ScrollRow row = paneScroll().addRow();
-            for(int slot=0; slot<9; slot++) {
+            for (int slot=0; slot<9; slot++) {
                 final ItemStack item;
                 int histIndex = i*9+slot;
-                if(history.size()>histIndex)
+                if (history.size()>histIndex)
                     item = BlackMagick.itemFromNbt(BlackMagick.validCompound(history.get(i*9+slot)));
                 else
                     item = ItemStack.EMPTY;
                 ItemSlotButton itemBtn = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, item, btn -> btnCopyItemNbt(item));
                 itemBtn.showSlot(false);
                 itemBtn.active = false;
-                if(item != null && !item.isEmpty()) {
+                if (item != null && !item.isEmpty()) {
                     itemBtn.showSlot(true);
                     itemBtn.active = true;
                     itemBtn.setTooltip(ItemBuilderScreen.makeItemTooltip(item));
@@ -54,7 +54,7 @@ public class ItemHistoryScreen extends GenericScreen {
     }
 
     protected void btnCopyItemNbt(ItemStack stack) {
-        if(stack != null && !stack.isEmpty()) {
+        if (stack != null && !stack.isEmpty()) {
             String itemData = BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(stack));
             FortytwoEdit.setClipboard(itemData);
             FortytwoEdit.showToast("Item History","Item NBT copied to clipboard");

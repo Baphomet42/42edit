@@ -58,31 +58,31 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
     @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
     private void injectRenderTooltip(GuiGraphics context, int x, int y, CallbackInfo c) {
 
-        if(this.hoveredSlot != null && this.hoveredSlot.hasItem()) {
+        if (this.hoveredSlot != null && this.hoveredSlot.hasItem()) {
             ItemStack stack = this.hoveredSlot.getItem().copy();
-            if(((AbstractContainerMenu)this.menu).getCarried().isEmpty() || this.showTooltipWithItemInHand(stack)) {
+            if (((AbstractContainerMenu)this.menu).getCarried().isEmpty() || this.showTooltipWithItemInHand(stack)) {
                 DataComponentMap components = stack.getComponents();
 		        TooltipDisplay tooltipDisplay = stack.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT);
-                if(components.has(DataComponents.CONTAINER) && tooltipDisplay.shows(DataComponents.CONTAINER)) {
+                if (components.has(DataComponents.CONTAINER) && tooltipDisplay.shows(DataComponents.CONTAINER)) {
                     ItemContainerContents container = components.get(DataComponents.CONTAINER);
                     int rows = 3;
                     int columns = 9;
                     int[] size = SuggestionHelper.getContainerSize(stack.getItem());
-                    if(size[0]>0)
+                    if (size[0]>0)
                         rows = size[0];
-                    if(size[1]>0)
+                    if (size[1]>0)
                         columns = size[1];
 
                     NonNullList<ItemStack> items = NonNullList.withSize(rows*columns,ItemStack.EMPTY);
                     container.copyInto(items);
 
                     boolean empty = true;
-                    for(ItemStack i: items) {
-                        if(!i.isEmpty())
+                    for (ItemStack i: items) {
+                        if (!i.isEmpty())
                             empty = false;
                     }
 
-                    if(!empty) {
+                    if (!empty) {
                         stack.set(DataComponents.CONTAINER,ItemContainerContents.EMPTY);
                         Optional<TooltipComponent> data = Optional.of(new ContainerTooltipData(items,rows,columns));
                         context.setTooltipForNextFrame(this.font, this.getTooltipFromContainerItem(stack), data, x, y, stack.get(DataComponents.TOOLTIP_STYLE));
@@ -96,15 +96,15 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void injectKeyPressed(KeyEvent keyEvent, CallbackInfoReturnable<Boolean> cir) {
 
-        if(FortytwoEdit.keySpamClick.matches(keyEvent)) {
+        if (FortytwoEdit.keySpamClick.matches(keyEvent)) {
 
             double d = minecraft.mouseHandler.xpos() * (double)this.minecraft.getWindow().getGuiScaledWidth() / (double)this.minecraft.getWindow().getScreenWidth();
             double e = minecraft.mouseHandler.ypos() * (double)this.minecraft.getWindow().getGuiScaledHeight() / (double)this.minecraft.getWindow().getScreenHeight();
             Slot slot = this.getHoveredSlot(d, e);
 
-            if(slot != null && ((AbstractContainerMenu)this.menu).canTakeItemForPickAll(ItemStack.EMPTY, slot)) {
+            if (slot != null && ((AbstractContainerMenu)this.menu).canTakeItemForPickAll(ItemStack.EMPTY, slot)) {
 
-                if(slot.hasItem()) {
+                if (slot.hasItem()) {
                     ItemStack quickMove = slot.getItem().copy();
                     if (!quickMove.isEmpty()) {
                         for (Slot target : this.menu.slots) {

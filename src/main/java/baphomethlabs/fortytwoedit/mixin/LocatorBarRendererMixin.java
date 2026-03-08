@@ -34,7 +34,7 @@ public abstract class LocatorBarRendererMixin {
     public void injectRender(Entity entity, Level level, PartialTickSupplier partialTickSupplier, GuiGraphics guiGraphics, int i, TrackedWaypoint trackedWaypoint, CallbackInfo ci) {
 
         playerInfo = null;
-        if(FortytwoEdit.mixinLocatorBar
+        if (FortytwoEdit.mixinLocatorBar
         && (trackedWaypoint.icon().style == WaypointStyleAssets.DEFAULT || FortytwoEdit.mixinLocatorBarAlways)
         && trackedWaypoint.id().left().isPresent()) {
             final Minecraft minecraft = Minecraft.getInstance();
@@ -45,9 +45,9 @@ public abstract class LocatorBarRendererMixin {
             WaypointStyle waypointStyle = minecraft.getWaypointStyles().get(trackedWaypoint.icon().style);
             float f = Mth.sqrt((float)trackedWaypoint.distanceSquared(entity));
             size = 0;
-            if(f < waypointStyle.nearDistance())
+            if (f < waypointStyle.nearDistance())
                 size = 1;
-            else if(f >= waypointStyle.farDistance())
+            else if (f >= waypointStyle.farDistance())
                 size = -1;
         }
 
@@ -55,10 +55,10 @@ public abstract class LocatorBarRendererMixin {
 
 	@Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
 	private void redirectBlitSprite(GuiGraphics guiGraphics, RenderPipeline renderPipeline, Identifier identifier, int i, int j, int k, int l, int m) {
-        if(playerInfo == null)
+        if (playerInfo == null)
             guiGraphics.blitSprite(renderPipeline, identifier, i, j, k, l, m);
         else {
-            if(FortytwoEdit.mixinLocatorBarColor)
+            if (FortytwoEdit.mixinLocatorBarColor)
                 guiGraphics.fill(i-size, j-size, i+k+size, j+k+size, m);
             PlayerFaceRenderer.draw(guiGraphics, playerInfo.getSkin().body().texturePath(), i+1-size, j+1-size, k-2+size+size, playerInfo.showHat(), isUpsideDown, -1);
         }

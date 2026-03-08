@@ -30,7 +30,7 @@ public abstract class KeyBindsListMixin extends ContainerObjectSelectionList<Key
         KeyBindsList self = (KeyBindsList)(Object)this;
         this.addEntry(self.new CategoryEntry(FortytwoEdit.KEY_CATEGORY));
 
-        for(KeyMapping keyMapping : FortytwoEdit.KEYBINDS) {
+        for (KeyMapping keyMapping : FortytwoEdit.KEYBINDS) {
 			Component component = Component.translatable(keyMapping.getName());
             int i = minecraft.font.width(component);
             if (i > this.maxNameWidth) {

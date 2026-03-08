@@ -16,7 +16,7 @@ public abstract class WindowMixin {
         try {
             return NativeImage.read(getClass().getClassLoader().getResourceAsStream("assets/42edit/textures/icon/mycelium.png"));
         }
-        catch(Exception ex) {
+        catch (Exception ex) {
             FortytwoEdit.logError("Failed to set game icon");
         }
         return new NativeImage(16,16,true);

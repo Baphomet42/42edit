@@ -34,7 +34,7 @@ public class MagickScreen extends GenericScreen {
             button -> changeScreen(new HacksScreen())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
         btnWgtHat = this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.hat"),
             button -> this.btnHat()).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*4+TOP_OFFSET,60,WID_HEIGHT).build());
-        if(!minecraft.player.getAbilities().instabuild) {
+        if (!minecraft.player.getAbilities().instabuild) {
             btnWgtHat.active = false;
             btnWgtHat.setTooltip(TT_CREATIVE);
         }
@@ -52,7 +52,7 @@ public class MagickScreen extends GenericScreen {
     }
 
     protected void btnHat() {
-        if(minecraft.player.getAbilities().instabuild) {
+        if (minecraft.player.getAbilities().instabuild) {
             ItemStack hand = minecraft.player.getMainHandItem().copy();
             ItemStack head = minecraft.player.getItemBySlot(EquipmentSlot.HEAD).copy();
             BlackMagick.setItemHead(hand);
@@ -62,7 +62,7 @@ public class MagickScreen extends GenericScreen {
     }
 
     protected void btnSuperSecretSettings(InputWithModifiers inputWithModifiers) {
-        if(inputWithModifiers.hasShiftDown()) {
+        if (inputWithModifiers.hasShiftDown()) {
             changeScreen(new SecretScreen());
         }
         else {
@@ -72,16 +72,16 @@ public class MagickScreen extends GenericScreen {
     }
 
     protected void btnAutoClick() {
-        if(BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Use]")) {
+        if (BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Use]")) {
             FortytwoEdit.updateAutoClick(false,true,false,1500);
         }
-        else if(BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Attack .65]")) {
+        else if (BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Attack .65]")) {
             FortytwoEdit.updateAutoClick(true,false,false,1500);
         }
-        else if(BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Attack 1.5]")) {
+        else if (BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Attack 1.5]")) {
             FortytwoEdit.updateAutoClick(false,false,true,650);
         }
-        else if(BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Mine]")) {
+        else if (BlackMagick.textComponentToStringLiteral(btnWgtAutoClick.getMessage()).equals("[Mine]")) {
             FortytwoEdit.updateAutoClick(false,false,true,1500);
         }
         else {
@@ -91,13 +91,13 @@ public class MagickScreen extends GenericScreen {
     }
 
     private void setAutoClickMessage() {
-        if(FortytwoEdit.autoClick && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack)
+        if (FortytwoEdit.autoClick && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack)
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.use"));
-        else if(!FortytwoEdit.autoClick && FortytwoEdit.autoMine && !FortytwoEdit.autoAttack)
+        else if (!FortytwoEdit.autoClick && FortytwoEdit.autoMine && !FortytwoEdit.autoAttack)
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.mine"));
-        else if(!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 1500)
+        else if (!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 1500)
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.attack_slow"));
-        else if(!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 650)
+        else if (!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 650)
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.attack_fast"));
         else
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.custom"));
