@@ -7,7 +7,7 @@ import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.tooltip.BelowOrAboveWidgetTooltipPositioner;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -157,13 +157,13 @@ public class TextSuggestor {
         }
 	}
 
-    public void render(GuiGraphics guiGraphics, int i, int j) {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int i, int j) {
         this.renderSuggestions(guiGraphics, i, j);
     }
 
-    public boolean renderSuggestions(GuiGraphics guiGraphics, int i, int j) {
+    public boolean renderSuggestions(GuiGraphicsExtractor guiGraphics, int i, int j) {
         if (this.suggestionsWindow != null) {
-            this.suggestionsWindow.render(guiGraphics, i, j);
+            this.suggestionsWindow.extractRenderState(guiGraphics, i, j);
             return true;
         }
         return false;
@@ -258,7 +258,7 @@ public class TextSuggestor {
             this.select(0);
         }
 
-        public void render(GuiGraphics guiGraphics, int i, int j) {
+        public void extractRenderState(GuiGraphicsExtractor guiGraphics, int i, int j) {
             int k = Math.min(this.suggestionList.size(), TextSuggestor.this.suggestionLineLimit);
 
             List<ClientTooltipComponent> tooltipList = Lists.newArrayList();
@@ -287,13 +287,13 @@ public class TextSuggestor {
                 }
             }
 
-            guiGraphics.renderTooltip(TextSuggestor.this.font, tooltipList, i, j, ttPositioner, null);
+            guiGraphics.tooltip(TextSuggestor.this.font, tooltipList, i, j, ttPositioner, null);
         }
 
         /**
          * Modified from {@link net.minecraft.client.gui.GuiGraphics#renderTooltip}
          */
-        private static Vector2ic getTooltipPosition(Font font, GuiGraphics guiGraphics, int i, int j, List<ClientTooltipComponent> list, BelowOrAboveWidgetTooltipPositioner clientTooltipPositioner) {
+        private static Vector2ic getTooltipPosition(Font font, GuiGraphicsExtractor guiGraphics, int i, int j, List<ClientTooltipComponent> list, BelowOrAboveWidgetTooltipPositioner clientTooltipPositioner) {
             int k = 0;
             int l = list.size() == 1 ? -2 : 0;
 

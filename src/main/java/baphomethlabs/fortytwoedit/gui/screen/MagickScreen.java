@@ -4,7 +4,7 @@ import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.widget.ModifierButton;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.input.InputWithModifiers;
@@ -110,16 +110,16 @@ public class MagickScreen extends GenericScreen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.renderFakeItem(new ItemStack(Items.JIGSAW), x+6, y+6);
-        context.drawCenteredString(this.font, TITLE_TEXT, this.width / 2, y+11, TEXT_COLOR);
-		context.renderFakeItem(new ItemStack(Items.SPONGE),x+WID_LEFT_NARROW+ITEM_OFFSET,y+44+TOP_OFFSET+ITEM_OFFSET);
-		context.renderFakeItem(new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET+ITEM_OFFSET);
-		context.renderFakeItem(new ItemStack(Items.DIAMOND_HELMET),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET+ITEM_OFFSET);
-		context.renderFakeItem(new ItemStack(Items.STRUCTURE_BLOCK),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET+ITEM_OFFSET);
-		context.renderFakeItem(new ItemStack(Items.ELYTRA),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET+ITEM_OFFSET);
-		context.renderFakeItem(new ItemStack(Items.GOLDEN_SWORD),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET+ITEM_OFFSET);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
+        context.fakeItem(new ItemStack(Items.JIGSAW), x+6, y+6);
+        context.centeredText(this.font, TITLE_TEXT, this.width / 2, y+11, TEXT_COLOR);
+		context.fakeItem(new ItemStack(Items.SPONGE),x+WID_LEFT_NARROW+ITEM_OFFSET,y+44+TOP_OFFSET+ITEM_OFFSET);
+		context.fakeItem(new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET+ITEM_OFFSET);
+		context.fakeItem(new ItemStack(Items.DIAMOND_HELMET),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET+ITEM_OFFSET);
+		context.fakeItem(new ItemStack(Items.STRUCTURE_BLOCK),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET+ITEM_OFFSET);
+		context.fakeItem(new ItemStack(Items.ELYTRA),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET+ITEM_OFFSET);
+		context.fakeItem(new ItemStack(Items.GOLDEN_SWORD),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET+ITEM_OFFSET);
     }
 
 }

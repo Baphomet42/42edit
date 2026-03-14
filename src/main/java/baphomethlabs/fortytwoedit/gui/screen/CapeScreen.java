@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
@@ -216,7 +216,7 @@ public class CapeScreen extends GenericScreen {
      * Replace y body rot 180.0F occurances with 0.0F to flip player backwards. Do not replace 180.0 in quaternion
      * Copy referenced `extractRenderState` method here
      */
-    private static void drawPlayer(GuiGraphics guiGraphics, int i, int j, int k, int l, int m, float f, float g, float h, LivingEntity livingEntity) {
+    private static void drawPlayer(GuiGraphicsExtractor guiGraphics, int i, int j, int k, int l, int m, float f, float g, float h, LivingEntity livingEntity) {
 		float n = (i + k) / 2.0F;
 		float o = (j + l) / 2.0F;
 		float p = (float)Math.atan((n - g) / 40.0F);
@@ -240,7 +240,7 @@ public class CapeScreen extends GenericScreen {
 		}
 
 		Vector3f vector3f = new Vector3f(0.0F, entityRenderState.boundingBoxHeight / 2.0F + f, 0.0F);
-		guiGraphics.submitEntityRenderState(entityRenderState, m, vector3f, quaternionf, quaternionf2, i, j, k, l);
+		guiGraphics.entity(entityRenderState, m, vector3f, quaternionf, quaternionf2, i, j, k, l);
     }
 	private static EntityRenderState extractRenderState(LivingEntity livingEntity) {
 		EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
@@ -253,11 +253,11 @@ public class CapeScreen extends GenericScreen {
 	}
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredString(this.font, Component.nullToEmpty("Client Capes & Skins"), this.width / 2, y+11, TEXT_COLOR);
-        context.drawString(this.font, Component.nullToEmpty("Capes"), x+20,y+7+ROW_HEIGHT*2, LABEL_COLOR);
-        context.drawString(this.font, Component.nullToEmpty("Skin"), x+20,y+7+ROW_HEIGHT*5, LABEL_COLOR);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
+        context.centeredText(this.font, Component.nullToEmpty("Client Capes & Skins"), this.width / 2, y+11, TEXT_COLOR);
+        context.text(this.font, Component.nullToEmpty("Capes"), x+20,y+7+ROW_HEIGHT*2, LABEL_COLOR);
+        context.text(this.font, Component.nullToEmpty("Skin"), x+20,y+7+ROW_HEIGHT*5, LABEL_COLOR);
         drawPlayer(context, x + playerX, y + playerY, x + playerX + playerWidth, y + playerY + playerHeight, 60, 0.0F, mouseX, mouseY, (LivingEntity)this.minecraft.player);
     }
 

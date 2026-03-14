@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.gui.contextualbar.LocatorBarRenderer;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
@@ -30,8 +30,8 @@ public abstract class LocatorBarRendererMixin {
     private static boolean isUpsideDown = false;
     private static int size = 0;
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"), cancellable = true)
-    public void injectRender(Entity entity, Level level, PartialTickSupplier partialTickSupplier, GuiGraphics guiGraphics, int i, TrackedWaypoint trackedWaypoint, CallbackInfo ci) {
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"), cancellable = true)
+    public void injectExtractRenderState(Entity entity, Level level, PartialTickSupplier partialTickSupplier, GuiGraphicsExtractor guiGraphics, int i, TrackedWaypoint trackedWaypoint, CallbackInfo ci) {
 
         playerInfo = null;
         if (FortytwoEdit.mixinLocatorBar
@@ -53,14 +53,14 @@ public abstract class LocatorBarRendererMixin {
 
     }
 
-	@Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
-	private void redirectBlitSprite(GuiGraphics guiGraphics, RenderPipeline renderPipeline, Identifier identifier, int i, int j, int k, int l, int m) {
+	@Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
+	private void redirectBlitSprite(GuiGraphicsExtractor guiGraphics, RenderPipeline renderPipeline, Identifier identifier, int i, int j, int k, int l, int m) {
         if (playerInfo == null)
             guiGraphics.blitSprite(renderPipeline, identifier, i, j, k, l, m);
         else {
             if (FortytwoEdit.mixinLocatorBarColor)
                 guiGraphics.fill(i-size, j-size, i+k+size, j+k+size, m);
-            PlayerFaceRenderer.draw(guiGraphics, playerInfo.getSkin().body().texturePath(), i+1-size, j+1-size, k-2+size+size, playerInfo.showHat(), isUpsideDown, -1);
+            PlayerFaceExtractor.extractRenderState(guiGraphics, playerInfo.getSkin().body().texturePath(), i+1-size, j+1-size, k-2+size+size, playerInfo.showHat(), isUpsideDown, -1);
         }
 	}
     

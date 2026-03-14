@@ -124,10 +124,12 @@ public class SuggestionHelper {
     private static final Map<String,List<String>> LIST_CACHES = Maps.newHashMap();
     private static final Set<String> DYNAMIC_LIST_CACHES = Sets.newHashSet();
     private static final Map<String,Supplier<List<String>>> SUGGS_LIST_METHODS = Maps.newHashMap();
+    private static final Map<String,Map<String,List<String>>> BLOCK_STATE_CACHE = Maps.newHashMap();
 
     public static void clearCacheInfo() {
         for (String key : LIST_CACHES.keySet())
             LIST_CACHES.get(key).clear();
+        BLOCK_STATE_CACHE.clear();
     }
 
     public static void clearDynamicListCaches() {
@@ -184,20 +186,23 @@ public class SuggestionHelper {
      * Get list of all possible block states that can be applied to the item
      * 
      * @param item the ItemStack.getItem()
-     * @return list of lists where the first string in each list is the key and the rest are the value options (may be empty but never null)
+     * @return map of lists
      */
-    public static List<List<String>> getBlockStates(Item item) {
-        List<List<String>> states = Lists.newArrayList();
-        BlockState blockState = Block.byItem(item).defaultBlockState();
-        for (Map.Entry<Property<?>, Comparable<?>> entry : blockState.getValues().entrySet()) {
-            List<String> list = Lists.newArrayList();
-            list.add(entry.getKey().getName());
-            for (Comparable<?> val : entry.getKey().getPossibleValues()) {
-                list.add((String)Util.getPropertyName(entry.getKey(), val));
+    public static Map<String,List<String>> getBlockStates(Item item) {
+        String itemId = BlackMagick.itemToStringId(item);
+        if (!BLOCK_STATE_CACHE.containsKey(itemId)) {
+            Map<String,List<String>> states = Maps.newHashMap();
+            BlockState blockState = Block.byItem(item).defaultBlockState();
+            for (Property<?> entry : blockState.getProperties()) {
+                List<String> list = Lists.newArrayList();
+                for (Comparable<?> val : entry.getPossibleValues()) {
+                    list.add((String)Util.getPropertyName(entry, val));
+                }
+                states.put(entry.getName(), list);
             }
-            states.add(list);
+            BLOCK_STATE_CACHE.put(itemId, states);
         }
-        return states;
+        return BLOCK_STATE_CACHE.get(itemId);
     }
 
     /**
@@ -226,9 +231,9 @@ public class SuggestionHelper {
      */
     public static int[] getContainerSize(Item item) {
 
-        Identifier identifier = BlackMagick.identifierOrNull(item.toString());
+        Identifier identifier = BlackMagick.identifierOrNull(BlackMagick.itemToStringId(item));
         if (identifier != null) {
-            String id = identifier.toString();
+            String id = BlackMagick.identifierToString(identifier);
 
             if (id.startsWith("minecraft:") && id.endsWith("shulker_box"))
                 return new int[]{3,9};
@@ -293,7 +298,7 @@ public class SuggestionHelper {
         if (list.isEmpty()) {
             BuiltInRegistries.DATA_COMPONENT_TYPE.forEach(i -> {
                 if (!i.isTransient())
-                    list.add(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
+                    list.add(BlackMagick.identifierToString(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i)));
             });
             sortUnique(list);
         }
@@ -308,8 +313,8 @@ public class SuggestionHelper {
         if (list.isEmpty()) {
             BuiltInRegistries.DATA_COMPONENT_TYPE.forEach(i -> {
                 if (!i.isTransient()) {
-                    list.add(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
-                    list.add("!"+BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i).toString());
+                    list.add(BlackMagick.identifierToString(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i)));
+                    list.add("!"+BlackMagick.identifierToString(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i)));
                 }
             });
             sortUnique(list);
@@ -507,7 +512,7 @@ public class SuggestionHelper {
             final Minecraft client = Minecraft.getInstance();
             if (client.getAtlasManager() != null) {
                 client.getAtlasManager().forEach((identifier, atlasEntry) -> {
-                    list.add(identifier.toString());
+                    list.add(BlackMagick.identifierToString(identifier));
                 });
                 sortUnique(list);
             }
@@ -522,7 +527,7 @@ public class SuggestionHelper {
             if (client.getAtlasManager() != null) {
                 client.getAtlasManager().forEach((identifier, atlasEntry) -> {
                     ((TextureAtlasAccessor)atlasEntry).getTexturesByName().forEach((textureLocation, textureSprite) -> {
-                        list.add(textureLocation.toString());
+                        list.add(BlackMagick.identifierToString(textureLocation));
                     });
                 });
                 sortUnique(list);
@@ -551,7 +556,7 @@ public class SuggestionHelper {
     private static List<String> getRegistryIfEmpty(List<String> list, Registry<?> registryRef) {
         if (list.isEmpty()) {
             for (Identifier i : registryRef.keySet())
-                list.add(i.toString());
+                list.add(BlackMagick.identifierToString(i));
             sortUnique(list);
         }
         return list;
@@ -605,7 +610,7 @@ public class SuggestionHelper {
             if (client.level != null)
                 BlackMagick.getRegistryAccess(client).lookup(registryRef).ifPresent(reg -> {
                     for (Identifier i : reg.keySet())
-                        list.add(i.toString());
+                        list.add(BlackMagick.identifierToString(i));
                 });
             sortUnique(list);
         }
@@ -684,7 +689,7 @@ public class SuggestionHelper {
             if (client.level != null)
                 BlackMagick.getRegistryAccess(client).lookup(registryRef).ifPresent(reg -> {
                     reg.listTagIds().forEach(tag -> {
-                        list.add("#"+tag.location().toString());
+                        list.add("#"+BlackMagick.identifierToString(tag.location()));
                     });
                 });
             sortUnique(list);
@@ -725,7 +730,7 @@ public class SuggestionHelper {
             if (client.level != null)
                 BlackMagick.getRegistryAccess(client).lookup(Registries.ITEM).ifPresent(reg -> {
                     for (Holder<Item> itemHolder : reg.getTagOrEmpty(TagKey.create(Registries.ITEM,Identifier.parse(tag)))) {
-                        list.add(itemHolder.value().toString());
+                        list.add(BlackMagick.itemToStringId(itemHolder.value()));
                     }
                 });
             sortUnique(list);
@@ -746,7 +751,7 @@ public class SuggestionHelper {
                 final String namespace = "minecraft";
                 ServerPacksSource.createVanillaPackSource().listResources(PackType.SERVER_DATA, namespace, path, map::putIfAbsent);
                 map.keySet().forEach(i -> {
-                    String temp = i.toString();
+                    String temp = BlackMagick.identifierToString(i);
                     if (temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
                         temp = namespace+":"+temp.substring(namespace.length()+1+path.length()+1,temp.length()-suffix.length());
                         if (path.startsWith("tags/"))
@@ -754,7 +759,7 @@ public class SuggestionHelper {
                         list.add(temp);
                     }
                     else {
-                        FortytwoEdit.logWarn("Failed to add data path to list: "+i.toString());
+                        FortytwoEdit.logWarn("Failed to add data path to list: "+BlackMagick.identifierToString(i));
                     }
                 });
             } catch (Exception ex) {}
@@ -814,14 +819,14 @@ public class SuggestionHelper {
                 final String namespace = "minecraft";
                 ServerPacksSource.createVanillaPackSource().listResources(PackType.CLIENT_RESOURCES, namespace, path, map::putIfAbsent);
                 map.keySet().forEach(i -> {
-                    String temp = i.toString();
+                    String temp = BlackMagick.identifierToString(i);
                     if (!temp.endsWith(suffix+MCMETA_SUFFIX)) {
                         if (temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
                             temp = namespace+":"+temp.substring(namespace.length()+1+path.length()+1,temp.length()-suffix.length());
                             list.add(temp);
                         }
                         else {
-                            FortytwoEdit.logWarn("Failed to add assets path to list: "+i.toString());
+                            FortytwoEdit.logWarn("Failed to add assets path to list: "+BlackMagick.identifierToString(i));
                         }
                     }
                 });

@@ -34,7 +34,7 @@ public class ItemHistoryScreen extends GenericScreen {
                 final ItemStack item;
                 int histIndex = i*9+slot;
                 if (history.size()>histIndex)
-                    item = BlackMagick.itemFromNbt(BlackMagick.validCompound(history.get(i*9+slot)));
+                    item = BlackMagick.itemFromNbtTag(history.get(i*9+slot));
                 else
                     item = ItemStack.EMPTY;
                 ItemSlotButton itemBtn = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, item, btn -> btnCopyItemNbt(item));

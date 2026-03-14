@@ -1096,19 +1096,19 @@ public class FortytwoEdit implements ClientModInitializer {
 
             if (!blockState.getProperties().isEmpty()) {
                 CompoundTag stack = new CompoundTag();
-                stack.put("id",StringTag.valueOf(blockState.getBlock().asItem().toString()));
+                stack.put("id",StringTag.valueOf(BlackMagick.itemToStringId(blockState.getBlock().asItem())));
                 CompoundTag tag = new CompoundTag();
 
                 String states = "";
                 states += "{";
                 boolean bl = false;
-                for (Map.Entry<Property<?>,Comparable<?>> entry : blockState.getValues().entrySet()) {
+                for (Property<?> entry : blockState.getProperties()) {
                     if (bl) {
                         states += ",";
                     }
-                    states += entry.getKey().getName();
+                    states += entry.getName();
                     states += ":";
-                    states += "\""+getValueString(blockState,entry.getKey())+"\"";
+                    states += "\""+getValueString(blockState,entry)+"\"";
                     bl = true;
                 }
                 states += "}";

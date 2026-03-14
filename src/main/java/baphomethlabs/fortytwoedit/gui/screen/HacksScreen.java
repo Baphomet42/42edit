@@ -3,7 +3,7 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.Tooltip;
@@ -155,7 +155,7 @@ public class HacksScreen extends GenericScreen {
                 }
                 else {
                     nbt.putString("id","minecraft:endermite_spawn_egg");
-                    entityData.putString("id",EntityType.getKey(current.getType()).toString());
+                    entityData.putString("id",BlackMagick.identifierToString(EntityType.getKey(current.getType())));
                     components.putString("minecraft:item_name","Custom "
                         +BlackMagick.textComponentToStringLiteral(current.getType().getDescription())+" Spawn Egg");
                 }
@@ -195,7 +195,7 @@ public class HacksScreen extends GenericScreen {
             }
             ItemStack item = BlackMagick.itemFromNbt(nbt);
             if (items.size()==1)
-                item = BlackMagick.itemFromNbt(BlackMagick.validCompound(bundle.get(0)));
+                item = BlackMagick.itemFromNbtTag(bundle.get(0));
 
             FortytwoEdit.setClipboard(BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(item)));
             FortytwoEdit.showToast("Get Entity","Entity data copied");
@@ -261,7 +261,7 @@ public class HacksScreen extends GenericScreen {
     protected void btnDeathPos() {
         if (minecraft.player.getLastDeathLocation().isPresent()) {
             GlobalPos pos = minecraft.player.getLastDeathLocation().get();
-            String coords = "Last death [X: "+pos.pos().getX()+", Y: "+pos.pos().getY()+", Z: "+pos.pos().getZ()+"] in "+pos.dimension().identifier().toString();
+            String coords = "Last death [X: "+pos.pos().getX()+", Y: "+pos.pos().getY()+", Z: "+pos.pos().getZ()+"] in "+BlackMagick.identifierToString(pos.dimension().identifier());
             BlackMagick.sendClientChat(coords);
             FortytwoEdit.showToast("Death Pos", "Death coords sent to chat");
         }
@@ -297,14 +297,14 @@ public class HacksScreen extends GenericScreen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredString(this.font, Component.nullToEmpty("Hacks"), this.width / 2, y+11, TEXT_COLOR);
-		context.renderFakeItem(new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+ROW_HEIGHT*2+1+2);
-		context.renderFakeItem(new ItemStack(Items.CREEPER_SPAWN_EGG),x+20+2,y+ROW_HEIGHT*3+1+2);
-		context.renderFakeItem(new ItemStack(Items.BARRIER),x+20+2,y+ROW_HEIGHT*4+1+2);
-		context.renderFakeItem(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+ROW_HEIGHT*5+1+2);
-		context.renderFakeItem(new ItemStack(Items.FISHING_ROD),x+20+2+100+WID_SPACE,y+ROW_HEIGHT*5+1+2);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
+        context.centeredText(this.font, Component.nullToEmpty("Hacks"), this.width / 2, y+11, TEXT_COLOR);
+		context.fakeItem(new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+ROW_HEIGHT*2+1+2);
+		context.fakeItem(new ItemStack(Items.CREEPER_SPAWN_EGG),x+20+2,y+ROW_HEIGHT*3+1+2);
+		context.fakeItem(new ItemStack(Items.BARRIER),x+20+2,y+ROW_HEIGHT*4+1+2);
+		context.fakeItem(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+ROW_HEIGHT*5+1+2);
+		context.fakeItem(new ItemStack(Items.FISHING_ROD),x+20+2+100+WID_SPACE,y+ROW_HEIGHT*5+1+2);
     }
 
     @Override

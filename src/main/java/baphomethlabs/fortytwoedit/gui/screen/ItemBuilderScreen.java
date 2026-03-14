@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.HotbarManager;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -102,7 +102,6 @@ public class ItemBuilderScreen extends GenericScreen {
     private static boolean runSuggsTest = true;
     protected ItemStack selItem = ItemStack.EMPTY;
     protected ItemStack selItemOff = ItemStack.EMPTY;
-    protected static List<List<String>> cacheStates = Lists.newArrayList();
     protected ItemSlotButton itemBtn = null;
     protected Button swapBtn;
     protected Button swapCopyBtn;
@@ -491,11 +490,6 @@ public class ItemBuilderScreen extends GenericScreen {
             if (tab==CACHE_TAB_MAIN)
                 setErrorMsg(null);
 
-            if (!cacheStates.isEmpty())
-                cacheStates.clear();
-            if (selItem!=null && !selItem.isEmpty())
-                cacheStates = SuggestionHelper.getBlockStates(selItem.getItem());
-
             if (selItem.is(Items.ARMOR_STAND)) {
                 updateArmorStand(selItem.copy());
                 prevArmorStand = true;
@@ -763,30 +757,6 @@ public class ItemBuilderScreen extends GenericScreen {
         }
     }
 
-    public static String[] getStatesArr() {
-        if (!cacheStates.isEmpty()) {
-            String[] temp = new String[cacheStates.size()];
-            for (int i=0; i<temp.length; i++)
-                temp[i]=cacheStates.get(i).get(0);
-            return temp;
-        }
-        return null;
-    }
-
-    public static String[] getStateVals(String key) {
-        if (!cacheStates.isEmpty()) {
-            for (int i=0; i<cacheStates.size(); i++) {
-                if (cacheStates.get(i).get(0).equals(key) && cacheStates.get(i).size()>1) {
-                    String[] temp = new String[cacheStates.get(i).size()-1];
-                    for (int j=0; j<temp.length; j++)
-                        temp[j]=cacheStates.get(i).get(j+1);
-                    return temp;
-                }
-            }
-        }
-        return null;
-    }
-
     public static MutableComponent grayWhiteText(String... parts) {
         return alternatingText(ChatFormatting.WHITE, ChatFormatting.GRAY, parts);
     }
@@ -1028,9 +998,9 @@ public class ItemBuilderScreen extends GenericScreen {
         colorHsl = new float[]{h,s,v};
     }
 
-    private void drawItem(GuiGraphics context, ItemStack item, int x, int y) {//to_do remove
-        context.renderItem(item,x,y);
-        context.renderItemDecorations(this.font,item,x,y);
+    private void drawItem(GuiGraphicsExtractor context, ItemStack item, int x, int y) {//to_do remove
+        context.item(item,x,y);
+        context.itemDecorations(this.font,item,x,y);
     }
 
     // private void updateTextComponentPreview(String path, String textComponentBase) { to_do old code
@@ -1600,6 +1570,30 @@ public class ItemBuilderScreen extends GenericScreen {
                     return errorText("Invalid color");
                 }
 
+                case ITEM_STACK:
+                {
+                    ItemStack tryParseStack = BlackMagick.itemFromNbtTag(el);
+                    if (!tryParseStack.isEmpty()) {
+                        Component btnTxt = tryParseStack.getStyledHoverName();
+                        return showLabel ? Component.empty().append(grayWhiteText("Item stack:\n",btnTxt)) : btnTxt;
+                    }
+                    return errorText("Invalid item");
+                }
+
+                case CONTAINER_SLOT:
+                {
+                    ItemStack tryParseStack = BlackMagick.itemFromNbtTag(BlackMagick.getNbtPath(BlackMagick.validCompound(el),"item"));
+                    Tag slotTag = BlackMagick.getNbtPath(BlackMagick.validCompound(el),"slot");
+                    if (slotTag != null && slotTag.getId() == Tag.TAG_INT) {
+                        int slot = ((IntTag)slotTag).intValue();
+                        if (!tryParseStack.isEmpty()) {
+                            Component btnTxt = Component.empty().append(grayWhiteText("","Slot "+slot+": ")).append(tryParseStack.getStyledHoverName());
+                            return showLabel ? Component.empty().append(grayWhiteText("Container slot:\n",btnTxt)) : btnTxt;
+                        }
+                    }
+                    return errorText("Invalid item");
+                }
+
                 case RARITY:
                 {
                     if (el.getId()==Tag.TAG_STRING) {
@@ -1830,8 +1824,8 @@ public class ItemBuilderScreen extends GenericScreen {
                                 lore = new ListTag();
                             lore.add(StringTag.valueOf(""));
                             lore.add(FortytwoEdit.LORE_BAPHOMETHLABS);
-                            ItemStack newStack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
-                                BlackMagick.itemToNbt(selItem),"components.minecraft:lore",lore)));
+                            ItemStack newStack = BlackMagick.itemFromNbtTag(BlackMagick.setNbtPath(
+                                BlackMagick.itemToNbt(selItem),"components.minecraft:lore",lore));
                             if (!newStack.isEmpty())
                                 BlackMagick.setItemMain(newStack);
                         }
@@ -1871,8 +1865,8 @@ public class ItemBuilderScreen extends GenericScreen {
                                 lore = new ListTag();
                             lore.add(StringTag.valueOf(""));
                             lore.add(FortytwoEdit.LORE_BAPHOMETHLABS_BOTTLE);
-                            ItemStack newStack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
-                                BlackMagick.itemToNbt(selItem),"components.minecraft:lore",lore)));
+                            ItemStack newStack = BlackMagick.itemFromNbtTag(BlackMagick.setNbtPath(
+                                BlackMagick.itemToNbt(selItem),"components.minecraft:lore",lore));
                             if (!newStack.isEmpty())
                                 BlackMagick.setItemMain(newStack);
                         }
@@ -1881,18 +1875,18 @@ public class ItemBuilderScreen extends GenericScreen {
                 }, btn -> {
                     if (!selItem.isEmpty()) {
                         if (BlackMagick.getNbtPath(BlackMagick.itemToNbt(selItem),"components.minecraft:custom_data.\"\u00a76\u00a7oBaphomethLabs\u00a7r\"")!=null) {
-                            ItemStack newStack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
-                                BlackMagick.itemToNbt(selItem),"components.minecraft:custom_data.\"\u00a76\u00a7oBaphomethLabs\u00a7r\"",null)));
+                            ItemStack newStack = BlackMagick.itemFromNbtTag(BlackMagick.setNbtPath(
+                                BlackMagick.itemToNbt(selItem),"components.minecraft:custom_data.\"\u00a76\u00a7oBaphomethLabs\u00a7r\"",null));
                             if (BlackMagick.nbtToSnbt(BlackMagick.getNbtPath(BlackMagick.itemToNbt(newStack),"components.minecraft:custom_data")).equals("{}")) {
-                                newStack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
-                                    BlackMagick.itemToNbt(selItem),"components.minecraft:custom_data",null)));
+                                newStack = BlackMagick.itemFromNbtTag(BlackMagick.setNbtPath(
+                                    BlackMagick.itemToNbt(selItem),"components.minecraft:custom_data",null));
                             }
                             if (!newStack.isEmpty())
                                 BlackMagick.setItemMain(newStack);
                         }
                         else {
-                            ItemStack newStack = BlackMagick.itemFromNbt(BlackMagick.validCompound(BlackMagick.setNbtPath(
-                                BlackMagick.itemToNbt(selItem),"components.minecraft:custom_data.\"\u00a76\u00a7oBaphomethLabs\u00a7r\"",IntTag.valueOf(42))));
+                            ItemStack newStack = BlackMagick.itemFromNbtTag(BlackMagick.setNbtPath(
+                                BlackMagick.itemToNbt(selItem),"components.minecraft:custom_data.\"\u00a76\u00a7oBaphomethLabs\u00a7r\"",IntTag.valueOf(42)));
                             if (!newStack.isEmpty())
                                 BlackMagick.setItemMain(newStack);
                         }
@@ -1998,12 +1992,12 @@ public class ItemBuilderScreen extends GenericScreen {
                         String sound = inp.trim();
                         Identifier soundId = BlackMagick.identifierOrNull(sound);
                         if (soundId != null) {
-                            String soundDisplay = soundId.getNamespace().equals("minecraft") ? soundId.getPath() : soundId.toString();
+                            String soundDisplay = soundId.getNamespace().equals("minecraft") ? soundId.getPath() : BlackMagick.identifierToString(soundId);
                             ItemStack item = BlackMagick.itemFromString(
                                 "{id:player_head,components:{\"minecraft:profile\":{name:\"Note_Block\",properties:[{name:\"textures\",value:"+
                                 "\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcyIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDov"+
                                 "L3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80Y2VlYjc3ZDRkMjU3MjRhOWNhZjJjN2NkZjJkODgzOTliMTQxN2M2YjlmZjUyMTM2NTliNjUzYmU0Mz"+
-                                "c2ZTMiDQogICAgfQ0KICB9DQp9\"}]},\"minecraft:note_block_sound\":\""+soundId.toString()+"\","+
+                                "c2ZTMiDQogICAgfQ0KICB9DQp9\"}]},\"minecraft:note_block_sound\":\""+BlackMagick.identifierToString(soundId)+"\","+
                                 "\"minecraft:custom_name\":{italic:false,text:\""+soundDisplay+"\"}}}");
                             if (!item.isEmpty())
                                 BlackMagick.setItemMain(item);
@@ -2378,16 +2372,15 @@ public class ItemBuilderScreen extends GenericScreen {
                 Set<String> modifiedComponentKeys = Sets.newHashSet();
                 Set<String> defaultComponentKeys = Sets.newHashSet();
                 Set<String> removedComponentKeys = Sets.newHashSet();
-                Set<String> storedComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(editItemInstance),"components")).keySet();
                 for (String k : BlackMagick.validCompound(BlackMagick.getNbtPath(editItemStack,"components")).keySet()) {
                     if (k.startsWith("!"))
                         removedComponentKeys.add(k);
                     else {
                         allSetComponentKeys.add(k);
-                        if (storedComponentKeys.contains(k))
-                            modifiedComponentKeys.add(k);
-                        else
+                        if (BlackMagick.isComponentDefault(selItem, k))
                             defaultComponentKeys.add(k);
+                        else
+                            modifiedComponentKeys.add(k);
                     }
                 }
                 if (!modifiedComponentKeys.isEmpty()) {
@@ -2409,7 +2402,7 @@ public class ItemBuilderScreen extends GenericScreen {
                 for (String c : SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
                     if (!allSetComponentKeys.contains(c)) {
                         if (firstUnset) {
-                            addTabWidgetScroll(tabNum, new RowWidget("Unset Components"));
+                            addTabWidgetScroll(tabNum, new RowWidget(PathInfo.COMPOUND_KEY_UNSET_COMPONENTS_LABEL));
                             firstUnset = false;
                         }
                         addTabWidgetScroll(tabNum, new RowWidgetComponent(editItemStack,c,true));
@@ -2444,7 +2437,7 @@ public class ItemBuilderScreen extends GenericScreen {
 
                         ItemStack[] stacks = new ItemStack[itemsList.size()+1];
                         for (int index=0; index<itemsList.size(); index++) {
-                            stacks[index+1] = BlackMagick.itemFromNbt(BlackMagick.validCompound(itemsList.get(index)));
+                            stacks[index+1] = BlackMagick.itemFromNbtTag(itemsList.get(index));
                         }
 
                         int index = 0;
@@ -2464,22 +2457,22 @@ public class ItemBuilderScreen extends GenericScreen {
                             addTabWidgetScroll(tabNum, new RowWidget(i==0 ? "Selected Entity" : "Offhand Entity"));
 
                         ItemStack[] stacks = new ItemStack[8];
-                        stacks[0] = BlackMagick.itemFromNbt(BlackMagick.validCompound(
-                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.feet")));
-                        stacks[1] = BlackMagick.itemFromNbt(BlackMagick.validCompound(
-                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.legs")));
-                        stacks[2] = BlackMagick.itemFromNbt(BlackMagick.validCompound(
-                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.chest")));
-                        stacks[3] = BlackMagick.itemFromNbt(BlackMagick.validCompound(
-                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.head")));
-                        stacks[4] = BlackMagick.itemFromNbt(BlackMagick.validCompound(
-                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.body")));
-                        stacks[5] = BlackMagick.itemFromNbt(BlackMagick.validCompound(
-                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.saddle")));
-                        stacks[6] = BlackMagick.itemFromNbt(BlackMagick.validCompound(
-                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.mainhand")));
-                        stacks[7] = BlackMagick.itemFromNbt(BlackMagick.validCompound(
-                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.offhand")));
+                        stacks[0] = BlackMagick.itemFromNbtTag(
+                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.feet"));
+                        stacks[1] = BlackMagick.itemFromNbtTag(
+                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.legs"));
+                        stacks[2] = BlackMagick.itemFromNbtTag(
+                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.chest"));
+                        stacks[3] = BlackMagick.itemFromNbtTag(
+                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.head"));
+                        stacks[4] = BlackMagick.itemFromNbtTag(
+                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.body"));
+                        stacks[5] = BlackMagick.itemFromNbtTag(
+                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.saddle"));
+                        stacks[6] = BlackMagick.itemFromNbtTag(
+                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.mainhand"));
+                        stacks[7] = BlackMagick.itemFromNbtTag(
+                            BlackMagick.getNbtPath(BlackMagick.itemToNbt(current),"components.minecraft:entity_data.equipment.offhand"));
 
                         addTabWidgetScroll(tabNum, new RowWidgetInvRow(stacks,RowWidgetInvRow.ARMOR_STAND_SPRITES));
                     }
@@ -2883,14 +2876,14 @@ public class ItemBuilderScreen extends GenericScreen {
                     CompoundTag thisCompound = (editElement != null && editElement.getId() == Tag.TAG_COMPOUND) ? (CompoundTag)editElement : new CompoundTag();
 
                     Set<String> allKeys = Sets.newHashSet();
-                    allKeys.addAll(nbtEdit.pi().getCompoundKeys(thisCompound));
+                    allKeys.addAll(nbtEdit.pi().getCompoundKeys(nbtEdit.current(), nbtEdit.pathNodes()));
                     allKeys.addAll(thisCompound.keySet());
 
                     List<String> keyLabelOrder = Lists.newArrayList();
                     Map<String,Set<String>> keyLabelSets = Maps.newHashMap();
 
                     for (String k : allKeys) {
-                        String lbl = nbtEdit.pi().getCompoundKeyLabel(thisCompound,k);
+                        String lbl = nbtEdit.pi().getCompoundKeyLabel(k, nbtEdit.current(), nbtEdit.pathNodes());
                         if (!keyLabelOrder.contains(lbl)) {
                             keyLabelOrder.add(lbl);
                             keyLabelSets.put(lbl,Sets.newHashSet());
@@ -2912,12 +2905,15 @@ public class ItemBuilderScreen extends GenericScreen {
                     for (String lbl : keyLabelOrder) {
                         addTabWidgetScroll(tabNum, new RowWidget(lbl));
                         for (String k : BlackMagick.sortSet(keyLabelSets.get(lbl)))
-                            addTabWidgetScroll(tabNum, RowWidgetElement.compoundTemplateElement(this, thisCompound, k));
+                            addTabWidgetScroll(tabNum, RowWidgetElement.compoundTemplateElement(this, k, nbtEdit.current(), nbtEdit.pathNodes()));
                     }
 
                     if (nbtEdit.pi().showCompoundNewKeyRow()) {
                         addTabWidgetScroll(tabNum, new RowWidget("Set Key"));
-                        addTabWidgetScroll(tabNum, RowWidgetElement.customCompoundKey(this, thisCompound, true));
+                        addTabWidgetScroll(tabNum, RowWidgetElement.customCompoundKey(this, thisCompound, true, nbtEdit.current(), nbtEdit.pathNodes()));
+                    }
+                    else if (keyLabelOrder.isEmpty()) {
+                        addTabWidgetScroll(tabNum, new RowWidget("No key suggestions found."));
                     }
 
                 }
@@ -2927,11 +2923,11 @@ public class ItemBuilderScreen extends GenericScreen {
                     int listSize = thisList.size();
 
                     for (int i=0; i<listSize; i++)
-                        addTabWidgetScroll(tabNum, RowWidgetElement.listTemplateElement(this, thisList, i));
+                        addTabWidgetScroll(tabNum, RowWidgetElement.listTemplateElement(this, thisList, i, nbtEdit.current(), nbtEdit.pathNodes()));
 
                     if (nbtEdit.pi().getListSize() == -1 || thisList.size() < nbtEdit.pi().getListSize()) {
                         addTabWidgetScroll(tabNum, new RowWidget("Append Element"));
-                        addTabWidgetScroll(tabNum, RowWidgetElement.customListElement(this, thisList, true));
+                        addTabWidgetScroll(tabNum, RowWidgetElement.customListElement(this, thisList, true, nbtEdit.current(), nbtEdit.pathNodes()));
                     }
 
                 }
@@ -2951,10 +2947,10 @@ public class ItemBuilderScreen extends GenericScreen {
                             CompoundTag thisCompound = (CompoundTag)editElement;
 
                             for (String k : BlackMagick.sortSet(thisCompound.keySet()))
-                                addTabWidgetScroll(tabNum, new RowWidgetElement(thisCompound, k));
+                                addTabWidgetScroll(tabNum, new RowWidgetElement(k, nbtEdit.current(), nbtEdit.pathNodes()));
 
                             addTabWidgetScroll(tabNum, new RowWidget("Set Key"));
-                            addTabWidgetScroll(tabNum, RowWidgetElement.customCompoundKey(this, thisCompound, false));
+                            addTabWidgetScroll(tabNum, RowWidgetElement.customCompoundKey(this, thisCompound, false, nbtEdit.current(), nbtEdit.pathNodes()));
 
                             break;
                         }
@@ -2964,10 +2960,10 @@ public class ItemBuilderScreen extends GenericScreen {
                             int listSize = thisList.size();
 
                             for (int i=0; i<listSize; i++)
-                                addTabWidgetScroll(tabNum, new RowWidgetElement(thisList, i));
+                                addTabWidgetScroll(tabNum, new RowWidgetElement(thisList, i, nbtEdit.current(), nbtEdit.pathNodes()));
 
                             addTabWidgetScroll(tabNum, new RowWidget("Append Element"));
-                            addTabWidgetScroll(tabNum, RowWidgetElement.customListElement(this, thisList, false));
+                            addTabWidgetScroll(tabNum, RowWidgetElement.customListElement(this, thisList, false, nbtEdit.current(), nbtEdit.pathNodes()));
 
                             break;
                         }
@@ -3598,10 +3594,10 @@ public class ItemBuilderScreen extends GenericScreen {
         }
 
         @Override
-        protected void renderListSeparators(GuiGraphics context) {}
+        protected void extractListSeparators(GuiGraphicsExtractor context) {}
 
         @Override
-        protected void renderListBackground(GuiGraphics context) {}
+        protected void extractListBackground(GuiGraphicsExtractor context) {}
 
         @Override
         public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
@@ -3813,29 +3809,29 @@ public class ItemBuilderScreen extends GenericScreen {
         }
 
         @Override
-        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             for (int i=0; i<btns.length; i++) {
                 this.btns[i].setX(this.getContentX()+this.btnX[i]);
                 if (this.btnY == null)
                     this.btns[i].setY(this.getContentY());
                 else
                     this.btns[i].setY(this.getContentY()+this.btnY[i]);
-                this.btns[i].render(context, mouseX, mouseY, tickDelta);
+                this.btns[i].extractRenderState(context, mouseX, mouseY, tickDelta);
             }
             for (int i=0; i<txts.length; i++) {
                 this.txts[i].setX(this.getContentX()+this.txtX[i]);
                 this.txts[i].setY(this.getContentY());
-                this.txts[i].render(context, mouseX, mouseY, tickDelta);
+                this.txts[i].extractRenderState(context, mouseX, mouseY, tickDelta);
             }
             for (PosWidget posWidget : this.wids) {
                 posWidget.repositionInRow(this);
-                posWidget.w().render(context, mouseX, mouseY, tickDelta);
+                posWidget.w().extractRenderState(context, mouseX, mouseY, tickDelta);
             }
             if (lbl != null) {
                 if (lblCentered)
-                    context.drawCenteredString(ItemBuilderScreen.this.font, this.lbl, ItemBuilderScreen.this.width/2, this.getContentY()+6, lblColor);
+                    context.centeredText(ItemBuilderScreen.this.font, this.lbl, ItemBuilderScreen.this.width/2, this.getContentY()+6, lblColor);
                 else
-                    context.drawString(ItemBuilderScreen.this.font, this.lbl, ItemBuilderScreen.this.x+ROW_LEFT_SCROLL+3, this.getContentY()+6, lblColor);
+                    context.text(ItemBuilderScreen.this.font, this.lbl, ItemBuilderScreen.this.x+ROW_LEFT_SCROLL+3, this.getContentY()+6, lblColor);
             }
             if (displayItem != null) {
                 drawItem(context,displayItem,this.getContentX()+ROW_LEFT_SCROLL+2+displayItemXoff,this.getContentY()+2);//to_do remove (used to draw item for component widget)
@@ -4225,10 +4221,10 @@ public class ItemBuilderScreen extends GenericScreen {
 
         private RowWidgetElement() {}
 
-        public RowWidgetElement(CompoundTag baseCompound, String key) {
+        public RowWidgetElement(String key, CompoundTag contextRoot, PathNode[] contextPath) {
             NbtEdit thisNbtEdit = nbtEdit.addPath(PathNode.of(key));
             String fullPath = thisNbtEdit.fullPath();
-            PathInfo pi = nbtEdit.pi().getCompoundKeyInfo(baseCompound, key);
+            PathInfo pi = nbtEdit.pi().getCompoundKeyInfo(key, contextRoot, contextPath);
             final PathFlag pathFlag = pi.getFlag();
 
             Tag currentEl = thisNbtEdit.getEditElement();
@@ -4324,12 +4320,12 @@ public class ItemBuilderScreen extends GenericScreen {
             initChildren();
         }
 
-        public static RowWidgetElement compoundTemplateElement(ItemBuilderScreen context, CompoundTag baseCompound, String key) {
+        public static RowWidgetElement compoundTemplateElement(ItemBuilderScreen context, String key, CompoundTag contextRoot, PathNode[] contextPath) {
             RowWidgetElement row = context.new RowWidgetElement();
 
             NbtEdit thisNbtEdit = context.nbtEdit.addPath(PathNode.of(key));
             String fullPath = thisNbtEdit.fullPath();
-            PathInfo pi = context.nbtEdit.pi().getCompoundKeyInfo(baseCompound, key);
+            PathInfo pi = context.nbtEdit.pi().getCompoundKeyInfo(key, contextRoot, contextPath);
             final PathFlag pathFlag = pi.getFlag();
 
             Tag currentEl = thisNbtEdit.getEditElement();
@@ -4533,14 +4529,14 @@ public class ItemBuilderScreen extends GenericScreen {
             return row;
         }
 
-        public static RowWidgetElement customCompoundKey(ItemBuilderScreen context, CompoundTag baseCompound, boolean isTemplate) {
+        public static RowWidgetElement customCompoundKey(ItemBuilderScreen context, CompoundTag baseCompound, boolean isTemplate, CompoundTag contextRoot, PathNode[] contextPath) {
             RowWidgetElement row = context.new RowWidgetElement();
 
             int size = 70;
 
             {
                 Set<String> newKeySet = Sets.newHashSet();
-                newKeySet.addAll(context.nbtEdit.pi().getCompoundKeys(baseCompound));
+                newKeySet.addAll(context.nbtEdit.pi().getCompoundKeys(contextRoot, contextPath));
                 if (baseCompound != null)
                     newKeySet.removeAll(baseCompound.keySet());
                 String[] keysSuggs = newKeySet.toArray(new String[0]);
@@ -4556,7 +4552,7 @@ public class ItemBuilderScreen extends GenericScreen {
                         String key = value;
                         if (row.cacheNode == null || !row.cacheNode.equals(key)) {
                             row.cacheNode = key;
-                            row.cachePathInfo = context.nbtEdit.pi().getCompoundKeyInfo(baseCompound, key);
+                            row.cachePathInfo = context.nbtEdit.pi().getCompoundKeyInfo(key, contextRoot, contextPath);
                             row.cacheIsString = isTemplate && row.cachePathInfo.getDefaultPathType()==PathType.STRING;
                             row.cacheCurrentElement = baseCompound != null ? baseCompound.get(key) : null;
                             row.cacheSuggs = row.cacheIsString ? row.cachePathInfo.getSuggs().getArray() : row.cachePathInfo.getSuggs().getArraySnbt();
@@ -4653,10 +4649,10 @@ public class ItemBuilderScreen extends GenericScreen {
             return row;
         }
 
-        public static RowWidgetElement customListElement(ItemBuilderScreen context, ListTag baseList, boolean isTemplate) {
+        public static RowWidgetElement customListElement(ItemBuilderScreen context, ListTag baseList, boolean isTemplate, CompoundTag contextRoot, PathNode[] contextPath) {
             RowWidgetElement row = context.new RowWidgetElement();
 
-            PathInfo pi = context.nbtEdit.pi().getListIndexInfo(baseList.size());
+            PathInfo pi = context.nbtEdit.pi().getListIndexInfo(baseList.size(), contextRoot, contextPath);
             boolean isString = false; // to_do isString
             // boolean isString = isTemplate && pi.getDefaultPathType()==PathType.STRING;
             String[] baseSuggestions = isString ? pi.getSuggs().getArray() : pi.getSuggs().getArraySnbt();
@@ -4711,7 +4707,7 @@ public class ItemBuilderScreen extends GenericScreen {
             return row;
         }
 
-        public static RowWidgetElement listTemplateElement(ItemBuilderScreen context, ListTag baseList, int index) {
+        public static RowWidgetElement listTemplateElement(ItemBuilderScreen context, ListTag baseList, int index, CompoundTag contextRoot, PathNode[] contextPath) {
             if (index<0 || index>=baseList.size())
                 throw new IllegalArgumentException("Tried to create RowWidgetElement with index or listSize out of bounds");
 
@@ -4719,7 +4715,7 @@ public class ItemBuilderScreen extends GenericScreen {
 
             NbtEdit thisNbtEdit = context.nbtEdit.addPath(PathNode.of(index));
             String fullPath = thisNbtEdit.fullPath();
-            PathInfo pi = context.nbtEdit.pi().getListIndexInfo(index);
+            PathInfo pi = context.nbtEdit.pi().getListIndexInfo(index, contextRoot, contextPath);
             final PathFlag pathFlag = pi.getFlag();
 
             Tag currentEl = thisNbtEdit.getEditElement();
@@ -4952,13 +4948,13 @@ public class ItemBuilderScreen extends GenericScreen {
             return row;
         }
 
-        public RowWidgetElement(ListTag baseList, int index) {
+        public RowWidgetElement(ListTag baseList, int index, CompoundTag contextRoot, PathNode[] contextPath) {
             if (index<0 || index>=baseList.size())
                 throw new IllegalArgumentException("Tried to create RowWidgetElement with index or listSize out of bounds");
 
             NbtEdit thisNbtEdit = nbtEdit.addPath(PathNode.of(index));
             String fullPath = thisNbtEdit.fullPath();
-            PathInfo pi = nbtEdit.pi().getListIndexInfo(index);
+            PathInfo pi = nbtEdit.pi().getListIndexInfo(index, contextRoot, contextPath);
             final PathFlag pathFlag = pi.getFlag();
 
             Tag currentEl = thisNbtEdit.getEditElement();
@@ -5466,8 +5462,8 @@ public class ItemBuilderScreen extends GenericScreen {
         }
 
         @Override
-        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            super.renderContent(context, mouseX, mouseY, hovered, tickDelta);
+        public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            super.extractContent(context, mouseX, mouseY, hovered, tickDelta);
             if (this.renderHotbarSel)
                 context.blitSprite(RenderPipelines.GUI_TEXTURED, SEL_SLOT,
                     this.getContentX()+(minecraft.player.getInventory().getSelectedSlot()*20)+40-2, this.getContentY()-2-20, 24, 23);
@@ -5598,8 +5594,8 @@ public class ItemBuilderScreen extends GenericScreen {
         }
 
         @Override
-        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            super.renderContent(context, mouseX, mouseY, hovered, tickDelta);
+        public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            super.extractContent(context, mouseX, mouseY, hovered, tickDelta);
 
             boolean editorEqual = false;
             switch (this.cacheType) {
@@ -5625,13 +5621,13 @@ public class ItemBuilderScreen extends GenericScreen {
             }
 
             if (!editorEqual) {
-                context.drawString(ItemBuilderScreen.this.font, Component.nullToEmpty("Unlinked from editor"),
+                context.text(ItemBuilderScreen.this.font, Component.nullToEmpty("Unlinked from editor"),
                     this.getContentX()+this.btnX[this.btnX.length-1]+20+5, this.getContentY()+6, ERROR_COLOR);
                 this.btns[0].active = true;
                 this.btns[1].active = true;
             }
             else {
-                context.drawString(ItemBuilderScreen.this.font, Component.nullToEmpty("Linked to editor"),
+                context.text(ItemBuilderScreen.this.font, Component.nullToEmpty("Linked to editor"),
                     this.getContentX()+this.btnX[this.btnX.length-1]+20+5, this.getContentY()+6, LABEL_COLOR_DIM);
                 this.btns[0].active = false;
                 this.btns[1].active = false;
@@ -5859,30 +5855,30 @@ public class ItemBuilderScreen extends GenericScreen {
 
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         if (!tabs[tab].hideTabs()) {
             if (tab == CACHE_TAB_SAVED && !viewBlackMarket && savedItemsError)
-                context.drawCenteredString(this.font,
+                context.centeredText(this.font,
                     Component.nullToEmpty("Failed to read saved items"), this.width / 2, y+this.backgroundHeight+3, ERROR_COLOR);
 
             if (prevArmorStand)
-                InventoryScreen.renderEntityInInventoryFollowsMouse(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
+                InventoryScreen.extractEntityInInventoryFollowsMouse(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
                     mouseX, mouseY, (LivingEntity)renderArmorStand);
             else
-                InventoryScreen.renderEntityInInventoryFollowsMouse(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
+                InventoryScreen.extractEntityInInventoryFollowsMouse(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
                     mouseX, mouseY, (LivingEntity)this.minecraft.player);
 
             txtFormat.setX(x+50);
-            txtFormat.render(context, mouseX, mouseY, delta);
+            txtFormat.extractRenderState(context, mouseX, mouseY, delta);
             if (!this.UNSAVED_TEXT_WIDGETS.isEmpty())
-                context.drawCenteredString(this.font, Component.nullToEmpty("Unsaved"), this.width / 2, y-11, TEXT_COLOR);
+                context.centeredText(this.font, Component.nullToEmpty("Unsaved"), this.width / 2, y-11, TEXT_COLOR);
         }
         else {
             if (textComponentPreview != null) {
                 txtFormat.setX(x-15);
-                txtFormat.render(context, mouseX, mouseY, delta);
+                txtFormat.extractRenderState(context, mouseX, mouseY, delta);
 
                 if (textComponentPreviewBook) {
                     // Modified from {@link net.minecraft.client.gui.screens.inventory.BookViewScreen#visitText}
@@ -5896,11 +5892,11 @@ public class ItemBuilderScreen extends GenericScreen {
 
                     for (int l = 0; l < k; l++) {
                         FormattedCharSequence formattedCharSequence = (FormattedCharSequence)cachedPageComponents.get(l);
-                        context.textRenderer(GuiGraphics.HoveredTextEffects.TOOLTIP_AND_CURSOR).accept(i + 36, j + 30 + l * 9, formattedCharSequence);
+                        context.textRenderer(GuiGraphicsExtractor.HoveredTextEffects.TOOLTIP_AND_CURSOR).accept(i + 36, j + 30 + l * 9, formattedCharSequence);
                     }
                 }
                 else
-                    context.drawCenteredString(this.font, textComponentPreview, this.width / 2, y-14, TEXT_COLOR);
+                    context.centeredText(this.font, textComponentPreview, this.width / 2, y-14, TEXT_COLOR);
 
                 if (tab != CACHE_TAB_BLANK) {
                     textComponentPreview = null;
@@ -5909,23 +5905,23 @@ public class ItemBuilderScreen extends GenericScreen {
 
             if (showBannerPreview && bannerChangePreview != null) {
                 if (!bannerShield)
-                    InventoryScreen.renderEntityInInventoryFollowsMouse(context,x+backgroundWidth,y,
+                    InventoryScreen.extractEntityInInventoryFollowsMouse(context,x+backgroundWidth,y,
                         x+backgroundWidth+100,y+400,2*ENTITY_RENDER_SIZE,0f,x+backgroundWidth+50,y+200,(LivingEntity)bannerChangePreview);
                 else
-                    InventoryScreen.renderEntityInInventoryFollowsMouse(context,x+backgroundWidth,y,
+                    InventoryScreen.extractEntityInInventoryFollowsMouse(context,x+backgroundWidth,y,
                         x+backgroundWidth+100,y+200,2*ENTITY_RENDER_SIZE,0f,x+backgroundWidth+50,y+100,(LivingEntity)bannerChangePreview);
             }
 
             if (showPosePreview) {
-                InventoryScreen.renderEntityInInventoryFollowsMouse(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
+                InventoryScreen.extractEntityInInventoryFollowsMouse(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
                     mouseX, mouseY, (LivingEntity)renderArmorPose);
             }
         }
         if (lblInpError != null)
-            lblInpError.render(context, mouseX, mouseY, delta);
+            lblInpError.extractRenderState(context, mouseX, mouseY, delta);
 
         if (suggs != null)
-            suggs.render(context, mouseX, mouseY);
+            suggs.extractRenderState(context, mouseX, mouseY);
     }
 
     @Override
@@ -5934,7 +5930,7 @@ public class ItemBuilderScreen extends GenericScreen {
     }
 
     @Override
-    protected void renderBehindBackgroundTexture(GuiGraphics context) {
+    protected void extractBehindBackgroundTexture(GuiGraphicsExtractor context) {
         if (textComponentPreviewBook && tabs[tab].hideTabs())
             context.blit(RenderPipelines.GUI_TEXTURED, BookViewScreen.BOOK_LOCATION, x + bookX, y + bookY, 0.0F, 0.0F, 192, 192, 256, 256);
     }

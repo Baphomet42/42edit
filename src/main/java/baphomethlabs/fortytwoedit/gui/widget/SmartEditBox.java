@@ -2,7 +2,7 @@ package baphomethlabs.fortytwoedit.gui.widget;
 
 import java.util.function.Consumer;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -40,8 +40,8 @@ public class SmartEditBox extends EditBox {
 	}
 
 	@Override
-	public void renderWidget(GuiGraphics guiGraphics, int i, int j, float f) {
-        super.renderWidget(guiGraphics, i, j, f);
+	public void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int i, int j, float f) {
+        super.extractWidgetRenderState(guiGraphics, i, j, f);
 
         if (this.smartTooltip != null) {
             if (isFocused())

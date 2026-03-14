@@ -2,7 +2,7 @@ package baphomethlabs.fortytwoedit.mixin;
 
 import java.util.List;
 import java.util.Optional;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
@@ -55,8 +55,8 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
     @Shadow
     private Slot getHoveredSlot(double x, double y) {return null;}
 
-    @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
-    private void injectRenderTooltip(GuiGraphics context, int x, int y, CallbackInfo c) {
+    @Inject(method = "extractTooltip", at = @At("HEAD"), cancellable = true)
+    private void injectExtractTooltip(GuiGraphicsExtractor context, int x, int y, CallbackInfo c) {
 
         if (this.hoveredSlot != null && this.hoveredSlot.hasItem()) {
             ItemStack stack = this.hoveredSlot.getItem().copy();

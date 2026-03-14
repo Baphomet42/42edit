@@ -315,6 +315,14 @@ public class BlackMagick {
      * @param inp item compound with id/count/components
      * @return stack from nbt (or empty stack if invalid)
      */
+    public static ItemStack itemFromNbtTag(Tag inp) {
+        return BlackMagick.itemFromNbt(BlackMagick.validCompound(inp));
+    }
+
+    /**
+     * @param inp item compound with id/count/components
+     * @return stack from nbt (or empty stack if invalid)
+     */
     public static ItemStack itemFromNbt(CompoundTag inp) {
         if (inp != null) {
             try {
@@ -372,7 +380,7 @@ public class BlackMagick {
             if (!comps.isEmpty())
                 nbt.put("components",comps);
             nbt.putInt("count",item.getCount());
-            nbt.putString("id",BlackMagick.getItemId(item,true));
+            nbt.putString("id",BlackMagick.getItemId(item));
         }
         return nbt;
     }
@@ -405,7 +413,7 @@ public class BlackMagick {
             if (!comps.isEmpty())
                 nbt.put("components",comps);
             nbt.putInt("count",item.getCount());
-            nbt.putString("id",BlackMagick.getItemId(item,true));
+            nbt.putString("id",BlackMagick.getItemId(item));
         }
         return nbt;
     }
@@ -466,7 +474,7 @@ public class BlackMagick {
                 Optional<Tag> optional = component.encodeValue(dynamicOps).result();
                 if (componentIdentifier == null || !optional.isPresent())
                     return Stream.empty();
-                return Stream.of("\"" + componentIdentifier.toString() + "\":" + BlackMagick.nbtToSnbt(optional.get()));
+                return Stream.of("\"" + BlackMagick.identifierToString(componentIdentifier) + "\":" + BlackMagick.nbtToSnbt(optional.get()));
             }).collect(Collectors.joining(String.valueOf(',')));
         }
         return "";
@@ -475,23 +483,46 @@ public class BlackMagick {
     /**
      * 
      * @param stack
-     * @param namespace if id should begin with minecraft:
+     * @param componentId
+     * @return true if component is present and default for stack
+     */
+    public static boolean isComponentDefault(ItemStack stack, String componentId) {
+        return isComponentDefault(stack, BlackMagick.identifierOrNull(componentId));
+    }
+
+    /**
+     * 
+     * @param stack
+     * @param componentId
+     * @return true if component is present and default for stack
+     */
+    public static boolean isComponentDefault(ItemStack stack, Identifier componentId) {
+        if (stack == null || stack.isEmpty() || componentId == null)
+            return false;
+
+        String componentKey = BlackMagick.identifierToString(componentId);
+        Set<String> storedComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(stack),"components")).keySet();
+        Set<String> allComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbt(stack),"components")).keySet();
+        
+        return (allComponentKeys.contains(componentKey) && !storedComponentKeys.contains(componentKey));
+    }
+
+    /**
+     * 
+     * @param stack
      * @return item id like stone or minecraft:stone
      */
-    public static String getItemId(ItemStack stack, boolean namespace) {
-        return getItemId(stack.getItem(), namespace);
+    public static String getItemId(ItemStack stack) {
+        return getItemId(stack.getItem());
     }
 
     /**
      * 
      * @param item from ItemStack.getItem()
-     * @param namespace if id should begin with minecraft:
      * @return item id like stone or minecraft:stone
      */
-    public static String getItemId(Item item, boolean namespace) {
-        if (namespace)
-            return BuiltInRegistries.ITEM.getKey(item).toString();
-        return BuiltInRegistries.ITEM.getKey(item).getPath();
+    public static String getItemId(Item item) {
+        return BlackMagick.identifierToString(BuiltInRegistries.ITEM.getKey(item));
     }
 
     /**
@@ -738,11 +769,25 @@ public class BlackMagick {
     }
 
     public static Identifier identifierOrNull(String id) {
+        if (id == null || id.contains("!"))
+            return null;
         try {
             return Identifier.parse(id);
         }
         catch (Exception ex) {}
         return null;
+    }
+
+    public static String identifierToString(Identifier id) {
+        if (id == null)
+            return null;
+        return id.toString();
+    }
+
+    public static String itemToStringId(Item item) {
+        if (item == null)
+            return null;
+        return item.toString();
     }
 
     public static ValueInput valueInputFromCompound(CompoundTag nbt) {

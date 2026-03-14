@@ -2,7 +2,7 @@ package baphomethlabs.fortytwoedit.gui.screen;
 
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
@@ -71,13 +71,13 @@ public class AutoClickScreen extends GenericScreen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredString(this.font, Component.nullToEmpty("Auto Clicker"), this.width / 2, y+11, TEXT_COLOR);
-		context.renderFakeItem(new ItemStack(Items.FISHING_ROD),x+20+2,y+44+1+2);
-		context.renderFakeItem(new ItemStack(Items.NETHERITE_PICKAXE),x+20+2,y+ROW_HEIGHT*3+1+2);
-		context.renderFakeItem(new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+ROW_HEIGHT*4+1+2);
-        context.drawString(this.font, Component.nullToEmpty("Attack Cooldown:"), x+20+3,y+7+ROW_HEIGHT*5, LABEL_COLOR);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
+        context.centeredText(this.font, Component.nullToEmpty("Auto Clicker"), this.width / 2, y+11, TEXT_COLOR);
+		context.fakeItem(new ItemStack(Items.FISHING_ROD),x+20+2,y+44+1+2);
+		context.fakeItem(new ItemStack(Items.NETHERITE_PICKAXE),x+20+2,y+ROW_HEIGHT*3+1+2);
+		context.fakeItem(new ItemStack(Items.GOLDEN_SWORD),x+20+2,y+ROW_HEIGHT*4+1+2);
+        context.text(this.font, Component.nullToEmpty("Attack Cooldown:"), x+20+3,y+7+ROW_HEIGHT*5, LABEL_COLOR);
     }
 
     @Override

@@ -1,7 +1,7 @@
 package baphomethlabs.fortytwoedit.gui.widget;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
@@ -78,10 +78,10 @@ public class ItemSlotButton extends Button.Plain {
         this.overlaySize = overlaySize;
     }
 
-    protected void drawItem(GuiGraphics context, ItemStack item, int x, int y) {
+    protected void drawItem(GuiGraphicsExtractor context, ItemStack item, int x, int y) {
         final Minecraft client = Minecraft.getInstance();
-        context.renderItem(item,x,y);
-        context.renderItemDecorations(client.font,item,x,y);
+        context.item(item,x,y);
+        context.itemDecorations(client.font,item,x,y);
     }
 
     private boolean shouldShowSlotHighlight() {
@@ -95,8 +95,8 @@ public class ItemSlotButton extends Button.Plain {
     }
 
 	@Override
-	protected void renderContents(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.renderContents(context, mouseX, mouseY, delta);
+	protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractContents(context, mouseX, mouseY, delta);
 
         if (this.showSlot)
             context.blitSprite(RenderPipelines.GUI_TEXTURED,

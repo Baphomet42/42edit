@@ -1,5 +1,6 @@
 package baphomethlabs.fortytwoedit.mixin;
 
+import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.gui.components.SubtitleOverlay;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -14,7 +15,7 @@ public abstract class SubtitleOverlayMixin {
 
     @Inject(method = "onPlaySound", at = @At("HEAD"), cancellable = true)
     private void testSound(SoundInstance sound, WeighedSoundEvents soundSet, float range, CallbackInfo c) {
-        if (FortytwoEdit.autoFish && sound.getIdentifier().toString().equals("minecraft:entity.fishing_bobber.splash")) {
+        if (FortytwoEdit.autoFish && BlackMagick.identifierToString(sound.getIdentifier()).equals("minecraft:entity.fishing_bobber.splash")) {
             FortytwoEdit.queueAutoFish();
         }
     }

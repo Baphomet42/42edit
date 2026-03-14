@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import baphomethlabs.fortytwoedit.SuggestionHelper;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -54,10 +54,10 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
         });
     }
 
-    @Inject(method = "render", at = @At("TAIL"), cancellable = true)
-    private void injectRender(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo c) {
+    @Inject(method = "extractRenderState", at = @At("TAIL"), cancellable = true)
+    private void injectExtractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo c) {
         if (suggs != null)
-            suggs.render(context, mouseX, mouseY);
+            suggs.extractRenderState(context, mouseX, mouseY);
     }
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)

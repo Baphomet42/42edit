@@ -7,7 +7,7 @@ import org.lwjgl.glfw.GLFW;
 import com.google.common.collect.Lists;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
@@ -140,7 +140,7 @@ public abstract class GenericScreen extends Screen {
         return TEXTURE_GENERIC;
     }
 
-    protected void renderBehindBackgroundTexture(GuiGraphics context) {}
+    protected void extractBehindBackgroundTexture(GuiGraphicsExtractor context) {}
 
     protected void changeScreen(Screen newScreen) {
         this.onCloseAction();
@@ -166,9 +166,9 @@ public abstract class GenericScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        this.renderTransparentBackground(context);
-        this.renderBehindBackgroundTexture(context);
+    public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        this.extractTransparentBackground(context);
+        this.extractBehindBackgroundTexture(context);
 
         Identifier backgroundTexture = getBackgroundTexture();
         if (backgroundTexture != null)
@@ -275,10 +275,10 @@ public abstract class GenericScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
         if (hasTitle)
-            context.drawCenteredString(this.font, this.getTitle(), this.width / 2, y+11, TEXT_COLOR);
+            context.centeredText(this.font, this.getTitle(), this.width / 2, y+11, TEXT_COLOR);
     }
 
     @Override
@@ -373,10 +373,10 @@ public abstract class GenericScreen extends Screen {
         }
 
         @Override
-        protected void renderListSeparators(GuiGraphics context) {}
+        protected void extractListSeparators(GuiGraphicsExtractor context) {}
 
         @Override
-        protected void renderListBackground(GuiGraphics context) {}
+        protected void extractListBackground(GuiGraphicsExtractor context) {}
 
         @Override
         public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
@@ -488,10 +488,10 @@ public abstract class GenericScreen extends Screen {
         }
 
         @Override
-        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             for (PosWidget posWidget : this.children) {
                 posWidget.repositionInRow(this);
-                posWidget.w().render(context, mouseX, mouseY, tickDelta);
+                posWidget.w().extractRenderState(context, mouseX, mouseY, tickDelta);
             }
         }
 
