@@ -356,6 +356,14 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean autoMine = false;
     public static int attackWait = 1500;
     public static boolean afkScreenLock = false;
+    private static long afkReduceFramerateTime = 0;
+    public static void toggleAutoClicker() {
+        afkReduceFramerateTime = System.currentTimeMillis();
+        autoClicker = !autoClicker;
+    }
+    public static boolean shouldReduceFramerate() {
+        return autoClicker && afkScreenLock && (System.currentTimeMillis() - afkReduceFramerateTime > 5000);
+    }
     private static long lastAttack = 0;
     private static long lastSpam = 0;
     public static boolean xrayEntity = false;
@@ -968,7 +976,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         //afkClick
         if (keyAfkClick.consumeClick()) {
-            autoClicker = !autoClicker;
+            toggleAutoClicker();
             client.options.keyUse.setDown(false);
             client.options.keyAttack.setDown(false);
             while (client.options.keyUse.consumeClick()) {}
