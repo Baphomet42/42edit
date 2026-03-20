@@ -3,13 +3,11 @@ package baphomethlabs.fortytwoedit.mixin;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.google.common.collect.Maps;
-
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.locale.Language;

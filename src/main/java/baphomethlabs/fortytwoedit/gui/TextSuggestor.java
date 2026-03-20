@@ -2,7 +2,6 @@ package baphomethlabs.fortytwoedit.gui;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
-
 import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
