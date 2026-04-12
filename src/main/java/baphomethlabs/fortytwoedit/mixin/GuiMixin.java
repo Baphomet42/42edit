@@ -36,7 +36,7 @@ public abstract class GuiMixin {
                     context.text(client.font, "\u00a7cAuto Fish requires Subtitles", x-64, y - 10, TEXT_COLOR, true);
                 if (FortytwoEdit.randoMode)
                     context.text(client.font, "[Rando Mode]", x, y, TEXT_COLOR, true);
-                if (FortytwoEdit.showCoordHud && !client.debugEntries.isOverlayVisible()) {
+                if (FortytwoEdit.showCoordHud && !client.debugEntries.isOverlayVisible() && !client.showOnlyReducedInfo()) {
                     // see net.minecraft.client.gui.components.debug.DebugEntryPosition
                     long currentTime = System.currentTimeMillis();
                     if (cacheCoordHud == null || currentTime - lastRefreshTime > 50) {
