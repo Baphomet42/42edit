@@ -30,12 +30,12 @@ dependencies {
 	//	UPDATE PROTOCOL
 	//	paste gradle.properties Fabric Properties and Dependencies and manually update Mod Properties
 	//	update fabric.mod.json depends minecraft version (for new full mc versions)
-	//	close vscode, end all openjdk tasks, run gradle commands in powershell:
-	//		./gradlew genSources --refresh-dependencies
-	//		.\gradlew vscode
+	//	run commands in vscode terminal:
+	//      ./gradlew --stop
+	//		./gradlew genSources
+	//  ./gradlew vscode
 	//	.vscode/launch.json:
 	//		"args": "--quickPlaySingleplayer",
-	//		remove runDir lines
 	//	java project clean workspace
 
 	//  BUILD
@@ -46,10 +46,12 @@ dependencies {
 	//	copy 42jar from build/libs to mods
 
 	//	RARE UPDATES
-	//	./gradlew --stop
-	//  ./gradlew clean build
 	//	delete .gradle .vscode bin build run
 	//	delete .gradle .cache from User
+	//	./gradlew --stop
+	//  ./gradlew clean
+	//  ./gradlew genSources
+	//	java project clean workspace
 	//	update example mod files from https://github.com/FabricMC/fabric-example-mod/
 	//      also see template https://fabricmc.net/develop/template/ (uncheck split client and common sources)
 	//		comment out fabric api from build.gradle dependencies

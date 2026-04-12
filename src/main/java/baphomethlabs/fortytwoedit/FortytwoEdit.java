@@ -355,6 +355,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean autoAttack = false;
     public static boolean autoMine = false;
     public static int attackWait = 1500;
+    public static boolean showCoordHud = false;
     public static boolean afkScreenLock = false;
     private static long afkReduceFramerateTime = 0;
     public static void toggleAutoClicker() {
@@ -1230,6 +1231,7 @@ public class FortytwoEdit implements ClientModInitializer {
         // keep options consistent
         options.getByte("afk_screen_lock").ifPresent(b -> afkScreenLock = (b == 1));
         options.getByte("chat_icons").ifPresent(b -> mixinChatProfileIcon = (b == 1));
+        options.getByte("coord_hud").ifPresent(b -> showCoordHud = (b == 1));
         options.getByte("custom_cape_toggle").ifPresent(b -> showClientCape = (b == 1));
         options.getString("custom_cape").ifPresent(s -> selectedClientCape = s);
         options.getByte("debug_screen_rearrange").ifPresent(b -> debugMixinRearrange = (b == 1));
@@ -1275,6 +1277,7 @@ public class FortytwoEdit implements ClientModInitializer {
         options.remove("file_format");
         options.remove("afk_screen_lock");
         options.remove("chat_icons");
+        options.remove("coord_hud");
         options.remove("custom_cape_toggle");
         options.remove("custom_cape");
         options.remove("debug_screen_rearrange");
@@ -1306,6 +1309,7 @@ public class FortytwoEdit implements ClientModInitializer {
         options.putInt("file_format",FileTools.FILE_FORMAT);
         options.putBoolean("afk_screen_lock",afkScreenLock);
         options.putBoolean("chat_icons",mixinChatProfileIcon);
+        options.putBoolean("coord_hud",showCoordHud);
         options.putBoolean("custom_cape_toggle",showClientCape);
         options.putString("custom_cape",selectedClientCape);
         options.putBoolean("debug_screen_rearrange",debugMixinRearrange);
