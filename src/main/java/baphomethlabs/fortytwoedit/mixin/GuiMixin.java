@@ -49,9 +49,9 @@ public abstract class GuiMixin {
                             case WEST: coordFacing = "W"; break;
                             default: break;
                         }
-                        cacheCoordHud = Component.empty().append(""+feetPos.getX()+" "+feetPos.getY()+" "+feetPos.getZ()+" "+coordFacing);
+                        cacheCoordHud = Component.empty().append(coordFacing+" "+feetPos.getX()+" "+feetPos.getY()+" "+feetPos.getZ());
                     }
-                    context.text(client.font, cacheCoordHud, client.getWindow().getGuiScaledWidth()-client.font.width(cacheCoordHud)-10, 10, TEXT_COLOR, true);
+                    context.text(client.font, cacheCoordHud, 2, 2, TEXT_COLOR, true);
                 }
             }
         }
