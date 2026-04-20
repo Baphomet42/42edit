@@ -11,6 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 
 public class SecretScreen extends GenericScreen {
 
@@ -42,15 +43,13 @@ public class SecretScreen extends GenericScreen {
         paneScroll().addRow("Config");
         {
             MutableComponent btnTxt = Component.empty().append("Chat Icons: ");
-            if (!FortytwoEdit.mixinChatProfileIcon)
+            if (!OptionsUtil.ModOptions.CHAT_ICONS.getSetting())
                 btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GRAY));
             else
                 btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GREEN));
             paneScroll().addRow(
                 WIDGET_UTIL.newButton(btnTxt, btn -> {
-                    FortytwoEdit.readOptions();
-                    FortytwoEdit.mixinChatProfileIcon = !FortytwoEdit.mixinChatProfileIcon;
-                    FortytwoEdit.updateOptions();
+                    OptionsUtil.ModOptions.CHAT_ICONS.toggleSetting();
                     reloadScreen();
                 }).setSize(CONFIG_BUTTON_WIDTH).setTooltip("Show player heads next to chat messages.\n\nDefault: false").build()
             );
@@ -58,9 +57,11 @@ public class SecretScreen extends GenericScreen {
         {
             MutableComponent btnTxt = Component.empty().append("Locator Bar Skin: ");
             if (FortytwoEdit.mixinLocatorBarModeDefault())
-                btnTxt.append(Component.empty().append(FortytwoEdit.mixinLocatorBarMode).withStyle(ChatFormatting.GRAY));
+                btnTxt.append(Component.empty().append(OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting()).withStyle(ChatFormatting.GRAY));
+            else if (FortytwoEdit.mixinLocatorBarModeUnknown())
+                btnTxt.append(Component.empty().append(OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting()).withStyle(ChatFormatting.YELLOW));
             else
-                btnTxt.append(Component.empty().append(FortytwoEdit.mixinLocatorBarMode).withStyle(ChatFormatting.GREEN));
+                btnTxt.append(Component.empty().append(OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting()).withStyle(ChatFormatting.GREEN));
             paneScroll().addRow(
                 WIDGET_UTIL.newButton(btnTxt, btn -> {
                     FortytwoEdit.mixinLocatorBarCycle();
@@ -69,46 +70,27 @@ public class SecretScreen extends GenericScreen {
             );
         }
         {
-            MutableComponent btnTxt = Component.empty().append("Locator Bar Skin Border: ");
-            if (!FortytwoEdit.mixinLocatorBarColor)
-                btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GREEN));
-            else
-                btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GRAY));
-            paneScroll().addRow(
-                WIDGET_UTIL.newButton(btnTxt, btn -> {
-                    FortytwoEdit.readOptions();
-                    FortytwoEdit.mixinLocatorBarColor = !FortytwoEdit.mixinLocatorBarColor;
-                    FortytwoEdit.updateOptions();
-                    reloadScreen();
-                }).setSize(CONFIG_BUTTON_WIDTH).setTooltip("Show colored border around locator bar skin.\n\nDefault: true").build()
-            );
-        }
-        {
             MutableComponent btnTxt = Component.empty().append("Profile Tooltip Info: ");
-            if (!FortytwoEdit.mixinProfileDynamicTooltip)
+            if (!OptionsUtil.ModOptions.DYNAMIC_PROFILE_TOOLTIP_INFO.getSetting())
                 btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GRAY));
             else
                 btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GREEN));
             paneScroll().addRow(
                 WIDGET_UTIL.newButton(btnTxt, btn -> {
-                    FortytwoEdit.readOptions();
-                    FortytwoEdit.mixinProfileDynamicTooltip = !FortytwoEdit.mixinProfileDynamicTooltip;
-                    FortytwoEdit.updateOptions();
+                    OptionsUtil.ModOptions.DYNAMIC_PROFILE_TOOLTIP_INFO.toggleSetting();
                     reloadScreen();
                 }).setSize(CONFIG_BUTTON_WIDTH).setTooltip("Override dynamic profile item tooltip to show extra info.\n\nDefault: false").build()
             );
         }
         {
             MutableComponent btnTxt = Component.empty().append("F3 Screen Rearrange: ");
-            if (!FortytwoEdit.debugMixinRearrange)
+            if (!OptionsUtil.ModOptions.DEBUG_SCREEN_REARRANGE.getSetting())
                 btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GRAY));
             else
                 btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GREEN));
             paneScroll().addRow(
                 WIDGET_UTIL.newButton(btnTxt, btn -> {
-                    FortytwoEdit.readOptions();
-                    FortytwoEdit.debugMixinRearrange = !FortytwoEdit.debugMixinRearrange;
-                    FortytwoEdit.updateOptions();
+                    OptionsUtil.ModOptions.DEBUG_SCREEN_REARRANGE.toggleSetting();
                     reloadScreen();
                 }).setSize(CONFIG_BUTTON_WIDTH).setTooltip("Move certain elements in the F3 screen for easier readability.\n\nDefault: false").build()
             );

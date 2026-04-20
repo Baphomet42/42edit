@@ -10,7 +10,7 @@ import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.PlayerFaceExtractor;
-import net.minecraft.client.gui.contextualbar.LocatorBarRenderer;
+import net.minecraft.client.gui.contextualbar.LocatorBar;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.resources.WaypointStyle;
@@ -23,8 +23,8 @@ import net.minecraft.world.waypoints.PartialTickSupplier;
 import net.minecraft.world.waypoints.TrackedWaypoint;
 import net.minecraft.world.waypoints.WaypointStyleAssets;
 
-@Mixin(LocatorBarRenderer.class)
-public abstract class LocatorBarRendererMixin {
+@Mixin(LocatorBar.class)
+public abstract class LocatorBarMixin {
 
     private static PlayerInfo playerInfo = null;
     private static boolean isUpsideDown = false;
@@ -43,7 +43,7 @@ public abstract class LocatorBarRendererMixin {
                 Player player = minecraft.level.getPlayerByUUID(playerInfo.getProfile().id());
                 isUpsideDown = player != null && AvatarRenderer.isPlayerUpsideDown(player);
 
-                WaypointStyle waypointStyle = minecraft.getWaypointStyles().get(trackedWaypoint.icon().style);
+                WaypointStyle waypointStyle = minecraft.gui.hud.getWaypointStyles().get(trackedWaypoint.icon().style);
                 float f = Mth.sqrt((float)trackedWaypoint.distanceSquared(entity));
                 size = 0;
                 if (f < waypointStyle.nearDistance())
@@ -60,10 +60,9 @@ public abstract class LocatorBarRendererMixin {
         if (playerInfo == null)
             guiGraphics.blitSprite(renderPipeline, location, x, y, width, height, color);
         else {
-            if (FortytwoEdit.mixinLocatorBarColor)
-                guiGraphics.fill(x-size, y-size, x+width+size, y+height+size, color);
+            guiGraphics.fill(x-size, y-size, x+width+size, y+height+size, color);
             PlayerFaceExtractor.extractRenderState(guiGraphics, playerInfo.getSkin().body().texturePath(), x+1-size, y+1-size, width-2+size+size, playerInfo.showHat(), isUpsideDown, -1);
         }
 	}
-    
+
 }

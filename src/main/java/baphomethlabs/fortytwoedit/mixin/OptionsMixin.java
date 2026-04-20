@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.google.common.collect.Lists;
-import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 
 @Mixin(Options.class)
 public abstract class OptionsMixin {
@@ -26,7 +26,7 @@ public abstract class OptionsMixin {
 	private KeyMapping[] removeModBindings(Options gameOptions) {
 		List<KeyMapping> allKeysList = Lists.newArrayList(keyMappings);
 
-        for (KeyMapping k : FortytwoEdit.KEYBINDS)
+        for (KeyMapping k : OptionsUtil.Keybinds.ALL_KEYBINDS)
             allKeysList.remove(k);
 
 		return allKeysList.toArray(new KeyMapping[0]);
@@ -34,7 +34,16 @@ public abstract class OptionsMixin {
 
     @Inject(method = "save", at = @At("RETURN"))
     private void saveModKeybinds(CallbackInfo ci) {
-        FortytwoEdit.saveKeybindOptions();
+		if (OptionsUtil.Keybinds.cachedKeybinds != null) {
+			for (KeyMapping keyMapping : OptionsUtil.Keybinds.ALL_KEYBINDS) {
+				if (!OptionsUtil.Keybinds.cachedKeybinds.containsKey(keyMapping.getName())
+						|| !OptionsUtil.Keybinds.cachedKeybinds.get(keyMapping.getName()).equals(keyMapping.saveString())) {
+
+					OptionsUtil.saveKeybindOptions();
+					break;
+				}
+			}
+		}
     }
 
 }

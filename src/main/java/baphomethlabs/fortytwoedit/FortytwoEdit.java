@@ -14,7 +14,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import org.apache.commons.compress.utils.Lists;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.collect.Maps;
@@ -22,7 +21,6 @@ import com.google.common.collect.Sets;
 import com.mojang.authlib.SignatureState;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import baphomethlabs.fortytwoedit.BlackMagick.ParsedText;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
@@ -88,34 +86,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final Supplier<GenericScreen> DEFAULT_SCREEN = MagickScreen::new;
     public static Supplier<GenericScreen> quickScreen = DEFAULT_SCREEN;
 
-    // keys
-    public static KeyMapping.Category KEY_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("42edit","keybinds"));
-    public static KeyMapping keyAfkClick = new KeyMapping("42edit.key.afk_click", GLFW.GLFW_KEY_MINUS, KEY_CATEGORY);
-    public static KeyMapping keyAfkMove = new KeyMapping("42edit.key.afk_move", GLFW.GLFW_KEY_EQUAL, KEY_CATEGORY);
-    public static KeyMapping keyFreeLook = new KeyMapping("42edit.key.free_look", GLFW.GLFW_KEY_LEFT_ALT, KEY_CATEGORY);
-    public static KeyMapping keyMagickGui = new KeyMapping("42edit.key.open_magick_gui", GLFW.GLFW_KEY_J, KEY_CATEGORY);
-    public static KeyMapping keyMod = new KeyMapping("42edit.key.key_mod", InputConstants.UNKNOWN.getValue(), KEY_CATEGORY);
-    public static KeyMapping keySpamClick = new KeyMapping("42edit.key.spam_click", InputConstants.UNKNOWN.getValue(), KEY_CATEGORY);
-    public static KeyMapping keyZoom = new KeyMapping("42edit.key.zoom", GLFW.GLFW_KEY_R, KEY_CATEGORY);
-
-    public static final KeyMapping[] KEYBINDS = new KeyMapping[]{
-        keyAfkClick,
-        keyAfkMove,
-        keyFreeLook,
-        keyMagickGui,
-        keyMod,
-        keySpamClick,
-        keyZoom
-    };
-    private static final String[] KEYBINDS_CONFIG_CACHE = new String[KEYBINDS.length];
-
-    // options
-    private static CompoundTag optionsExtra = null;
-    public static boolean mixinProfileDynamicTooltip = true;
-    public static boolean debugMixinRearrange = false;
-
     // chat icons
-    public static boolean mixinChatProfileIcon = false;
     private static final Set<String> CHAT_ICON_KEY_SET = Sets.newHashSet();
     private static final List<String> CHAT_ICON_KEY_LIST = Lists.newArrayList();
     private static final Map<String,Component> CHAT_ICON_COMPONENT_CACHE = Maps.newHashMap();
@@ -135,7 +106,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void chatIconNew(Component text, UUID uuid) {
         try {
             final Minecraft minecraft = Minecraft.getInstance();
-            String mapKey = ""+minecraft.gui.getGuiTicks()+"_"+BlackMagick.textComponentToSnbt(text);
+            String mapKey = ""+minecraft.gui.hud.getGuiTicks()+"_"+BlackMagick.textComponentToSnbt(text);
             MutableComponent newComponent = Component.empty();
 
             String hat = ",hat:true";
@@ -146,7 +117,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
             ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{id:"
                 +BlackMagick.nbtToSnbt(new IntArrayTag(UUIDUtil.uuidToIntArray(uuid)))+"}"+hat+",shadow_color:0}");
-            
+
             if (parsedText.isValid()) {
                 newComponent.append(parsedText.text());
                 newComponent.append(" ");
@@ -159,7 +130,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void chatIconNew(Component text, String name) {
         try {
             final Minecraft minecraft = Minecraft.getInstance();
-            String mapKey = ""+minecraft.gui.getGuiTicks()+"_"+BlackMagick.textComponentToSnbt(text);
+            String mapKey = ""+minecraft.gui.hud.getGuiTicks()+"_"+BlackMagick.textComponentToSnbt(text);
             MutableComponent newComponent = Component.empty();
 
             String hat = ",hat:true";
@@ -169,7 +140,7 @@ public class FortytwoEdit implements ClientModInitializer {
             }
 
             ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{name:"+BlackMagick.nbtToSnbt(StringTag.valueOf(name))+"}"+hat+",shadow_color:0}");
-            
+
             if (parsedText.isValid()) {
                 newComponent.append(parsedText.text());
                 newComponent.append(" ");
@@ -185,7 +156,7 @@ public class FortytwoEdit implements ClientModInitializer {
         GuiMessage testCache = CHAT_ICON_MESSAGE_CACHE.get(mapKey);
         if (testCache != null)
             return testCache;
-        
+
         Component testComponent = CHAT_ICON_COMPONENT_CACHE.get(mapKey);
         if (testComponent != null) {
             GuiMessage newMessage = new GuiMessage(guiMessage.addedTime(), testComponent, guiMessage.signature(), guiMessage.source(), guiMessage.tag());
@@ -278,7 +249,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
 
     // locator bar
-    private static final String MIXIN_LOCATOR_BAR_OPTION_NEVER = "never";
+    public static final String MIXIN_LOCATOR_BAR_OPTION_NEVER = "never";
     private static final String MIXIN_LOCATOR_BAR_OPTION_OVERRIDE_DEFAULT = "override_default";
     private static final String MIXIN_LOCATOR_BAR_OPTION_ALWAYS = "always";
     private static final String[] MIXIN_LOCATOR_BAR_PROFILE_OPTIONS = {
@@ -286,17 +257,21 @@ public class FortytwoEdit implements ClientModInitializer {
         MIXIN_LOCATOR_BAR_OPTION_OVERRIDE_DEFAULT,
         MIXIN_LOCATOR_BAR_OPTION_ALWAYS
     };
-    public static boolean mixinLocatorBarColor = true;
-    public static String mixinLocatorBarMode = MIXIN_LOCATOR_BAR_OPTION_NEVER;
     public static boolean mixinLocatorBar = false;
     public static boolean mixinLocatorBarAlways = false;
     public static boolean mixinLocatorBarModeDefault() {
-        return mixinLocatorBarMode.equals(MIXIN_LOCATOR_BAR_OPTION_NEVER);
+        return OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting().equals(MIXIN_LOCATOR_BAR_OPTION_NEVER);
+    }
+    public static boolean mixinLocatorBarModeUnknown() {
+        for (String mode : MIXIN_LOCATOR_BAR_PROFILE_OPTIONS)
+            if (OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting().equals(mode))
+                return false;
+        return true;
     }
     public static void mixinLocatorBarCycle() {
         int index=-1;
         for (int i=0; i<MIXIN_LOCATOR_BAR_PROFILE_OPTIONS.length; i++) {
-            if (MIXIN_LOCATOR_BAR_PROFILE_OPTIONS[i].equals(mixinLocatorBarMode)) {
+            if (MIXIN_LOCATOR_BAR_PROFILE_OPTIONS[i].equals(OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting())) {
                 index = i;
                 break;
             }
@@ -304,23 +279,22 @@ public class FortytwoEdit implements ClientModInitializer {
         index++;
         if (index >= MIXIN_LOCATOR_BAR_PROFILE_OPTIONS.length)
             index = 0;
-        FortytwoEdit.readOptions();
-        mixinLocatorBarSet(MIXIN_LOCATOR_BAR_PROFILE_OPTIONS[index]);
-        FortytwoEdit.updateOptions();
+        OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.setSetting(MIXIN_LOCATOR_BAR_PROFILE_OPTIONS[index]);
     }
-    private static void mixinLocatorBarSet(String mode) {
-        mixinLocatorBarMode = mode;
+    public static void mixinLocatorBarRefresh() {
         mixinLocatorBar = false;
         mixinLocatorBarAlways = false;
         boolean found = false;
         for (String option : MIXIN_LOCATOR_BAR_PROFILE_OPTIONS) {
-            if (option.equals(mode)) {
+            if (option.equals(OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting())) {
                 found = true;
                 break;
             }
         }
         if (!found) {
-            String err = "Unknown option locator_bar_profile:"+BlackMagick.nbtToSnbt(StringTag.valueOf(mode))+" (expected one of: ";
+            String err = "Unknown option locator_bar_profile:"
+                + BlackMagick.nbtToSnbt(StringTag.valueOf(OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting()))
+                + " (expected one of: ";
             boolean first = true;
             for (String o : MIXIN_LOCATOR_BAR_PROFILE_OPTIONS) {
                 if (!first) {
@@ -333,10 +307,10 @@ public class FortytwoEdit implements ClientModInitializer {
             err += ")";
             FortytwoEdit.logWarn(err);
         }
-        else if (mode.equals(MIXIN_LOCATOR_BAR_OPTION_OVERRIDE_DEFAULT)) {
+        else if (OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting().equals(MIXIN_LOCATOR_BAR_OPTION_OVERRIDE_DEFAULT)) {
             mixinLocatorBar = true;
         }
-        else if (mode.equals(MIXIN_LOCATOR_BAR_OPTION_ALWAYS)) {
+        else if (OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting().equals(MIXIN_LOCATOR_BAR_OPTION_ALWAYS)) {
             mixinLocatorBar = true;
             mixinLocatorBarAlways = true;
         }
@@ -355,15 +329,13 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean autoAttack = false;
     public static boolean autoMine = false;
     public static int attackWait = 1500;
-    public static boolean showCoordHud = false;
-    public static boolean afkScreenLock = false;
     private static long afkReduceFramerateTime = 0;
     public static void toggleAutoClicker() {
         afkReduceFramerateTime = System.currentTimeMillis();
         autoClicker = !autoClicker;
     }
     public static boolean shouldReduceFramerate() {
-        return autoClicker && afkScreenLock && (System.currentTimeMillis() - afkReduceFramerateTime > 5000);
+        return autoClicker && OptionsUtil.ModOptions.AFK_SCREEN_LOCK.getSetting() && (System.currentTimeMillis() - afkReduceFramerateTime > 5000);
     }
     private static long lastAttack = 0;
     private static long lastSpam = 0;
@@ -443,12 +415,11 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     public static boolean opticapesWorking = true; //if optifine connection is working
-    public static boolean opticapesOn = true; //optifine cape setting
 
     private static void checkCapesEnabled() {
         opticapesWorking = true;
 
-        if (opticapesOn) {
+        if (OptionsUtil.ModOptions.OPTICAPES.getSetting()) {
             boolean connect = false;
 
             HttpURLConnection con = null;
@@ -556,8 +527,6 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     // custom capes
-    public static boolean showClientCape = false;
-    public static String selectedClientCape = "none";
     private static CapeTexture cacheClientCape = null;
     public static final List<CapeTexture> CLIENT_CAPES = Lists.newArrayList();
     private static void resetClientCapes() {
@@ -639,15 +608,15 @@ public class FortytwoEdit implements ClientModInitializer {
                 CAPE_URLS_QUEUE.clear();
             }
         }
-        else if (!CAPE_REGISTERED_IDS.contains(selectedClientCape) && (warnedCapeCache == null || !warnedCapeCache.equals(selectedClientCape))) {
-            warnedCapeCache = selectedClientCape;
-            FortytwoEdit.logWarn("Failed to find custom cape with ID: "+selectedClientCape);
+        else if (!CAPE_REGISTERED_IDS.contains(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting()) && (warnedCapeCache == null || !warnedCapeCache.equals(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting()))) {
+            warnedCapeCache = OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting();
+            FortytwoEdit.logWarn("Failed to find custom cape with ID: "+OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting());
         }
     }
     private static final Map<String,ClientAsset.Texture> CAPE_MAP = Maps.newHashMap();
     public static ClientAsset.Texture getClientCape() {
-        if (CAPE_MAP.containsKey(selectedClientCape))
-            return CAPE_MAP.get(selectedClientCape);
+        if (CAPE_MAP.containsKey(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting()))
+            return CAPE_MAP.get(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting());
         resolveCapeUrlQueue();
         return null;
     }
@@ -655,11 +624,14 @@ public class FortytwoEdit implements ClientModInitializer {
         if (cacheClientCape != null)
             return cacheClientCape;
         for (CapeTexture c : CLIENT_CAPES)
-            if (c.id().equals(selectedClientCape)) {
+            if (c.id().equals(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting())) {
                 cacheClientCape = c;
                 return cacheClientCape;
             }
-        cacheClientCape = new CapeTexture(CapeTextureStatus.UNKNOWN, selectedClientCape, selectedClientCape, selectedClientCape);
+        cacheClientCape = new CapeTexture(CapeTextureStatus.UNKNOWN,
+            OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting(),
+            OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting(),
+            OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting());
         return cacheClientCape;
     }
     public static String getClientCapeTextboxName() {
@@ -680,7 +652,7 @@ public class FortytwoEdit implements ClientModInitializer {
             return;
         int index = -1;
         for (int i=0; i<CLIENT_CAPES.size(); i++) {
-            if (CLIENT_CAPES.get(i).id().equals(selectedClientCape)) {
+            if (CLIENT_CAPES.get(i).id().equals(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting())) {
                 index = i;
                 break;
             }
@@ -703,9 +675,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         String newCape = CLIENT_CAPES.get(index).id();
 
-        FortytwoEdit.readOptions();
-        FortytwoEdit.selectedClientCape = newCape;
-        FortytwoEdit.updateOptions();
+        OptionsUtil.ModOptions.CUSTOM_CAPE.setSetting(newCape);
 
         cacheClientCape = null;
     }
@@ -888,22 +858,20 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final int SAVED_ROWS = 12;
 
     //web items
-    public static boolean webItemsAuto = true;
     public static List<String> webItems = Lists.newArrayList();
     private static final String WEB_ITEMS_URL_DEFAULT = "https://baphomet42.github.io/mc/blackmarket/items.json";
     private static String webItemsUrlOverride = "";
 
-
     @Override
-    public void onInitializeClient() {
-        logInfo("Loading 42edit client");
+    public void onInitializeClient() {}
+
+    public static void onMinecraftInit() {
+        logInfo("42edit init started");
 
         final Minecraft client = Minecraft.getInstance();
 
-        //options
-        readOptions();
+        OptionsUtil.readOptions();
 
-        // custom capes
         USERNAME = client.getUser().getName();
         if (client.getUser().getProfileId() != null)
             UUID = new IntArrayTag(UUIDUtil.uuidToIntArray(client.getUser().getProfileId()));
@@ -911,24 +879,18 @@ public class FortytwoEdit implements ClientModInitializer {
         clearOptiCapes();
 
         getSavedItems(); // used to show log errors
-        refreshWebItems(false);
+        refreshWebItems();
 
         FileTools.scanModFiles();
 
-        logInfo("42edit client initialized");
-    }
-
-    public static void onMinecraftInit() {
-        logInfo("Running 42edit post-init setup");
-
         loadAllModAssets();
 
-        logInfo("42edit post-init setup finished");
+        logInfo("42edit init finished");
     }
 
     public static void clientTick(Minecraft client) {
 
-        if (client.player == null || client.screen != null) {
+        if (client.player == null || (client.gui != null && client.gui.screen() != null)) {
             autoClicker = false;
             autoMove = false;
         }
@@ -945,22 +907,22 @@ public class FortytwoEdit implements ClientModInitializer {
         }
 
         // magickgui
-        if (keyMagickGui.consumeClick())
-            client.setScreen(quickScreen.get());
+        if (OptionsUtil.Keybinds.KEY_OPEN_MAGICK_GUI.consumeClick())
+            client.gui.setScreen(quickScreen.get());
 
         // zoom
-        if (keyZoom.isDown() && !zoomed) {
+        if (OptionsUtil.Keybinds.KEY_ZOOM.isDown() && !zoomed) {
             smooth = client.options.smoothCamera;
             client.options.smoothCamera = true;
             zoomed = true;
         }
-        else if (!keyZoom.isDown() && zoomed) {
+        else if (!OptionsUtil.Keybinds.KEY_ZOOM.isDown() && zoomed) {
             client.options.smoothCamera = smooth;
             zoomed = false;
         }
 
         // afkMove
-        if (keyAfkMove.consumeClick()) {
+        if (OptionsUtil.Keybinds.KEY_AFK_MOVE.consumeClick()) {
             autoMove = !autoMove;
             client.options.keyUp.setDown(false);
             while (client.options.keyUp.consumeClick()) {}
@@ -976,7 +938,7 @@ public class FortytwoEdit implements ClientModInitializer {
         }
 
         //afkClick
-        if (keyAfkClick.consumeClick()) {
+        if (OptionsUtil.Keybinds.KEY_AFK_CLICK.consumeClick()) {
             toggleAutoClicker();
             client.options.keyUse.setDown(false);
             client.options.keyAttack.setDown(false);
@@ -1000,7 +962,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         //autoFish
         if (autoFishClickQueue && System.currentTimeMillis()>=(lastFish+fishWait)) {
-            if (autoFish && !autoClicker && client.screen == null && ((!client.player.getMainHandItem().isEmpty()
+            if (autoFish && !autoClicker && client.gui.screen() == null && ((!client.player.getMainHandItem().isEmpty()
                     && client.player.getMainHandItem().is(Items.FISHING_ROD)) || (client.player.getMainHandItem().isEmpty()
                     && !client.player.getOffhandItem().isEmpty() && client.player.getOffhandItem().is(Items.FISHING_ROD))) ) {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
@@ -1010,7 +972,7 @@ public class FortytwoEdit implements ClientModInitializer {
             lastFish = System.currentTimeMillis() + 100+randomInt(400);
         }
         if (didFish && System.currentTimeMillis()>=(lastFish+fishWait)) {
-            if (autoFish && !autoClicker && client.screen == null && ((!client.player.getMainHandItem().isEmpty()
+            if (autoFish && !autoClicker && client.gui.screen() == null && ((!client.player.getMainHandItem().isEmpty()
                     && client.player.getMainHandItem().is(Items.FISHING_ROD)) || (client.player.getMainHandItem().isEmpty()
                     && !client.player.getOffhandItem().isEmpty() && client.player.getOffhandItem().is(Items.FISHING_ROD))) ) {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
@@ -1020,7 +982,7 @@ public class FortytwoEdit implements ClientModInitializer {
         }
 
         //freelook
-        if (keyFreeLook.isDown()) {
+        if (OptionsUtil.Keybinds.KEY_FREE_LOOK.isDown()) {
             if (!isFreeLooking) {
                 lastPerspective = client.options.getCameraType();
                 Entity view = client.getCameraEntity() == null ? client.player : client.getCameraEntity();
@@ -1039,8 +1001,8 @@ public class FortytwoEdit implements ClientModInitializer {
         }
 
         //spam
-        if (keySpamClick.isDown() && System.currentTimeMillis()>=lastSpam + 20) {
-            if (keyMod.isDown())
+        if (OptionsUtil.Keybinds.KEY_SPAM_CLICK.isDown() && System.currentTimeMillis()>=lastSpam + 20) {
+            if (OptionsUtil.Keybinds.KEY_KEY_MOD.isDown())
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyAttack).getBoundKey());
             else {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
@@ -1170,7 +1132,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void showToast(Component title, Component desc) {
         final Minecraft client = Minecraft.getInstance();
         try {
-            client.getToastManager().addToast(new SystemToast(TOAST_TYPE, TOAST_PREFIX.copy().append(title), desc));
+            client.gui.toastManager().addToast(new SystemToast(TOAST_TYPE, TOAST_PREFIX.copy().append(title), desc));
         }
         catch (Exception ex) {
             logError("Failed to show toast ("+BlackMagick.textComponentToStringLiteral(title)+") ("+BlackMagick.textComponentToStringLiteral(desc)+"): "+ex.getMessage());
@@ -1183,8 +1145,8 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void debugTryRefreshVarious() {
         logInfo("Starting debug...");
 
-        readOptions();
-        refreshWebItems(true);
+        OptionsUtil.readOptions();
+        refreshWebItems();
 
         final Minecraft client = Minecraft.getInstance();
         ((HotbarManagerAccessor)client.getHotbarManager()).setLoaded(false);
@@ -1209,135 +1171,6 @@ public class FortytwoEdit implements ClientModInitializer {
         LogScreen.debugTryRefreshVarious();
 
         logInfo("Debug complete");
-    }
-
-    public static void saveKeybindOptions() {
-        boolean diff = false;
-        for (int i=0; i<KEYBINDS.length; i++) {
-            if (!KEYBINDS[i].saveString().equals(KEYBINDS_CONFIG_CACHE[i])) {
-                diff = true;
-                break;
-            }
-        }
-        if (diff)
-            updateOptions();
-    }
-
-    public static void readOptions() {
-        CompoundTag options = FileTools.readCompoundFromFile(FileTools.FILE_OPTIONS);
-        if (options == null)
-            options = new CompoundTag();
-
-        // keep options consistent
-        options.getByte("afk_screen_lock").ifPresent(b -> afkScreenLock = (b == 1));
-        options.getByte("chat_icons").ifPresent(b -> mixinChatProfileIcon = (b == 1));
-        options.getByte("coord_hud").ifPresent(b -> showCoordHud = (b == 1));
-        options.getByte("custom_cape_toggle").ifPresent(b -> showClientCape = (b == 1));
-        options.getString("custom_cape").ifPresent(s -> selectedClientCape = s);
-        options.getByte("debug_screen_rearrange").ifPresent(b -> debugMixinRearrange = (b == 1));
-        options.getByte("dynamic_profile_tooltip_info").ifPresent(b -> mixinProfileDynamicTooltip = (b == 1));
-        options.getCompound("keybinds").ifPresent(c -> {
-            Set<String> foundKeys = Sets.newHashSet();
-            for (String k : c.keySet()) {
-                boolean added = false;
-                if (c.getString(k).isPresent()) {
-                    for (int i=0; i<KEYBINDS.length; i++) {
-                        if (KEYBINDS[i].getName().equals(k)) {
-                            try {
-                                KEYBINDS[i].setKey(InputConstants.getKey(c.getString(k).get()));
-                            }
-                            catch (Exception ex) {}
-                            foundKeys.add(k);
-                            added = true;
-                        }
-                    }
-                }
-                if (!added)
-                    logError("Failed to set keybind for binding "+k+" to key "+BlackMagick.nbtToSnbt(c.get(k)));
-            }
-            if (!foundKeys.isEmpty()) {
-                for (String k : foundKeys)
-                    c.remove(k);
-                KeyMapping.resetMapping();
-            }
-        });
-        options.getString("locator_bar_profile").ifPresent(s -> mixinLocatorBarSet(s));
-        options.getByte("locator_bar_profile_color").ifPresent(b -> mixinLocatorBarColor = (b == 1));
-        options.getByte("opticapes").ifPresent(b -> opticapesOn = (b == 1));
-        options.getByte("web_items").ifPresent(b -> webItemsAuto = (b == 1));
-        options.getString("web_items_url").ifPresent(s -> {
-            webItemsUrlOverride = s;
-            if (webItemsUrlOverride.length()>0 && !webItemsUrlOverride.startsWith("https://") && !webItemsUrlOverride.startsWith("http://")) {
-                logError("Invalid web_items_url (expected 'http://' or 'https://'): "+webItemsUrlOverride);
-                webItemsUrlOverride = "";
-            }
-        });
-
-        // keep options consistent
-        options.remove("file_format");
-        options.remove("afk_screen_lock");
-        options.remove("chat_icons");
-        options.remove("coord_hud");
-        options.remove("custom_cape_toggle");
-        options.remove("custom_cape");
-        options.remove("debug_screen_rearrange");
-        options.remove("dynamic_profile_tooltip_info");
-        options.remove("item_warning_override");
-        if (options.getCompoundOrEmpty("keybinds").isEmpty())
-            options.remove("keybinds");
-        options.remove("locator_bar_profile");
-        options.remove("locator_bar_profile_color");
-        options.remove("opticapes");
-        options.remove("web_items");
-        options.remove("web_items_url");
-
-        optionsExtra = null;
-        if (!options.isEmpty()) {
-            logWarn("Config file contains unknown keys: "+BlackMagick.nbtToSnbt(options));
-            optionsExtra = options.copy();
-        }
-
-        updateOptions();
-    }
-
-    public static void updateOptions() {
-        CompoundTag options = new CompoundTag();
-        if (optionsExtra != null)
-            options = optionsExtra.copy();
-
-        // keep options consistent
-        options.putInt("file_format",FileTools.FILE_FORMAT);
-        options.putBoolean("afk_screen_lock",afkScreenLock);
-        options.putBoolean("chat_icons",mixinChatProfileIcon);
-        options.putBoolean("coord_hud",showCoordHud);
-        options.putBoolean("custom_cape_toggle",showClientCape);
-        options.putString("custom_cape",selectedClientCape);
-        options.putBoolean("debug_screen_rearrange",debugMixinRearrange);
-        options.putBoolean("dynamic_profile_tooltip_info",mixinProfileDynamicTooltip);
-        CompoundTag keysCompound = options.getCompoundOrEmpty("keybinds");
-        for (int i=0; i<KEYBINDS.length; i++) {
-            keysCompound.put(KEYBINDS[i].getName(),StringTag.valueOf(KEYBINDS[i].saveString()));
-            KEYBINDS_CONFIG_CACHE[i] = KEYBINDS[i].saveString();
-        }
-        options.put("keybinds",keysCompound);
-        options.putString("locator_bar_profile",mixinLocatorBarMode);
-        options.putBoolean("locator_bar_profile_color",mixinLocatorBarColor);
-        options.putBoolean("opticapes",opticapesOn);
-        options.putBoolean("web_items",webItemsAuto);
-        options.putString("web_items_url",webItemsUrlOverride);
-
-        FileTools.writeCompoundToFile(FileTools.FILE_OPTIONS, options, FileDisplayType.TREE);
-        onOptionsUpdates();
-    }
-
-    private static void onOptionsUpdates() {
-        final Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.debugEntries != null) {
-            minecraft.debugEntries.rebuildCurrentList();
-        }
-        if (minecraft.gui != null && minecraft.gui.getChat() != null) {
-            minecraft.gui.getChat().rescaleChat();
-        }
     }
 
     public static Map<Integer,String> getSavedItems() {
@@ -1431,7 +1264,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
         CompoundTag savedItemsNbt = new CompoundTag();
         savedItemsNbt.put("items",itemsList);
-        savedItemsNbt.putInt("file_format",FileTools.FILE_FORMAT);
+        savedItemsNbt.putInt(FileTools.FILE_FORMAT_LABEL,FileTools.FILE_FORMAT);
         if (FileTools.writeCompoundToFile(FileTools.FILE_SAVED_ITEMS, savedItemsNbt, FileDisplayType.TREE_CONDITIONAL_COLLAPSE)) {
             getSavedItems(); // used to show log errors
             return true;
@@ -1453,10 +1286,9 @@ public class FortytwoEdit implements ClientModInitializer {
 
     /**
      * 
-     * @param forceWeb when false, only connect to site if .42edit config web items option set to auto
      * @return compound with keys to mark results (site_match_catch, site_updated_catch)
      */
-    public static CompoundTag refreshWebItems(boolean forceWeb) {
+    public static CompoundTag refreshWebItems() {
         webItems.clear();
         CompoundTag result = new CompoundTag();
 
@@ -1465,7 +1297,7 @@ public class FortytwoEdit implements ClientModInitializer {
             cacheNbt = new CompoundTag();
         CompoundTag newItems = cacheNbt.copy();
 
-        if (webItemsAuto || forceWeb) {
+        {
             String webItemsUrlActive = webItemsUrlOverride.length()>0 ? webItemsUrlOverride : WEB_ITEMS_URL_DEFAULT;
             String webJson = "";
             boolean didError = false;

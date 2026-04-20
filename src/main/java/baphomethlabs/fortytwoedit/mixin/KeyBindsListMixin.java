@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
@@ -28,9 +28,9 @@ public abstract class KeyBindsListMixin extends ContainerObjectSelectionList<Key
     private void appendConstructor(KeyBindsScreen keyBindsScreen, Minecraft minecraft, CallbackInfo ci) {
 
         KeyBindsList self = (KeyBindsList)(Object)this;
-        this.addEntry(self.new CategoryEntry(FortytwoEdit.KEY_CATEGORY));
+        this.addEntry(self.new CategoryEntry(OptionsUtil.Keybinds.MOD_CATEGORY));
 
-        for (KeyMapping keyMapping : FortytwoEdit.KEYBINDS) {
+        for (KeyMapping keyMapping : OptionsUtil.Keybinds.ALL_KEYBINDS) {
 			Component component = Component.translatable(keyMapping.getName());
             int i = minecraft.font.width(component);
             if (i > this.maxNameWidth) {
@@ -40,5 +40,5 @@ public abstract class KeyBindsListMixin extends ContainerObjectSelectionList<Key
         }
 
     }
-    
+
 }

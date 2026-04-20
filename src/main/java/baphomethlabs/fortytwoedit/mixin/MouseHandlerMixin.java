@@ -4,6 +4,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.Mixin;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
@@ -19,7 +20,7 @@ public abstract class MouseHandlerMixin {
             FortytwoEdit.cameraRotation[0] += deltaX;
             FortytwoEdit.cameraRotation[1] = Mth.clamp(FortytwoEdit.cameraRotation[1]+deltaY, -90.0f, 90.0f);
         }
-        else if (!(FortytwoEdit.autoClicker && FortytwoEdit.afkScreenLock))
+        else if (!(FortytwoEdit.autoClicker && OptionsUtil.ModOptions.AFK_SCREEN_LOCK.getSetting()))
             entity.turn(cursorDeltaX,cursorDeltaY);
     }
 

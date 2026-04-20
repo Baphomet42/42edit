@@ -1,6 +1,7 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.CycleButton;
@@ -39,10 +40,14 @@ public class AutoClickScreen extends GenericScreen {
         this.txtAttackCooldown.setValue(""+FortytwoEdit.attackWait);
         this.txtAttackCooldown.setResponder(this::editTxtAttackCooldown);
         this.addRenderableWidget(this.txtAttackCooldown);
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Lock Screen [On]"), Component.literal("Lock Screen [Off]"), FortytwoEdit.afkScreenLock).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle screen lock in auto click mode\n\nWhen on: mouse movement will be ignored and FPS will be reduced"))).create(x+20,y+ROW_HEIGHT*6+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
-            FortytwoEdit.readOptions();
-            FortytwoEdit.afkScreenLock = (boolean)trackOutput;
-            FortytwoEdit.updateOptions();
+        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Lock Screen [On]"),
+                Component.literal("Lock Screen [Off]"),
+                OptionsUtil.ModOptions.AFK_SCREEN_LOCK.getSetting()).displayOnlyValue()
+                .withTooltip(val -> Tooltip.create(Component.nullToEmpty(
+                "Toggle screen lock in auto click mode\n\nWhen on: mouse movement will be ignored and FPS will be reduced")))
+                .create(x+20,y+ROW_HEIGHT*6+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
+
+            OptionsUtil.ModOptions.AFK_SCREEN_LOCK.setSetting((boolean)trackOutput);
             reloadScreen();
         }));
     }

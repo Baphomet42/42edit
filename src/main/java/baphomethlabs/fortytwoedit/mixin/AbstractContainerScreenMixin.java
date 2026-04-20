@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 import baphomethlabs.fortytwoedit.SuggestionHelper;
 import baphomethlabs.fortytwoedit.gui.ContainerTooltipData;
 
@@ -96,7 +96,7 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void injectKeyPressed(KeyEvent keyEvent, CallbackInfoReturnable<Boolean> cir) {
 
-        if (FortytwoEdit.keySpamClick.matches(keyEvent)) {
+        if (OptionsUtil.Keybinds.KEY_SPAM_CLICK.matches(keyEvent)) {
 
             double d = minecraft.mouseHandler.xpos() * (double)this.minecraft.getWindow().getGuiScaledWidth() / (double)this.minecraft.getWindow().getScreenWidth();
             double e = minecraft.mouseHandler.ypos() * (double)this.minecraft.getWindow().getGuiScaledHeight() / (double)this.minecraft.getWindow().getScreenHeight();

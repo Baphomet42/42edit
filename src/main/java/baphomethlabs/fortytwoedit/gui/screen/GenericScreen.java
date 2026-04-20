@@ -24,6 +24,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilderScreen.RowWidget;
 import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
@@ -144,7 +145,7 @@ public abstract class GenericScreen extends Screen {
 
     protected void changeScreen(Screen newScreen) {
         this.onCloseAction();
-        minecraft.setScreen(newScreen);
+        minecraft.gui.setScreen(newScreen);
     }
 
     protected void addBackButton() {
@@ -239,7 +240,7 @@ public abstract class GenericScreen extends Screen {
         if (super.keyPressed(keyEvent)) {
             return true;
         }
-        if (FortytwoEdit.keyMagickGui.matches(keyEvent) || minecraft.options.keyInventory.matches(keyEvent)) {
+        if (OptionsUtil.Keybinds.KEY_OPEN_MAGICK_GUI.matches(keyEvent) || minecraft.options.keyInventory.matches(keyEvent)) {
             if (shouldCloseOnKeybind()) {
                 this.onClose();
                 return true;
@@ -387,7 +388,7 @@ public abstract class GenericScreen extends Screen {
         }
 
     }
-    
+
     /**
      * Modified from {@link net.minecraft.client.gui.screens.worldselection.EditGameRulesScreen.RuleEntry}
      */
@@ -433,7 +434,7 @@ public abstract class GenericScreen extends Screen {
             int left = getLeft();
             int right = getRight();
             int offset = ((backgroundWidth - (right - left)) / 2) + SCROLL_ROW_LEFT_OFFSET - left;
-            
+
             for (int i=0; i<children.size(); i++) {
                 set(i, PosWidget.create(children.get(i).w(), children.get(i).x() + offset, children.get(i).y()));
             }

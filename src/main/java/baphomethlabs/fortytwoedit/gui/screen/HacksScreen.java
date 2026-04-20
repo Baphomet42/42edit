@@ -16,12 +16,14 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.server.commands.data.EntityDataAccessor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import com.google.common.collect.Lists;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FileTools;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
 
 public class HacksScreen extends GenericScreen {
@@ -39,11 +41,10 @@ public class HacksScreen extends GenericScreen {
         this.addBackButton();
 
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Coord Hud [On]"),
-                Component.literal("Coord Hud [Off]"), FortytwoEdit.showCoordHud).displayOnlyValue().create(x+20,y+ROW_HEIGHT*2+1,120,WID_HEIGHT,
+                Component.literal("Coord Hud [Off]"), OptionsUtil.ModOptions.COORD_HUD.getSetting()).displayOnlyValue().create(x+20,y+ROW_HEIGHT*2+1,120,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
-            FortytwoEdit.readOptions();
-            FortytwoEdit.showCoordHud = (boolean)trackOutput;
-            FortytwoEdit.updateOptions();
+
+            OptionsUtil.ModOptions.COORD_HUD.setSetting((boolean)trackOutput);
             unsel();
         }));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Mix [On]"),
@@ -142,7 +143,7 @@ public class HacksScreen extends GenericScreen {
         double range = 2.5;
         while (entities.hasNext()) {
             Entity current = entities.next();
-            if (current.getType() != EntityType.PLAYER
+            if (current.getType() != EntityTypes.PLAYER
             && current.getX()>x-range && current.getX()<x+range
             && current.getY()>y-range && current.getY()<y+range
             && current.getZ()>z-range && current.getZ()<z+range) {
@@ -153,7 +154,7 @@ public class HacksScreen extends GenericScreen {
                 if ((new EntityDataAccessor(current)).getData()!=null)
                     entityData = (new EntityDataAccessor(current)).getData();
                 components.put("entity_data",entityData);
-                if (current.getType() == EntityType.ARMOR_STAND) {
+                if (current.getType() == EntityTypes.ARMOR_STAND) {
                     nbt.putString("id","minecraft:armor_stand");
                     entityData.putString("id","minecraft:armor_stand");
                     if (mode == 1) {
@@ -224,7 +225,7 @@ public class HacksScreen extends GenericScreen {
             Iterator<Entity> entities = minecraft.level.entitiesForRendering().iterator();
             while (entities.hasNext()) {
                 Entity current = entities.next();
-                if (current.getType() == EntityType.ARMOR_STAND) {
+                if (current.getType() == EntityTypes.ARMOR_STAND) {
                     CompoundTag nbt = new CompoundTag();
                     if ((new EntityDataAccessor(current)).getData()!=null)
                         nbt = (new EntityDataAccessor(current)).getData();
@@ -235,7 +236,7 @@ public class HacksScreen extends GenericScreen {
                         found++;
                     }
                 }
-                else if (current.getType() == EntityType.ITEM_FRAME || current.getType() == EntityType.GLOW_ITEM_FRAME) {
+                else if (current.getType() == EntityTypes.ITEM_FRAME || current.getType() == EntityTypes.GLOW_ITEM_FRAME) {
                     CompoundTag nbt = new CompoundTag();
                     if ((new EntityDataAccessor(current)).getData()!=null)
                         nbt = (new EntityDataAccessor(current)).getData();

@@ -14,5 +14,5 @@ public interface KeyBindsListKeyEntryInvoker {
     static KeyEntry invokeConstructor(KeyBindsList keyBindsList, final KeyMapping keyMapping, final Component component) {
         throw new AssertionError();
     }
-    
+
 }

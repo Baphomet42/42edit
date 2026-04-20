@@ -5,15 +5,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.Hud;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 
-@Mixin(Gui.class)
-public abstract class GuiMixin {
+@Mixin(Hud.class)
+public abstract class HudMixin {
 
     private static final int TEXT_COLOR = 0xFFFFFFFF;
     private static long lastRefreshTime = 0;
@@ -21,9 +22,9 @@ public abstract class GuiMixin {
 
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void injectExtractRenderState(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo c) {
-        if (FortytwoEdit.autoMove || FortytwoEdit.autoClicker || FortytwoEdit.randoMode || FortytwoEdit.autoFish || FortytwoEdit.showCoordHud) {
+        if (FortytwoEdit.autoMove || FortytwoEdit.autoClicker || FortytwoEdit.randoMode || FortytwoEdit.autoFish || OptionsUtil.ModOptions.COORD_HUD.getSetting()) {
             final Minecraft client = Minecraft.getInstance();
-            if (!client.options.hideGui && client.player != null) {
+            if (!client.gui.hud.isHidden() && client.player != null) {
                 int x = client.getWindow().getGuiScaledWidth()-80;
                 int y = client.getWindow().getGuiScaledHeight()-15;
                 if (FortytwoEdit.autoMove)
@@ -36,7 +37,7 @@ public abstract class GuiMixin {
                     context.text(client.font, "\u00a7cAuto Fish requires Subtitles", x-64, y - 10, TEXT_COLOR, true);
                 if (FortytwoEdit.randoMode)
                     context.text(client.font, "[Rando Mode]", x, y, TEXT_COLOR, true);
-                if (FortytwoEdit.showCoordHud && !client.debugEntries.isOverlayVisible() && !client.showOnlyReducedInfo()) {
+                if (OptionsUtil.ModOptions.COORD_HUD.getSetting() && !client.debugEntries.isOverlayVisible() && !client.showOnlyReducedInfo()) {
                     // see net.minecraft.client.gui.components.debug.DebugEntryPosition
                     long currentTime = System.currentTimeMillis();
                     if (cacheCoordHud == null || currentTime - lastRefreshTime > 50) {

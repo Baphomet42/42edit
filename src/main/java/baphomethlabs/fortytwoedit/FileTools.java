@@ -22,6 +22,7 @@ public class FileTools {
 
     // .42edit files
     public static final int FILE_FORMAT = 4; // increment for any breaking file format changes
+    public static final String FILE_FORMAT_LABEL = "file_format";
     public static final Charset FILE_CHARSET = StandardCharsets.UTF_8;
     public static final String PATH_SEPARATOR = File.separator;
     public static final String FILE_DIRECTORY = ".42edit";

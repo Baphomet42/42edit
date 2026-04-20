@@ -35,7 +35,7 @@ public abstract class ClientLanguageMixin {
         }
 
         cir.setReturnValue(ClientLanguageInvoker.invokeClientLanguage(Map.copyOf(newTranslations), clientLanguage.isDefaultRightToLeft()));
-        
+
     }
 
 }

@@ -84,5 +84,5 @@ public abstract class ItemStackPreset {
         }
 
     }
-    
+
 }

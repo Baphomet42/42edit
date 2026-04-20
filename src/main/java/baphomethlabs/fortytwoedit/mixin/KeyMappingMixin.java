@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -17,7 +18,7 @@ public abstract class KeyMappingMixin {
     @Inject(method = "click", at = @At("TAIL"))
     private static void detectKeyPress(InputConstants.Key key, CallbackInfo c) {
 
-        if (FortytwoEdit.keyMod.isDown() && !FortytwoEdit.keySpamClick.isDown()) {
+        if (OptionsUtil.Keybinds.KEY_KEY_MOD.isDown() && !OptionsUtil.Keybinds.KEY_SPAM_CLICK.isDown()) {
             final Minecraft client = Minecraft.getInstance();
 
             if (key.equals(((KeyMappingAccessor)client.options.keyAttack).getBoundKey())) {

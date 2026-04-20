@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import baphomethlabs.fortytwoedit.BlackMagick;
-import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -26,7 +26,7 @@ public abstract class ResolvableProfileDynamicMixin {
     public void injectAddToTooltip(
         Item.TooltipContext tooltipContext, Consumer<Component> consumer, TooltipFlag tooltipFlag, DataComponentGetter dataComponentGetter, CallbackInfo ci
     ) {
-        if (FortytwoEdit.mixinProfileDynamicTooltip) {
+        if (OptionsUtil.ModOptions.DYNAMIC_PROFILE_TOOLTIP_INFO.getSetting()) {
             String dynamicName = BlackMagick.getDynamicUUIDProfileName((ResolvableProfile.Dynamic)(Object)this);
             if (dynamicName != null && !dynamicName.isEmpty()) {
                 consumer.accept(Component.empty().append(DYNAMIC_TOOLTIP).append(Component.empty().append(" UUID ("+dynamicName+")").setStyle(DYNAMIC_TOOLTIP.getStyle())));

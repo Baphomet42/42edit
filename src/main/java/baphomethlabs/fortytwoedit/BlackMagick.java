@@ -503,7 +503,7 @@ public class BlackMagick {
         String componentKey = BlackMagick.identifierToString(componentId);
         Set<String> storedComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(stack),"components")).keySet();
         Set<String> allComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbt(stack),"components")).keySet();
-        
+
         return (allComponentKeys.contains(componentKey) && !storedComponentKeys.contains(componentKey));
     }
 
@@ -1013,15 +1013,22 @@ public class BlackMagick {
         return list;
     }
 
-    public static List<String> joinCommandSuggs(List<String> suggsList, String startVal) {
+    public static List<String> joinCommandSuggs(List<String> suggsList, String... startVals) {
         List<String> list = Lists.newArrayList();
         if (suggsList != null && !suggsList.isEmpty()) {
             list.addAll(suggsList);
             Collections.sort(list, new SnbtSortComparator());
         }
 
-        if (startVal != null && !startVal.isEmpty() && (suggsList == null || !suggsList.contains(startVal)))
-            list.add(0,startVal);
+        if (startVals != null && startVals.length > 0) {
+            List<String> startValsList = Lists.newArrayList();
+            for (String s : startVals)
+                if (s != null && !s.isEmpty() && (suggsList == null || !suggsList.contains(s)))
+                    startValsList.add(s);
+            Collections.sort(startValsList, new SnbtSortComparator());
+            for (int i = startValsList.size() - 1; i >= 0; i--)
+                list.add(0, startValsList.get(i));
+        }
 
         return list;
     }
@@ -1099,7 +1106,7 @@ public class BlackMagick {
                 case Tag.TAG_BYTE_ARRAY: return 3;
                 case Tag.TAG_INT_ARRAY: return 4;
                 case Tag.TAG_LONG_ARRAY: return 5;
-                
+
                 case Tag.TAG_BYTE: return 6;
                 case Tag.TAG_SHORT: return 7;
                 case Tag.TAG_INT: return 8;
@@ -1112,7 +1119,7 @@ public class BlackMagick {
                 default: return 0;
             }
         }
-        
+
     }
 
     public static String[] getIntRangeArray(int min, int max) {
@@ -1142,7 +1149,7 @@ public class BlackMagick {
             try {
                 int col = Integer.parseInt(dec);
                 if (col>=0 && col <=16777215) {
-                    String hex = Integer.toHexString(col);
+                    String hex = Integer.toHexString(col).toUpperCase();
                     while (hex.length()<6)
                         hex = "0"+hex;
                     if (hex.length()==6)
@@ -1158,7 +1165,7 @@ public class BlackMagick {
      * @return hex String like 0x420666
      */
     public static String hexFromInt(int dec) {
-        return "0x"+Integer.toHexString(dec);
+        return "0x"+Integer.toHexString(dec).toUpperCase();
     }
 
     /**
@@ -1222,7 +1229,12 @@ public class BlackMagick {
 
     public static void sendClientChat(Component component) {
         final Minecraft minecraft = Minecraft.getInstance();
-        minecraft.gui.getChat().addClientSystemMessage(component);
+        try {
+            minecraft.gui.hud.getChat().addClientSystemMessage(component);
+        }
+        catch (Exception ex) {
+            FortytwoEdit.logError("Failed to send client chat message: "+textComponentToStringLiteral(component));
+        }
     }
 
     /**

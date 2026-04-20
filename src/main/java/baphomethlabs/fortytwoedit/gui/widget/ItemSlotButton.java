@@ -34,7 +34,7 @@ public class ItemSlotButton extends Button.Plain {
     protected int overlaySize = 16;
     protected Identifier emptySlotSprite = null;
     protected final int size;
-    
+
     private static final int SIZE_ITEM = 16;
     private static final int SIZE_HIGHLIGHT = 24;
     private static final int SIZE_SLOT = 18;
@@ -136,5 +136,5 @@ public class ItemSlotButton extends Button.Plain {
         }
 
 	}
-    
+
 }

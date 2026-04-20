@@ -30,19 +30,19 @@ public abstract class TooltipMixin {
 
     @Inject(method = "toCharSequence", at = @At("RETURN"), cancellable = true)
     private void injectToCharSequence(Minecraft client, CallbackInfoReturnable<List<FormattedCharSequence>> cir) {
-        if (client.screen != null && client.screen instanceof GenericScreen) {
+        if (client.gui != null && client.gui.screen() != null && client.gui.screen() instanceof GenericScreen) {
             List<FormattedCharSequence> cacheTooltip = GenericScreen.setCurrentTooltip(message);
             if (cacheTooltip != null)
                 cir.setReturnValue(cacheTooltip);
             else if (client.font.split(message, small).size()>lineSwap) {
 
-                int largeSafe = Math.min(large,client.screen.width-safeZone);
-                int mediumSafe = Math.min(medium,client.screen.width-safeZone);
+                int largeSafe = Math.min(large,client.gui.screen().width-safeZone);
+                int mediumSafe = Math.min(medium,client.gui.screen().width-safeZone);
 
                 if (client.font.split(message, largeSafe).size()>lineSwap) {
-                    List<FormattedCharSequence> linesImmutable = client.font.split(message, client.screen.width-safeZone);
+                    List<FormattedCharSequence> linesImmutable = client.font.split(message, client.gui.screen().width-safeZone);
                     List<FormattedCharSequence> lines = Lists.newArrayList();
-                    int maxLines = Math.max(lineSwap,((client.screen.height-safeZone)/10)-1);//10 pixels per line, -1 line gives space to see hotbar
+                    int maxLines = Math.max(lineSwap,((client.gui.screen().height-safeZone)/10)-1);//10 pixels per line, -1 line gives space to see hotbar
                     for (FormattedCharSequence t : linesImmutable)
                         lines.add(t);
                     if (lines.size()>maxLines) {
@@ -66,7 +66,7 @@ public abstract class TooltipMixin {
                             .append("[Showing lines "+ startLine + "-" + endLine + " of " + originalLines + "]")
                             .append("  ")
                             .append(Component.empty().append("Use Ctrl+PGU/PGD to cycle").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC))
-                            , client.screen.width-safeZone);
+                            , client.gui.screen().width-safeZone);
                         lines.add(extra.get(0));
                     }
                     cir.setReturnValue(lines);

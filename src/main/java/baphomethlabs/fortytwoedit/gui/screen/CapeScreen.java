@@ -28,6 +28,7 @@ import net.minecraft.world.entity.player.PlayerSkin;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.OptionsUtil;
 
 public class CapeScreen extends GenericScreen {
 
@@ -48,12 +49,10 @@ public class CapeScreen extends GenericScreen {
         this.addBackButton();
 
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("OptiFine [On]"),
-                Component.literal("OptiFine [Off]"), FortytwoEdit.opticapesOn).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle OptiFine capes mode\n\nWhen on: you can see players' OptiFine capes"))).create(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT,
+                Component.literal("OptiFine [Off]"), OptionsUtil.ModOptions.OPTICAPES.getSetting()).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle OptiFine capes mode\n\nWhen on: you can see players' OptiFine capes"))).create(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
 
-            FortytwoEdit.readOptions();
-            FortytwoEdit.opticapesOn = (boolean)trackOutput;
-            FortytwoEdit.updateOptions();
+            OptionsUtil.ModOptions.OPTICAPES.setSetting((boolean)trackOutput);
             FortytwoEdit.clearOptiCapes();
             reloadScreen();
         }));
@@ -62,12 +61,10 @@ public class CapeScreen extends GenericScreen {
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("Edit"), button -> this.btnEditCape()).bounds(x+20+80+WID_SPACE+60+WID_SPACE,y+ROW_HEIGHT*3+1,40,WID_HEIGHT).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Edit your OptiFine cape (requires donation to OptiFine)")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Custom [On]"),
-                Component.literal("Custom [Off]"), FortytwoEdit.showClientCape).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle custom capes mode\n\nWhen on: change your cape (only you can see this)"))).create(x+20,y+ROW_HEIGHT*4+1,80,WID_HEIGHT,
+                Component.literal("Custom [Off]"), OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.getSetting()).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle custom capes mode\n\nWhen on: change your cape (only you can see this)"))).create(x+20,y+ROW_HEIGHT*4+1,80,WID_HEIGHT,
                 Component.nullToEmpty(""), (button, trackOutput) -> {
 
-            FortytwoEdit.readOptions();
-            FortytwoEdit.showClientCape = (boolean)trackOutput;
-            FortytwoEdit.updateOptions();
+            OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.setSetting((boolean)trackOutput);
             reloadScreen();
         }));
         this.addRenderableWidget(Button.builder(Component.nullToEmpty("<"), button -> this.btnDecCustom()).bounds(x+20+80+WID_SPACE,y+ROW_HEIGHT*4+1,15,WID_HEIGHT).build())
@@ -143,7 +140,7 @@ public class CapeScreen extends GenericScreen {
         boolean changed = false;
 
         //cape
-        if (FortytwoEdit.opticapesWorking && FortytwoEdit.opticapesOn) {
+        if (FortytwoEdit.opticapesWorking && OptionsUtil.ModOptions.OPTICAPES.getSetting()) {
             if (FortytwoEdit.capeCached(name)) {
                 Identifier id = Identifier.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
                 cape = new ClientAsset.ResourceTexture(id, id);
@@ -154,7 +151,7 @@ public class CapeScreen extends GenericScreen {
                 FortytwoEdit.tryLoadCape(name);
             }
         }
-        if (FortytwoEdit.showClientCape && name.equals(FortytwoEdit.USERNAME)) {
+        if (OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.getSetting() && name.equals(FortytwoEdit.USERNAME)) {
             cape = FortytwoEdit.getClientCape();
             elytra = cape;
             changed = true;

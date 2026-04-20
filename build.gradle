@@ -26,43 +26,6 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	// implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-
-	//	UPDATE PROTOCOL
-	//	paste gradle.properties Fabric Properties and Dependencies and manually update Mod Properties
-	//	update fabric.mod.json depends minecraft version (for new full mc versions)
-	//	run commands in vscode terminal:
-	//      ./gradlew --stop
-	//		./gradlew genSources
-	//  ./gradlew vscode
-	//	.vscode/launch.json:
-	//		"args": "--quickPlaySingleplayer",
-	//	java project clean workspace
-
-	//  BUILD
-	//  ./gradlew build
-
-	//	UPDATE LAUNCHER
-	//	use fabric installer to get new launcher profile
-	//	copy 42jar from build/libs to mods
-
-	//	RARE UPDATES
-	//	delete .gradle .vscode bin build run
-	//	delete .gradle .cache from User
-	//	./gradlew --stop
-	//  ./gradlew clean
-	//  ./gradlew genSources
-	//	java project clean workspace
-	//	update example mod files from https://github.com/FabricMC/fabric-example-mod/
-	//      also see template https://fabricmc.net/develop/template/ (uncheck split client and common sources)
-	//		comment out fabric api from build.gradle dependencies
-	//	update FortytwoEdit.FEATURES
-	//	update SuggestionHelper and PathHelper (search HARDCODED)
-	//	verify ordinals (AbstractScrollAreaMixin/StringUtilMixin)
-
-	//	TOOLS
-	//	Ctrl-P search MC classes starting with #
-	//	Mixin help https://fabricmc.net/wiki/tutorial:mixin_introduction
-
 }
 
 processResources {

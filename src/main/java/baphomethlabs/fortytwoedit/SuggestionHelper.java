@@ -407,11 +407,11 @@ public class SuggestionHelper {
     public static final SuggestionGetter LIST_MAP_COLOR = registerSuggsListSnbt("LIST_MAP_COLOR", () -> {
         List<String> list = createOrGetCacheList("LIST_MAP_COLOR",false);
         if (list.isEmpty()) {
-            list.add(""+MapItemColor.DEFAULT.rgb());
+            list.add(BlackMagick.hexFromInt(MapItemColor.DEFAULT.rgb()));
             for (Identifier i : BuiltInRegistries.MAP_DECORATION_TYPE.keySet()) {
                 MapDecorationType t = BuiltInRegistries.MAP_DECORATION_TYPE.get(i).get().value();
                 if (t.hasMapColor()) {
-                    list.add(""+t.mapColor());
+                    list.add(BlackMagick.hexFromInt(t.mapColor()));
                 }
             }
             sortUnique(list);

@@ -50,5 +50,5 @@ public class SmartEditBox extends EditBox {
                 this.setTooltip(this.smartTooltip);
         }
     }
-    
+
 }
