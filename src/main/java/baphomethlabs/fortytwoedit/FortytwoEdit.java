@@ -257,6 +257,14 @@ public class FortytwoEdit implements ClientModInitializer {
         MIXIN_LOCATOR_BAR_OPTION_OVERRIDE_DEFAULT,
         MIXIN_LOCATOR_BAR_OPTION_ALWAYS
     };
+    public static final OptionsUtil.StringChoices LOCATOR_BAR_PROFILE_CHOICES = new OptionsUtil.StringChoicesList(
+        OptionsUtil.StringOption.of(MIXIN_LOCATOR_BAR_OPTION_NEVER, "Never")
+            .withDesc("Icon is not modified."),
+        OptionsUtil.StringOption.of(MIXIN_LOCATOR_BAR_OPTION_OVERRIDE_DEFAULT, "Override Default")
+            .withDesc("Icon is modified only when existing icon is default."),
+        OptionsUtil.StringOption.of(MIXIN_LOCATOR_BAR_OPTION_ALWAYS, "Always")
+            .withDesc("Icon is always modified.")
+    );
     public static boolean mixinLocatorBar = false;
     public static boolean mixinLocatorBarAlways = false;
     public static boolean mixinLocatorBarModeDefault() {
@@ -335,7 +343,7 @@ public class FortytwoEdit implements ClientModInitializer {
         autoClicker = !autoClicker;
     }
     public static boolean shouldReduceFramerate() {
-        return autoClicker && OptionsUtil.ModOptions.AFK_SCREEN_LOCK.getSetting() && (System.currentTimeMillis() - afkReduceFramerateTime > 5000);
+        return autoClicker && OptionsUtil.ModOptions.AUTO_CLICK_LOCK.getSetting() && (System.currentTimeMillis() - afkReduceFramerateTime > 5000);
     }
     private static long lastAttack = 0;
     private static long lastSpam = 0;
@@ -400,7 +408,19 @@ public class FortytwoEdit implements ClientModInitializer {
 
     // randomizer mode
     public static int[] randoSlots;
-    public static boolean randoMode = false;
+    private static boolean randoMode = false;
+    public static boolean isRandoModeActive() {
+        return randoMode && randoSlots != null;
+    }
+    public static boolean isRandoModeEnabled() {
+        return randoMode;
+    }
+    public static void setRandoModeEnabled(boolean enabled) {
+        randoMode = enabled;
+    }
+    public static void toggleRandoModeEnabled() {
+        setRandoModeEnabled(!randoMode);
+    }
 
     // opticapes
     private static long lastCapeLoaded = System.currentTimeMillis();
@@ -1006,14 +1026,14 @@ public class FortytwoEdit implements ClientModInitializer {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyAttack).getBoundKey());
             else {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
-                if (randoMode)
+                if (isRandoModeActive())
                     changeRandoSlot();
             }
             lastSpam = System.currentTimeMillis();
         }
 
         // rando
-        if (randoMode) {
+        if (isRandoModeActive()) {
             if (client.options.keyUse.isDown())
                 changeRandoSlot();
         }
@@ -1137,6 +1157,10 @@ public class FortytwoEdit implements ClientModInitializer {
         catch (Exception ex) {
             logError("Failed to show toast ("+BlackMagick.textComponentToStringLiteral(title)+") ("+BlackMagick.textComponentToStringLiteral(desc)+"): "+ex.getMessage());
         }
+    }
+
+    public static void showToastCreativeError() {
+        showToast("Invalid Permissions", "Creative mode required");
     }
 
     /**

@@ -3,10 +3,6 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -28,88 +24,88 @@ import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
 
 public class HacksScreen extends GenericScreen {
 
-    protected Button btnWgtFindInvis;
     protected SmartEditBox txtRando;
     protected boolean unsaved = false;
 
-    public HacksScreen() {}
+    public HacksScreen() {
+        super("Hacks");
+    }
 
     @Override
     protected void init() {
         super.init();
         FortytwoEdit.quickScreen = HacksScreen::new;
         this.addBackButton();
+        
+        setupScrollPane();
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Coord Hud", 110, btn -> {
+                    OptionsUtil.ModOptions.COORD_HUD.toggleSetting();
+                    rebuildWidgets();
+                }).setBoolName(OptionsUtil.ModOptions.COORD_HUD.getSetting()).setRenderItem(Items.COMPASS).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Mix", btn -> {
+                    setTxtRando();
+                    FortytwoEdit.toggleRandoModeEnabled();
+                    rebuildWidgets();
+                }).setBoolName(FortytwoEdit.isRandoModeEnabled()).setRenderItem(Items.CRACKED_DEEPSLATE_BRICKS).setTooltip(
+                    "Toggle mix mode\n\nWhen on - after placing a block, change to a random hotbar slot based on the specified slots"
+                ).build(),
+            WIDGET_UTIL.newEditBox().setMaxLength(15).setValue(getRandoSlotsValue()).setSmartTooltip(
+                    "Mix mode slots\n\nChoose which slots should be randomized.\n\n"
+                    +"Example: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)"
+                )
+                .setResponder(this::editTxtRando).runWithSelf(w -> this.txtRando = w).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Get Entity", btn -> this.btnGetEntity(1))
+                .setTooltip("Copy entity data within 2.5 blocks and get a spawn egg for the entities").setRenderItem(Items.CREEPER_HEAD).build(),
+            WIDGET_UTIL.newButton("Full Data", btn -> this.btnGetEntity(0))
+                .setTooltip("Get Entity without removing position, uuid, etc.").build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Xray", btn -> {
+                    //minecraft.levelRenderer.allChanged(); // to_do enable if invis block mixins are reimplemented
+                    FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
+                    FortytwoEdit.xrayEntity = FortytwoEdit.seeInvis;
+                    rebuildWidgets();
+                }).setBoolName(FortytwoEdit.seeInvis).setTooltip("Toggle xray mode\n\nWhen on: all entities will glow through blocks").setRenderItem(Items.BARRIER).build(),
+            WIDGET_UTIL.newButton("Find Invis Entities", btn -> this.btnFindInvis()).creativeOnly("Print positions of invisible entities").build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Death Pos", btn -> this.btnDeathPos())
+                .setTooltip("Print your last position of death (only you can see this)").setRenderItem(Items.SKELETON_SKULL).build(),
+            WIDGET_UTIL.newButton("Auto Fish", btn -> {
+                FortytwoEdit.autoFish = !FortytwoEdit.autoFish;
+                    rebuildWidgets();
+                }).setBoolName(FortytwoEdit.autoFish).setTooltip("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on").setRenderItem(Items.FISHING_ROD).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Look N", 40, btn -> this.btnLookN())
+                .setTooltip("Set your rotation to straight north").build(),
+            WIDGET_UTIL.newButton("Rotate", 40, btn -> this.btnLookR())
+                .setTooltip("Rotate 90\\u00b0 clockwise").build(),
+            WIDGET_UTIL.newButton("Pano", 40, btn -> this.btnPano())
+                .setTooltip("Take a panorama screenshot").build(),
+            WIDGET_UTIL.newButton("View Pano", WID_WIDTH_FULL - ((40 + WID_SPACE) * 3), btn -> this.btnScreenshots())
+                .setTooltip("Open screenshots folder to view panorama").build()
+        );
+    }
 
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Coord Hud [On]"),
-                Component.literal("Coord Hud [Off]"), OptionsUtil.ModOptions.COORD_HUD.getSetting()).displayOnlyValue().create(x+20,y+ROW_HEIGHT*2+1,120,WID_HEIGHT,
-                Component.nullToEmpty(""), (button, trackOutput) -> {
+    protected void editTxtRando(String text) {
+        unsaved = true;
+    }
 
-            OptionsUtil.ModOptions.COORD_HUD.setSetting((boolean)trackOutput);
-            unsel();
-        }));
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Mix [On]"),
-                Component.literal("Mix [Off]"), FortytwoEdit.randoMode).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty(
-                "Toggle mix mode\n\nWhen on: after placing a block, change to a random hotbar slot\n\n"
-                +"If numbers are specified, the random slot will be selected from those.\nExample: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)"))).create(x+20,y+ROW_HEIGHT*3+1,80,WID_HEIGHT,
-                Component.nullToEmpty(""), (button, trackOutput) -> {
-            setTxtRando();
-            if (!(boolean)trackOutput)
-                FortytwoEdit.randoMode = false;
-            else if ((boolean)trackOutput && FortytwoEdit.randoSlots != null)
-                FortytwoEdit.randoMode = true;
-            unsel();
-        }));
-        this.txtRando = new SmartEditBox(this.font,x+20+80+WID_SPACE,y+ROW_HEIGHT*3+1,100-2,WID_HEIGHT,Component.nullToEmpty(""));
-        this.txtRando.setMaxLength(15);
+    protected String getRandoSlotsValue() {
         if (FortytwoEdit.randoSlots != null) {
             String keys = "";
             for (int i: FortytwoEdit.randoSlots) {
                 keys += i;
             }
-            txtRando.setValue(keys);
+            return keys;
         }
-        this.txtRando.setResponder(this::editTxtRando);
-        this.addRenderableWidget(this.txtRando);
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Get Entity"), button -> this.btnGetEntity(1)).bounds(x+20,y+ROW_HEIGHT*4+1,80,WID_HEIGHT).build())
-            .setTooltip(Tooltip.create(Component.nullToEmpty("Copy entity data within 2.5 blocks and get a spawn egg for the entities")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Full Data"), button -> this.btnGetEntity(0)).bounds(x+20+80+WID_SPACE,y+ROW_HEIGHT*4+1,60,WID_HEIGHT).build())
-            .setTooltip(Tooltip.create(Component.nullToEmpty("Get Entity without removing position, uuid, etc.")));
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Xray [On]"),
-                Component.literal("Xray [Off]"), FortytwoEdit.seeInvis).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Toggle xray mode\n\nWhen on: all entities will glow through blocks"))).create(x+20,y+ROW_HEIGHT*5+1,100,WID_HEIGHT,
-                Component.nullToEmpty(""), (button, trackOutput) -> {
-            //minecraft.levelRenderer.allChanged(); // to_do enable if invis block mixins are reimplemented
-            FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
-            FortytwoEdit.xrayEntity = FortytwoEdit.seeInvis;
-            unsel();
-        }));
-        btnWgtFindInvis = this.addRenderableWidget(Button.builder(Component.nullToEmpty("Find Invis Entities"),
-            button -> this.btnFindInvis()).bounds(x+20+100+WID_SPACE,y+ROW_HEIGHT*5+1,100,WID_HEIGHT).build());
-        if (!minecraft.player.getAbilities().instabuild) {
-            btnWgtFindInvis.active = false;
-            btnWgtFindInvis.setTooltip(TT_CREATIVE);
-        }
-        else
-            btnWgtFindInvis.setTooltip(Tooltip.create(Component.nullToEmpty("Print positions of invisible entities (only you can see this)")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Death Pos"), button -> this.btnDeathPos()).bounds(x+20,y+ROW_HEIGHT*6+1,100,WID_HEIGHT).build())
-            .setTooltip(Tooltip.create(Component.nullToEmpty("Print your last position of death (only you can see this)")));
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("   Auto Fish [On]"),
-                Component.literal("   Auto Fish [Off]"), FortytwoEdit.autoFish).displayOnlyValue().withTooltip(val -> Tooltip.create(Component.nullToEmpty("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on"))).create(x+20+100+WID_SPACE,y+ROW_HEIGHT*6+1,100,WID_HEIGHT,
-                Component.nullToEmpty(""), (button, trackOutput) -> {
-            FortytwoEdit.autoFish = !FortytwoEdit.autoFish;
-            unsel();
-        }));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Look N"), button -> this.btnLookN()).bounds(x+20,y+ROW_HEIGHT*7+1,40,WID_HEIGHT).build())
-            .setTooltip(Tooltip.create(Component.nullToEmpty("Set your rotation to straight north")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Rotate"), button -> this.btnLookR()).bounds(x+20+40+WID_SPACE,y+ROW_HEIGHT*7+1,40,WID_HEIGHT).build())
-            .setTooltip(Tooltip.create(Component.nullToEmpty("Rotate 90\u00b0 clockwise")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Pano"), button -> this.btnPano()).bounds(x+20+40+WID_SPACE+40+WID_SPACE,y+ROW_HEIGHT*7+1,40,WID_HEIGHT).build())
-            .setTooltip(Tooltip.create(Component.nullToEmpty("Take a panorama screenshot")));
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("View Pano"), button -> this.btnScreenshots()).bounds(x+20+40+WID_SPACE+40+WID_SPACE+40+WID_SPACE,y+ROW_HEIGHT*7+1,60,WID_HEIGHT).build())
-            .setTooltip(Tooltip.create(Component.nullToEmpty("Open screenshots folder to view panorama")));
-    }
-
-    protected void editTxtRando(String text) {
-        unsaved = true;
+        return null;
     }
 
     protected void setTxtRando() {
@@ -124,11 +120,12 @@ public class HacksScreen extends GenericScreen {
                             slots[i]=Integer.parseInt(""+inp.charAt(i));
                         } catch (NumberFormatException ex) {}
                     }
-                    FortytwoEdit.randoSlots = slots;
+                    if (slots != null && slots.length > 0)
+                        FortytwoEdit.randoSlots = slots;
                 }
             }
 
-            FortytwoEdit.randoMode = (FortytwoEdit.randoSlots!=null);
+            FortytwoEdit.setRandoModeEnabled(FortytwoEdit.randoSlots != null);
             unsaved = false;
             reloadScreen();
         }
@@ -209,7 +206,7 @@ public class HacksScreen extends GenericScreen {
             FortytwoEdit.setClipboard(BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(item)));
             FortytwoEdit.showToast("Get Entity","Entity data copied");
 
-            if (minecraft.player.getAbilities().instabuild && !item.isEmpty()) {
+            if (BlackMagick.isCreative(minecraft) && !item.isEmpty()) {
                 BlackMagick.setItemMain(item);
             }
         }
@@ -220,42 +217,37 @@ public class HacksScreen extends GenericScreen {
     }
 
     protected void btnFindInvis() {
-        if (minecraft.player.getAbilities().instabuild) {
-            int found = 0;
-            Iterator<Entity> entities = minecraft.level.entitiesForRendering().iterator();
-            while (entities.hasNext()) {
-                Entity current = entities.next();
-                if (current.getType() == EntityTypes.ARMOR_STAND) {
-                    CompoundTag nbt = new CompoundTag();
-                    if ((new EntityDataAccessor(current)).getData()!=null)
-                        nbt = (new EntityDataAccessor(current)).getData();
-                    if ((nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1)
-                    && !(nbt.getByte("CustomNameVisible").isPresent() && nbt.getByte("CustomNameVisible").get()==1)
-                    && !nbt.getCompound("equipment").isPresent()) {
+        int found = 0;
+        Iterator<Entity> entities = minecraft.level.entitiesForRendering().iterator();
+        while (entities.hasNext()) {
+            Entity current = entities.next();
+            if (current.getType() == EntityTypes.ARMOR_STAND) {
+                CompoundTag nbt = new CompoundTag();
+                if ((new EntityDataAccessor(current)).getData()!=null)
+                    nbt = (new EntityDataAccessor(current)).getData();
+                if ((nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1)
+                && !(nbt.getByte("CustomNameVisible").isPresent() && nbt.getByte("CustomNameVisible").get()==1)
+                && !nbt.getCompound("equipment").isPresent()) {
+                    reportInvis(current);
+                    found++;
+                }
+            }
+            else if (current.getType() == EntityTypes.ITEM_FRAME || current.getType() == EntityTypes.GLOW_ITEM_FRAME) {
+                CompoundTag nbt = new CompoundTag();
+                if ((new EntityDataAccessor(current)).getData()!=null)
+                    nbt = (new EntityDataAccessor(current)).getData();
+                if (nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1) {
+                    if (!nbt.contains("Item")) {
                         reportInvis(current);
                         found++;
                     }
                 }
-                else if (current.getType() == EntityTypes.ITEM_FRAME || current.getType() == EntityTypes.GLOW_ITEM_FRAME) {
-                    CompoundTag nbt = new CompoundTag();
-                    if ((new EntityDataAccessor(current)).getData()!=null)
-                        nbt = (new EntityDataAccessor(current)).getData();
-                    if (nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1) {
-                        if (!nbt.contains("Item")) {
-                            reportInvis(current);
-                            found++;
-                        }
-                    }
-                }
             }
-            if (found>0)
-                FortytwoEdit.showToast("Find Invis","Found "+found+" invisible entities");
-            else
-                FortytwoEdit.showToast("Find Invis","No invisible entities detected");
         }
-        else {
-            FortytwoEdit.showToast("Find Invis", "This requires creative mode");
-        }
+        if (found>0)
+            FortytwoEdit.showToast("Find Invis","Found "+found+" invisible entities");
+        else
+            FortytwoEdit.showToast("Find Invis","No invisible entities detected");
         unsel();
     }
 
@@ -303,18 +295,6 @@ public class HacksScreen extends GenericScreen {
 
     protected void saveAll() {
         setTxtRando();
-    }
-
-    @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(context, mouseX, mouseY, delta);
-        context.centeredText(this.font, Component.nullToEmpty("Hacks"), this.width / 2, y+11, TEXT_COLOR);
-		context.fakeItem(new ItemStack(Items.COMPASS),x+20+2,y+ROW_HEIGHT*2+1+2);
-		context.fakeItem(new ItemStack(Items.CRACKED_DEEPSLATE_BRICKS),x+20+2,y+ROW_HEIGHT*3+1+2);
-		context.fakeItem(new ItemStack(Items.CREEPER_SPAWN_EGG),x+20+2,y+ROW_HEIGHT*4+1+2);
-		context.fakeItem(new ItemStack(Items.BARRIER),x+20+2,y+ROW_HEIGHT*5+1+2);
-		context.fakeItem(new ItemStack(Items.SKELETON_SKULL),x+20+2,y+ROW_HEIGHT*6+1+2);
-		context.fakeItem(new ItemStack(Items.FISHING_ROD),x+20+2+100+WID_SPACE,y+ROW_HEIGHT*6+1+2);
     }
 
     @Override

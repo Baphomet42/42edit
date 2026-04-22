@@ -18,16 +18,10 @@ public abstract class DebugScreenEntryListMixin {
     @Final
 	protected List<Identifier> currentlyEnabled;
 
-    private static final Identifier[] MOVE_LAST = {
-        Identifier.withDefaultNamespace("looking_at_entity"),
-        Identifier.withDefaultNamespace("looking_at_fluid"),
-        Identifier.withDefaultNamespace("looking_at_block")
-    };
-
     @Inject(method = "rebuildCurrentList", at = @At("RETURN"), cancellable = true)
 	public void injectRebuildCurrentList(CallbackInfo ci) {
         if (OptionsUtil.ModOptions.DEBUG_SCREEN_REARRANGE.getSetting()) {
-            for (Identifier rl : MOVE_LAST) {
+            for (Identifier rl : OptionsUtil.DEBUG_SCREEN_REARRANGE_MOVE_LAST) {
                 if (currentlyEnabled.contains(rl)) {
                     currentlyEnabled.remove(rl);
                     currentlyEnabled.add(rl);

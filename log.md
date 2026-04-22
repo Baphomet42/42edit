@@ -71,7 +71,7 @@ This file is to log important information related to maintaining the mod.
 ## CODE CLEANUP REGEX
 
 + files to exclude:
-    + `.git, crash-reports`
+    + `.git, run\crash-reports, run\logs`
 
 + regex search terms:
     + `^import.*\n\n+import`

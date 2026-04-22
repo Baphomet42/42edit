@@ -43,7 +43,7 @@ public class CapeScreen extends GenericScreen {
     public CapeScreen() {}
 
     @Override
-    protected void init() {
+    protected void init() {//TODO remake screen
         super.init();
         FortytwoEdit.quickScreen = CapeScreen::new;
         this.addBackButton();

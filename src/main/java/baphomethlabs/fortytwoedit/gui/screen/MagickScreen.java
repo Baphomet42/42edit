@@ -2,9 +2,7 @@ package baphomethlabs.fortytwoedit.gui.screen;
 
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
-import baphomethlabs.fortytwoedit.gui.widget.ModifierButton;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.input.InputWithModifiers;
@@ -17,42 +15,50 @@ import net.minecraft.world.item.Items;
 public class MagickScreen extends GenericScreen {
 
     private Button btnWgtAutoClick;
-    private Button btnWgtHat;
-    private static final int ITEM_OFFSET = 2;
-    private static final Component TITLE_TEXT = Component.translatable("42edit.gui.magick_screen.title").copy().withColor(0x420666).withStyle(ChatFormatting.BOLD);
 
-    public MagickScreen() {}
+    public MagickScreen() {
+        super(Component.translatable("42edit.gui.magick_screen.title").copy().withColor(0x420666).withStyle(ChatFormatting.BOLD),
+            Items.JIGSAW);
+    }
 
     @Override
     protected void init() {
         super.init();
         FortytwoEdit.quickScreen = MagickScreen::new;
 
-        this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.item_builder"),
-            button -> changeScreen(new ItemBuilderScreen())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*2+TOP_OFFSET,80,WID_HEIGHT).build());
-        this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.hacks"),
-            button -> changeScreen(new HacksScreen())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*3+TOP_OFFSET,80,WID_HEIGHT).build());
-        btnWgtHat = this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.hat"),
-            button -> this.btnHat()).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*4+TOP_OFFSET,60,WID_HEIGHT).build());
-        if (!minecraft.player.getAbilities().instabuild) {
-            btnWgtHat.active = false;
-            btnWgtHat.setTooltip(TT_CREATIVE);
-        }
-        else
-            btnWgtHat.setTooltip(Tooltip.create(Component.translatable("42edit.gui.magick_screen.hat.tooltip")));
-        this.addRenderableWidget(new ModifierButton(Component.translatable("42edit.gui.magick_screen.super_secret"),
-            (button, inputWithModifiers) -> this.btnSuperSecretSettings(inputWithModifiers),x+WID_LEFT_NARROW,y+ROW_HEIGHT*5+TOP_OFFSET,165,WID_HEIGHT));
-        this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.capes"),
-            button -> changeScreen(new CapeScreen())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*6+TOP_OFFSET,80,WID_HEIGHT).build());
-        this.addRenderableWidget(Button.builder(Component.translatable("42edit.gui.magick_screen.auto_click"),
-            button -> changeScreen(new AutoClickScreen())).bounds(x+WID_LEFT_NARROW,y+ROW_HEIGHT*7+TOP_OFFSET,90,WID_HEIGHT).build());
-        btnWgtAutoClick = this.addRenderableWidget(Button.builder(Component.empty(),
-            button -> this.btnAutoClick()).bounds(x+WID_LEFT_NARROW+90+WID_SPACE,y+ROW_HEIGHT*7+TOP_OFFSET,70,WID_HEIGHT).build());
+        setupScrollPane();
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.item_builder"), btn -> changeScreen(new ItemBuilderScreen()))
+                .setRenderItem(Items.SPONGE).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.hacks"), btn -> changeScreen(new HacksScreen()))
+                .setRenderItem(Items.REPEATING_COMMAND_BLOCK).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.hat"), btn -> this.btnHat())
+                .setRenderItem(Items.DIAMOND_HELMET).creativeOnly(Component.translatable("42edit.gui.magick_screen.hat.tooltip")).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.super_secret"), WID_WIDTH_FULL,
+                (button, inputWithModifiers) -> this.btnSuperSecretSettings(inputWithModifiers))
+                .setRenderItem(Items.STRUCTURE_BLOCK).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.capes"), btn -> changeScreen(new CapeScreen()))
+                .setRenderItem(Items.ELYTRA).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.auto_click"), btn -> changeScreen(new AutoClickScreen()))
+                .setRenderItem(Items.GOLDEN_SWORD).build(),
+            WIDGET_UTIL.newButton(Component.empty(), btn -> this.btnAutoClick()).runWithSelf(w -> this.btnWgtAutoClick = w).build()
+        );
         setAutoClickMessage();
+
     }
 
     protected void btnHat() {
-        if (minecraft.player.getAbilities().instabuild) {
+        if (BlackMagick.isCreative(minecraft)) {
             ItemStack hand = minecraft.player.getMainHandItem().copy();
             ItemStack head = minecraft.player.getItemBySlot(EquipmentSlot.HEAD).copy();
             BlackMagick.setItemHead(hand);
@@ -107,19 +113,6 @@ public class MagickScreen extends GenericScreen {
     @Override
     protected Identifier getBackgroundTexture() {
         return null;
-    }
-
-    @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(context, mouseX, mouseY, delta);
-        context.fakeItem(new ItemStack(Items.JIGSAW), x+6, y+6);
-        context.centeredText(this.font, TITLE_TEXT, this.width / 2, y+11, TEXT_COLOR);
-		context.fakeItem(new ItemStack(Items.SPONGE),x+WID_LEFT_NARROW+ITEM_OFFSET,y+44+TOP_OFFSET+ITEM_OFFSET);
-		context.fakeItem(new ItemStack(Items.REPEATING_COMMAND_BLOCK),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*3+TOP_OFFSET+ITEM_OFFSET);
-		context.fakeItem(new ItemStack(Items.DIAMOND_HELMET),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*4+TOP_OFFSET+ITEM_OFFSET);
-		context.fakeItem(new ItemStack(Items.STRUCTURE_BLOCK),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*5+TOP_OFFSET+ITEM_OFFSET);
-		context.fakeItem(new ItemStack(Items.ELYTRA),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*6+TOP_OFFSET+ITEM_OFFSET);
-		context.fakeItem(new ItemStack(Items.GOLDEN_SWORD),x+WID_LEFT_NARROW+ITEM_OFFSET,y+ROW_HEIGHT*7+TOP_OFFSET+ITEM_OFFSET);
     }
 
 }

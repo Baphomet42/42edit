@@ -1,25 +1,18 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
 import java.util.List;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
-import baphomethlabs.fortytwoedit.OptionsUtil;
 
 public class SecretScreen extends GenericScreen {
 
     protected EditBox txtUpsideDown;
     protected static final String UPSIDE_DOWN_REF = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789 .,?!':[](){}-=";
     protected static final String UPSIDE_DOWN_CHARS = "ⱯɐᗺqƆɔᗡpƎǝℲɟ⅁ᵷHɥIᴉՐɾꞰʞꞀꞁWɯNuOoԀdꝹbᴚɹSs⟘ʇ∩nɅʌMʍXx⅄ʎZz0⥝ᘔƐ߈ϛ9ㄥ86 ˙'¿¡,:][)(}{-=";
-    protected static final Tooltip ITEM_WARN_TT = Tooltip.create(Component.nullToEmpty("vanilla - no change to item warnings\n\nhide - never show warnings\n\nsmart - hide warnings for items that cannot run operator commands"));
-    private static final int CONFIG_BUTTON_WIDTH = ROW_WIDTH-NARROW_OFFSET;
 
     public SecretScreen() {
         super("Super Secret Settings");
@@ -33,68 +26,17 @@ public class SecretScreen extends GenericScreen {
 
         setupScrollPane();
         paneScroll().addRow(
+            WIDGET_UTIL.newButton("42edit Options...", btn -> changeScreen(new OptionsScreen())).build()
+        );
+        paneScroll().addRow(
             WIDGET_UTIL.newButton("Debug Tools...", btn -> changeScreen(new DebugScreen())).build()
         );
-        this.txtUpsideDown = WIDGET_UTIL.newEditBox(100).build();
+        this.txtUpsideDown = WIDGET_UTIL.newEditBox().build();
         paneScroll().addRow(
             WIDGET_UTIL.newButton("Upside Down", btn -> flipTextBox()).setTooltip("Convert text to upside down text").build(),
             this.txtUpsideDown
         );
-        paneScroll().addRow("Config");
-        {
-            MutableComponent btnTxt = Component.empty().append("Chat Icons: ");
-            if (!OptionsUtil.ModOptions.CHAT_ICONS.getSetting())
-                btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GRAY));
-            else
-                btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GREEN));
-            paneScroll().addRow(
-                WIDGET_UTIL.newButton(btnTxt, btn -> {
-                    OptionsUtil.ModOptions.CHAT_ICONS.toggleSetting();
-                    reloadScreen();
-                }).setSize(CONFIG_BUTTON_WIDTH).setTooltip("Show player heads next to chat messages.\n\nDefault: false").build()
-            );
-        }
-        {
-            MutableComponent btnTxt = Component.empty().append("Locator Bar Skin: ");
-            if (FortytwoEdit.mixinLocatorBarModeDefault())
-                btnTxt.append(Component.empty().append(OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting()).withStyle(ChatFormatting.GRAY));
-            else if (FortytwoEdit.mixinLocatorBarModeUnknown())
-                btnTxt.append(Component.empty().append(OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting()).withStyle(ChatFormatting.YELLOW));
-            else
-                btnTxt.append(Component.empty().append(OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting()).withStyle(ChatFormatting.GREEN));
-            paneScroll().addRow(
-                WIDGET_UTIL.newButton(btnTxt, btn -> {
-                    FortytwoEdit.mixinLocatorBarCycle();
-                    reloadScreen();
-                }).setSize(CONFIG_BUTTON_WIDTH).setTooltip("Override locator bar icon to show player skin.\n\nDefault: never").build()
-            );
-        }
-        {
-            MutableComponent btnTxt = Component.empty().append("Profile Tooltip Info: ");
-            if (!OptionsUtil.ModOptions.DYNAMIC_PROFILE_TOOLTIP_INFO.getSetting())
-                btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GRAY));
-            else
-                btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GREEN));
-            paneScroll().addRow(
-                WIDGET_UTIL.newButton(btnTxt, btn -> {
-                    OptionsUtil.ModOptions.DYNAMIC_PROFILE_TOOLTIP_INFO.toggleSetting();
-                    reloadScreen();
-                }).setSize(CONFIG_BUTTON_WIDTH).setTooltip("Override dynamic profile item tooltip to show extra info.\n\nDefault: false").build()
-            );
-        }
-        {
-            MutableComponent btnTxt = Component.empty().append("F3 Screen Rearrange: ");
-            if (!OptionsUtil.ModOptions.DEBUG_SCREEN_REARRANGE.getSetting())
-                btnTxt.append(Component.empty().append("false").withStyle(ChatFormatting.GRAY));
-            else
-                btnTxt.append(Component.empty().append("true").withStyle(ChatFormatting.GREEN));
-            paneScroll().addRow(
-                WIDGET_UTIL.newButton(btnTxt, btn -> {
-                    OptionsUtil.ModOptions.DEBUG_SCREEN_REARRANGE.toggleSetting();
-                    reloadScreen();
-                }).setSize(CONFIG_BUTTON_WIDTH).setTooltip("Move certain elements in the F3 screen for easier readability.\n\nDefault: false").build()
-            );
-        }
+        paneScroll().addRow();
     }
 
     protected void flipTextBox() {

@@ -73,7 +73,6 @@ import baphomethlabs.fortytwoedit.PathHelper.PathType;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
 import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
-import baphomethlabs.fortytwoedit.gui.widget.WidgetUtil;
 
 public class ItemBuilderScreen extends GenericScreen {
 
@@ -296,13 +295,13 @@ public class ItemBuilderScreen extends GenericScreen {
             throwCopyBtn = this.addRenderableWidget(Button.builder(Component.nullToEmpty("Q*"),
                 button -> this.btnThrow(true)).bounds(width/2 + 30,y+5,WID_HEIGHT,WID_HEIGHT).build());
 
-            if (!minecraft.player.getAbilities().instabuild) {
+            if (!BlackMagick.isCreative(minecraft)) {
                 swapCopyBtn.active = false;
                 swapCopyBtn.setTooltip(TT_CREATIVE);
                 throwCopyBtn.active = false;
                 throwCopyBtn.setTooltip(TT_CREATIVE);
             }
-            if (minecraft.player.isSpectator()) {
+            if (BlackMagick.isSpectator(minecraft)) {
                 swapCopyBtn.active = false;
                 swapCopyBtn.setTooltip(null);
                 swapBtn.active = false;
@@ -385,12 +384,12 @@ public class ItemBuilderScreen extends GenericScreen {
     }
 
     protected void btnSwapOff(boolean copy) {
-        if (!minecraft.player.isSpectator()) {
+        if (!BlackMagick.isSpectator(minecraft)) {
             if (!copy) {
                 // from MinecraftClient (search `this.options.swapHandsKey.wasPressed()`)
                 minecraft.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ZERO, Direction.DOWN));
             }
-            else if (minecraft.player.getAbilities().instabuild) {
+            else if (BlackMagick.isCreative(minecraft)) {
                 if (!minecraft.player.getMainHandItem().isEmpty()) {
                     BlackMagick.setItemOff(minecraft.player.getMainHandItem());
                 }
@@ -403,7 +402,7 @@ public class ItemBuilderScreen extends GenericScreen {
     }
 
     protected void btnChangeSlot(boolean left) {
-        if (!minecraft.player.isSpectator()) {
+        if (!BlackMagick.isSpectator(minecraft)) {
             int slot = minecraft.player.getInventory().getSelectedSlot();
             if (left)
                 slot--;
@@ -419,13 +418,13 @@ public class ItemBuilderScreen extends GenericScreen {
     }
 
     protected void btnThrow(boolean copy) {
-        if (!minecraft.player.isSpectator()) {
+        if (!BlackMagick.isSpectator(minecraft)) {
             if (!copy) {
                 if (minecraft.player.drop(true))
                     minecraft.player.swing(InteractionHand.MAIN_HAND);
                 minecraft.player.inventoryMenu.broadcastChanges();
             }
-            else if (minecraft.player.getAbilities().instabuild) {
+            else if (BlackMagick.isCreative(minecraft)) {
                 ItemStack item = minecraft.player.getMainHandItem().copy();
                 if (minecraft.player.drop(true))
                     minecraft.player.swing(InteractionHand.MAIN_HAND);
@@ -2035,7 +2034,7 @@ public class ItemBuilderScreen extends GenericScreen {
                 {SuggestionHelper.LIST_DYE_COLOR.getArray(),BANNER_CHAR_LIST,SuggestionHelper.LIST_DYE_COLOR.getArray()},
                 false,btn -> {
                     String[] inps = TAB_WIDGETS_SCROLL.get(i).get(j).btn();
-                    if (minecraft.player.getAbilities().instabuild) {
+                    if (BlackMagick.isCreative(minecraft)) {
 
                         ItemStack bannerStack = ItemStack.EMPTY;
 
@@ -2226,7 +2225,7 @@ public class ItemBuilderScreen extends GenericScreen {
                         String inp = editBox.getValue();
                         this.markSaved(editBox);
 
-                        if (minecraft.player.getAbilities().instabuild) {
+                        if (BlackMagick.isCreative(minecraft)) {
                             ItemStack item = ItemStack.EMPTY;
 
                             // keep consistent
@@ -2284,7 +2283,7 @@ public class ItemBuilderScreen extends GenericScreen {
                     }
                     this.unsel();
                 }).size(60,WID_HEIGHT).build();
-                if (!minecraft.player.getAbilities().instabuild)
+                if (!BlackMagick.isCreative(minecraft))
                     w.active = false;
                 addTabWidgetLocked(tabNum, new PosWidget(widgetCacheAdd(WidgetCacheType.GIVE_BOX_GIVE,w),ROW_LEFT_LOCKED+5+60,ROW_TOP+ROW_HEIGHT*6));
             }
@@ -2858,7 +2857,7 @@ public class ItemBuilderScreen extends GenericScreen {
         }
         {
             Button w = Button.builder(Component.nullToEmpty("Save"), btn -> {
-                if (!nbtEdit.getItem().isEmpty() && minecraft.player.getAbilities().instabuild) {
+                if (!nbtEdit.getItem().isEmpty() && BlackMagick.isCreative(minecraft)) {
                     BlackMagick.setItemMain(nbtEdit.getItem());
                     nbtEdit = null;
                     nbtEditScroll.clear();
@@ -3011,7 +3010,10 @@ public class ItemBuilderScreen extends GenericScreen {
                     }
                 }
                 if (!found) {
-                    addTabWidgetScroll(tabNum, RowWidgetElement.fallbackElement(this));
+                    if (nbtEditStyle == NbtEditStyle.TEMPLATE)
+                        addTabWidgetScroll(tabNum, RowWidgetElement.fallbackTemplateElement(this));
+                    else
+                        addTabWidgetScroll(tabNum, RowWidgetElement.fallbackElement(this));
                 }
                 addTabWidgetScroll(tabNum, new RowWidget());
                 break;
@@ -3316,7 +3318,7 @@ public class ItemBuilderScreen extends GenericScreen {
                     saveBtn.setMessage(Component.nullToEmpty("Save").copy().withStyle(ChatFormatting.YELLOW));
 
                 Component tempText = grayWhiteText("Set item:\n",nbtEdit.getNewItemDiff());
-                if (minecraft.player.getAbilities().instabuild) {
+                if (BlackMagick.isCreative(minecraft)) {
                     saveBtn.setTooltip(Tooltip.create(tempText));
                 }
                 else {
@@ -3714,13 +3716,13 @@ public class ItemBuilderScreen extends GenericScreen {
          * btn(size) txt
          */
         public RowWidget(String name, String tooltip, OnPress onPress, String[] suggestions, boolean survival) {
-            int size = WidgetUtil.sizeFromName(ItemBuilderScreen.this, name);
+            int size = 40; //to_do
 
             this.btns = new Button[]{Button.builder(Component.nullToEmpty(name), onPress).size(size,WID_HEIGHT).build()};
             this.btnX = new int[]{ROW_LEFT_SCROLL};
             if (tooltip != null)
                 this.btns[0].setTooltip(Tooltip.create(Component.nullToEmpty(tooltip)));
-            if (!minecraft.player.getAbilities().instabuild && !survival)
+            if (!BlackMagick.isCreative(minecraft) && !survival)
                 this.btns[0].active = false;
             this.txts = new SmartEditBox[]{new SmartEditBox(minecraft.font,0,0, ROW_WIDTH-WID_SPACE-size, WID_HEIGHT, Component.nullToEmpty(""))};
             this.txtX = new int[]{ROW_LEFT_SCROLL+5+size};
@@ -3769,7 +3771,7 @@ public class ItemBuilderScreen extends GenericScreen {
                     if (tooltips[i] != null)
                         this.btns[i].setTooltip(Tooltip.create(Component.nullToEmpty(tooltips[i])));
 
-                    if (!minecraft.player.getAbilities().instabuild && !survival)
+                    if (!BlackMagick.isCreative(minecraft) && !survival)
                         this.btns[i].active = false;
                 }
                 for (int i=0; i<this.txts.length; i++) {
@@ -3944,7 +3946,7 @@ public class ItemBuilderScreen extends GenericScreen {
 
                 for (int i=0; i<btns.length; i++) {
                     if (i>0 && this.btns[i].active) {
-                        if (!minecraft.player.getAbilities().instabuild)
+                        if (!BlackMagick.isCreative(minecraft))
                             this.btns[i].setTooltip(Tooltip.create(ERROR_CREATIVE));
                         else
                             this.btns[i].setTooltip(TT_SET);
@@ -3981,7 +3983,7 @@ public class ItemBuilderScreen extends GenericScreen {
                     this.btns[1].active = false;
 
                 this.btns[2].setTooltip(Tooltip.create(Component.nullToEmpty(startEl==null ? "Create component" : "Delete")));
-                if (!minecraft.player.getAbilities().instabuild && startEl!=null) {
+                if (!BlackMagick.isCreative(minecraft) && startEl!=null) {
                     this.btns[2].active = false;
                     this.btns[2].setTooltip(Tooltip.create(ERROR_CREATIVE));
                 }
@@ -4027,7 +4029,7 @@ public class ItemBuilderScreen extends GenericScreen {
 
                 for (int i=0; i<btns.length; i++) {
                     if (i>0 && this.btns[i].active) {
-                        if (!minecraft.player.getAbilities().instabuild)
+                        if (!BlackMagick.isCreative(minecraft))
                             this.btns[i].setTooltip(Tooltip.create(ERROR_CREATIVE));
                         else
                             this.btns[i].setTooltip(TT_SET);
@@ -4144,7 +4146,7 @@ public class ItemBuilderScreen extends GenericScreen {
                                 }
                                 else {
                                     Component tempLbl = grayWhiteText("Set "+keyType+" to:").append(getElementTooltipInfo(el,pathFlag));
-                                    if (minecraft.player.getAbilities().instabuild) {
+                                    if (BlackMagick.isCreative(minecraft)) {
                                         ((Button)getPosWidget(2)).setTooltip(Tooltip.create(tempLbl));
                                         ((Button)getPosWidget(2)).active = true;
                                     }
@@ -4236,7 +4238,7 @@ public class ItemBuilderScreen extends GenericScreen {
                     }).size(20,WID_HEIGHT).build();
                     w.active = true;
                     w.setTooltip(Tooltip.create(Component.nullToEmpty("Delete")));
-                    if (!minecraft.player.getAbilities().instabuild) {
+                    if (!BlackMagick.isCreative(minecraft)) {
                         w.active = false;
                         w.setTooltip(Tooltip.create(ERROR_CREATIVE));
                     }
@@ -4988,6 +4990,77 @@ public class ItemBuilderScreen extends GenericScreen {
             return row;
         }
 
+        public static RowWidgetElement fallbackTemplateElement(ItemBuilderScreen context) {
+            RowWidgetElement row = context.new RowWidgetElement();
+
+            Tag currentEl = context.nbtEdit.getEditElement();
+            PathInfo pi = context.nbtEdit.pi();
+
+            boolean isString = false; // to_do isString
+            // boolean isString = ((currentEl != null && pi.hasPathType(PathType.STRING) && currentEl.getId()==Tag.TAG_STRING)
+            //     || (currentEl == null && pi.getDefaultPathType()==PathType.STRING));
+            final String[] startVals = getStartVals(currentEl, isString, pi.getFlag());
+            String[] baseSuggestions = isString ? pi.getSuggs().getArray() : pi.getSuggs().getArraySnbt();
+
+            final PathFlag pathFlag = pi.getFlag();
+
+            SmartEditBox elementTxt = new SmartEditBox(context.minecraft.font,0,0,
+                ROW_WIDTH-20-(currentEl==null ? 0 : 20), WID_HEIGHT, Component.nullToEmpty(""));
+            elementTxt.setMaxLength(MAX_TEXT_LENGTH);
+            elementTxt.setSuggsResponder(value -> {
+                if (row.testPosWidget(1)) {
+                    context.setErrorMsg(null);
+                    ((Button)row.getPosWidget(1)).active = false;
+                    ((Button)row.getPosWidget(1)).setTooltip(null);
+                    ((SmartEditBox)row.getPosWidget(0)).setTextColor(TEXT_COLOR);
+
+                    if (!value.isEmpty()) {
+                        Tag el = BlackMagick.nbtFromSnbt(value);
+                        if (el == null) {
+                            ((SmartEditBox)row.getPosWidget(0)).setTextColor(ERROR_COLOR);
+                            context.setErrorMsg("Invalid element");
+                            ((Button)row.getPosWidget(1)).setTooltip(Tooltip.create(errorText("Invalid element")));
+                        }
+                        else if (BlackMagick.elementsEqual(currentEl,el)) {
+                            ((SmartEditBox)row.getPosWidget(0)).setTextColor(LABEL_COLOR);
+                            ((Button)row.getPosWidget(1)).setTooltip(Tooltip.create(Component.nullToEmpty("Element already set")));
+                        }
+                        else {
+                            ((Button)row.getPosWidget(1)).active = true;
+                            ((Button)row.getPosWidget(1)).setTooltip(Tooltip.create(grayWhiteText("Set value:").append(getElementTooltipInfo(el,pathFlag))));
+                        }
+                    }
+
+                    context.suggsOnChanged(elementTxt, baseSuggestions, startVals);
+                }
+            });
+            row.addPosWidget(elementTxt, ROW_LEFT_SCROLL, 0);
+            {
+                Button w = Button.builder(Component.nullToEmpty("+"), btn -> {
+                    if (row.testPosWidget(0)) {
+                        Tag el = BlackMagick.nbtFromSnbt(((SmartEditBox)row.getPosWidget(0)).getValue());
+
+                        if (el!=null) {
+                            context.nbtEditUpdate(context.nbtEdit.fullPath(),el);
+                        }
+                    }
+                    context.unsel();
+                }).size(20,WID_HEIGHT).build();
+                row.addPosWidget(w, ROW_RIGHT_SCROLL-20-(currentEl==null ? 0 : 20), 0);
+            }
+            if (currentEl!=null) {
+                Button w = Button.builder(Component.nullToEmpty("X"), btn -> {
+                    context.nbtEditUpdate(context.nbtEdit.fullPath(), null);
+                    context.createBlankTabNbtEdit(context.nbtEdit.backPath());
+                }).size(20,WID_HEIGHT).build();
+                w.setTooltip(Tooltip.create(Component.nullToEmpty("Delete")));
+                row.addPosWidget(w, ROW_RIGHT_SCROLL-20, 0);
+            }
+            elementTxt.setValue(startVals[startVals.length-1]);
+
+            return row;
+        }
+
         public RowWidgetElement(ListTag baseList, int index, CompoundTag contextRoot, PathNode[] contextPath) {
             if (index<0 || index>=baseList.size())
                 throw new IllegalArgumentException("Tried to create RowWidgetElement with index or listSize out of bounds");
@@ -5226,7 +5299,7 @@ public class ItemBuilderScreen extends GenericScreen {
                                 +"\nTried to save: "+(itemString.isEmpty() ? "air" : itemString));
                         }
                     }
-                    else if (minecraft.player.getAbilities().instabuild) {
+                    else if (BlackMagick.isCreative(minecraft)) {
                         ItemStack thisItem =
                             (viewBlackMarket ?
                                 ((FortytwoEdit.webItems.size()>index) ?
@@ -5281,7 +5354,7 @@ public class ItemBuilderScreen extends GenericScreen {
                         else
                             w.setTooltip(makeItemTooltip(current.stack()));
 
-                        if (minecraft.player.getAbilities().instabuild)
+                        if (BlackMagick.isCreative(minecraft))
                             w.active = true;
                     }
                     if (savedModeSet && !viewBlackMarket)

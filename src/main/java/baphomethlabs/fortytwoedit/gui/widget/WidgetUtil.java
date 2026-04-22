@@ -1,78 +1,48 @@
 package baphomethlabs.fortytwoedit.gui.widget;
 
+import java.time.Duration;
+import java.util.function.Consumer;
+
+import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.gui.screen.GenericScreen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class WidgetUtil {
 
-    private final GenericScreen SCREEN;
+    protected final Minecraft MINECRAFT;
+    protected final GenericScreen SCREEN;
 
-    public WidgetUtil(GenericScreen screen) {
+    public WidgetUtil(Minecraft minecraft, GenericScreen screen) {
+        this.MINECRAFT = minecraft;
         this.SCREEN = screen;
-    }
-
-    /**
-     * Get widget size based on text (between 40 and 100 pixels).
-     * Size is a multiple of 20.
-     * 
-     * @param text
-     * @return width
-     */
-    public static int sizeFromName(GenericScreen screen, String text) {
-        return sizeFromName(screen, Component.nullToEmpty(text));
-    }
-
-    /**
-     * Get widget size based on text (between 40 and 100 pixels).
-     * Size is a multiple of 20.
-     * 
-     * @param text
-     * @return width
-     */
-    public static int sizeFromName(GenericScreen screen, Component text) {
-        return sizeFromName(screen, text, 100);
-    }
-
-    /**
-     * Get widget size based on text (between 40 and `maxWidth` pixels).
-     * Size is a multiple of 20.
-     * 
-     * @param text
-     * @return width
-     */
-    public static int sizeFromName(GenericScreen screen, String text, int maxWidth) {
-        return sizeFromName(screen, Component.nullToEmpty(text), maxWidth);
-    }
-
-    /**
-     * Get widget size based on text (between 40 and `maxWidth` pixels).
-     * Size is a multiple of 20.
-     * 
-     * @param text
-     * @return width
-     */
-    public static int sizeFromName(GenericScreen screen, Component text, int maxWidth) {
-        int size = 40;
-        int min = screen.getFont().width(text)+4;
-        while (min>size && size<maxWidth) {
-            size += 20;
-        }
-        return size;
     }
 
     public static abstract class AbstractWidgetBuilder<T extends AbstractWidget, SELF extends AbstractWidgetBuilder<T, SELF>> {
 
         protected T w;
+        protected final Minecraft minecraft;
+        protected final GenericScreen screen;
+        protected static final Component LABEL_OPTION_ON = Component.nullToEmpty(" [On]");
+        protected static final Component LABEL_OPTION_OFF = Component.nullToEmpty(" [Off]");
 
         protected abstract SELF self();
 
-        private AbstractWidgetBuilder(T w) {
+        private AbstractWidgetBuilder(Minecraft minecraft, GenericScreen screen, T w) {
+            this.minecraft = minecraft;
+            this.screen = screen;
             this.w = w;
             w.setSize(GenericScreen.WID_HEIGHT, GenericScreen.WID_HEIGHT);
+        }
+
+        public SELF setPosition(int x, int y) {//TODO remove
+            w.setPosition(x, y);
+            return self();
         }
 
         public SELF setSize(int width) {
@@ -98,22 +68,45 @@ public class WidgetUtil {
             return self();
         }
 
+        public SELF setTooltipDelay(Duration delay) {
+            w.setTooltipDelay(delay);
+            return self();
+        }
+
+        public SELF setTooltipDelayStandard() {
+            return setTooltipDelay(GenericScreen.TOOLTIP_DELAY);
+        }
+
+        public SELF setTooltipDelayShort() {
+            return setTooltipDelay(GenericScreen.TOOLTIP_DELAY_SHORT);
+        }
+
+        public SELF runWithSelf(Consumer<T> method) {
+            method.accept(w);
+            return self();
+        }
+
         public T build() {
             return w;
         }
 
     }
 
-    public static class ButtonBuilder extends AbstractWidgetBuilder<Button, ButtonBuilder> {
+    public static class ButtonBuilder extends AbstractWidgetBuilder<SmartButton, ButtonBuilder> {
 
         @Override
         protected ButtonBuilder self() {
             return this;
         }
 
-        private ButtonBuilder(GenericScreen screen, Component label, Button.OnPress onPress) {
-            super(Button.builder(label, onPress).build());
-            setSize(sizeFromName(screen, label));
+        private ButtonBuilder(Minecraft minecraft, GenericScreen screen, Component label, int width, Button.OnPress onPress) {
+            super(minecraft, screen, new SmartButton(label, onPress));
+            setSize(width);
+        }
+
+        private ButtonBuilder(Minecraft minecraft, GenericScreen screen, Component label, int width, SmartButton.OnPressInput onPressInput) {
+            super(minecraft, screen, new SmartButton(label, onPressInput));
+            setSize(width);
         }
 
         public ButtonBuilder setActive(boolean active) {
@@ -121,25 +114,91 @@ public class WidgetUtil {
             return this;
         }
 
+        public ButtonBuilder setRenderItem(Item item) {
+            return setRenderItem(new ItemStack(item));
+        }
+
+        public ButtonBuilder setRenderItem(ItemStack item) {
+            w.setRenderItem(item);
+            return this;
+        }
+
+        public ButtonBuilder setBoolName(boolean condition) {
+            this.w.setMessage(Component.empty().append(this.w.getMessage()).append(condition ? LABEL_OPTION_ON : LABEL_OPTION_OFF));
+            return this;
+        }
+
+        public ButtonBuilder creativeOnly(String tooltip) {
+            if (tooltip == null)
+                return creativeOnly();
+
+            return creativeOnly(Component.nullToEmpty(tooltip));
+        }
+
+        public ButtonBuilder creativeOnly(Component tooltip) {
+            if (tooltip == null)
+                return creativeOnly();
+
+            this.w.creativeOnly();
+            if (!BlackMagick.isCreative(minecraft)) {
+                this.w.active = false;
+                return setTooltip(Component.empty().append(GenericScreen.ERROR_CREATIVE).append("\n\n").append(tooltip));
+            }
+            return setTooltip(tooltip);
+        }
+
+        public ButtonBuilder creativeOnly() {
+            this.w.creativeOnly();
+            if (!BlackMagick.isCreative(minecraft)) {
+                this.w.active = false;
+                this.w.setTooltip(GenericScreen.TT_CREATIVE);
+            }
+            return this;
+        }
+
     }
 
     public ButtonBuilder newButton(String label, Button.OnPress onPress) {
-        return new ButtonBuilder(SCREEN, Component.nullToEmpty(label), onPress);
+        return newButton(Component.nullToEmpty(label), GenericScreen.WID_WIDTH_HALF, onPress);
     }
 
     public ButtonBuilder newButton(Component label, Button.OnPress onPress) {
-        return new ButtonBuilder(SCREEN, label, onPress);
+        return newButton(label, GenericScreen.WID_WIDTH_HALF, onPress);
     }
 
-    public static class EditBoxBuilder extends AbstractWidgetBuilder<EditBox, EditBoxBuilder> {
+    public ButtonBuilder newButton(String label, int width, Button.OnPress onPress) {
+        return newButton(Component.nullToEmpty(label), width, onPress);
+    }
+
+    public ButtonBuilder newButton(Component label, int width, Button.OnPress onPress) {
+        return new ButtonBuilder(MINECRAFT, SCREEN, label, width, onPress);
+    }
+
+    public ButtonBuilder newButton(String label, SmartButton.OnPressInput onPressInput) {
+        return newButton(Component.nullToEmpty(label), GenericScreen.WID_WIDTH_HALF, onPressInput);
+    }
+
+    public ButtonBuilder newButton(Component label, SmartButton.OnPressInput onPressInput) {
+        return newButton(label, GenericScreen.WID_WIDTH_HALF, onPressInput);
+    }
+
+    public ButtonBuilder newButton(String label, int width, SmartButton.OnPressInput onPressInput) {
+        return newButton(Component.nullToEmpty(label), width, onPressInput);
+    }
+
+    public ButtonBuilder newButton(Component label, int width, SmartButton.OnPressInput onPressInput) {
+        return new ButtonBuilder(MINECRAFT, SCREEN, label, width, onPressInput);
+    }
+
+    public static class EditBoxBuilder extends AbstractWidgetBuilder<SmartEditBox, EditBoxBuilder> {
 
         @Override
         protected EditBoxBuilder self() {
             return this;
         }
 
-        private EditBoxBuilder(GenericScreen screen, int width) {
-            super(new EditBox(screen.getFont(), 0, 0, GenericScreen.WID_HEIGHT, GenericScreen.WID_HEIGHT, Component.empty()));
+        private EditBoxBuilder(Minecraft minecraft, GenericScreen screen, int width) {
+            super(minecraft, screen, new SmartEditBox(screen.getFont(), 0, 0, GenericScreen.WID_HEIGHT, GenericScreen.WID_HEIGHT, Component.empty()));
             w.setMaxLength(GenericScreen.MAX_TEXT_LENGTH);
             setSize(width);
         }
@@ -149,10 +208,38 @@ public class WidgetUtil {
             return this;
         }
 
+        public EditBoxBuilder setValue(String value) {
+            if (value != null)
+                this.w.setValue(value);
+            return this;
+        }
+
+        public EditBoxBuilder setResponder(final Consumer<String> responder) {
+            this.w.setResponder(responder);
+            return this;
+        }
+
+        public EditBoxBuilder setSmartTooltip(String tooltip) {
+            return setSmartTooltip(Component.nullToEmpty(tooltip));
+        }
+
+        public EditBoxBuilder setSmartTooltip(Component tooltip) {
+            return setSmartTooltip(Tooltip.create(tooltip));
+        }
+
+        public EditBoxBuilder setSmartTooltip(Tooltip tooltip) {
+            w.setSmartTooltip(tooltip);
+            return self();
+        }
+
+    }
+
+    public EditBoxBuilder newEditBox() {
+        return new EditBoxBuilder(MINECRAFT, SCREEN, GenericScreen.WID_WIDTH_HALF);
     }
 
     public EditBoxBuilder newEditBox(int width) {
-        return new EditBoxBuilder(SCREEN, width);
+        return new EditBoxBuilder(MINECRAFT, SCREEN, width);
     }
 
 }

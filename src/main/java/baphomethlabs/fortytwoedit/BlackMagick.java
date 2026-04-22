@@ -94,7 +94,7 @@ public class BlackMagick {
      */
     public static void setItem(ItemStack itemInput, int invSlot, int creativeSlot) {
         final Minecraft client = Minecraft.getInstance();
-        if (client.player != null && client.player.getAbilities().instabuild) {
+        if (client.player != null && BlackMagick.isCreative(client)) {
 
             ItemStack item = itemInput == null ? ItemStack.EMPTY : itemInput.copy();
 
@@ -778,9 +778,27 @@ public class BlackMagick {
         return null;
     }
 
+    /**
+     * 
+     * @param id
+     * @return string form of identifier in standard form `namespace:path`
+     */
     public static String identifierToString(Identifier id) {
         if (id == null)
             return null;
+        return id.toString();
+    }
+
+    /**
+     * 
+     * @param id
+     * @return string form of identifier in simplified form `path` for the minecraft namespace, or standard form `namespace:path` otherwise
+     */
+    public static String identifierToStringSimplified(Identifier id) {
+        if (id == null)
+            return null;
+        if (id.getNamespace().equals("minecraft"))
+            return id.getPath();
         return id.toString();
     }
 
@@ -800,6 +818,24 @@ public class BlackMagick {
 
     public static CompoundTag valueOutputToCompound(TagValueOutput output) {
         return output.buildResult();
+    }
+
+    public static boolean isCreative() {
+        final Minecraft minecraft = Minecraft.getInstance();
+        return isCreative(minecraft);
+    }
+
+    public static boolean isCreative(Minecraft minecraft) {
+        return minecraft.player.getAbilities().instabuild;
+    }
+
+    public static boolean isSpectator() {
+        final Minecraft minecraft = Minecraft.getInstance();
+        return isSpectator(minecraft);
+    }
+
+    public static boolean isSpectator(Minecraft minecraft) {
+        return minecraft.player.isSpectator();
     }
 
     public static RegistryAccess getRegistryAccess() {

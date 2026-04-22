@@ -22,6 +22,8 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.OptionsUtil;
@@ -43,18 +45,20 @@ public abstract class GenericScreen extends Screen {
     protected static final int ERROR_COLOR = 0xFFFF5555;
     protected static final int TEXT_COLOR = 0xFFFFFFFF;
     public static final int WID_HEIGHT = 20; // standard widget height
-    protected static final int ROW_HEIGHT = 22; // standard spacing amounts between rows of widgets
-    protected static final int ROW_WIDTH = 208;
-    protected static final int TOP_OFFSET = (ROW_HEIGHT-WID_HEIGHT)/2;
-    protected static final int WID_SPACE = 5; // standard horizontal spacing between widgets
+    protected static final int WID_SPACE = 4; // standard horizontal spacing between widgets
     protected static final int GUI_SPACE = 5; // standard starting position for widget in top corner of gui (for both x and y)
     protected static final int WID_LEFT = 10; // standard spacing before first widget in row
+    protected static final int ROW_HEIGHT = 22; // standard spacing amounts between rows of widgets
+    protected static final int ROW_WIDTH = 208;
+    protected static final int TOP_OFFSET = (ROW_HEIGHT - WID_HEIGHT) / 2;
     protected static final int NARROW_OFFSET = 10;
     protected static final int WID_LEFT_NARROW = WID_LEFT + NARROW_OFFSET;
     protected static final int SCROLL_ROW_LEFT_OFFSET = 3;
     protected static final int MULTI_LINE_TEXT_WIDGET_Y_OFFSET = 6;
-    protected static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
-    protected static final Duration TOOLTIP_DELAY_SHORT = Duration.ofMillis(100L);
+    public static final int WID_WIDTH_FULL = ROW_WIDTH-NARROW_OFFSET;
+    public static final int WID_WIDTH_HALF = (WID_WIDTH_FULL - WID_SPACE) / 2;
+    public static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
+    public static final Duration TOOLTIP_DELAY_SHORT = Duration.ofMillis(100L);
     public static final int MAX_TEXT_LENGTH = 131072;
     public static final String UNICODE_SECTION_SIGN = "\u00a7";
     public static final String UNICODE_UP_ARROW = "\u2227";
@@ -75,7 +79,8 @@ public abstract class GenericScreen extends Screen {
 
     private boolean unsel = false;
     private boolean hasTitle = false;
-    protected final WidgetUtil WIDGET_UTIL;
+    private ItemStack titleItem = null;
+    public final WidgetUtil WIDGET_UTIL;
     protected ScrollList SCROLL_PANE = null;
     protected TextSuggestor suggs = null;
 
@@ -116,21 +121,28 @@ public abstract class GenericScreen extends Screen {
     }
 
     public GenericScreen(String title) {
-        super(title == null ? GameNarrator.NO_TITLE : Component.nullToEmpty(title));
-        if (title != null)
-            hasTitle = true;
-        WIDGET_UTIL = createWidgetUtil();
+        this(title == null ? null : Component.nullToEmpty(title));
     }
 
     public GenericScreen(Component title) {
+        this(title, null);
+    }
+
+    public GenericScreen(String title, Item item) {
+        this(title == null ? null : Component.nullToEmpty(title), item);
+    }
+
+    public GenericScreen(Component title, Item item) {
         super(title == null ? GameNarrator.NO_TITLE : title);
         if (title != null)
             hasTitle = true;
+        if (item != null)
+            titleItem = new ItemStack(item);
         WIDGET_UTIL = createWidgetUtil();
     }
 
     private WidgetUtil createWidgetUtil() {
-        return new WidgetUtil(this);
+        return new WidgetUtil(minecraft, this);
     }
 
     public boolean shouldCloseOnKeybind() {
@@ -258,7 +270,7 @@ public abstract class GenericScreen extends Screen {
         unsel = true;
     }
 
-    protected void reloadScreen() {
+    public void reloadScreen() {
         double scroll = 0;
         if (SCROLL_PANE != null)
             scroll = SCROLL_PANE.scrollAmount();
@@ -278,8 +290,11 @@ public abstract class GenericScreen extends Screen {
     @Override
     public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.extractRenderState(context, mouseX, mouseY, delta);
-        if (hasTitle)
+        if (hasTitle) {
             context.centeredText(this.font, this.getTitle(), this.width / 2, y+11, TEXT_COLOR);
+            if (titleItem != null)
+                context.fakeItem(titleItem, (this.width - this.font.width(this.getTitle())) / 2 - 20, y+7);
+        }
     }
 
     @Override

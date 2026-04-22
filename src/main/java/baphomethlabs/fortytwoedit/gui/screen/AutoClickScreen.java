@@ -18,7 +18,7 @@ public class AutoClickScreen extends GenericScreen {
     public AutoClickScreen() {}
 
     @Override
-    protected void init() {
+    protected void init() {//TODO remake screen
         super.init();
         FortytwoEdit.quickScreen = AutoClickScreen::new;
         this.addBackButton();
@@ -42,12 +42,12 @@ public class AutoClickScreen extends GenericScreen {
         this.addRenderableWidget(this.txtAttackCooldown);
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Lock Screen [On]"),
                 Component.literal("Lock Screen [Off]"),
-                OptionsUtil.ModOptions.AFK_SCREEN_LOCK.getSetting()).displayOnlyValue()
+                OptionsUtil.ModOptions.AUTO_CLICK_LOCK.getSetting()).displayOnlyValue()
                 .withTooltip(val -> Tooltip.create(Component.nullToEmpty(
                 "Toggle screen lock in auto click mode\n\nWhen on: mouse movement will be ignored and FPS will be reduced")))
                 .create(x+20,y+ROW_HEIGHT*6+1,100,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
 
-            OptionsUtil.ModOptions.AFK_SCREEN_LOCK.setSetting((boolean)trackOutput);
+            OptionsUtil.ModOptions.AUTO_CLICK_LOCK.setSetting((boolean)trackOutput);
             reloadScreen();
         }));
     }

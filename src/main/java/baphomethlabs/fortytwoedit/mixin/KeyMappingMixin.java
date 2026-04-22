@@ -23,13 +23,13 @@ public abstract class KeyMappingMixin {
 
             if (key.equals(((KeyMappingAccessor)client.options.keyAttack).getBoundKey())) {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
-                if (FortytwoEdit.randoMode)
+                if (FortytwoEdit.isRandoModeActive())
                     FortytwoEdit.changeRandoSlot();
                 client.options.keyAttack.setDown(false);
             }
             else if (key.equals(((KeyMappingAccessor)client.options.keyPickItem).getBoundKey())) {
                 ItemStack item = FortytwoEdit.copyLookAt();
-                if (item != null && !item.isEmpty() && client.player.getAbilities().instabuild) {
+                if (item != null && !item.isEmpty() && BlackMagick.isCreative(client)) {
                     BlackMagick.setItemMain(item);
                     while (client.options.keyPickItem.consumeClick()) {}
                     client.options.keyPickItem.setDown(false);

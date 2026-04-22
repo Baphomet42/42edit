@@ -14,7 +14,6 @@ import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.network.chat.Component;
 import com.google.common.collect.Lists;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
-import baphomethlabs.fortytwoedit.gui.widget.ModifierButton;
 import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
 
 public class LogScreen extends GenericScreen {
@@ -45,7 +44,7 @@ public class LogScreen extends GenericScreen {
     public LogScreen() {}
 
     @Override
-    protected void init() {
+    protected void init() {//TODO remake screen
         super.init();
         FortytwoEdit.quickScreen = LogScreen::new;
         this.addBackButton(DebugScreen::new);
@@ -58,7 +57,7 @@ public class LogScreen extends GenericScreen {
             updateBox();
             unsel();
         }));
-        this.addRenderableWidget(new ModifierButton(Component.nullToEmpty("Clear"), (button, inputWithModifiers) -> btnClearLog(inputWithModifiers), x+backgroundWidth-GUI_SPACE-50-40-WID_SPACE,y+GUI_SPACE,40,WID_HEIGHT))
+        this.addRenderableWidget(WIDGET_UTIL.newButton(Component.nullToEmpty("Clear"), (button, inputWithModifiers) -> btnClearLog(inputWithModifiers)).setSize(40).setPosition(x+backgroundWidth-GUI_SPACE-50-40-WID_SPACE,y+GUI_SPACE).build())
             .setTooltip(Tooltip.create(Component.nullToEmpty("Clear all logged messages\n\nShift click to restore all cleared messages")));
         this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("[42edit]"),
                 Component.literal("[All]"), onlyMod).displayOnlyValue().create(x+backgroundWidth-GUI_SPACE-50,y+GUI_SPACE,50,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {

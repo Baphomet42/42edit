@@ -20,7 +20,7 @@ public abstract class MouseHandlerMixin {
             FortytwoEdit.cameraRotation[0] += deltaX;
             FortytwoEdit.cameraRotation[1] = Mth.clamp(FortytwoEdit.cameraRotation[1]+deltaY, -90.0f, 90.0f);
         }
-        else if (!(FortytwoEdit.autoClicker && OptionsUtil.ModOptions.AFK_SCREEN_LOCK.getSetting()))
+        else if (!(FortytwoEdit.autoClicker && OptionsUtil.ModOptions.AUTO_CLICK_LOCK.getSetting()))
             entity.turn(cursorDeltaX,cursorDeltaY);
     }
 

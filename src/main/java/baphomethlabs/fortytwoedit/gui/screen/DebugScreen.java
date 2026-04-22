@@ -33,6 +33,7 @@ public class DebugScreen extends GenericScreen {
             WIDGET_UTIL.newButton("Reset Misc", btn -> btnRefreshRuntime())
                 .setTooltip("Clear various caches, refresh files, etc.").build()
         );
+        paneScroll().addRow();
     }
 
     protected void btnRefreshRuntime() {
