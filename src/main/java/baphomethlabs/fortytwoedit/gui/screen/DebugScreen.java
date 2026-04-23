@@ -39,7 +39,6 @@ public class DebugScreen extends GenericScreen {
     protected void btnRefreshRuntime() {
         FortytwoEdit.showToast("Reset Misc","Variables reset");
         FortytwoEdit.debugTryRefreshVarious();
-        unsel();
     }
 
     protected void btnOutputHist() {
@@ -47,12 +46,10 @@ public class DebugScreen extends GenericScreen {
         FortytwoEdit.setClipboard(hist);
         FortytwoEdit.logInfo("Item History: "+hist);
         FortytwoEdit.showToast("Output Hist", "Item history has been copied and sent to the output log");
-        unsel();
     }
 
     protected void btnOpenDir() {
         FileTools.openModDir();
-        unsel();
     }
 
 }

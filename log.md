@@ -71,7 +71,7 @@ This file is to log important information related to maintaining the mod.
 ## CODE CLEANUP REGEX
 
 + files to exclude:
-    + `.git, run\crash-reports, run\logs`
+    + `.git, crash-reports, run/logs, gradlew, run/resourcepacks, run/saves, .gradle/`
 
 + regex search terms:
     + `^import.*\n\n+import`

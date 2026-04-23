@@ -40,19 +40,22 @@ public class WidgetUtil {
             w.setSize(GenericScreen.WID_HEIGHT, GenericScreen.WID_HEIGHT);
         }
 
-        public SELF setPosition(int x, int y) {//TODO remove
+        public SELF setPosition(int x, int y) {//to_do remove
             w.setPosition(x, y);
             return self();
         }
 
         public SELF setSize(int width) {
-            w.setSize(width, GenericScreen.WID_HEIGHT);
-            return self();
+            return setSize(width, w.getHeight());
         }
 
         public SELF setSize(int width, int height) {
-            w.setSize(width, height);
+            w.setSize(Math.max(width, GenericScreen.WID_MIN_WIDTH), height);
             return self();
+        }
+
+        public SELF fullWidth() {
+            return setSize(GenericScreen.WID_WIDTH_FULL);
         }
 
         public SELF setTooltip(String tooltip) {
@@ -100,12 +103,12 @@ public class WidgetUtil {
         }
 
         private ButtonBuilder(Minecraft minecraft, GenericScreen screen, Component label, int width, Button.OnPress onPress) {
-            super(minecraft, screen, new SmartButton(label, onPress));
+            super(minecraft, screen, new SmartButton(screen, label, onPress));
             setSize(width);
         }
 
         private ButtonBuilder(Minecraft minecraft, GenericScreen screen, Component label, int width, SmartButton.OnPressInput onPressInput) {
-            super(minecraft, screen, new SmartButton(label, onPressInput));
+            super(minecraft, screen, new SmartButton(screen, label, onPressInput));
             setSize(width);
         }
 
@@ -159,35 +162,19 @@ public class WidgetUtil {
     }
 
     public ButtonBuilder newButton(String label, Button.OnPress onPress) {
-        return newButton(Component.nullToEmpty(label), GenericScreen.WID_WIDTH_HALF, onPress);
+        return newButton(Component.nullToEmpty(label), onPress);
     }
 
     public ButtonBuilder newButton(Component label, Button.OnPress onPress) {
-        return newButton(label, GenericScreen.WID_WIDTH_HALF, onPress);
-    }
-
-    public ButtonBuilder newButton(String label, int width, Button.OnPress onPress) {
-        return newButton(Component.nullToEmpty(label), width, onPress);
-    }
-
-    public ButtonBuilder newButton(Component label, int width, Button.OnPress onPress) {
-        return new ButtonBuilder(MINECRAFT, SCREEN, label, width, onPress);
+        return new ButtonBuilder(MINECRAFT, SCREEN, label, GenericScreen.WID_WIDTH_HALF, onPress);
     }
 
     public ButtonBuilder newButton(String label, SmartButton.OnPressInput onPressInput) {
-        return newButton(Component.nullToEmpty(label), GenericScreen.WID_WIDTH_HALF, onPressInput);
+        return newButton(Component.nullToEmpty(label), onPressInput);
     }
 
     public ButtonBuilder newButton(Component label, SmartButton.OnPressInput onPressInput) {
-        return newButton(label, GenericScreen.WID_WIDTH_HALF, onPressInput);
-    }
-
-    public ButtonBuilder newButton(String label, int width, SmartButton.OnPressInput onPressInput) {
-        return newButton(Component.nullToEmpty(label), width, onPressInput);
-    }
-
-    public ButtonBuilder newButton(Component label, int width, SmartButton.OnPressInput onPressInput) {
-        return new ButtonBuilder(MINECRAFT, SCREEN, label, width, onPressInput);
+        return new ButtonBuilder(MINECRAFT, SCREEN, label, GenericScreen.WID_WIDTH_HALF, onPressInput);
     }
 
     public static class EditBoxBuilder extends AbstractWidgetBuilder<SmartEditBox, EditBoxBuilder> {
@@ -232,14 +219,20 @@ public class WidgetUtil {
             return self();
         }
 
+        public EditBoxBuilder moveCursorToStart(boolean hasShiftDown) {
+            w.moveCursorToStart(hasShiftDown);
+            return self();
+        }
+
+        public EditBoxBuilder setEditable(boolean isEditable) {
+            w.setEditable(isEditable);
+            return self();
+        }
+
     }
 
     public EditBoxBuilder newEditBox() {
         return new EditBoxBuilder(MINECRAFT, SCREEN, GenericScreen.WID_WIDTH_HALF);
-    }
-
-    public EditBoxBuilder newEditBox(int width) {
-        return new EditBoxBuilder(MINECRAFT, SCREEN, width);
     }
 
 }

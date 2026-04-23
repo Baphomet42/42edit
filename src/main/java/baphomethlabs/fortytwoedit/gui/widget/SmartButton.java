@@ -14,17 +14,20 @@ import net.minecraft.world.item.ItemStack;
 
 public class SmartButton extends Button.Plain {
 
+	protected final GenericScreen screen;
 	protected final SmartButton.OnPressInput onPressInput;
 	private ItemStack renderLeftItem = null;
 	private boolean creativeOnly = false;
 
-    public SmartButton(Component message, OnPressInput onPressInput) {
+    public SmartButton(GenericScreen screen, Component message, OnPressInput onPressInput) {
 		super(0, 0, GenericScreen.WID_WIDTH_HALF, GenericScreen.WID_HEIGHT, message, button -> {}, Button.DEFAULT_NARRATION);
+		this.screen = screen;
         this.onPressInput = onPressInput;
     }
 
-	public SmartButton(Component message, Button.OnPress onPress) {
+	public SmartButton(GenericScreen screen, Component message, Button.OnPress onPress) {
 		super(0, 0, GenericScreen.WID_WIDTH_HALF, GenericScreen.WID_HEIGHT, message, button -> {}, Button.DEFAULT_NARRATION);
+		this.screen = screen;
         this.onPressInput = (button, inputWithModifiers) -> {onPress.onPress(button);};
 	}
 
@@ -44,11 +47,11 @@ public class SmartButton extends Button.Plain {
 
 	@Override
 	public void onPress(InputWithModifiers inputWithModifiers) {
-		if (this.creativeOnly && !BlackMagick.isCreative()) {
+		if (this.creativeOnly && !BlackMagick.isCreative())
 			FortytwoEdit.showToastCreativeError();
-			return;
-		}
-		this.onPressInput.onPress(this, inputWithModifiers);
+		else
+			this.onPressInput.onPress(this, inputWithModifiers);
+		screen.unsel();
 	}
 
 	@Environment(EnvType.CLIENT)

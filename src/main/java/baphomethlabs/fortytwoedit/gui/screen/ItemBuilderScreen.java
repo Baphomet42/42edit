@@ -186,7 +186,9 @@ public class ItemBuilderScreen extends GenericScreen {
     private int cacheInvSlot = -1;
     public static Tooltip FORMAT_CODES_TT = null;
 
-    public ItemBuilderScreen() {}
+    public ItemBuilderScreen() {
+        super("");
+    }
 
     @Override
     protected void init() {
@@ -268,7 +270,7 @@ public class ItemBuilderScreen extends GenericScreen {
                             tabX = x+backgroundWidth;
                             tabY = y+30+TAB_OFFSET+(TAB_SIZE+TAB_SPACING)*(posNum-LEFT_TABS);
                         }
-                        ItemSlotButton w = new ItemSlotButton(tabX, tabY, TAB_SIZE, tabs[i].display().get(), btn -> this.btnTab(tabNum));
+                        ItemSlotButton w = new ItemSlotButton(this, tabX, tabY, TAB_SIZE, tabs[i].display().get(), btn -> this.btnTab(tabNum));
                         w.setTooltip(Tooltip.create(Component.nullToEmpty(tabs[i].lbl())));
                         w.showSlot(false);
                         if (tab==i)
@@ -283,7 +285,7 @@ public class ItemBuilderScreen extends GenericScreen {
             txtFormat.setValue(UNICODE_SECTION_SIGN);
             txtFormat.setTooltip(FORMAT_CODES_TT);
             swapCopyBtn = this.addRenderableWidget(Button.builder(Component.nullToEmpty("c*"),
-                button -> this.btnSwapOff(true)).bounds(width/2 - 50,y+5,WID_HEIGHT,WID_HEIGHT).build());
+                button -> this.btnSwapOff(true)).bounds(width/2 - 50,y+5,20,WID_HEIGHT).build());
             swapBtn = this.addRenderableWidget(Button.builder(Component.nullToEmpty("c"),
                 button -> this.btnSwapOff(false)).bounds(width/2 - 30,y+5,15,WID_HEIGHT).build());
             hotbarLeftBtn = this.addRenderableWidget(Button.builder(Component.nullToEmpty("<"),
@@ -293,7 +295,7 @@ public class ItemBuilderScreen extends GenericScreen {
             Button throwBtn = this.addRenderableWidget(Button.builder(Component.nullToEmpty("Q"),
                 button -> this.btnThrow(false)).bounds(width/2 + 15,y+5,15,WID_HEIGHT).build());
             throwCopyBtn = this.addRenderableWidget(Button.builder(Component.nullToEmpty("Q*"),
-                button -> this.btnThrow(true)).bounds(width/2 + 30,y+5,WID_HEIGHT,WID_HEIGHT).build());
+                button -> this.btnThrow(true)).bounds(width/2 + 30,y+5,20,WID_HEIGHT).build());
 
             if (!BlackMagick.isCreative(minecraft)) {
                 swapCopyBtn.active = false;
@@ -330,7 +332,7 @@ public class ItemBuilderScreen extends GenericScreen {
 
             compareItems();
 
-            itemBtn = this.addRenderableWidget(new ItemSlotButton(x+backgroundWidth-20-5, y+5, 20, selItem, button -> this.btnCopySelItemNbt()));
+            itemBtn = this.addRenderableWidget(new ItemSlotButton(this, x+backgroundWidth-20-5, y+5, 20, selItem, button -> this.btnCopySelItemNbt()));
             if (selItem==null || selItem.isEmpty()) {
                 itemBtn.active = false;
                 itemBtn.setTooltip(null);
@@ -2297,7 +2299,7 @@ public class ItemBuilderScreen extends GenericScreen {
             int tabNum = CACHE_TAB_SAVED;
             {
                 // button is setup in updateSavedModeButtons()
-                ItemSlotButton w = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, null, btn -> {
+                ItemSlotButton w = new ItemSlotButton(this, ItemSlotButton.SLOT_HEIGHT, null, btn -> {
                     viewBlackMarket = !viewBlackMarket;
                     updateSavedModeButtons();
                     updateSavedTab();
@@ -2760,21 +2762,21 @@ public class ItemBuilderScreen extends GenericScreen {
                 }
         }
 
-        ItemSlotButton btnStyleTemplate = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[0].get(), btn -> {
+        ItemSlotButton btnStyleTemplate = new ItemSlotButton(this, TAB_SIZE, NBT_EDIT_STYLE_ITEMS[0].get(), btn -> {
             nbtEditStyle = NbtEditStyle.TEMPLATE;
             nbtEditRefreshScreen();
         }).showSlot(false);
         btnStyleTemplate.setTooltip(Tooltip.create(grayWhiteText("Style: ","Template")));
         addTabWidgetLocked(tabNum, new PosWidget(btnStyleTemplate,0-TAB_SIZE,30+TAB_OFFSET));
 
-        ItemSlotButton btnStyleNbt = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[1].get(), btn -> {
+        ItemSlotButton btnStyleNbt = new ItemSlotButton(this, TAB_SIZE, NBT_EDIT_STYLE_ITEMS[1].get(), btn -> {
             nbtEditStyle = NbtEditStyle.NBT;
             nbtEditRefreshScreen();
         }).showSlot(false);
         btnStyleNbt.setTooltip(Tooltip.create(grayWhiteText("Style: ","NBT")));
         addTabWidgetLocked(tabNum, new PosWidget(btnStyleNbt,0-TAB_SIZE,30+TAB_OFFSET+1*(TAB_SPACING+TAB_SIZE)));
 
-        ItemSlotButton btnStyleSnbt = new ItemSlotButton(TAB_SIZE, NBT_EDIT_STYLE_ITEMS[2].get(), btn -> {
+        ItemSlotButton btnStyleSnbt = new ItemSlotButton(this, TAB_SIZE, NBT_EDIT_STYLE_ITEMS[2].get(), btn -> {
             nbtEditStyle = NbtEditStyle.SNBT;
             nbtEditRefreshScreen();
         }).showSlot(false);
@@ -5266,7 +5268,7 @@ public class ItemBuilderScreen extends GenericScreen {
                             BlackMagick.itemFromString(savedItems.get(index))
                             : ItemStack.EMPTY)
                     );
-                this.btns[i] = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, thisItemStart, btn -> {
+                this.btns[i] = new ItemSlotButton(ItemBuilderScreen.this, ItemSlotButton.SLOT_HEIGHT, thisItemStart, btn -> {
                     if (!viewBlackMarket && savedModeSet) {
                         String itemString = "";
                         ItemStack savedItem = minecraft.player.getMainHandItem().copy();
@@ -5434,7 +5436,7 @@ public class ItemBuilderScreen extends GenericScreen {
                 else
                     tt = Tooltip.create(stacks[i].getHoverName());
 
-                ItemSlotButton w = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, stacks[i], btn -> {
+                ItemSlotButton w = new ItemSlotButton(ItemBuilderScreen.this, ItemSlotButton.SLOT_HEIGHT, stacks[i], btn -> {
                     // nbtEditUpdate(blankElPath,BlackMagick.getNbtPath(BlackMagick.setNbtPath(
                     //     BlackMagick.setNbtPath(BlackMagick.itemToNbt(selItem),blankElPath,blankTabEl),fullPath,StringTag.valueOf(vals[col])),blankElPath),saveBtn,
                     //     path2==null ? null : pagePath);
@@ -5514,7 +5516,7 @@ public class ItemBuilderScreen extends GenericScreen {
                 this.btnX[i] = currentX;
                 final int index = row*9+i;
                 final ItemStack thisItem = cacheInv[index];
-                ItemSlotButton w = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, thisItem, btn -> btnCopyItemNbt(thisItem));
+                ItemSlotButton w = new ItemSlotButton(ItemBuilderScreen.this, ItemSlotButton.SLOT_HEIGHT, thisItem, btn -> btnCopyItemNbt(thisItem));
                 if (row == 4) {
                     w.addEmptySlotSprite(PLAYER_ARMOR_SPRITES[i]);
                 }
@@ -5559,7 +5561,7 @@ public class ItemBuilderScreen extends GenericScreen {
             for (int i=0; i<this.btns.length; i++) {
                 this.btnX[i] = currentX;
                 final ItemStack thisItem = stacks[i];
-                ItemSlotButton w = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, thisItem, btn -> btnCopyItemNbt(thisItem));
+                ItemSlotButton w = new ItemSlotButton(ItemBuilderScreen.this, ItemSlotButton.SLOT_HEIGHT, thisItem, btn -> btnCopyItemNbt(thisItem));
                 if (slotSprites != null && slotSprites.length == stacks.length)
                     w.addEmptySlotSprite(slotSprites[i]);
                 this.btns[i] = w;

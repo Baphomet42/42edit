@@ -25,7 +25,7 @@ public class OptionsScreen extends GenericScreen {
         );
 
         for (String key : BlackMagick.sortSet(OptionsUtil.MOD_OPTIONS.keySet())) {
-            paneScroll().addRow(OptionsUtil.MOD_OPTIONS.get(key).getButton(this, WID_WIDTH_FULL));
+            paneScroll().addRow(OptionsUtil.MOD_OPTIONS.get(key).getButton(this));
         }
 
         paneScroll().addRow();

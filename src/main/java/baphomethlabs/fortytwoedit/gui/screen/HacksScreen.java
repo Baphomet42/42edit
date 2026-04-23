@@ -39,10 +39,11 @@ public class HacksScreen extends GenericScreen {
         
         setupScrollPane();
         paneScroll().addRow(
-            WIDGET_UTIL.newButton("Coord Hud", 110, btn -> {
+            WIDGET_UTIL.newButton("Coord Hud", btn -> {
                     OptionsUtil.ModOptions.COORD_HUD.toggleSetting();
                     rebuildWidgets();
-                }).setBoolName(OptionsUtil.ModOptions.COORD_HUD.getSetting()).setRenderItem(Items.COMPASS).build()
+                }).setSize(110).setBoolName(OptionsUtil.ModOptions.COORD_HUD.getSetting()).setRenderItem(Items.COMPASS)
+                .setTooltip(OptionsUtil.ModOptions.COORD_HUD.getButtonTooltip()).build()
         );
         paneScroll().addRow(
             WIDGET_UTIL.newButton("Mix", btn -> {
@@ -82,15 +83,15 @@ public class HacksScreen extends GenericScreen {
                 }).setBoolName(FortytwoEdit.autoFish).setTooltip("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on").setRenderItem(Items.FISHING_ROD).build()
         );
         paneScroll().addRow(
-            WIDGET_UTIL.newButton("Look N", 40, btn -> this.btnLookN())
+            WIDGET_UTIL.newButton("Look N", btn -> this.btnLookN()).setSize(40)
                 .setTooltip("Set your rotation to straight north").build(),
-            WIDGET_UTIL.newButton("Rotate", 40, btn -> this.btnLookR())
+            WIDGET_UTIL.newButton("Rotate", btn -> this.btnLookR()).setSize(40)
                 .setTooltip("Rotate 90\\u00b0 clockwise").build(),
-            WIDGET_UTIL.newButton("Pano", 40, btn -> this.btnPano())
+            WIDGET_UTIL.newButton("Pano", btn -> this.btnPano()).setSize(40)
                 .setTooltip("Take a panorama screenshot").build(),
-            WIDGET_UTIL.newButton("View Pano", WID_WIDTH_FULL - ((40 + WID_SPACE) * 3), btn -> this.btnScreenshots())
+            WIDGET_UTIL.newButton("View Pano", btn -> this.btnScreenshots())
                 .setTooltip("Open screenshots folder to view panorama").build()
-        );
+        ).stretchLast();
     }
 
     protected void editTxtRando(String text) {
@@ -213,7 +214,6 @@ public class HacksScreen extends GenericScreen {
         else {
             FortytwoEdit.showToast("Get Entity","No entities within range");
         }
-        unsel();
     }
 
     protected void btnFindInvis() {
@@ -248,7 +248,6 @@ public class HacksScreen extends GenericScreen {
             FortytwoEdit.showToast("Find Invis","Found "+found+" invisible entities");
         else
             FortytwoEdit.showToast("Find Invis","No invisible entities detected");
-        unsel();
     }
 
     private void reportInvis(Entity entity) {
@@ -269,28 +268,23 @@ public class HacksScreen extends GenericScreen {
         else {
             FortytwoEdit.showToast("Death Pos", "No death pos recorded");
         }
-        unsel();
     }
 
     protected void btnLookN() {
 		minecraft.player.setXRot(0);
 		minecraft.player.setYRot(180);
-        unsel();
     }
 
     protected void btnLookR() {
 		minecraft.player.setYRot(minecraft.player.getYRot() + 90);
-        unsel();
     }
 
     protected void btnPano() {
         minecraft.grabPanoramixScreenshot(new File(minecraft.gameDirectory.getAbsolutePath()));
-        unsel();
     }
 
     protected void btnScreenshots() {
         FileTools.openMinecraftScreenshots();
-        unsel();
     }
 
     protected void saveAll() {
@@ -304,14 +298,20 @@ public class HacksScreen extends GenericScreen {
     }
 
     @Override
-    public boolean shouldCloseOnKeybind() {
-        return !txtRando.canConsumeInput();
+    public void rebuildWidgets() {
+        saveAll();
+        super.rebuildWidgets();
     }
 
     @Override
     public void onCloseAction() {
         saveAll();
         super.onCloseAction();
+    }
+
+    @Override
+    public boolean shouldCloseOnKeybind() {
+        return !txtRando.canConsumeInput();
     }
 
     @Override

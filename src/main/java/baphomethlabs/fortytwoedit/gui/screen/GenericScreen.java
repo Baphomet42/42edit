@@ -9,7 +9,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.MultiLineTextWidget;
 import net.minecraft.client.gui.components.Tooltip;
@@ -55,6 +54,7 @@ public abstract class GenericScreen extends Screen {
     protected static final int WID_LEFT_NARROW = WID_LEFT + NARROW_OFFSET;
     protected static final int SCROLL_ROW_LEFT_OFFSET = 3;
     protected static final int MULTI_LINE_TEXT_WIDGET_Y_OFFSET = 6;
+    public static final int WID_MIN_WIDTH = 10;
     public static final int WID_WIDTH_FULL = ROW_WIDTH-NARROW_OFFSET;
     public static final int WID_WIDTH_HALF = (WID_WIDTH_FULL - WID_SPACE) / 2;
     public static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
@@ -115,11 +115,6 @@ public abstract class GenericScreen extends Screen {
         return prevTooltipScroll;
     }
 
-    public GenericScreen() {
-        super(GameNarrator.NO_TITLE);
-        WIDGET_UTIL = createWidgetUtil();
-    }
-
     public GenericScreen(String title) {
         this(title == null ? null : Component.nullToEmpty(title));
     }
@@ -161,13 +156,12 @@ public abstract class GenericScreen extends Screen {
     }
 
     protected void addBackButton() {
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"),
-            btn -> changeScreen(FortytwoEdit.DEFAULT_SCREEN.get())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
+        addBackButton(FortytwoEdit.DEFAULT_SCREEN);
     }
 
     protected void addBackButton(Supplier<GenericScreen> backScreen) {
-        this.addRenderableWidget(Button.builder(Component.nullToEmpty("Back"),
-            btn -> changeScreen(backScreen.get())).bounds(x+GUI_SPACE,y+GUI_SPACE,40,WID_HEIGHT).build());
+        this.addRenderableWidget(WIDGET_UTIL.newButton("Back",
+            btn -> changeScreen(backScreen.get())).setPosition(x+GUI_SPACE,y+GUI_SPACE).setSize(40).build());
     }
 
     @Override
@@ -266,7 +260,7 @@ public abstract class GenericScreen extends Screen {
         return false;
     }
 
-    protected void unsel() {
+    public void unsel() {
         unsel = true;
     }
 
@@ -417,35 +411,44 @@ public abstract class GenericScreen extends Screen {
             this.LEFT_START = (narrow ? WID_LEFT_NARROW : WID_LEFT) + SCROLL_ROW_LEFT_OFFSET;
         }
 
-        private void set(int i, PosWidget posWidget) {
+        private ScrollRow set(int i, PosWidget posWidget) {
             childrenCache.clear();
             if (i==-1)
                 children.add(posWidget);
             else
                 children.set(i, posWidget);
+            return this;
         }
 
-        public void add(PosWidget posWidget) {
-            set(-1, posWidget);
+        public ScrollRow add(PosWidget posWidget) {
+            return set(-1, posWidget);
         }
 
-        public void add(AbstractWidget w, int x, int y) {
-            add(new PosWidget(w, x, y));
+        public ScrollRow add(AbstractWidget w, int x, int y) {
+            return add(new PosWidget(w, x, y));
         }
 
-        public void add(AbstractWidget w, boolean padLeft, int y) {
-            add(w, children.isEmpty() ? LEFT_START : (getRight() + (padLeft ? WID_SPACE : 0)), y);
+        private ScrollRow add(AbstractWidget w, boolean padLeft, int y) {
+            return add(w, children.isEmpty() ? LEFT_START : (getRight() + (padLeft ? WID_SPACE : 0)), y);
         }
 
-        public void add(AbstractWidget w, boolean padLeft) {
-            add(w, padLeft, 0);
+        public ScrollRow add(AbstractWidget w, int y) {
+            return add(w, true, y);
         }
 
-        public void add(AbstractWidget w) {
-            add(w, true);
+        public ScrollRow add(AbstractWidget w) {
+            return add(w, 0);
         }
 
-        public void center() {
+        public ScrollRow addNoPad(AbstractWidget w, int y) {
+            return add(w, false, y);
+        }
+
+        public ScrollRow addNoPad(AbstractWidget w) {
+            return addNoPad(w, 0);
+        }
+
+        public ScrollRow center() {
             int left = getLeft();
             int right = getRight();
             int offset = ((backgroundWidth - (right - left)) / 2) + SCROLL_ROW_LEFT_OFFSET - left;
@@ -453,6 +456,25 @@ public abstract class GenericScreen extends Screen {
             for (int i=0; i<children.size(); i++) {
                 set(i, PosWidget.create(children.get(i).w(), children.get(i).x() + offset, children.get(i).y()));
             }
+            return this;
+        }
+
+        public ScrollRow stretchLast() {
+            return stretchPrev(1);
+        }
+
+        public ScrollRow stretchPrev(int prev) {
+            if (!children.isEmpty() && prev > 0 && children.size() - prev >= 0) {
+                int offset = WID_WIDTH_FULL - (getRight() - getLeft());
+                AbstractWidget w = children.get(children.size() - prev).w();
+                int newWidth = w.getWidth() + offset;
+                int realNewWidth = Math.max(newWidth, WID_MIN_WIDTH);
+                w.setSize(realNewWidth, w.getHeight());
+                if (prev > 1)
+                    for (int i = children.size() - prev + 1; i < children.size(); i++)
+                        set(i, PosWidget.create(children.get(i).w(), children.get(i).x() + offset + (realNewWidth - newWidth), children.get(i).y()));
+            }
+            return this;
         }
 
         private int getLeft() {

@@ -6,14 +6,13 @@ import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.network.chat.Component;
 import com.google.common.collect.Lists;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
+import baphomethlabs.fortytwoedit.gui.widget.SmartButton;
 import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
 
 public class LogScreen extends GenericScreen {
@@ -26,6 +25,10 @@ public class LogScreen extends GenericScreen {
     private static final List<LogMessage> FULL_LOG = Lists.newArrayList();
     private static final List<LogMessage> MOD_LOG = Lists.newArrayList();
     private static final List<LogMessage> MOD_LOG_QUEUE = Lists.newArrayList();
+
+    private SmartButton btnPause = null;
+    private SmartButton btnSource = null;
+    private SmartButton btnSearchMode = null;
 
     private static boolean clearFullLogCache = false;
     private static boolean paused = false;
@@ -41,43 +44,85 @@ public class LogScreen extends GenericScreen {
     private static final int UPDATE_WAIT_MS = 1000;
     private static final String ss = "\u00a7";
 
-    public LogScreen() {}
+    public LogScreen() {
+        super("Log");
+    }
 
     @Override
-    protected void init() {//TODO remake screen
+    protected void init() {
         super.init();
         FortytwoEdit.quickScreen = LogScreen::new;
         this.addBackButton(DebugScreen::new);
 
         logFile = new File(minecraft.gameDirectory.getAbsolutePath()+"\\logs\\latest.log");
 
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("Resume"),
-                Component.literal("Pause"), paused).displayOnlyValue().withTooltip(val -> Tooltip.create(val ? Component.nullToEmpty("Unpause log and show new messages") : Component.nullToEmpty("Temporarily freeze new messages from appearing"))).create(x+GUI_SPACE+40+WID_SPACE,y+GUI_SPACE,40,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
-            paused = (boolean)trackOutput;
-            updateBox();
-            unsel();
-        }));
-        this.addRenderableWidget(WIDGET_UTIL.newButton(Component.nullToEmpty("Clear"), (button, inputWithModifiers) -> btnClearLog(inputWithModifiers)).setSize(40).setPosition(x+backgroundWidth-GUI_SPACE-50-40-WID_SPACE,y+GUI_SPACE).build())
-            .setTooltip(Tooltip.create(Component.nullToEmpty("Clear all logged messages\n\nShift click to restore all cleared messages")));
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("[42edit]"),
-                Component.literal("[All]"), onlyMod).displayOnlyValue().create(x+backgroundWidth-GUI_SPACE-50,y+GUI_SPACE,50,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
-            onlyMod = (boolean)trackOutput;
-            updateBox();
-            unsel();
-        }));
-        box = this.addRenderableWidget(MultiLineEditBox.builder().setX(x+15-3).setY(y+35).build(minecraft.font, 240-24, ROW_HEIGHT*6, Component.nullToEmpty("")));
-        txtRegex = new SmartEditBox(this.font,x+15-3,y+35+ROW_HEIGHT*6+1,160,WID_HEIGHT,Component.nullToEmpty(""));
-        txtRegex.setMaxLength(MAX_TEXT_LENGTH);
-        txtRegex.setValue(""+regexInput);
-        txtRegex.setResponder(this::editTxtRegex);
-        this.addRenderableWidget(CycleButton.booleanBuilder(Component.literal("[Regex]"),
-                Component.literal("[Search]"), useRegex).displayOnlyValue().create(x+backgroundWidth-5-50-7,y+35+ROW_HEIGHT*6+1,50,WID_HEIGHT, Component.nullToEmpty(""), (button, trackOutput) -> {
-            useRegex = (boolean)trackOutput;
-            updateBox();
-            unsel();
-        }));
-        this.addRenderableWidget(txtRegex);
+        this.addRenderableWidget(
+            WIDGET_UTIL.newButton("", btn -> {
+                    paused = !paused;
+                    updateBox();
+                    updatePauseButton();
+                }).setSize(40).setPosition(x+GUI_SPACE+40+WID_SPACE,y+GUI_SPACE)
+                .runWithSelf(w -> this.btnPause = w).build()
+        );
+        updatePauseButton();
+
+        this.addRenderableWidget(
+            WIDGET_UTIL.newButton(Component.nullToEmpty("Clear"),
+                (button, inputWithModifiers) -> btnClearLog(inputWithModifiers)).setSize(40).setPosition(x+backgroundWidth-GUI_SPACE-50-40-WID_SPACE,y+GUI_SPACE)
+                .setTooltip("Clear all logged messages\n\nShift click to restore all cleared messages").build()
+        );
+
+        this.addRenderableWidget(
+            WIDGET_UTIL.newButton("", btn -> {
+                    onlyMod = !onlyMod;
+                    updateBox();
+                    updateSourceButton();
+                }).setSize(50).setPosition(x+backgroundWidth-GUI_SPACE-50,y+GUI_SPACE)
+                .runWithSelf(w -> this.btnSource = w)
+                .setTooltip("Toggle log source between all logs or only 42edit logs").build()
+        );
+        updateSourceButton();
+
+        box = this.addRenderableWidget(
+            MultiLineEditBox.builder().setX(x+15-3).setY(y+35).build(minecraft.font, 240-24, ROW_HEIGHT*6, Component.nullToEmpty(""))
+        );
+
+        this.addRenderableWidget(
+            WIDGET_UTIL.newButton("", btn -> {
+                    useRegex = !useRegex;
+                    updateBox();
+                    updateSearchButton();
+                }).setSize(50).setPosition(x+backgroundWidth-5-50-7,y+35+ROW_HEIGHT*6+1)
+                .runWithSelf(w -> this.btnSearchMode = w)
+                .setTooltip("Toggle search mode between classic and regex").build()
+        );
+        updateSearchButton();
+
+        this.addRenderableWidget(
+            WIDGET_UTIL.newEditBox().setSize(160).setPosition(x+15-3,y+35+ROW_HEIGHT*6+1).runWithSelf(w -> this.txtRegex = w)
+                .setValue(""+regexInput).setResponder(this::editTxtRegex).build()
+        );
+
         updateBox();
+    }
+
+    protected void updatePauseButton() {
+        if (this.btnPause != null) {
+            this.btnPause.setMessage(Component.nullToEmpty(paused ? "Resume" : "Pause"));
+            this.btnPause.setTooltip(Tooltip.create(Component.nullToEmpty(paused ? "Unpause log and show new messages" : "Temporarily freeze new messages from appearing")));
+        }
+    }
+
+    protected void updateSourceButton() {
+        if (this.btnSource != null) {
+            this.btnSource.setMessage(Component.nullToEmpty(onlyMod ? "[42edit]" : "[All]"));
+        }
+    }
+
+    protected void updateSearchButton() {
+        if (this.btnSearchMode != null) {
+            this.btnSearchMode.setMessage(Component.nullToEmpty(useRegex ? "[Regex]" : "[Search]"));
+        }
     }
 
     protected void updateBox() {
@@ -251,7 +296,6 @@ public class LogScreen extends GenericScreen {
         else {
             hideCurrentlyLogged();
         }
-        unsel();
         updateBox();
     }
 
@@ -263,12 +307,6 @@ public class LogScreen extends GenericScreen {
     private void unhideAllLogged() {
         fullLogStart = 0;
         modLogStart = 0;
-    }
-
-    @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(context, mouseX, mouseY, delta);
-        context.centeredText(this.font, Component.nullToEmpty("Log"), this.width / 2, y+11, TEXT_COLOR);
     }
 
     @Override

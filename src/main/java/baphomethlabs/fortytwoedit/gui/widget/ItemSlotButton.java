@@ -1,5 +1,6 @@
 package baphomethlabs.fortytwoedit.gui.widget;
 
+import baphomethlabs.fortytwoedit.gui.screen.GenericScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -9,7 +10,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemStack;
 
-public class ItemSlotButton extends Button.Plain {
+public class ItemSlotButton extends SmartButton {
 
     public static final Identifier SPRITE_SLOT = Identifier.withDefaultNamespace("container/slot");
     public static final Identifier SPRITE_HIGHLIGHT_BACK = Identifier.withDefaultNamespace("container/slot_highlight_back");
@@ -41,14 +42,16 @@ public class ItemSlotButton extends Button.Plain {
     private static final int SIZE_ERROR = 20;
     private static final int SIZE_EMPTY_SLOT_SPRITE = 16;
 
-	public ItemSlotButton(int x, int y, int size, ItemStack item, Button.OnPress onPress) {
-		super(x, y, size, size, Component.empty(), onPress, Button.DEFAULT_NARRATION);
+	public ItemSlotButton(GenericScreen screen, int x, int y, int size, ItemStack item, Button.OnPress onPress) {
+        super(screen, Component.empty(), onPress);
+        setPosition(x, y);
+        setSize(size, size);
         this.size = size;
         setItem(item);
 	}
 
-    public ItemSlotButton(int size, ItemStack item, Button.OnPress onPress) {
-        this(0, 0, size, item, onPress);
+    public ItemSlotButton(GenericScreen screen, int size, ItemStack item, Button.OnPress onPress) {
+        this(screen, 0, 0, size, item, onPress);
     }
 
     public ItemSlotButton addEmptySlotSprite(Identifier sprite) {

@@ -37,7 +37,7 @@ public class ItemHistoryScreen extends GenericScreen {
                     item = BlackMagick.itemFromNbtTag(history.get(i*9+slot));
                 else
                     item = ItemStack.EMPTY;
-                ItemSlotButton itemBtn = new ItemSlotButton(ItemSlotButton.SLOT_HEIGHT, item, btn -> btnCopyItemNbt(item));
+                ItemSlotButton itemBtn = new ItemSlotButton(this, ItemSlotButton.SLOT_HEIGHT, item, btn -> btnCopyItemNbt(item));
                 itemBtn.showSlot(false);
                 itemBtn.active = false;
                 if (item != null && !item.isEmpty()) {
@@ -46,7 +46,7 @@ public class ItemHistoryScreen extends GenericScreen {
                     itemBtn.setTooltip(ItemBuilderScreen.makeItemTooltip(item));
                 }
                 itemBtn.setTooltipDelay(TOOLTIP_DELAY_SHORT);
-                row.add(itemBtn, false);
+                row.addNoPad(itemBtn);
             }
             row.center();
         }
@@ -59,7 +59,6 @@ public class ItemHistoryScreen extends GenericScreen {
             FortytwoEdit.setClipboard(itemData);
             FortytwoEdit.showToast("Item History","Item NBT copied to clipboard");
         }
-        unsel();
     }
 
 }

@@ -75,7 +75,6 @@ public class SecretScreen extends GenericScreen {
                 txtUpsideDown.setValue(flipString(txt));
             }
         }
-        unsel();
     }
 
     protected static String flipString(String text) {

@@ -10,10 +10,10 @@ import com.google.common.collect.Sets;
 import com.mojang.blaze3d.platform.InputConstants;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
 import baphomethlabs.fortytwoedit.gui.screen.GenericScreen;
+import baphomethlabs.fortytwoedit.gui.widget.SmartButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.StringTag;
@@ -266,7 +266,9 @@ public class OptionsUtil {
             return this.displayName;
         }
 
-        public abstract Button getButton(GenericScreen screen, int buttonWidth);
+        public abstract Component getButtonTooltip();
+
+        public abstract SmartButton getButton(GenericScreen screen);
 
     }
 
@@ -332,21 +334,24 @@ public class OptionsUtil {
             return this;
         }
 
-        public Button getButton(GenericScreen screen, int buttonWidth) {
+        public Component getButtonTooltip() {
+            MutableComponent btnTooltip = Component.empty().append("Default: ").append(getDefault() ? LABEL_DEFAULT_TRUE : LABEL_DEFAULT_FALSE);
+            if (this.description != null)
+                btnTooltip.append("\n\n").append(this.description);
+            return btnTooltip;
+        }
+
+        public SmartButton getButton(GenericScreen screen) {
             MutableComponent btnTxt = Component.empty().append(this.displayName + ": ");
             if (!getSetting())
                 btnTxt.append(Component.empty().append("Off").withStyle(getSetting() == getDefault() ? ChatFormatting.GRAY : ChatFormatting.RED));
             else
                 btnTxt.append(Component.empty().append("On").withStyle(getSetting() == getDefault() ? ChatFormatting.GRAY : ChatFormatting.GREEN));
 
-            MutableComponent btnTooltip = Component.empty().append("Default: ").append(getDefault() ? LABEL_DEFAULT_TRUE : LABEL_DEFAULT_FALSE);
-            if (this.description != null)
-                btnTooltip.append("\n\n").append(this.description);
-
             return screen.WIDGET_UTIL.newButton(btnTxt, btn -> {
                 toggleSetting();
                 screen.reloadScreen();
-            }).setSize(buttonWidth).setTooltip(btnTooltip).setTooltipDelayStandard().build();
+            }).fullWidth().setTooltip(getButtonTooltip()).setTooltipDelayStandard().build();
         }
 
     }
@@ -412,37 +417,12 @@ public class OptionsUtil {
             return this;
         }
 
-        public Button getButton(GenericScreen screen, int buttonWidth) {
-            StringOption foundCurrent = StringOption.of(getSetting());
-            boolean didFindCurrent = false;
-            StringOption foundDefault = StringOption.of(getDefault());
-            boolean didFindDefault = false;
-            ChatFormatting btnColor = ChatFormatting.YELLOW;
+        public Component getButtonTooltip() {
+            StringOptionDetails details = StringOptionDetails.get(choices, getSetting(), getDefault(), isDefault());
+            return getButtonTooltip(details.didFindCurrent(), details.foundDefault(), details.choiceOptions());
+        }
 
-            List<StringOption> choiceOptions = null;
-            if (choices != null) {
-                choiceOptions = choices.getChoices();
-                for (StringOption o : choiceOptions) {
-                    if (o.choice().equals(getSetting())) {
-                        foundCurrent = o;
-                        btnColor = ChatFormatting.GREEN;
-                        didFindCurrent = true;
-                    }
-                    if (o.choice().equals(getDefault())) {
-                        foundDefault = o;
-                        didFindDefault = true;
-                    }
-                    if (didFindCurrent && didFindDefault)
-                        break;
-                }
-            }
-
-            if (isDefault())
-                btnColor = ChatFormatting.GRAY;
-
-            MutableComponent btnTxt = Component.empty().append(this.displayName + ": ")
-                .append(Component.empty().append(foundCurrent.displayName()).withStyle(btnColor));
-
+        public Component getButtonTooltip(boolean didFindCurrent, StringOption foundDefault, List<StringOption> choiceOptions) {
             MutableComponent btnTooltip = Component.empty().append("Default: ").append(Component.empty().append(foundDefault.displayName()).withStyle(ChatFormatting.GRAY));
 
             if (!didFindCurrent)
@@ -461,10 +441,52 @@ public class OptionsUtil {
                 }
             }
 
+            return btnTooltip;
+        }
+
+        public SmartButton getButton(GenericScreen screen) {
+            StringOptionDetails details = StringOptionDetails.get(choices, getSetting(), getDefault(), isDefault());
+
+            MutableComponent btnTxt = Component.empty().append(this.displayName + ": ")
+                .append(Component.empty().append(details.foundCurrent().displayName()).withStyle(details.btnColor()));
+
             return screen.WIDGET_UTIL.newButton(btnTxt, (btn, inputs) -> {
                 cycleSetting(!inputs.hasShiftDown());
                 screen.reloadScreen();
-            }).setSize(buttonWidth).setTooltip(btnTooltip).setTooltipDelayStandard().build();
+            }).fullWidth().setTooltip(getButtonTooltip(details.didFindCurrent(), details.foundDefault(), details.choiceOptions())).setTooltipDelayStandard().build();
+        }
+
+        private record StringOptionDetails(StringOption foundCurrent, boolean didFindCurrent, StringOption foundDefault, boolean didFindDefault, ChatFormatting btnColor, List<StringOption> choiceOptions) {
+            public static StringOptionDetails get(StringChoices choices, String currentSetting, String defaultSetting, boolean isDefault) {
+                StringOption foundCurrent = StringOption.of(currentSetting);
+                boolean didFindCurrent = false;
+                StringOption foundDefault = StringOption.of(defaultSetting);
+                boolean didFindDefault = false;
+                ChatFormatting btnColor = ChatFormatting.YELLOW;
+
+                List<StringOption> choiceOptions = null;
+                if (choices != null) {
+                    choiceOptions = choices.getChoices();
+                    for (StringOption o : choiceOptions) {
+                        if (o.choice().equals(currentSetting)) {
+                            foundCurrent = o;
+                            btnColor = ChatFormatting.GREEN;
+                            didFindCurrent = true;
+                        }
+                        if (o.choice().equals(defaultSetting)) {
+                            foundDefault = o;
+                            didFindDefault = true;
+                        }
+                        if (didFindCurrent && didFindDefault)
+                            break;
+                    }
+                }
+
+                if (isDefault)
+                    btnColor = ChatFormatting.GRAY;
+                
+                return new StringOptionDetails(foundCurrent, didFindCurrent, foundDefault, didFindDefault, btnColor, choiceOptions);
+            }
         }
 
     }
