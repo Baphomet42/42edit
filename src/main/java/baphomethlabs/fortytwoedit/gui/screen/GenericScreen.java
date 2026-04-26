@@ -28,13 +28,12 @@ import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.OptionsUtil;
 import baphomethlabs.fortytwoedit.gui.TextSuggestor;
 import baphomethlabs.fortytwoedit.gui.screen.ItemBuilderScreen.RowWidget;
-import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton;
 import baphomethlabs.fortytwoedit.gui.widget.WidgetUtil;
 
 public abstract class GenericScreen extends Screen {
 
-    protected static final Identifier TEXTURE_GENERIC = Identifier.fromNamespaceAndPath("42edit","gui/generic");
-    protected static final Identifier TEXTURE_MENU_BAR = Identifier.fromNamespaceAndPath("42edit","gui/menu_bar");
+    protected static final Identifier TEXTURE_GENERIC = Identifier.fromNamespaceAndPath("42edit","textures/gui/generic.png");
+    protected static final Identifier TEXTURE_MENU_BAR = Identifier.fromNamespaceAndPath("42edit","textures/gui/menu_bar.png");
     protected int backgroundWidth = 12*20;
     protected int backgroundHeight = 9*22;
     protected int x;// to_do rename to leftPos and topPos (see AbstractContainerScreen)
@@ -85,12 +84,18 @@ public abstract class GenericScreen extends Screen {
     protected TextSuggestor suggs = null;
 
     protected void setupScrollPane() {
-        setupScrollPane(true, false);
+        setupScrollPane(true, ROW_HEIGHT);
     }
 
-    protected void setupScrollPane(boolean narrow, boolean slotHeight) {
-        SCROLL_PANE = new ScrollList(narrow, slotHeight);
+    protected void setupScrollPane(boolean narrow, int rowHeight) {
+        SCROLL_PANE = new ScrollList(narrow, rowHeight);
         this.addRenderableWidget(SCROLL_PANE);
+    }
+
+    protected void finalizeScrollPane() {
+        if (SCROLL_PANE != null && SCROLL_PANE.isScrollable()) {
+            SCROLL_PANE.addRow();
+        }
     }
 
     protected ScrollList paneScroll() {
@@ -315,12 +320,12 @@ public abstract class GenericScreen extends Screen {
 
         public final boolean NARROW;
 
-        public ScrollList(boolean narrow, boolean slotHeight) {
+        public ScrollList(boolean narrow, int rowHeight) {
             super(GenericScreen.this.minecraft,
                 GenericScreen.this.width+AREA_WIDTH_OFFSET,
                 GenericScreen.this.backgroundHeight+AREA_HEIGHT_OFFSET-(narrow ? AREA_Y_OFFSET_NARROW : 0),
                 GenericScreen.this.y+AREA_Y_OFFSET+(narrow ? AREA_Y_OFFSET_NARROW : 0),
-                slotHeight ? ItemSlotButton.SLOT_HEIGHT : ROW_HEIGHT);
+                rowHeight);
             NARROW = narrow;
         }
 
@@ -380,6 +385,18 @@ public abstract class GenericScreen extends Screen {
             for (ScrollRow row : this.children()) {
                 row.center();
             }
+        }
+
+        public int getSize() {
+            return this.children().size();
+        }
+
+        public boolean isEmpty() {
+            return this.children().isEmpty();
+        }
+
+        public boolean isScrollable() {
+            return this.scrollable();
         }
 
         @Override
@@ -452,14 +469,17 @@ public abstract class GenericScreen extends Screen {
             int left = getLeft();
             int right = getRight();
             int offset = ((backgroundWidth - (right - left)) / 2) + SCROLL_ROW_LEFT_OFFSET - left;
+            return shiftRight(offset);
+        }
 
+        public ScrollRow shiftRight(int offset) {
             for (int i=0; i<children.size(); i++) {
                 set(i, PosWidget.create(children.get(i).w(), children.get(i).x() + offset, children.get(i).y()));
             }
             return this;
         }
 
-        public ScrollRow stretchLast() {
+        public ScrollRow stretchPrev() {
             return stretchPrev(1);
         }
 
@@ -477,7 +497,7 @@ public abstract class GenericScreen extends Screen {
             return this;
         }
 
-        private int getLeft() {
+        public int getLeft() {
             int temp = 0;
             if (!this.children.isEmpty())
                 temp = this.children.get(0).x();
@@ -487,7 +507,7 @@ public abstract class GenericScreen extends Screen {
             return temp;
         }
 
-        private int getRight() {
+        public int getRight() {
             int temp = 0;
             if (!this.children.isEmpty())
                 temp = this.children.get(0).x() + this.children.get(0).w().getWidth();

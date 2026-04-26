@@ -13,6 +13,7 @@ import net.minecraft.server.commands.data.EntityDataAccessor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import com.google.common.collect.Lists;
@@ -42,7 +43,7 @@ public class HacksScreen extends GenericScreen {
             WIDGET_UTIL.newButton("Coord Hud", btn -> {
                     OptionsUtil.ModOptions.COORD_HUD.toggleSetting();
                     rebuildWidgets();
-                }).setSize(110).setBoolName(OptionsUtil.ModOptions.COORD_HUD.getSetting()).setRenderItem(Items.COMPASS)
+                }).fullWidth().setBoolName(OptionsUtil.ModOptions.COORD_HUD.getSetting()).setRenderItem(Items.COMPASS)
                 .setTooltip(OptionsUtil.ModOptions.COORD_HUD.getButtonTooltip()).build()
         );
         paneScroll().addRow(
@@ -76,22 +77,25 @@ public class HacksScreen extends GenericScreen {
         );
         paneScroll().addRow(
             WIDGET_UTIL.newButton("Death Pos", btn -> this.btnDeathPos())
-                .setTooltip("Print your last position of death (only you can see this)").setRenderItem(Items.SKELETON_SKULL).build(),
-            WIDGET_UTIL.newButton("Auto Fish", btn -> {
-                FortytwoEdit.autoFish = !FortytwoEdit.autoFish;
-                    rebuildWidgets();
-                }).setBoolName(FortytwoEdit.autoFish).setTooltip("Hold a fishing rod to automatically fish\n\nRequires subtitles to be on").setRenderItem(Items.FISHING_ROD).build()
+                .setTooltip("Print your last position of death (only you can see this)").setRenderItem(Items.SKELETON_SKULL).build()
         );
         paneScroll().addRow(
-            WIDGET_UTIL.newButton("Look N", btn -> this.btnLookN()).setSize(40)
+            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.hat"), btn -> this.btnHat())
+                .setRenderItem(Items.DIAMOND_HELMET).creativeOnly(Component.translatable("42edit.gui.magick_screen.hat.tooltip")).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Look North", btn -> this.btnLookN())
                 .setTooltip("Set your rotation to straight north").build(),
-            WIDGET_UTIL.newButton("Rotate", btn -> this.btnLookR()).setSize(40)
-                .setTooltip("Rotate 90\\u00b0 clockwise").build(),
-            WIDGET_UTIL.newButton("Pano", btn -> this.btnPano()).setSize(40)
+            WIDGET_UTIL.newButton("Rotate Clockwise", btn -> this.btnLookR())
+                .setTooltip("Rotate 90\\u00b0 clockwise").build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Take Panorama", btn -> this.btnPano())
                 .setTooltip("Take a panorama screenshot").build(),
-            WIDGET_UTIL.newButton("View Pano", btn -> this.btnScreenshots())
+            WIDGET_UTIL.newButton("Open Screenshots", btn -> this.btnScreenshots())
                 .setTooltip("Open screenshots folder to view panorama").build()
-        ).stretchLast();
+        );
+        finalizeScrollPane();
     }
 
     protected void editTxtRando(String text) {
@@ -129,6 +133,15 @@ public class HacksScreen extends GenericScreen {
             FortytwoEdit.setRandoModeEnabled(FortytwoEdit.randoSlots != null);
             unsaved = false;
             reloadScreen();
+        }
+    }
+
+    protected void btnHat() {
+        if (BlackMagick.isCreative(minecraft)) {
+            ItemStack hand = minecraft.player.getMainHandItem().copy();
+            ItemStack head = minecraft.player.getItemBySlot(EquipmentSlot.HEAD).copy();
+            BlackMagick.setItemHead(hand);
+            BlackMagick.setItemMain(head);
         }
     }
 

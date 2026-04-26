@@ -20,7 +20,7 @@ public class ItemHistoryScreen extends GenericScreen {
         FortytwoEdit.quickScreen = ItemHistoryScreen::new;
         this.addBackButton(DebugScreen::new);
 
-        setupScrollPane(false, true);
+        setupScrollPane(false, ItemSlotButton.SLOT_HEIGHT);
 
         ListTag history = FortytwoEdit.getItemHist();
         if (history.isEmpty())
@@ -50,6 +50,8 @@ public class ItemHistoryScreen extends GenericScreen {
             }
             row.center();
         }
+
+        finalizeScrollPane();
 
     }
 

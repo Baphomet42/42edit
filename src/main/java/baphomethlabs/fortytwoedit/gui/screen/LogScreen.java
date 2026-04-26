@@ -61,7 +61,7 @@ public class LogScreen extends GenericScreen {
                     paused = !paused;
                     updateBox();
                     updatePauseButton();
-                }).setSize(40).setPosition(x+GUI_SPACE+40+WID_SPACE,y+GUI_SPACE)
+                }).setSize(40).setPosition(x+GUI_SPACE+40+WID_SPACE,y+GUI_SPACE).setTooltip("")
                 .runWithSelf(w -> this.btnPause = w).build()
         );
         updatePauseButton();

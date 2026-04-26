@@ -23,8 +23,6 @@ public abstract class KeyMappingMixin {
 
             if (key.equals(((KeyMappingAccessor)client.options.keyAttack).getBoundKey())) {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
-                if (FortytwoEdit.isRandoModeActive())
-                    FortytwoEdit.changeRandoSlot();
                 client.options.keyAttack.setDown(false);
             }
             else if (key.equals(((KeyMappingAccessor)client.options.keyPickItem).getBoundKey())) {
@@ -43,7 +41,7 @@ public abstract class KeyMappingMixin {
 
             if ((FortytwoEdit.autoMine || FortytwoEdit.autoAttack) && key.equals(((KeyMappingAccessor)client.options.keyAttack).getBoundKey()))
                 stopAutoClicker = true;
-            else if (FortytwoEdit.autoClick && key.equals(((KeyMappingAccessor)client.options.keyUse).getBoundKey()))
+            else if ((FortytwoEdit.autoClick || FortytwoEdit.autoFish) && key.equals(((KeyMappingAccessor)client.options.keyUse).getBoundKey()))
                 stopAutoClicker = true;
 
             if (stopAutoClicker) {

@@ -28,7 +28,7 @@ public class OptionsScreen extends GenericScreen {
             paneScroll().addRow(OptionsUtil.MOD_OPTIONS.get(key).getButton(this));
         }
 
-        paneScroll().addRow();
+        finalizeScrollPane();
     }
 
 }

@@ -36,7 +36,7 @@ public class SecretScreen extends GenericScreen {
             WIDGET_UTIL.newButton("Upside Down", btn -> flipTextBox()).setTooltip("Convert text to upside down text").build(),
             this.txtUpsideDown
         );
-        paneScroll().addRow();
+        finalizeScrollPane();
     }
 
     protected void flipTextBox() {

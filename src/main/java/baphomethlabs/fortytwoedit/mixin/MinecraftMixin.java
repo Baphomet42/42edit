@@ -31,6 +31,13 @@ public abstract class MinecraftMixin {
         }
     }
 
+    @Inject(method = "startUseItem", at = @At("RETURN"), cancellable = true)
+    private void injectStartUseItem(CallbackInfo ci) {
+        if (FortytwoEdit.isRandoModeActive()) {
+            FortytwoEdit.randomizeSlot();
+        }
+    }
+
 	@Redirect(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/FramerateLimitTracker;getFramerateLimit()I"))
 	private int redirectFramerate(FramerateLimitTracker inactivityFpsLimiter) {
         if (FortytwoEdit.shouldReduceFramerate() && ((Minecraft)(Object)this).player != null) {

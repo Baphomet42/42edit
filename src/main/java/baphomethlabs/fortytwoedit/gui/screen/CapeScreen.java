@@ -28,7 +28,6 @@ import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
 
 public class CapeScreen extends GenericScreen {
 
-    protected SmartEditBox txtCustom;
     protected SmartEditBox txtCustomSkin;
     protected final int playerX = backgroundWidth;
     protected final int playerY = 0;
@@ -46,6 +45,8 @@ public class CapeScreen extends GenericScreen {
         FortytwoEdit.quickScreen = CapeScreen::new;
         this.addBackButton();
 
+        FortytwoEdit.resolveCapeUrlQueue();
+
         setupScrollPane();
         paneScroll().addRow("Cape", false);
         paneScroll().addRow(
@@ -55,24 +56,20 @@ public class CapeScreen extends GenericScreen {
                     reloadScreen();
                 }).setBoolName(OptionsUtil.ModOptions.OPTICAPES.getSetting()).setSize(80)
                 .setTooltip(OptionsUtil.ModOptions.OPTICAPES.getButtonTooltip()).build(),
-            WIDGET_UTIL.newButton("Refresh", btn -> this.btnReloadCapes()).setSize(80)
+            WIDGET_UTIL.newButton("Refresh", btn -> this.btnReloadCapes())
                 .setTooltip("Refresh all OptiCapes").build(),
-            WIDGET_UTIL.newButton("Edit", btn -> this.btnEditCape())
+            WIDGET_UTIL.newButton("Edit", btn -> this.btnEditCape()).setSize(40)
                 .setTooltip("Edit your OptiFine cape (if you have one)").build()
-        ).stretchLast();
+        ).stretchPrev(2);
         paneScroll().addRow(
             WIDGET_UTIL.newButton("Custom", btn -> {
                     OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.toggleSetting();
                     reloadScreen();
                 }).setBoolName(OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.getSetting()).setSize(80)
                 .setTooltip(OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.getButtonTooltip()).build(),
-            WIDGET_UTIL.newButton("<", btn -> this.btnDecCustom()).setSize(15).setTooltip("Cycle custom cape left").build()
-        ).addNoPad(
-            WIDGET_UTIL.newEditBox().setValue(FortytwoEdit.getClientCapeTextboxName()).moveCursorToStart(false)
-                .setTooltip(FortytwoEdit.getClientCapeTextboxTooltip()).setEditable(false).runWithSelf(w -> this.txtCustom = w).build()
-        ).addNoPad(
-            WIDGET_UTIL.newButton(">", btn -> this.btnIncCustom()).setSize(15).setTooltip("Cycle custom cape right").build()
-        ).stretchPrev(2);
+            WIDGET_UTIL.newButton("Cape: ["+FortytwoEdit.getCurrentClientCape().name()+"]", btn -> changeScreen(new CapeSelectorScreen()))
+                .setTooltip("Select custom cape").build()
+        ).stretchPrev();
 
         paneScroll().addRow("Skin", false);
         paneScroll().addRow(
@@ -92,6 +89,7 @@ public class CapeScreen extends GenericScreen {
                 .moveCursorToStart(false).setTooltip("Drag and drop a skin into this window to set a custom skin")
                 .setEditable(false).runWithSelf(w -> this.txtCustomSkin = w).build()
         );
+        finalizeScrollPane();
     }
 
     protected void btnReloadCapes() {
@@ -114,16 +112,6 @@ public class CapeScreen extends GenericScreen {
         }
     }
 
-    protected void btnDecCustom() {
-        FortytwoEdit.cycleClientCape(false);
-        reloadScreen();
-    }
-
-    protected void btnIncCustom() {
-        FortytwoEdit.cycleClientCape(true);
-        reloadScreen();
-    }
-
     public static PlayerSkin injectSkinLogic(String name, PlayerSkin current) {
         ClientAsset.Texture body = current.body();
         ClientAsset.Texture cape = current.cape();
@@ -135,7 +123,7 @@ public class CapeScreen extends GenericScreen {
         if (FortytwoEdit.opticapesWorking && OptionsUtil.ModOptions.OPTICAPES.getSetting()) {
             if (FortytwoEdit.capeCached(name)) {
                 Identifier id = Identifier.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
-                cape = new ClientAsset.ResourceTexture(id, id);
+                cape = new ClientAsset.ResourceTexture(id);
                 elytra = cape;
                 changed = true;
             }
@@ -144,7 +132,7 @@ public class CapeScreen extends GenericScreen {
             }
         }
         if (OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.getSetting() && name.equals(FortytwoEdit.USERNAME)) {
-            cape = FortytwoEdit.getClientCape();
+            cape = FortytwoEdit.getClientCapeTexture();
             elytra = cape;
             changed = true;
         }
@@ -205,7 +193,7 @@ public class CapeScreen extends GenericScreen {
      * Replace y body rot 180.0F occurances with 0.0F to flip player backwards. Do not replace 180.0 in quaternion
      * Copy referenced `extractRenderState` method here
      */
-    private static void drawPlayer(GuiGraphicsExtractor guiGraphics, int i, int j, int k, int l, int m, float f, float g, float h, LivingEntity livingEntity) {
+    public static void drawPlayer(GuiGraphicsExtractor guiGraphics, int i, int j, int k, int l, int m, float f, float g, float h, LivingEntity livingEntity) {
 		float n = (i + k) / 2.0F;
 		float o = (j + l) / 2.0F;
 		float p = (float)Math.atan((n - g) / 40.0F);

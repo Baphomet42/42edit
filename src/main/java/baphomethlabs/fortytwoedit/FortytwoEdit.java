@@ -38,7 +38,6 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.multiplayer.chat.GuiMessage;
@@ -409,6 +408,7 @@ public class FortytwoEdit implements ClientModInitializer {
     // randomizer mode
     public static int[] randoSlots;
     private static boolean randoMode = false;
+    private static boolean shouldRandomizeSlot = false;
     public static boolean isRandoModeActive() {
         return randoMode && randoSlots != null;
     }
@@ -420,6 +420,9 @@ public class FortytwoEdit implements ClientModInitializer {
     }
     public static void toggleRandoModeEnabled() {
         setRandoModeEnabled(!randoMode);
+    }
+    public static void randomizeSlot() {
+        shouldRandomizeSlot = true;
     }
 
     // opticapes
@@ -477,7 +480,7 @@ public class FortytwoEdit implements ClientModInitializer {
         capeNames.clear();
         final Minecraft client = Minecraft.getInstance();
         for (String name : capeNames2) {
-            client.getTextureManager().release(getCapeCacheID(name));
+            client.getTextureManager().release(getCapeCacheID(name, true));
         }
         capeNames2.clear();
         checkCapesEnabled();
@@ -521,8 +524,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     cape.setPixel(x, y, capeInp.getPixel(x, y));
 
             capeInp.close();
-            Identifier capeCacheId = getCapeCacheID(name);
-            client.getTextureManager().register(capeCacheId, new DynamicTexture(capeCacheId::toString, cape));
+            client.getTextureManager().register(getCapeCacheID(name, true), new DynamicTexture(getCapeCacheID(name, false)::toString, cape));
             cape.close();
             capeNames2.add(name);
             return true;
@@ -542,19 +544,20 @@ public class FortytwoEdit implements ClientModInitializer {
 
         return false;
     }
-    private static Identifier getCapeCacheID(String name) {
-        return Identifier.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
+    private static Identifier getCapeCacheID(String name, boolean full) {
+        String path = "cache/cape/" + name.toLowerCase();
+        if (full)
+            path = getTexturesFullPath(path);
+        return Identifier.fromNamespaceAndPath(MOD_ID_MC, path);
     }
 
     // custom capes
-    private static CapeTexture cacheClientCape = null;
     public static final List<CapeTexture> CLIENT_CAPES = Lists.newArrayList();
     private static void resetClientCapes() {
         CLIENT_CAPES.clear();
         CAPE_URLS.clear();
         CAPE_REGISTERED_IDS.clear();
         CAPE_MAP.clear();
-        cacheClientCape = null;
         warnedCapeCache = null;
 
         registerCape(new CapeTexture(CapeTextureStatus.NONE, "none", "No Cape", null), null);
@@ -571,7 +574,7 @@ public class FortytwoEdit implements ClientModInitializer {
             return new CapeTexture(CapeTextureStatus.URL, id, name, desc);
         }
     }
-    private enum CapeTextureStatus {
+    public enum CapeTextureStatus {
         NONE,
         CUSTOM,
         URL,
@@ -582,13 +585,16 @@ public class FortytwoEdit implements ClientModInitializer {
     private static final Set<String> CAPE_URLS_QUEUE = Sets.newHashSet();
     private static final Map<String,String> CAPE_URLS_QUEUE_MAP = Maps.newHashMap();
     private static final Set<String> CAPE_REGISTERED_IDS = Sets.newHashSet();
+    public static Identifier capeIdentifier(String id) {
+        return Identifier.fromNamespaceAndPath(MOD_ID_MC, "cape/"+id);
+    }
     private static void registerCustomCape(String id, String name, String desc) {
-        Identifier identifier = Identifier.tryParse("42edit:cape/"+id);
-        registerCape(CapeTexture.newCustom(id, name, desc), new ClientAsset.ResourceTexture(identifier, identifier));
+        registerCape(CapeTexture.newCustom(id, name, desc), new ClientAsset.ResourceTexture(capeIdentifier(id)));
     }
     private static void registerCape(CapeTexture cape, ClientAsset.Texture texture) {
         CLIENT_CAPES.add(cape);
         CAPE_MAP.put(cape.id(), texture);
+        CAPE_ID_TO_TEXTURE.put(cape.id(), getTexturesFullPath(capeIdentifier(cape.id())));
     }
     /**
      * see {@link net.minecraft.client.resources.SkinManager#registerTextures}
@@ -615,7 +621,9 @@ public class FortytwoEdit implements ClientModInitializer {
                             new MinecraftProfileTexture(url, null), null, SignatureState.SIGNED));
                             futurePlayerSkin.thenAccept(playerSkin -> {
                                 if (CAPE_URLS_QUEUE_MAP.containsKey(url) && playerSkin != null && playerSkin.cape() != null) {
-                                    CAPE_MAP.put(CAPE_URLS_QUEUE_MAP.get(url), playerSkin.cape());
+                                    String capeId = CAPE_URLS_QUEUE_MAP.get(url);
+                                    CAPE_MAP.put(capeId, playerSkin.cape());
+                                    CAPE_ID_TO_TEXTURE.put(capeId, playerSkin.cape().texturePath());
                                 }
                                 else
                                     FortytwoEdit.logWarn("Failed to load cape id for: "+url);
@@ -628,76 +636,29 @@ public class FortytwoEdit implements ClientModInitializer {
                 CAPE_URLS_QUEUE.clear();
             }
         }
-        else if (!CAPE_REGISTERED_IDS.contains(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting()) && (warnedCapeCache == null || !warnedCapeCache.equals(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting()))) {
+        else if (!CAPE_REGISTERED_IDS.contains(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting())
+        && (warnedCapeCache == null || !warnedCapeCache.equals(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting()))) {
             warnedCapeCache = OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting();
             FortytwoEdit.logWarn("Failed to find custom cape with ID: "+OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting());
         }
     }
     private static final Map<String,ClientAsset.Texture> CAPE_MAP = Maps.newHashMap();
-    public static ClientAsset.Texture getClientCape() {
+    public static final Map<String,Identifier> CAPE_ID_TO_TEXTURE = Maps.newHashMap();
+    public static ClientAsset.Texture getClientCapeTexture() {
         if (CAPE_MAP.containsKey(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting()))
             return CAPE_MAP.get(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting());
         resolveCapeUrlQueue();
         return null;
     }
-    private static CapeTexture getCacheClientCape() {
-        if (cacheClientCape != null)
-            return cacheClientCape;
+    public static CapeTexture getCurrentClientCape() {
         for (CapeTexture c : CLIENT_CAPES)
             if (c.id().equals(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting())) {
-                cacheClientCape = c;
-                return cacheClientCape;
+                return c;
             }
-        cacheClientCape = new CapeTexture(CapeTextureStatus.UNKNOWN,
+        return new CapeTexture(CapeTextureStatus.UNKNOWN,
             OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting(),
             OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting(),
-            OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting());
-        return cacheClientCape;
-    }
-    public static String getClientCapeTextboxName() {
-        return getCacheClientCape().name();
-    }
-    public static Tooltip getClientCapeTextboxTooltip() {
-        CapeTexture cape = getCacheClientCape();
-        if (cape.status()==CapeTextureStatus.UNKNOWN) {
-            return Tooltip.create(Component.empty().append("Unknown").withStyle(ChatFormatting.RED));
-        }
-        MutableComponent txtCustomTt = Component.empty().append(cape.name());
-        if (cape.desc() != null)
-            txtCustomTt.append("\n").append(Component.empty().append(cape.desc()).withStyle(ChatFormatting.GRAY));
-        return Tooltip.create(txtCustomTt);
-    }
-    public static void cycleClientCape(boolean right) {
-        if (CLIENT_CAPES.isEmpty())
-            return;
-        int index = -1;
-        for (int i=0; i<CLIENT_CAPES.size(); i++) {
-            if (CLIENT_CAPES.get(i).id().equals(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting())) {
-                index = i;
-                break;
-            }
-        }
-        if (index == -1) {
-            index = 0;
-        }
-        else {
-            if (right) {
-                index++;
-                if (index >= CLIENT_CAPES.size())
-                    index = 0;
-            }
-            else {
-                index--;
-                if (index < 0)
-                    index = CLIENT_CAPES.size()-1;
-            }
-        }
-
-        String newCape = CLIENT_CAPES.get(index).id();
-
-        OptionsUtil.ModOptions.CUSTOM_CAPE.setSetting(newCape);
-
-        cacheClientCape = null;
+            null);
     }
 
     public static String USERNAME = "";
@@ -708,14 +669,23 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean showClientSkin = false;
     public static boolean clientSkinSlim = false;
     public static String customSkinName = "";
-    private static final Identifier CUSTOM_SKIN_ID = Identifier.fromNamespaceAndPath("42edit","cache/custom_skin");
-    public static final ClientAsset.Texture CUSTOM_SKIN_TEXTURE = new ClientAsset.ResourceTexture(CUSTOM_SKIN_ID, CUSTOM_SKIN_ID);
+    private static final String CUSTOM_SKIN_PATH = "cache/custom_skin";
+    private static final Identifier CUSTOM_SKIN_ID = Identifier.fromNamespaceAndPath(MOD_ID_MC,CUSTOM_SKIN_PATH);
+    private static final Identifier CUSTOM_SKIN_ID_FULL = Identifier.fromNamespaceAndPath(MOD_ID_MC,getTexturesFullPath(CUSTOM_SKIN_PATH));
+    public static final ClientAsset.Texture CUSTOM_SKIN_TEXTURE = new ClientAsset.ResourceTexture(CUSTOM_SKIN_ID);
+
+    public static String getTexturesFullPath(String path) {
+        return "textures/" + path + ".png";
+    }
+    public static Identifier getTexturesFullPath(Identifier identifier) {
+        return Identifier.fromNamespaceAndPath(identifier.getNamespace(), getTexturesFullPath(identifier.getPath()));
+    }
 
     public static boolean setCustomSkin(File file) {
         final Minecraft client = Minecraft.getInstance();
         customSkinName = "";
         showClientSkin = false;
-        client.getTextureManager().release(CUSTOM_SKIN_ID);
+        client.getTextureManager().release(CUSTOM_SKIN_ID_FULL);
 
         if (file != null) {
             FileInputStream inp = null;
@@ -734,7 +704,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
                     skinFile.close();
                     customSkinName = file.getName();
-                    client.getTextureManager().register(CUSTOM_SKIN_ID, new DynamicTexture(CUSTOM_SKIN_ID::toString, skin));
+                    client.getTextureManager().register(CUSTOM_SKIN_ID_FULL, new DynamicTexture(CUSTOM_SKIN_ID::toString, skin));
                     skin.close();
                     showClientSkin = true;
                     return true;
@@ -782,8 +752,9 @@ public class FortytwoEdit implements ClientModInitializer {
         try {
             NativeImage texture = NativeImage.read(client.getClass().getClassLoader().getResourceAsStream("assets/"+MOD_ID_MC+"/textures/"+path+".png"));
             Identifier id = Identifier.fromNamespaceAndPath(MOD_ID_MC,path);
-            client.getTextureManager().release(id);
-            client.getTextureManager().register(id,new DynamicTexture(id::toString,texture));
+            Identifier idFull = Identifier.fromNamespaceAndPath(MOD_ID_MC,getTexturesFullPath(path));
+            client.getTextureManager().release(idFull);
+            client.getTextureManager().register(idFull,new DynamicTexture(id::toString,texture));
         }
         catch (Exception ex) {
             FortytwoEdit.logError("Failed to load mod texture: "+path);
@@ -926,6 +897,25 @@ public class FortytwoEdit implements ClientModInitializer {
             inWorld = true;
         }
 
+        if (shouldRandomizeSlot) {
+            shouldRandomizeSlot = false;
+            if (randoSlots != null) {
+                boolean testRandoSlot = false;
+                int selected = client.player.getInventory().getSelectedSlot() + 1;
+                for (int i = 0; i < randoSlots.length; i++) {
+                    if (randoSlots[i] == selected) {
+                        testRandoSlot = true;
+                        break;
+                    }
+                }
+                if (testRandoSlot) {
+                    int slot = randomInt(randoSlots.length);
+                    slot = randoSlots[slot];
+                    client.player.getInventory().setSelectedSlot(slot - 1);
+                }
+            }
+        }
+
         // magickgui
         if (OptionsUtil.Keybinds.KEY_OPEN_MAGICK_GUI.consumeClick())
             client.gui.setScreen(quickScreen.get());
@@ -979,10 +969,8 @@ public class FortytwoEdit implements ClientModInitializer {
                 client.options.keyAttack.setDown(true);
             }
         }
-
-        //autoFish
         if (autoFishClickQueue && System.currentTimeMillis()>=(lastFish+fishWait)) {
-            if (autoFish && !autoClicker && client.gui.screen() == null && ((!client.player.getMainHandItem().isEmpty()
+            if (autoClicker && autoFish && ((!client.player.getMainHandItem().isEmpty()
                     && client.player.getMainHandItem().is(Items.FISHING_ROD)) || (client.player.getMainHandItem().isEmpty()
                     && !client.player.getOffhandItem().isEmpty() && client.player.getOffhandItem().is(Items.FISHING_ROD))) ) {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
@@ -992,7 +980,7 @@ public class FortytwoEdit implements ClientModInitializer {
             lastFish = System.currentTimeMillis() + 100+randomInt(400);
         }
         if (didFish && System.currentTimeMillis()>=(lastFish+fishWait)) {
-            if (autoFish && !autoClicker && client.gui.screen() == null && ((!client.player.getMainHandItem().isEmpty()
+            if (autoClicker && autoFish && ((!client.player.getMainHandItem().isEmpty()
                     && client.player.getMainHandItem().is(Items.FISHING_ROD)) || (client.player.getMainHandItem().isEmpty()
                     && !client.player.getOffhandItem().isEmpty() && client.player.getOffhandItem().is(Items.FISHING_ROD))) ) {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
@@ -1026,20 +1014,13 @@ public class FortytwoEdit implements ClientModInitializer {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyAttack).getBoundKey());
             else {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
-                if (isRandoModeActive())
-                    changeRandoSlot();
             }
             lastSpam = System.currentTimeMillis();
         }
 
-        // rando
-        if (isRandoModeActive()) {
-            if (client.options.keyUse.isDown())
-                changeRandoSlot();
-        }
     }
 
-    public static void updateAutoClick(boolean click, boolean mine, boolean attack, int wait) {
+    public static void updateAutoClick(boolean click, boolean mine, boolean attack, boolean fish, int wait) {
         final Minecraft client = Minecraft.getInstance();
         autoClicker = false;
 
@@ -1047,6 +1028,7 @@ public class FortytwoEdit implements ClientModInitializer {
         autoMine = mine;
         autoAttack = attack;
         attackWait = wait;
+        autoFish = fish;
         if (wait < 1)
             attackWait = 1;
         else if (wait > 9999)
@@ -1054,25 +1036,6 @@ public class FortytwoEdit implements ClientModInitializer {
 
         client.options.keyUse.setDown(false);
         client.options.keyAttack.setDown(false);
-    }
-
-    private static boolean testRandoSlot() {
-        final Minecraft client = Minecraft.getInstance();
-        int selected = client.player.getInventory().getSelectedSlot() + 1;
-        for (int i = 0; i < randoSlots.length; i++) {
-            if (randoSlots[i] == selected)
-                return true;
-        }
-        return false;
-    }
-
-    public static void changeRandoSlot() {
-        if (randoSlots != null && testRandoSlot()) {
-            final Minecraft client = Minecraft.getInstance();
-            int slot = randomInt(randoSlots.length);
-            slot = randoSlots[slot];
-            client.player.getInventory().setSelectedSlot(slot - 1);
-        }
     }
 
     public static ItemStack copyLookAt() {
@@ -1126,9 +1089,9 @@ public class FortytwoEdit implements ClientModInitializer {
         return client.keyboardHandler.getClipboard();
     }
 
-    private static final String LOG_PREFIX = "(42edit) ";
+    private static final String LOG_PREFIX = "("+MOD_ID_MC+") ";
     private static final SystemToast.SystemToastId TOAST_TYPE = new SystemToast.SystemToastId();
-    private static final MutableComponent TOAST_PREFIX = Component.empty().append("").append(Component.empty().append("(42edit) ").withStyle(ChatFormatting.BLACK));
+    private static final MutableComponent TOAST_PREFIX = Component.empty().append("").append(Component.empty().append(LOG_PREFIX).withStyle(ChatFormatting.BLACK));
 
     public static void logInfo(String info) {
         LOGGER.info(LOG_PREFIX + info);

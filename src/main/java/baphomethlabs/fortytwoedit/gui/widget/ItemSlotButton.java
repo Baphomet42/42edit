@@ -124,18 +124,17 @@ public class ItemSlotButton extends SmartButton {
             context.blitSprite(RenderPipelines.GUI_TEXTURED,
                 this.overlay, this.getX()+((size-overlaySize)/2), this.getY()+((size-overlaySize)/2), overlaySize, overlaySize);
 
-        switch (this.error) {
-            case WARN : {
-                context.blitSprite(RenderPipelines.GUI_TEXTURED,
-                    SPRITE_WARNING, this.getX()+((size-SIZE_ERROR)/2), this.getY()+((size-SIZE_ERROR)/2), SIZE_ERROR, SIZE_ERROR);
-                break;
+        if (this.error != ItemError.NONE) {
+            Identifier sprite = null;
+            switch (this.error) {
+                case WARN: sprite = SPRITE_WARNING; break;
+                case ERROR: sprite = SPRITE_ERROR; break;
+                case NONE: break;
             }
-            case ERROR : {
+            if (sprite != null) {
                 context.blitSprite(RenderPipelines.GUI_TEXTURED,
-                    SPRITE_ERROR, this.getX()+((size-SIZE_ERROR)/2), this.getY()+((size-SIZE_ERROR)/2), SIZE_ERROR, SIZE_ERROR);
-                break;
+                    sprite, this.getX()+((getWidth()-SIZE_ERROR)/2), this.getY()+((getHeight()-SIZE_ERROR)/2), SIZE_ERROR, SIZE_ERROR);
             }
-            case NONE : break;
         }
 
 	}

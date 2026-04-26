@@ -23,27 +23,34 @@ public class AutoClickScreen extends GenericScreen {
         setupScrollPane();
         paneScroll().addRow(
             WIDGET_UTIL.newButton("Use", btn -> {
-                    FortytwoEdit.updateAutoClick(!FortytwoEdit.autoClick,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
+                    FortytwoEdit.updateAutoClick(!FortytwoEdit.autoClick,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.autoFish,FortytwoEdit.attackWait);
                     rebuildWidgets();
                 }).setBoolName(FortytwoEdit.autoClick).setRenderItem(Items.GOLDEN_APPLE).setTooltip(
                 "Toggle use key in auto click mode\n\nWhen on: auto click mode will hold the use key down").build()
         );
         paneScroll().addRow(
             WIDGET_UTIL.newButton("Mine", btn -> {
-                    FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,!FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
+                    FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,!FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.autoFish,FortytwoEdit.attackWait);
                     rebuildWidgets();
                 }).setBoolName(FortytwoEdit.autoMine).setRenderItem(Items.NETHERITE_PICKAXE).setTooltip(
                 "Toggle mine key in auto click mode\n\nWhen on: auto click mode will hold the mine key down").build()
         );
         paneScroll().addRow(
             WIDGET_UTIL.newButton("Attack", btn -> {
-                    FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,!FortytwoEdit.autoAttack,FortytwoEdit.attackWait);
+                    FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,!FortytwoEdit.autoAttack,FortytwoEdit.autoFish,FortytwoEdit.attackWait);
                     rebuildWidgets();
                 }).setBoolName(FortytwoEdit.autoAttack).setRenderItem(Items.GOLDEN_SWORD).setTooltip(
                 "Toggle auto attack in auto click mode\n\nWhen on: auto click mode will use the attack key based on the specified timer").build(),
             WIDGET_UTIL.newEditBox().setMaxLength(4).setValue(""+FortytwoEdit.attackWait).setResponder(this::editTxtAttackCooldown)
-                .runWithSelf(w -> this.txtAttackCooldown = w).setTooltip(
+                .runWithSelf(w -> this.txtAttackCooldown = w).setSmartTooltip(
                 "Number of milliseconds between attacks during auto click mode (defaults to 1500)").build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Fish", btn -> {
+                    FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,!FortytwoEdit.autoFish,FortytwoEdit.attackWait);
+                    rebuildWidgets();
+                }).setBoolName(FortytwoEdit.autoFish).setRenderItem(Items.FISHING_ROD).setTooltip(
+                "Toggle auto fish in auto click mode\n\nWhen on: auto click mode will attempt to reel in fish then cast again\n\nRequires closed captions to detect fish").build()
         );
         paneScroll().addRow(
             WIDGET_UTIL.newButton("Lock Screen", btn -> {
@@ -51,6 +58,7 @@ public class AutoClickScreen extends GenericScreen {
                     rebuildWidgets();
                 }).setBoolName(OptionsUtil.ModOptions.AUTO_CLICK_LOCK.getSetting()).setTooltip(OptionsUtil.ModOptions.AUTO_CLICK_LOCK.getButtonTooltip()).build()
         );
+        finalizeScrollPane();
     }
 
     protected void editTxtAttackCooldown(String text) {
@@ -74,7 +82,7 @@ public class AutoClickScreen extends GenericScreen {
             else if (attackWait > 9999)
                 attackWait = 9999;
 
-            FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,attackWait);
+            FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.autoFish,attackWait);
             if (!originalInp.equals(""+attackWait))
                 txtAttackCooldown.setValue(""+attackWait);
             unsaved = false;

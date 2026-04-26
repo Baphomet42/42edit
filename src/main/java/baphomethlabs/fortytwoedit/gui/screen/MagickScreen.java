@@ -1,14 +1,11 @@
 package baphomethlabs.fortytwoedit.gui.screen;
 
-import baphomethlabs.fortytwoedit.BlackMagick;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.gui.widget.SmartButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 public class MagickScreen extends GenericScreen {
@@ -36,10 +33,6 @@ public class MagickScreen extends GenericScreen {
                 .setRenderItem(Items.REPEATING_COMMAND_BLOCK).build()
         );
         paneScroll().addRow(
-            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.hat"), btn -> this.btnHat())
-                .setRenderItem(Items.DIAMOND_HELMET).creativeOnly(Component.translatable("42edit.gui.magick_screen.hat.tooltip")).build()
-        );
-        paneScroll().addRow(
             WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.super_secret"),
                 (button, inputWithModifiers) -> this.btnSuperSecretSettings(inputWithModifiers)).fullWidth()
                 .setRenderItem(Items.STRUCTURE_BLOCK).build()
@@ -55,16 +48,8 @@ public class MagickScreen extends GenericScreen {
                 Component.translatable("42edit.gui.magick_screen.auto_click.cycle_tooltip")).build()
         );
         setAutoClickMessage();
+        finalizeScrollPane();
 
-    }
-
-    protected void btnHat() {
-        if (BlackMagick.isCreative(minecraft)) {
-            ItemStack hand = minecraft.player.getMainHandItem().copy();
-            ItemStack head = minecraft.player.getItemBySlot(EquipmentSlot.HEAD).copy();
-            BlackMagick.setItemHead(hand);
-            BlackMagick.setItemMain(head);
-        }
     }
 
     protected void btnSuperSecretSettings(InputWithModifiers inputs) {
@@ -80,23 +65,26 @@ public class MagickScreen extends GenericScreen {
         else {
             autoClickCycle += (inputs.hasShiftDown() ? -1 : 1);
             if (autoClickCycle < 0)
-                autoClickCycle = 3;
-            else if (autoClickCycle > 3)
+                autoClickCycle = 4;
+            else if (autoClickCycle > 4)
                 autoClickCycle = 0;
         }
 
         switch (autoClickCycle) {
             case 0:
-                FortytwoEdit.updateAutoClick(true,false,false,1500);
+                FortytwoEdit.updateAutoClick(true,false,false,false,FortytwoEdit.attackWait);
                 break;
             case 1:
-                FortytwoEdit.updateAutoClick(false,true,false,1500);
+                FortytwoEdit.updateAutoClick(false,true,false,false,FortytwoEdit.attackWait);
                 break;
             case 2:
-                FortytwoEdit.updateAutoClick(false,false,true,1500);
+                FortytwoEdit.updateAutoClick(false,false,true,false,1500);
                 break;
             case 3:
-                FortytwoEdit.updateAutoClick(false,false,true,650);
+                FortytwoEdit.updateAutoClick(false,false,true,false,650);
+                break;
+            case 4:
+                FortytwoEdit.updateAutoClick(false,false,false,true,FortytwoEdit.attackWait);
                 break;
             default: break;
         }
@@ -105,21 +93,25 @@ public class MagickScreen extends GenericScreen {
     }
 
     private void setAutoClickMessage() {
-        if (FortytwoEdit.autoClick && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack) {
+        if (FortytwoEdit.autoClick && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack && !FortytwoEdit.autoFish) {
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.use"));
             autoClickCycle = 0;
         }
-        else if (!FortytwoEdit.autoClick && FortytwoEdit.autoMine && !FortytwoEdit.autoAttack) {
+        else if (!FortytwoEdit.autoClick && FortytwoEdit.autoMine && !FortytwoEdit.autoAttack && !FortytwoEdit.autoFish) {
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.mine"));
             autoClickCycle = 1;
         }
-        else if (!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 1500) {
+        else if (!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && !FortytwoEdit.autoFish && FortytwoEdit.attackWait == 1500) {
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.attack_slow"));
             autoClickCycle = 2;
         }
-        else if (!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && FortytwoEdit.attackWait == 650) {
+        else if (!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && !FortytwoEdit.autoFish && FortytwoEdit.attackWait == 650) {
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.attack_fast"));
             autoClickCycle = 3;
+        }
+        else if (!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack && FortytwoEdit.autoFish) {
+            btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.fish"));
+            autoClickCycle = 4;
         }
         else {
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.custom"));

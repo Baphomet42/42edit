@@ -11,6 +11,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
 import baphomethlabs.fortytwoedit.gui.screen.GenericScreen;
 import baphomethlabs.fortytwoedit.gui.widget.SmartButton;
+import baphomethlabs.fortytwoedit.gui.widget.WidgetUtil.ButtonBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -21,6 +22,8 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 
 public class OptionsUtil {
 
@@ -157,32 +160,41 @@ public class OptionsUtil {
 
     public static class ModOptions {
         public static final ModOptionBoolean AUTO_CLICK_LOCK = registerModOption(
-            new ModOptionBoolean("auto_click_lock", false, "AutoClick Lock")).setDescription(true,
+            new ModOptionBoolean("auto_click_lock", false, "AutoClick Lock")).setDisplayItem(Items.GOLDEN_SWORD)
+            .setDescription(true,
             "While AutoClick is in use, mouse movement will be ignored and FPS reduced.");
         public static final ModOptionBoolean CHAT_ICONS = registerModOption(
-            new ModOptionBoolean("chat_icons", false, "Chat Icons")).setDescription(true,
+            new ModOptionBoolean("chat_icons", false, "Chat Icons")).setDisplayItem(Items.PLAYER_HEAD)
+            .setDescription(true,
             "Player icons will render by chat messages.");
         public static final ModOptionBoolean COORD_HUD = registerModOption(
-            new ModOptionBoolean("coord_hud", false, "Coord HUD")).setDescription(true,
+            new ModOptionBoolean("coord_hud", false, "Coord HUD")).setDisplayItem(Items.COMPASS)
+            .setDescription(true,
             "The HUD will render coordinates and facing direction.");
         public static final ModOptionString CUSTOM_CAPE = registerModOption(
-            new ModOptionString("custom_cape", "none", "Custom Cape", new StringChoicesClientCape())).setDescription(
+            new ModOptionString("custom_cape", "none", "Custom Cape", new StringChoicesClientCape())).setDisplayItem(Items.CREEPER_HEAD)
+            .setDescription(
             "Determines which cape to render when the Custom Cape Toggle is enabled.");
         public static final ModOptionBoolean CUSTOM_CAPE_TOGGLE = registerModOption(
-            new ModOptionBoolean("custom_cape_toggle", false, "Custom Cape Toggle")).setDescription(true,
+            new ModOptionBoolean("custom_cape_toggle", false, "Custom Cape Toggle")).setDisplayItem(Items.CREEPER_HEAD)
+            .setDescription(true,
             "Your player will render with the cape specified in the Custom Cape option.");
         public static final ModOptionBoolean DEBUG_SCREEN_REARRANGE = registerModOption(
-            new ModOptionBoolean("debug_screen_rearrange", false, "Debug Screen Rearrange")).setDescription(true,
+            new ModOptionBoolean("debug_screen_rearrange", false, "Debug Screen Rearrange")).setDisplayItem(Items.COMMAND_BLOCK)
+            .setDescription(true,
             "The following debug screen entries are moved to the end of the list:"+getMovedLastDisplay());
         public static final ModOptionBoolean DYNAMIC_PROFILE_TOOLTIP_INFO = registerModOption(
-            new ModOptionBoolean("dynamic_profile_tooltip_info", false, "Dynamic Profile Tooltip Info")).setDescription(true,
+            new ModOptionBoolean("dynamic_profile_tooltip_info", false, "Dynamic Profile Tooltip Info")).setDisplayItem(Items.PLAYER_HEAD)
+            .setDescription(true,
             "The profile component tooltip will contain extra info for dynamic profiles.");
         public static final ModOptionString LOCATOR_BAR_PROFILE = registerModOption(
             new ModOptionString("locator_bar_profile", FortytwoEdit.MIXIN_LOCATOR_BAR_OPTION_NEVER, "Locator Bar Profile",
-            FortytwoEdit.LOCATOR_BAR_PROFILE_CHOICES)).setDescription(
+            FortytwoEdit.LOCATOR_BAR_PROFILE_CHOICES)).setDisplayItem(Items.PLAYER_HEAD)
+            .setDescription(
             "Choice whether player icon shows instead of locator bar icon.");
         public static final ModOptionBoolean OPTICAPES = registerModOption(
-            new ModOptionBoolean("opticapes", false, "OptiCapes").setDescription(true,
+            new ModOptionBoolean("opticapes", false, "OptiCapes").setDisplayItem(Items.CREEPER_HEAD)
+            .setDescription(true,
             "Players will render with their OptiFine cape, if they have one. 42edit is not affiliated with OptiFine in any way."));
 
         private static void registerModOptionCommon(ModOption<?> option) {
@@ -209,6 +221,7 @@ public class OptionsUtil {
         protected T defaultSetting;
         protected T currentSetting;
         protected String displayName;
+        protected ItemStackPreset displayItem;
 
         protected ModOption(String id, T defaultSetting, String displayName) {
             if (id == null || defaultSetting == null)
@@ -266,9 +279,20 @@ public class OptionsUtil {
             return this.displayName;
         }
 
+        public abstract ModOption<T> setDisplayItem(Item item);
+
+        public abstract ModOption<T> setDisplayItem(ItemStackPreset item);
+
         public abstract Component getButtonTooltip();
 
-        public abstract SmartButton getButton(GenericScreen screen);
+        public SmartButton getButton(GenericScreen screen) {
+            ButtonBuilder b = getButtonBase(screen).fullWidth();
+            if (displayItem != null)
+                b.setRenderItem(displayItem.get());
+            return b.build();
+        }
+
+        protected abstract ButtonBuilder getButtonBase(GenericScreen screen);
 
     }
 
@@ -334,6 +358,15 @@ public class OptionsUtil {
             return this;
         }
 
+        public ModOptionBoolean setDisplayItem(Item item) {
+            return setDisplayItem(ItemStackPreset.set(item));
+        }
+
+        public ModOptionBoolean setDisplayItem(ItemStackPreset item) {
+            this.displayItem = item;
+            return this;
+        }
+
         public Component getButtonTooltip() {
             MutableComponent btnTooltip = Component.empty().append("Default: ").append(getDefault() ? LABEL_DEFAULT_TRUE : LABEL_DEFAULT_FALSE);
             if (this.description != null)
@@ -341,7 +374,7 @@ public class OptionsUtil {
             return btnTooltip;
         }
 
-        public SmartButton getButton(GenericScreen screen) {
+        protected ButtonBuilder getButtonBase(GenericScreen screen) {
             MutableComponent btnTxt = Component.empty().append(this.displayName + ": ");
             if (!getSetting())
                 btnTxt.append(Component.empty().append("Off").withStyle(getSetting() == getDefault() ? ChatFormatting.GRAY : ChatFormatting.RED));
@@ -351,7 +384,7 @@ public class OptionsUtil {
             return screen.WIDGET_UTIL.newButton(btnTxt, btn -> {
                 toggleSetting();
                 screen.reloadScreen();
-            }).fullWidth().setTooltip(getButtonTooltip()).setTooltipDelayStandard().build();
+            }).setTooltip(getButtonTooltip());
         }
 
     }
@@ -417,6 +450,15 @@ public class OptionsUtil {
             return this;
         }
 
+        public ModOptionString setDisplayItem(Item item) {
+            return setDisplayItem(ItemStackPreset.set(item));
+        }
+
+        public ModOptionString setDisplayItem(ItemStackPreset item) {
+            this.displayItem = item;
+            return this;
+        }
+
         public Component getButtonTooltip() {
             StringOptionDetails details = StringOptionDetails.get(choices, getSetting(), getDefault(), isDefault());
             return getButtonTooltip(details.didFindCurrent(), details.foundDefault(), details.choiceOptions());
@@ -444,7 +486,7 @@ public class OptionsUtil {
             return btnTooltip;
         }
 
-        public SmartButton getButton(GenericScreen screen) {
+        protected ButtonBuilder getButtonBase(GenericScreen screen) {
             StringOptionDetails details = StringOptionDetails.get(choices, getSetting(), getDefault(), isDefault());
 
             MutableComponent btnTxt = Component.empty().append(this.displayName + ": ")
@@ -453,7 +495,7 @@ public class OptionsUtil {
             return screen.WIDGET_UTIL.newButton(btnTxt, (btn, inputs) -> {
                 cycleSetting(!inputs.hasShiftDown());
                 screen.reloadScreen();
-            }).fullWidth().setTooltip(getButtonTooltip(details.didFindCurrent(), details.foundDefault(), details.choiceOptions())).setTooltipDelayStandard().build();
+            }).setTooltip(getButtonTooltip(details.didFindCurrent(), details.foundDefault(), details.choiceOptions()));
         }
 
         private record StringOptionDetails(StringOption foundCurrent, boolean didFindCurrent, StringOption foundDefault, boolean didFindDefault, ChatFormatting btnColor, List<StringOption> choiceOptions) {

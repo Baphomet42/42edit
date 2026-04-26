@@ -5978,12 +5978,8 @@ public class ItemBuilderScreen extends GenericScreen {
                 context.centeredText(this.font,
                     Component.nullToEmpty("Failed to read saved items"), this.width / 2, y+this.backgroundHeight+3, ERROR_COLOR);
 
-            if (prevArmorStand)
-                InventoryScreen.extractEntityInInventoryFollowsMouse(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
-                    mouseX, mouseY, (LivingEntity)renderArmorStand);
-            else
-                InventoryScreen.extractEntityInInventoryFollowsMouse(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
-                    mouseX, mouseY, (LivingEntity)this.minecraft.player);
+            InventoryScreen.extractEntityInInventoryFollowsMouse(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
+                mouseX, mouseY, (LivingEntity)(prevArmorStand ? renderArmorStand : this.minecraft.player));
 
             txtFormat.setX(x+50);
             txtFormat.extractRenderState(context, mouseX, mouseY, delta);

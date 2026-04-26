@@ -68,6 +68,7 @@ public class WidgetUtil {
 
         public SELF setTooltip(Tooltip tooltip) {
             w.setTooltip(tooltip);
+            setTooltipDelayStandard();
             return self();
         }
 
@@ -82,6 +83,10 @@ public class WidgetUtil {
 
         public SELF setTooltipDelayShort() {
             return setTooltipDelay(GenericScreen.TOOLTIP_DELAY_SHORT);
+        }
+
+        public SELF setTooltipDelayNone() {
+            return setTooltipDelay(Duration.ZERO);
         }
 
         public SELF runWithSelf(Consumer<T> method) {
@@ -154,7 +159,7 @@ public class WidgetUtil {
             this.w.creativeOnly();
             if (!BlackMagick.isCreative(minecraft)) {
                 this.w.active = false;
-                this.w.setTooltip(GenericScreen.TT_CREATIVE);
+                return setTooltip(GenericScreen.TT_CREATIVE);
             }
             return this;
         }
@@ -216,6 +221,7 @@ public class WidgetUtil {
 
         public EditBoxBuilder setSmartTooltip(Tooltip tooltip) {
             w.setSmartTooltip(tooltip);
+            setTooltip((Tooltip)null);
             return self();
         }
 
