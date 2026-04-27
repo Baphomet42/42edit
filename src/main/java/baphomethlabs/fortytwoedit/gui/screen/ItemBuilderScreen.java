@@ -445,7 +445,7 @@ public class ItemBuilderScreen extends GenericScreen {
         if (tab != i && (i == CACHE_TAB_NBT))
             setErrorMsg(null);
         tab = i;
-        reloadScreen();
+        rebuildWidgets();
         resetSuggs();
         unsel();
     }
@@ -2322,7 +2322,7 @@ public class ItemBuilderScreen extends GenericScreen {
                             FortytwoEdit.showToast("Black Market", "Failed to connect to website");
 
                         refreshSaved();
-                        reloadScreen();
+                        rebuildWidgets();
                     }
                     else {
                         savedModeSet = !savedModeSet;
@@ -6047,13 +6047,13 @@ public class ItemBuilderScreen extends GenericScreen {
     }
 
     @Override
-    public void resize(int width, int height) {
+    public void rebuildWidgets() {//TODO
         if (!pauseSaveScroll && tabWidget != null) {
             tabScroll[tab] = tabWidget.scrollAmount();
             pauseSaveScroll = true;
         }
         resetSuggs();
-        super.resize(width, height);
+        super.rebuildWidgets();
         setErrorMsg(inpError);
     }
 

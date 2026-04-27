@@ -53,7 +53,7 @@ public class CapeScreen extends GenericScreen {
             WIDGET_UTIL.newButton("OptiCapes", btn -> {
                     OptionsUtil.ModOptions.OPTICAPES.toggleSetting();
                     FortytwoEdit.clearOptiCapes();
-                    reloadScreen();
+                    rebuildWidgets();
                 }).setBoolName(OptionsUtil.ModOptions.OPTICAPES.getSetting()).setSize(80)
                 .setTooltip(OptionsUtil.ModOptions.OPTICAPES.getButtonTooltip()).build(),
             WIDGET_UTIL.newButton("Refresh", btn -> this.btnReloadCapes())
@@ -64,23 +64,25 @@ public class CapeScreen extends GenericScreen {
         paneScroll().addRow(
             WIDGET_UTIL.newButton("Custom", btn -> {
                     OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.toggleSetting();
-                    reloadScreen();
+                    rebuildWidgets();
                 }).setBoolName(OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.getSetting()).setSize(80)
                 .setTooltip(OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.getButtonTooltip()).build(),
-            WIDGET_UTIL.newButton("Cape: ["+FortytwoEdit.getCurrentClientCape().name()+"]", btn -> changeScreen(new CapeSelectorScreen()))
-                .setTooltip("Select custom cape").build()
+            WIDGET_UTIL.newButton("Cape: ["+FortytwoEdit.getCurrentClientCape().name()+"]", btn -> {
+                    OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.setSetting(true);
+                    changeScreen(new CapeSelectorScreen());
+                }).setTooltip("Select custom cape").build()
         ).stretchPrev();
 
         paneScroll().addRow("Skin", false);
         paneScroll().addRow(
             WIDGET_UTIL.newButton("Custom", btn -> {
                     FortytwoEdit.showClientSkin = !FortytwoEdit.showClientSkin;
-                    reloadScreen();
+                    rebuildWidgets();
                 }).setBoolName(FortytwoEdit.showClientSkin).setSize(80)
                 .setTooltip("Toggle custom skin mode\n\nWhen on: change your skin (only you can see this)").build(),
             WIDGET_UTIL.newButton(FortytwoEdit.clientSkinSlim ? "3px" : "4px", btn -> {
                     FortytwoEdit.clientSkinSlim = !FortytwoEdit.clientSkinSlim;
-                    reloadScreen();
+                    rebuildWidgets();
                 }).setSize(40).setTooltip("Toggle skin model between wide/slim (requires custom skin mode)").build()
         );
         paneScroll().addRow(
@@ -170,10 +172,10 @@ public class CapeScreen extends GenericScreen {
                 if ((skin.getWidth()==64 && skin.getHeight()==64) || (skin.getWidth()==128 && skin.getHeight()==128)) {
                     if (FortytwoEdit.setCustomSkin(file)) {
                         FortytwoEdit.showToast("Custom skin loaded",file.getName());
-                        reloadScreen();
+                        rebuildWidgets();
                         return;
                     }
-                    reloadScreen();
+                    rebuildWidgets();
                 }
                 else {
                     FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE,"File is not a valid 64x64 or 128x128 skin");

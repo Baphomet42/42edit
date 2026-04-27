@@ -27,6 +27,7 @@ public class HacksScreen extends GenericScreen {
 
     protected SmartEditBox txtRando;
     protected boolean unsaved = false;
+    private static final int MAX_RANDO_SLOTS_LENGTH = 15;
 
     public HacksScreen() {
         super("Hacks");
@@ -54,7 +55,7 @@ public class HacksScreen extends GenericScreen {
                 }).setBoolName(FortytwoEdit.isRandoModeEnabled()).setRenderItem(Items.CRACKED_DEEPSLATE_BRICKS).setTooltip(
                     "Toggle mix mode\n\nWhen on - after placing a block, change to a random hotbar slot based on the specified slots"
                 ).build(),
-            WIDGET_UTIL.newEditBox().setMaxLength(15).setValue(getRandoSlotsValue()).setSmartTooltip(
+            WIDGET_UTIL.newEditBox().setMaxLength(MAX_RANDO_SLOTS_LENGTH).setValue(getRandoSlotsValue()).setSmartTooltip(
                     "Mix mode slots\n\nChoose which slots should be randomized.\n\n"
                     +"Example: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)"
                 )
@@ -132,7 +133,7 @@ public class HacksScreen extends GenericScreen {
 
             FortytwoEdit.setRandoModeEnabled(FortytwoEdit.randoSlots != null);
             unsaved = false;
-            reloadScreen();
+            rebuildWidgets();
         }
     }
 
@@ -302,12 +303,6 @@ public class HacksScreen extends GenericScreen {
 
     protected void saveAll() {
         setTxtRando();
-    }
-
-    @Override
-    public void resize(int width, int height) {
-        saveAll();
-        super.resize(width, height);
     }
 
     @Override

@@ -487,24 +487,31 @@ public class BlackMagick {
      * @return true if component is present and default for stack
      */
     public static boolean isComponentDefault(ItemStack stack, String componentId) {
-        return isComponentDefault(stack, BlackMagick.identifierOrNull(componentId));
+        if (stack == null || stack.isEmpty() || componentId == null)
+            return false;
+
+        Set<String> storedComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(stack),"components")).keySet();
+        Set<String> allComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbt(stack),"components")).keySet();
+
+        return (allComponentKeys.contains(componentId) && !storedComponentKeys.contains(componentId));
     }
 
     /**
      * 
      * @param stack
      * @param componentId
-     * @return true if component is present and default for stack
+     * @return true if component in itemNbt is exactly equal to default component for item
      */
-    public static boolean isComponentDefault(ItemStack stack, Identifier componentId) {
-        if (stack == null || stack.isEmpty() || componentId == null)
+    public static boolean isComponentDefault(CompoundTag itemNbt, String componentId) {
+        if (itemNbt == null || componentId == null)
             return false;
 
-        String componentKey = BlackMagick.identifierToString(componentId);
-        Set<String> storedComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(stack),"components")).keySet();
-        Set<String> allComponentKeys = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbt(stack),"components")).keySet();
+        Tag nbtComponent = BlackMagick.getNbtPath(itemNbt, "components."+componentId);
+        Tag itemComponent = BlackMagick.getNbtPath(BlackMagick.itemToNbt(
+            BlackMagick.itemFromNbt(BlackMagick.setNbtPath(itemNbt, "components", null))
+            ), "components."+componentId);
 
-        return (allComponentKeys.contains(componentKey) && !storedComponentKeys.contains(componentKey));
+        return nbtComponent != null && itemComponent != null && BlackMagick.elementsEqual(nbtComponent, itemComponent);
     }
 
     /**

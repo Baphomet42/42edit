@@ -1576,7 +1576,7 @@ public class PathHelper {
                         PathContext pc = PathContext.findNearestItem(contextRoot, contextPath);
                         if (pc.found() && PathNode.testEqual(PathNode.join(pc.path(), PathNode.of("components")), contextPath)) {
                             CompoundTag tryParseCompound = BlackMagick.validCompound(pc.nbtElement());
-                            if (BlackMagick.isComponentDefault(BlackMagick.itemFromNbt(tryParseCompound), key))
+                            if (BlackMagick.isComponentDefault(tryParseCompound, key))
                                 return PathInfo.COMPOUND_KEY_DEFAULT_COMPONENTS_LABEL;
                         }
 

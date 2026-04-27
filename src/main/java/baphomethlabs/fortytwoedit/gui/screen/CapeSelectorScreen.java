@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.OptionsUtil;
@@ -12,15 +13,13 @@ import baphomethlabs.fortytwoedit.FortytwoEdit.CapeTexture;
 import baphomethlabs.fortytwoedit.FortytwoEdit.CapeTextureStatus;
 import baphomethlabs.fortytwoedit.gui.widget.SpriteButton;
 import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton.ItemError;
-import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
 
 public class CapeSelectorScreen extends GenericScreen {
-    
-    protected SmartEditBox txtCustom;
-    protected SmartEditBox txtCustomSkin;
     protected final int playerX = backgroundWidth;
     protected static final int playerY = 0;
     protected static final int playerWidth = 100;
+    protected static final Identifier CAPE_ICON_NONE = Identifier.withDefaultNamespace("spectator/close");
+    protected static final int CAPE_ICON_NONE_SIZE = 16;
     protected final int playerHeight = backgroundHeight;
     protected static final int CAPE_WIDTH = 10;
     protected static final int CAPE_HEIGHT = 16;
@@ -32,6 +31,8 @@ public class CapeSelectorScreen extends GenericScreen {
     protected static final int CAPE_BUTTON_HEIGHT = CAPE_HEIGHT * 2 + SpriteButton.MARGIN + SpriteButton.MARGIN;
     protected static final int CAPE_BUTTONS_PER_ROW = WID_WIDTH_FULL / CAPE_BUTTON_WIDTH;
 
+    protected boolean hasUnloadedCapes = false;
+
     public CapeSelectorScreen() {
         super("Select Custom Cape");
     }
@@ -42,7 +43,10 @@ public class CapeSelectorScreen extends GenericScreen {
         FortytwoEdit.quickScreen = CapeSelectorScreen::new;
         this.addBackButton(CapeScreen::new);
 
+        FortytwoEdit.resolveCapeUrlQueue();
+
         setupScrollPane(true, CAPE_BUTTON_HEIGHT);
+        hasUnloadedCapes = false;
 
         CapeTexture currentCape = FortytwoEdit.getCurrentClientCape();
 
@@ -67,6 +71,13 @@ public class CapeSelectorScreen extends GenericScreen {
             }
         }
 
+        if (hasUnloadedCapes) {
+            paneScroll().addRowPrepend().add(WIDGET_UTIL.newButton("Refresh Capes", (btn, inputs) -> {
+                FortytwoEdit.resolveCapeUrlQueue();
+                rebuildWidgets();
+            }).setTooltip("Some cape textures have not yet loaded. Click to refresh view.").build());
+        }
+
         finalizeScrollPane();
     }
 
@@ -75,6 +86,7 @@ public class CapeSelectorScreen extends GenericScreen {
             paneScroll().addRow();
 
         SpriteButton wid = new SpriteButton(this, CAPE_BUTTON_WIDTH, CAPE_BUTTON_HEIGHT, (btn, inputs) -> {
+            OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.setSetting(true);
             OptionsUtil.ModOptions.CUSTOM_CAPE.setSetting(cape.id());
             rebuildWidgets();
         });
@@ -82,17 +94,20 @@ public class CapeSelectorScreen extends GenericScreen {
         MutableComponent txtCustomTt = Component.empty().append(cape.name());
         if (cape.status()==CapeTextureStatus.UNKNOWN) {
             txtCustomTt.append(Component.empty().append("\n\nUnknown cape selection").withStyle(ChatFormatting.RED));
-            wid.setError(ItemError.ERROR);
+            wid.setError(ItemError.WARN);
+            wid.missingno();
         }
         else if (cape.status() == CapeTextureStatus.NONE) {
-
+            wid.setSprite(CAPE_ICON_NONE, CAPE_ICON_NONE_SIZE);
         }
-        else if (FortytwoEdit.CAPE_ID_TO_TEXTURE.containsKey(cape.id()))
-            wid.setSprite(FortytwoEdit.CAPE_ID_TO_TEXTURE.get(cape.id()), CAPE_WIDTH, CAPE_HEIGHT,
+        else if (FortytwoEdit.CAPE_ID_TO_TEXTURE.containsKey(cape.id())) {
+            wid.setTexture(FortytwoEdit.CAPE_ID_TO_TEXTURE.get(cape.id()), CAPE_WIDTH, CAPE_HEIGHT,
                 CAPE_TEXTURE_WIDTH, CAPE_TEXTURE_HEIGHT, CAPE_SPRITE_U, CAPE_SPRITE_V);
+        }
         else {
             wid.setError(ItemError.WARN);
-            txtCustomTt.append("\n\n").append(Component.empty().append("Failed to load texture").withStyle(ChatFormatting.YELLOW));
+            txtCustomTt.append("\n\n").append(Component.empty().append("Texture still loading").withStyle(ChatFormatting.YELLOW));
+            this.hasUnloadedCapes = true;
         }
 
         if (cape.desc() != null)

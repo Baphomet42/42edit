@@ -251,6 +251,8 @@ public class OptionsUtil {
 
         public abstract boolean isDefault();
 
+        public abstract boolean testSetting(T test);
+
         public T setSetting(T newSetting) {
             readOptions();
             this.currentSetting = newSetting;
@@ -324,6 +326,10 @@ public class OptionsUtil {
             return getSetting() == getDefault();
         }
 
+        public boolean testSetting(Boolean test) {
+            return getSetting() == test;
+        }
+
         public boolean toggleSetting() {
             return setSetting(!this.currentSetting);
         }
@@ -383,7 +389,7 @@ public class OptionsUtil {
 
             return screen.WIDGET_UTIL.newButton(btnTxt, btn -> {
                 toggleSetting();
-                screen.reloadScreen();
+                screen.rebuildWidgets();
             }).setTooltip(getButtonTooltip());
         }
 
@@ -409,6 +415,10 @@ public class OptionsUtil {
 
         public boolean isDefault() {
             return getSetting().equals(getDefault());
+        }
+
+        public boolean testSetting(String test) {
+            return getSetting().equals(test);
         }
 
         public String cycleSetting(boolean forward) {
@@ -494,7 +504,7 @@ public class OptionsUtil {
 
             return screen.WIDGET_UTIL.newButton(btnTxt, (btn, inputs) -> {
                 cycleSetting(!inputs.hasShiftDown());
-                screen.reloadScreen();
+                screen.rebuildWidgets();
             }).setTooltip(getButtonTooltip(details.didFindCurrent(), details.foundDefault(), details.choiceOptions()));
         }
 

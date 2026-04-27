@@ -94,12 +94,6 @@ public class AutoClickScreen extends GenericScreen {
     }
 
     @Override
-    public void resize(int width, int height) {
-        saveAll();
-        super.resize(width, height);
-    }
-
-    @Override
     public void rebuildWidgets() {
         saveAll();
         super.rebuildWidgets();

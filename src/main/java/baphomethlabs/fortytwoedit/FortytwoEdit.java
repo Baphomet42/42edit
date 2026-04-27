@@ -627,7 +627,8 @@ public class FortytwoEdit implements ClientModInitializer {
                                 }
                                 else
                                     FortytwoEdit.logWarn("Failed to load cape id for: "+url);
-                            });
+                            }
+                        );
                     }
                     catch (Exception ex) {
                         FortytwoEdit.logWarn("Failed to load cape texture for: "+url);

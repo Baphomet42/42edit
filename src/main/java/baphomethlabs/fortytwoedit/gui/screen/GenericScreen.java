@@ -269,11 +269,12 @@ public abstract class GenericScreen extends Screen {
         unsel = true;
     }
 
-    public void reloadScreen() {
+    @Override
+    public void rebuildWidgets() {
         double scroll = 0;
         if (SCROLL_PANE != null)
             scroll = SCROLL_PANE.scrollAmount();
-        this.rebuildWidgets();
+        super.rebuildWidgets();
         if (SCROLL_PANE != null)
             SCROLL_PANE.setScrollAmount(scroll);
     }
@@ -337,6 +338,11 @@ public abstract class GenericScreen extends Screen {
         public ScrollRow addRow(ScrollRow row) {
             this.addEntry(row);
             return getRow();
+        }
+
+        public ScrollRow addRowPrepend() {
+            this.addEntryToTop(new ScrollRow(NARROW));
+            return this.children().getFirst();
         }
 
         public ScrollRow addRow(PosWidget... posWidgets) {
