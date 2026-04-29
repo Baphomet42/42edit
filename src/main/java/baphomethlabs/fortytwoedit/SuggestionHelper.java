@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.core.Holder;
@@ -43,6 +42,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.saveddata.maps.MapDecorationType;
+import net.minecraft.world.scores.TeamColor;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -355,9 +356,8 @@ public class SuggestionHelper {
     public static final SuggestionGetter LIST_FORMATTING_COLOR = registerSuggsList("LIST_FORMATTING_COLOR", () -> {
         List<String> list = createOrGetCacheList("LIST_FORMATTING_COLOR",false);
         if (list.isEmpty()) {
-            for (String i : ChatFormatting.getNames(true, false))
-                if (!i.equals("reset"))
-                    list.add(i);
+            for (TeamColor i : TeamColor.values())
+                list.add(i.getSerializedName());
             sortUnique(list);
         }
         return list;
