@@ -105,24 +105,22 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void chatIconNew(Component text, UUID uuid) {
         try {
             final Minecraft minecraft = Minecraft.getInstance();
-            String mapKey = ""+minecraft.gui.hud.getGuiTicks()+"_"+BlackMagick.textComponentToSnbt(text);
-            MutableComponent newComponent = Component.empty();
-
-            String hat = ",hat:true";
             PlayerInfo playerInfo = minecraft.player.connection.getPlayerInfo(uuid);
-            if (playerInfo != null && !playerInfo.showHat()) {
-                hat = ",hat:false";
-            }
+            if (playerInfo != null) {
+                String mapKey = ""+minecraft.gui.hud.getGuiTicks()+"_"+BlackMagick.textComponentToSnbt(text);
+                MutableComponent newComponent = Component.empty();
 
-            ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{id:"
-                +BlackMagick.nbtToSnbt(new IntArrayTag(UUIDUtil.uuidToIntArray(uuid)))+"}"+hat+",shadow_color:0}");
+                ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{id:"
+                    +BlackMagick.nbtToSnbt(new IntArrayTag(UUIDUtil.uuidToIntArray(uuid)))+"},hat:"
+                    +(playerInfo.showHat() ? "true" : "false")+",shadow_color:0}");
 
-            if (parsedText.isValid()) {
-                newComponent.append(parsedText.text());
-                newComponent.append(" ");
-                newComponent.append(text);
-                CHAT_ICON_COMPONENT_CACHE.put(mapKey,newComponent);
-                chatCache(mapKey);
+                if (parsedText.isValid()) {
+                    newComponent.append(parsedText.text());
+                    newComponent.append(" ");
+                    newComponent.append(text);
+                    CHAT_ICON_COMPONENT_CACHE.put(mapKey,newComponent);
+                    chatCache(mapKey);
+                }
             }
         } catch (Exception ex) {}
     }
