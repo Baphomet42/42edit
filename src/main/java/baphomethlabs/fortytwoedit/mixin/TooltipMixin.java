@@ -36,13 +36,13 @@ public abstract class TooltipMixin {
                 cir.setReturnValue(cacheTooltip);
             else if (client.font.split(message, small).size()>lineSwap) {
 
-                int largeSafe = Math.min(large,client.gui.screen().width-safeZone);
-                int mediumSafe = Math.min(medium,client.gui.screen().width-safeZone);
+                int largeSafe = Math.min(large,client.gui.screen().width - safeZone);
+                int mediumSafe = Math.min(medium,client.gui.screen().width - safeZone);
 
                 if (client.font.split(message, largeSafe).size()>lineSwap) {
-                    List<FormattedCharSequence> linesImmutable = client.font.split(message, client.gui.screen().width-safeZone);
+                    List<FormattedCharSequence> linesImmutable = client.font.split(message, client.gui.screen().width - safeZone);
                     List<FormattedCharSequence> lines = Lists.newArrayList();
-                    int maxLines = Math.max(lineSwap,((client.gui.screen().height-safeZone)/10)-1);//10 pixels per line, -1 line gives space to see hotbar
+                    int maxLines = Math.max(lineSwap, ((client.gui.screen().height - safeZone) / 10) - 1); //10 pixels per line, -1 line gives space to see hotbar
                     for (FormattedCharSequence t : linesImmutable)
                         lines.add(t);
                     if (lines.size()>maxLines) {
@@ -50,23 +50,23 @@ public abstract class TooltipMixin {
                         int startLine = 1;
                         int endLine = lines.size();
 
-                        for (int i=0; i<GenericScreen.getCurrentTooltipScroll(); i++)
-                            if (lines.size()>maxLines-1) {
+                        for (int i = 0; i < GenericScreen.getCurrentTooltipScroll(); i++)
+                            if (lines.size() > maxLines - 1) {
                                 lines.remove(0);
                                 startLine++;
                             }
                             else
                                 break;
                         GenericScreen.setCurrentTooltipScroll(startLine - 1);
-                        while (lines.size()>maxLines-1) {
-                            lines.remove(lines.size()-1);
+                        while (lines.size() > maxLines - 1) {
+                            lines.remove(lines.size() - 1);
                             endLine--;
                         }
                         List<FormattedCharSequence> extra = client.font.split(Component.empty()
-                            .append("[Showing lines "+ startLine + "-" + endLine + " of " + originalLines + "]")
+                            .append("[Showing lines " + startLine + "-" + endLine + " of " + originalLines + "]")
                             .append("  ")
-                            .append(Component.empty().append("Use Ctrl+PGU/PGD to cycle").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC))
-                            , client.gui.screen().width-safeZone);
+                            .append(Component.empty().append("Use Ctrl+PGU/PGD to cycle").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC)),
+                            client.gui.screen().width - safeZone);
                         lines.add(extra.get(0));
                     }
                     cir.setReturnValue(lines);

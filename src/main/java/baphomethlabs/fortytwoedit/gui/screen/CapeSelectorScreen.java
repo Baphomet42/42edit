@@ -92,7 +92,7 @@ public class CapeSelectorScreen extends GenericScreen {
         });
         
         MutableComponent txtCustomTt = Component.empty().append(cape.name());
-        if (cape.status()==CapeTextureStatus.UNKNOWN) {
+        if (cape.status() == CapeTextureStatus.UNKNOWN) {
             txtCustomTt.append(Component.empty().append("\n\nUnknown cape selection").withStyle(ChatFormatting.RED));
             wid.setError(ItemError.WARN);
             wid.missingno();

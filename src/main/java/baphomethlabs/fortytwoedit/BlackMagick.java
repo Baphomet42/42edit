@@ -65,7 +65,7 @@ public class BlackMagick {
     public static void setItemMain(ItemStack item) {
         final Minecraft client = Minecraft.getInstance();
         if (client.player != null)
-            setItem(item,client.player.getInventory().getSelectedSlot(),36+client.player.getInventory().getSelectedSlot());
+            setItem(item, client.player.getInventory().getSelectedSlot(), 36 + client.player.getInventory().getSelectedSlot());
     }
 
     /**
@@ -74,7 +74,7 @@ public class BlackMagick {
      * @param item
      */
     public static void setItemOff(ItemStack item) {
-        setItem(item,Inventory.SLOT_OFFHAND,45);
+        setItem(item, Inventory.SLOT_OFFHAND, 45);
     }
 
     /**
@@ -83,7 +83,7 @@ public class BlackMagick {
      * @param item
      */
     public static void setItemHead(ItemStack item) {
-        setItem(item,39,5);
+        setItem(item, 39, 5);
     }
 
     /**

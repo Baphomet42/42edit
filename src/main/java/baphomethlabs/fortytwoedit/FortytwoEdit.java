@@ -111,8 +111,8 @@ public class FortytwoEdit implements ClientModInitializer {
                 MutableComponent newComponent = Component.empty();
 
                 ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{id:"
-                    +BlackMagick.nbtToSnbt(new IntArrayTag(UUIDUtil.uuidToIntArray(uuid)))+"},hat:"
-                    +(playerInfo.showHat() ? "true" : "false")+",shadow_color:0}");
+                    + BlackMagick.nbtToSnbt(new IntArrayTag(UUIDUtil.uuidToIntArray(uuid))) + "},hat:"
+                    + (playerInfo.showHat() ? "true" : "false") + ",shadow_color:0}");
 
                 if (parsedText.isValid()) {
                     newComponent.append(parsedText.text());
@@ -127,7 +127,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void chatIconNew(Component text, String name) {
         try {
             final Minecraft minecraft = Minecraft.getInstance();
-            String mapKey = ""+minecraft.gui.hud.getGuiTicks()+"_"+BlackMagick.textComponentToSnbt(text);
+            String mapKey = "" + minecraft.gui.hud.getGuiTicks() + "_"+BlackMagick.textComponentToSnbt(text);
             MutableComponent newComponent = Component.empty();
 
             String hat = ",hat:true";

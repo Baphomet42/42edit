@@ -105,7 +105,7 @@ public class SpriteButton extends SmartButton {
             }
             if (sprite != null) {
                 context.blitSprite(RenderPipelines.GUI_TEXTURED,
-                    sprite, this.getX()+((getWidth()-SIZE_ERROR)/2), this.getY()+((getHeight()-SIZE_ERROR)/2), SIZE_ERROR, SIZE_ERROR);
+                    sprite, this.getX() + ((getWidth() - SIZE_ERROR) / 2), this.getY() + ((getHeight() - SIZE_ERROR) / 2), SIZE_ERROR, SIZE_ERROR);
             }
         }
 

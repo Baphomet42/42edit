@@ -41,7 +41,7 @@ public class AutoClickScreen extends GenericScreen {
                     rebuildWidgets();
                 }).setBoolName(FortytwoEdit.autoAttack).setRenderItem(Items.GOLDEN_SWORD).setTooltip(
                 "Toggle auto attack in auto click mode\n\nWhen on: auto click mode will use the attack key based on the specified timer").build(),
-            WIDGET_UTIL.newEditBox().setMaxLength(4).setValue(""+FortytwoEdit.attackWait).setResponder(this::editTxtAttackCooldown)
+            WIDGET_UTIL.newEditBox().setMaxLength(4).setValue("" + FortytwoEdit.attackWait).setResponder(this::editTxtAttackCooldown)
                 .runWithSelf(w -> this.txtAttackCooldown = w).setSmartTooltip(
                 "Number of milliseconds between attacks during auto click mode (defaults to 1500)").build()
         );
@@ -74,7 +74,7 @@ public class AutoClickScreen extends GenericScreen {
             int attackWait = 1500;
             inp = inp.replaceAll("[^0-9]","");
             try {
-                attackWait=Integer.parseInt(inp);
+                attackWait = Integer.parseInt(inp);
             } catch (NumberFormatException ex) {}
 
             if (attackWait < 1)
@@ -83,8 +83,8 @@ public class AutoClickScreen extends GenericScreen {
                 attackWait = 9999;
 
             FortytwoEdit.updateAutoClick(FortytwoEdit.autoClick,FortytwoEdit.autoMine,FortytwoEdit.autoAttack,FortytwoEdit.autoFish,attackWait);
-            if (!originalInp.equals(""+attackWait))
-                txtAttackCooldown.setValue(""+attackWait);
+            if (!originalInp.equals("" + attackWait))
+                txtAttackCooldown.setValue("" + attackWait);
             unsaved = false;
         }
     }

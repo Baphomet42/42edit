@@ -28,13 +28,13 @@ public class ItemHistoryScreen extends GenericScreen {
         else
             paneScroll().addRow("Showing recent " + history.size() + " item(s)");
 
-        for (int i=0; i<FortytwoEdit.ITEM_HIST_ROWS; i++) {
+        for (int i = 0; i<FortytwoEdit.ITEM_HIST_ROWS; i++) {
             ScrollRow row = paneScroll().addRow();
-            for (int slot=0; slot<9; slot++) {
+            for (int slot = 0; slot < 9; slot++) {
                 final ItemStack item;
-                int histIndex = i*9+slot;
+                int histIndex = i * 9 + slot;
                 if (history.size()>histIndex)
-                    item = BlackMagick.itemFromNbtTag(history.get(i*9+slot));
+                    item = BlackMagick.itemFromNbtTag(history.get(i * 9 + slot));
                 else
                     item = ItemStack.EMPTY;
                 ItemSlotButton itemBtn = new ItemSlotButton(this, ItemSlotButton.SLOT_HEIGHT, item, btn -> btnCopyItemNbt(item));

@@ -144,12 +144,12 @@ public class SuggestionHelper {
         int totalCount = 0;
         for (String list : SUGGS_LIST_METHODS.keySet()) {
             if (SUGGS_LIST_METHODS.get(list).get().isEmpty())
-                FortytwoEdit.logWarn("Unable to fetch suggestions list: "+list);
+                FortytwoEdit.logWarn("Unable to fetch suggestions list: " + list);
             else
                 successCount++;
             totalCount++;
         }
-        FortytwoEdit.logInfo("Loaded "+successCount+"/"+totalCount+" suggestions lists");
+        FortytwoEdit.logInfo("Loaded " + successCount + "/" + totalCount + " suggestions lists");
     }
 
     protected static List<String> createOrGetCacheList(String name, boolean isDynamic) {
@@ -157,7 +157,7 @@ public class SuggestionHelper {
         if (LIST_CACHES.containsKey(name))
             return LIST_CACHES.get(name);
         List<String> list = Lists.newArrayList();
-        LIST_CACHES.put(name,list);
+        LIST_CACHES.put(name, list);
         if (isDynamic)
             DYNAMIC_LIST_CACHES.add(name);
         return list;
@@ -272,7 +272,7 @@ public class SuggestionHelper {
     // static hardcoded lists
 
     public static final SuggestionGetter LIST_ATTRIBUTE_MODIFIER_SLOT = registerSuggsList("LIST_ATTRIBUTE_MODIFIER_SLOT", () -> {
-        List<String> list = createOrGetCacheList("LIST_ATTRIBUTE_MODIFIER_SLOT",false);
+        List<String> list = createOrGetCacheList("LIST_ATTRIBUTE_MODIFIER_SLOT", false);
         if (list.isEmpty()) {
             for (EquipmentSlotGroup i : EquipmentSlotGroup.values())
                 list.add(i.getSerializedName());
@@ -282,7 +282,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_AXOLOTL_VARIANT = registerSuggsList("LIST_AXOLOTL_VARIANT", () -> {
-        List<String> list = createOrGetCacheList("LIST_AXOLOTL_VARIANT",false);
+        List<String> list = createOrGetCacheList("LIST_AXOLOTL_VARIANT", false);
         if (list.isEmpty()) {
             for (Axolotl.Variant i : Axolotl.Variant.values())
                 list.add(i.getSerializedName());
@@ -295,7 +295,7 @@ public class SuggestionHelper {
      * Contains components that can be serialized
      */
     public static final SuggestionGetter LIST_DATA_COMPONENT_TYPE = registerSuggsList("LIST_DATA_COMPONENT_TYPE", () -> {
-        List<String> list = createOrGetCacheList("LIST_DATA_COMPONENT_TYPE",false);
+        List<String> list = createOrGetCacheList("LIST_DATA_COMPONENT_TYPE", false);
         if (list.isEmpty()) {
             BuiltInRegistries.DATA_COMPONENT_TYPE.forEach(i -> {
                 if (!i.isTransient())
@@ -310,7 +310,7 @@ public class SuggestionHelper {
      * Contains components that can be serialized
      */
     public static final SuggestionGetter LIST_DATA_COMPONENT_TYPE_OR_REMOVED = registerSuggsList("LIST_DATA_COMPONENT_TYPE_OR_REMOVED", () -> {
-        List<String> list = createOrGetCacheList("LIST_DATA_COMPONENT_TYPE_OR_REMOVED",false);
+        List<String> list = createOrGetCacheList("LIST_DATA_COMPONENT_TYPE_OR_REMOVED", false);
         if (list.isEmpty()) {
             BuiltInRegistries.DATA_COMPONENT_TYPE.forEach(i -> {
                 if (!i.isTransient()) {
@@ -324,7 +324,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_DYE_COLOR = registerSuggsList("LIST_DYE_COLOR", () -> {
-        List<String> list = createOrGetCacheList("LIST_DYE_COLOR",false);
+        List<String> list = createOrGetCacheList("LIST_DYE_COLOR", false);
         if (list.isEmpty()) {
             for (DyeColor i : DyeColor.values())
                 list.add(i.getSerializedName());
@@ -334,7 +334,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_EQUIPMENT_SLOT = registerSuggsList("LIST_EQUIPMENT_SLOT", () -> {
-        List<String> list = createOrGetCacheList("LIST_EQUIPMENT_SLOT",false);
+        List<String> list = createOrGetCacheList("LIST_EQUIPMENT_SLOT", false);
         if (list.isEmpty()) {
             for (EquipmentSlot i : EquipmentSlot.values())
                 list.add(i.getSerializedName());
@@ -344,7 +344,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_FIREWORK_EXPLOSION_COMPONENT_TYPE = registerSuggsList("LIST_FIREWORK_EXPLOSION_COMPONENT_TYPE", () -> {
-        List<String> list = createOrGetCacheList("LIST_FIREWORK_EXPLOSION_COMPONENT_TYPE",false);
+        List<String> list = createOrGetCacheList("LIST_FIREWORK_EXPLOSION_COMPONENT_TYPE", false);
         if (list.isEmpty()) {
             for (FireworkExplosion.Shape i : FireworkExplosion.Shape.values())
                 list.add(i.getSerializedName());
@@ -354,7 +354,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_FORMATTING_COLOR = registerSuggsList("LIST_FORMATTING_COLOR", () -> {
-        List<String> list = createOrGetCacheList("LIST_FORMATTING_COLOR",false);
+        List<String> list = createOrGetCacheList("LIST_FORMATTING_COLOR", false);
         if (list.isEmpty()) {
             for (TeamColor i : TeamColor.values())
                 list.add(i.getSerializedName());
@@ -364,7 +364,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_FOX_VARIANT = registerSuggsList("LIST_FOX_VARIANT", () -> {
-        List<String> list = createOrGetCacheList("LIST_FOX_VARIANT",false);
+        List<String> list = createOrGetCacheList("LIST_FOX_VARIANT", false);
         if (list.isEmpty()) {
             for (Fox.Variant i : Fox.Variant.values())
                 list.add(i.getSerializedName());
@@ -374,7 +374,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_HORSE_VARIANT = registerSuggsList("LIST_HORSE_VARIANT", () -> {
-        List<String> list = createOrGetCacheList("LIST_HORSE_VARIANT",false);
+        List<String> list = createOrGetCacheList("LIST_HORSE_VARIANT", false);
         if (list.isEmpty()) {
             for (Variant i : Variant.values())
                 list.add(i.getSerializedName());
@@ -384,7 +384,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_KEYBIND = registerSuggsList("LIST_KEYBIND", () -> {
-        List<String> list = createOrGetCacheList("LIST_KEYBIND",false);
+        List<String> list = createOrGetCacheList("LIST_KEYBIND", false);
         if (list.isEmpty()) {
             for (String i : KeyMappingAccessor.getKeysList().keySet())
                 if (!i.startsWith("42edit."))
@@ -395,7 +395,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_LLAMA_VARIANT = registerSuggsList("LIST_LLAMA_VARIANT", () -> {
-        List<String> list = createOrGetCacheList("LIST_LLAMA_VARIANT",false);
+        List<String> list = createOrGetCacheList("LIST_LLAMA_VARIANT", false);
         if (list.isEmpty()) {
             for (Llama.Variant i : Llama.Variant.values())
                 list.add(i.getSerializedName());
@@ -405,7 +405,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_MAP_COLOR = registerSuggsListSnbt("LIST_MAP_COLOR", () -> {
-        List<String> list = createOrGetCacheList("LIST_MAP_COLOR",false);
+        List<String> list = createOrGetCacheList("LIST_MAP_COLOR", false);
         if (list.isEmpty()) {
             list.add(BlackMagick.hexFromInt(MapItemColor.DEFAULT.rgb()));
             for (Identifier i : BuiltInRegistries.MAP_DECORATION_TYPE.keySet()) {
@@ -420,7 +420,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_MOOSHROOM_VARIANT = registerSuggsList("LIST_MOOSHROOM_VARIANT", () -> {
-        List<String> list = createOrGetCacheList("LIST_MOOSHROOM_VARIANT",false);
+        List<String> list = createOrGetCacheList("LIST_MOOSHROOM_VARIANT", false);
         if (list.isEmpty()) {
             for (MushroomCow.Variant i : MushroomCow.Variant.values())
                 list.add(i.getSerializedName());
@@ -430,7 +430,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_PARROT_VARIANT = registerSuggsList("LIST_PARROT_VARIANT", () -> {
-        List<String> list = createOrGetCacheList("LIST_PARROT_VARIANT",false);
+        List<String> list = createOrGetCacheList("LIST_PARROT_VARIANT", false);
         if (list.isEmpty()) {
             for (Parrot.Variant i : Parrot.Variant.values())
                 list.add(i.getSerializedName());
@@ -440,7 +440,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_POTION_CUSTOM_NAME = registerSuggsList("LIST_POTION_CUSTOM_NAME", () -> {
-        List<String> list = createOrGetCacheList("LIST_POTION_CUSTOM_NAME",false);
+        List<String> list = createOrGetCacheList("LIST_POTION_CUSTOM_NAME", false);
         if (list.isEmpty()) {
             list.add("empty");
             for (Identifier i : BuiltInRegistries.POTION.keySet())
@@ -451,7 +451,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_RABBIT_VARIANT = registerSuggsList("LIST_RABBIT_VARIANT", () -> {
-        List<String> list = createOrGetCacheList("LIST_RABBIT_VARIANT",false);
+        List<String> list = createOrGetCacheList("LIST_RABBIT_VARIANT", false);
         if (list.isEmpty()) {
             for (Rabbit.Variant i : Rabbit.Variant.values())
                 list.add(i.getSerializedName());
@@ -461,7 +461,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_SALMON_VARIANT = registerSuggsList("LIST_SALMON_VARIANT", () -> {
-        List<String> list = createOrGetCacheList("LIST_SALMON_VARIANT",false);
+        List<String> list = createOrGetCacheList("LIST_SALMON_VARIANT", false);
         if (list.isEmpty()) {
             for (Salmon.Variant i : Salmon.Variant.values())
                 list.add(i.getSerializedName());
@@ -471,7 +471,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_SWING_ANIMATION_TYPE = registerSuggsList("LIST_SWING_ANIMATION_TYPE", () -> {
-        List<String> list = createOrGetCacheList("LIST_SWING_ANIMATION_TYPE",false);
+        List<String> list = createOrGetCacheList("LIST_SWING_ANIMATION_TYPE", false);
         if (list.isEmpty()) {
             for (SwingAnimationType i : SwingAnimationType.values())
                 list.add(i.getSerializedName());
@@ -481,7 +481,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_TROPICAL_FISH_VARIANT = registerSuggsList("LIST_TROPICAL_FISH_VARIANT", () -> {
-        List<String> list = createOrGetCacheList("LIST_TROPICAL_FISH_VARIANT",false);
+        List<String> list = createOrGetCacheList("LIST_TROPICAL_FISH_VARIANT", false);
         if (list.isEmpty()) {
             for (TropicalFish.Pattern i : TropicalFish.Pattern.values())
                 list.add(i.getSerializedName());
@@ -494,7 +494,7 @@ public class SuggestionHelper {
      * Entries for consumable component animation
      */
     public static final SuggestionGetter LIST_USE_ACTION = registerSuggsList("LIST_USE_ACTION", () -> {
-        List<String> list = createOrGetCacheList("LIST_USE_ACTION",false);
+        List<String> list = createOrGetCacheList("LIST_USE_ACTION", false);
         if (list.isEmpty()) {
             for (ItemUseAnimation i : ItemUseAnimation.values())
                 list.add(i.getSerializedName());
@@ -507,7 +507,7 @@ public class SuggestionHelper {
     // dynamic hardcoded lists
 
     public static final SuggestionGetter LIST_ATLAS = registerSuggsList("LIST_ATLAS", () -> {
-        List<String> list = createOrGetCacheList("LIST_ATLAS",true);
+        List<String> list = createOrGetCacheList("LIST_ATLAS", true);
         if (list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
             if (client.getAtlasManager() != null) {
@@ -521,7 +521,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_SPRITE = registerSuggsList("LIST_SPRITE", () -> {
-        List<String> list = createOrGetCacheList("LIST_SPRITE",true);
+        List<String> list = createOrGetCacheList("LIST_SPRITE", true);
         if (list.isEmpty()) {
             final Minecraft client = Minecraft.getInstance();
             if (client.getAtlasManager() != null) {
@@ -537,7 +537,7 @@ public class SuggestionHelper {
     });
 
     public static final SuggestionGetter LIST_TRANSLATION_KEY = registerSuggsList("LIST_TRANSLATION_KEY", () -> {
-        List<String> list = createOrGetCacheList("LIST_TRANSLATION_KEY",true);
+        List<String> list = createOrGetCacheList("LIST_TRANSLATION_KEY", true);
         if (list.isEmpty()) {
             final Language lang = Language.getInstance();
             if (lang instanceof ClientLanguage) {
@@ -563,43 +563,43 @@ public class SuggestionHelper {
     }
 
     public static final SuggestionGetter REGISTRY_ATTRIBUTE = registerSuggsList("REGISTRY_ATTRIBUTE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ATTRIBUTE",false),BuiltInRegistries.ATTRIBUTE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ATTRIBUTE", false), BuiltInRegistries.ATTRIBUTE));
 
     public static final SuggestionGetter REGISTRY_BLOCK = registerSuggsList("REGISTRY_BLOCK", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_BLOCK",false),BuiltInRegistries.BLOCK));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_BLOCK", false), BuiltInRegistries.BLOCK));
 
     public static final SuggestionGetter REGISTRY_BLOCK_ENTITY_TYPE = registerSuggsList("REGISTRY_BLOCK_ENTITY_TYPE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_BLOCK_ENTITY_TYPE",false),BuiltInRegistries.BLOCK_ENTITY_TYPE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_BLOCK_ENTITY_TYPE", false), BuiltInRegistries.BLOCK_ENTITY_TYPE));
 
     public static final SuggestionGetter REGISTRY_CONSUME_EFFECT_TYPE = registerSuggsList("REGISTRY_CONSUME_EFFECT_TYPE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_CONSUME_EFFECT_TYPE",false),BuiltInRegistries.CONSUME_EFFECT_TYPE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_CONSUME_EFFECT_TYPE", false), BuiltInRegistries.CONSUME_EFFECT_TYPE));
 
     public static final SuggestionGetter REGISTRY_DIALOG_TYPE = registerSuggsList("REGISTRY_DIALOG_TYPE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_DIALOG_TYPE",false),BuiltInRegistries.DIALOG_TYPE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_DIALOG_TYPE", false), BuiltInRegistries.DIALOG_TYPE));
 
     public static final SuggestionGetter REGISTRY_ITEM = registerSuggsList("REGISTRY_ITEM", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ITEM",false),BuiltInRegistries.ITEM));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ITEM", false), BuiltInRegistries.ITEM));
 
     public static final SuggestionGetter REGISTRY_MAP_DECORATION_TYPE = registerSuggsList("REGISTRY_MAP_DECORATION_TYPE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_MAP_DECORATION_TYPE",false),BuiltInRegistries.MAP_DECORATION_TYPE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_MAP_DECORATION_TYPE", false), BuiltInRegistries.MAP_DECORATION_TYPE));
 
     public static final SuggestionGetter REGISTRY_SOUND_EVENT = registerSuggsList("REGISTRY_SOUND_EVENT", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_SOUND_EVENT",false),BuiltInRegistries.SOUND_EVENT));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_SOUND_EVENT", false), BuiltInRegistries.SOUND_EVENT));
 
     public static final SuggestionGetter REGISTRY_STATUS_EFFECT = registerSuggsList("REGISTRY_STATUS_EFFECT", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_STATUS_EFFECT",false),BuiltInRegistries.MOB_EFFECT));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_STATUS_EFFECT", false), BuiltInRegistries.MOB_EFFECT));
 
     public static final SuggestionGetter REGISTRY_ENTITY_TYPE = registerSuggsList("REGISTRY_ENTITY_TYPE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ENTITY_TYPE",false),BuiltInRegistries.ENTITY_TYPE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ENTITY_TYPE", false), BuiltInRegistries.ENTITY_TYPE));
 
     public static final SuggestionGetter REGISTRY_PARTICLE_TYPE = registerSuggsList("REGISTRY_PARTICLE_TYPE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_PARTICLE_TYPE",false),BuiltInRegistries.PARTICLE_TYPE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_PARTICLE_TYPE", false), BuiltInRegistries.PARTICLE_TYPE));
 
     public static final SuggestionGetter REGISTRY_POTION = registerSuggsList("REGISTRY_POTION", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_POTION",false),BuiltInRegistries.POTION));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_POTION", false), BuiltInRegistries.POTION));
 
     public static final SuggestionGetter REGISTRY_VILLAGER_TYPE = registerSuggsList("REGISTRY_VILLAGER_TYPE", () ->
-        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_VILLAGER_TYPE",false),BuiltInRegistries.VILLAGER_TYPE));
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_VILLAGER_TYPE", false), BuiltInRegistries.VILLAGER_TYPE));
 
 
     // dynamic data lists
@@ -618,67 +618,67 @@ public class SuggestionHelper {
     }
 
     public static final SuggestionGetter DATA_BANNER_PATTERN = registerSuggsList("DATA_BANNER_PATTERN", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_BANNER_PATTERN",true),Registries.BANNER_PATTERN));
+        getDataIfEmpty(createOrGetCacheList("DATA_BANNER_PATTERN", true), Registries.BANNER_PATTERN));
 
     public static final SuggestionGetter DATA_CAT_SOUND_VARIANT = registerSuggsList("DATA_CAT_SOUND_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_CAT_SOUND_VARIANT",true),Registries.CAT_SOUND_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_CAT_SOUND_VARIANT", true), Registries.CAT_SOUND_VARIANT));
 
     public static final SuggestionGetter DATA_CAT_VARIANT = registerSuggsList("DATA_CAT_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_CAT_VARIANT",true),Registries.CAT_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_CAT_VARIANT", true), Registries.CAT_VARIANT));
 
     public static final SuggestionGetter DATA_CHICKEN_SOUND_VARIANT = registerSuggsList("DATA_CHICKEN_SOUND_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_CHICKEN_SOUND_VARIANT",true),Registries.CHICKEN_SOUND_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_CHICKEN_SOUND_VARIANT", true), Registries.CHICKEN_SOUND_VARIANT));
 
     public static final SuggestionGetter DATA_CHICKEN_VARIANT = registerSuggsList("DATA_CHICKEN_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_CHICKEN_VARIANT",true),Registries.CHICKEN_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_CHICKEN_VARIANT", true), Registries.CHICKEN_VARIANT));
 
     public static final SuggestionGetter DATA_COW_SOUND_VARIANT = registerSuggsList("DATA_COW_SOUND_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_COW_SOUND_VARIANT",true),Registries.COW_SOUND_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_COW_SOUND_VARIANT", true), Registries.COW_SOUND_VARIANT));
 
     public static final SuggestionGetter DATA_COW_VARIANT = registerSuggsList("DATA_COW_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_COW_VARIANT",true),Registries.COW_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_COW_VARIANT", true), Registries.COW_VARIANT));
 
     public static final SuggestionGetter DATA_DAMAGE_TYPE = registerSuggsList("DATA_DAMAGE_TYPE", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_DAMAGE_TYPE",true),Registries.DAMAGE_TYPE));
+        getDataIfEmpty(createOrGetCacheList("DATA_DAMAGE_TYPE", true), Registries.DAMAGE_TYPE));
 
     public static final SuggestionGetter DATA_DIALOG = registerSuggsList("DATA_DIALOG", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_DIALOG",true),Registries.DIALOG));
+        getDataIfEmpty(createOrGetCacheList("DATA_DIALOG", true), Registries.DIALOG));
 
     public static final SuggestionGetter DATA_ENCHANTMENT = registerSuggsList("DATA_ENCHANTMENT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_ENCHANTMENT",true),Registries.ENCHANTMENT));
+        getDataIfEmpty(createOrGetCacheList("DATA_ENCHANTMENT", true), Registries.ENCHANTMENT));
 
     public static final SuggestionGetter DATA_FROG_VARIANT = registerSuggsList("DATA_FROG_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_FROG_VARIANT",true),Registries.FROG_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_FROG_VARIANT", true), Registries.FROG_VARIANT));
 
     public static final SuggestionGetter DATA_INSTRUMENT = registerSuggsList("DATA_INSTRUMENT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_INSTRUMENT",true),Registries.INSTRUMENT));
+        getDataIfEmpty(createOrGetCacheList("DATA_INSTRUMENT", true), Registries.INSTRUMENT));
 
     public static final SuggestionGetter DATA_JUKEBOX_SONG = registerSuggsList("DATA_JUKEBOX_SONG", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_JUKEBOX_SONG",true),Registries.JUKEBOX_SONG));
+        getDataIfEmpty(createOrGetCacheList("DATA_JUKEBOX_SONG", true), Registries.JUKEBOX_SONG));
 
     public static final SuggestionGetter DATA_PAINTING_VARIANT = registerSuggsList("DATA_PAINTING_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_PAINTING_VARIANT",true),Registries.PAINTING_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_PAINTING_VARIANT", true), Registries.PAINTING_VARIANT));
 
     public static final SuggestionGetter DATA_PIG_SOUND_VARIANT = registerSuggsList("DATA_PIG_SOUND_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_PIG_SOUND_VARIANT",true),Registries.PIG_SOUND_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_PIG_SOUND_VARIANT", true), Registries.PIG_SOUND_VARIANT));
 
     public static final SuggestionGetter DATA_PIG_VARIANT = registerSuggsList("DATA_PIG_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_PIG_VARIANT",true),Registries.PIG_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_PIG_VARIANT", true), Registries.PIG_VARIANT));
 
     public static final SuggestionGetter DATA_TRIM_MATERIAL = registerSuggsList("DATA_TRIM_MATERIAL", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_TRIM_MATERIAL",true),Registries.TRIM_MATERIAL));
+        getDataIfEmpty(createOrGetCacheList("DATA_TRIM_MATERIAL", true), Registries.TRIM_MATERIAL));
 
     public static final SuggestionGetter DATA_TRIM_PATTERN = registerSuggsList("DATA_TRIM_PATTERN", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_TRIM_PATTERN",true),Registries.TRIM_PATTERN));
+        getDataIfEmpty(createOrGetCacheList("DATA_TRIM_PATTERN", true), Registries.TRIM_PATTERN));
 
     public static final SuggestionGetter DATA_WOLF_SOUND_VARIANT = registerSuggsList("DATA_WOLF_SOUND_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_WOLF_SOUND_VARIANT",true),Registries.WOLF_SOUND_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_WOLF_SOUND_VARIANT", true), Registries.WOLF_SOUND_VARIANT));
 
     public static final SuggestionGetter DATA_WOLF_VARIANT = registerSuggsList("DATA_WOLF_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_WOLF_VARIANT",true),Registries.WOLF_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_WOLF_VARIANT", true), Registries.WOLF_VARIANT));
 
     public static final SuggestionGetter DATA_ZOMBIE_NAUTILUS_VARIANT = registerSuggsList("DATA_ZOMBIE_NAUTILUS_VARIANT", () ->
-        getDataIfEmpty(createOrGetCacheList("DATA_ZOMBIE_NAUTILUS_VARIANT",true),Registries.ZOMBIE_NAUTILUS_VARIANT));
+        getDataIfEmpty(createOrGetCacheList("DATA_ZOMBIE_NAUTILUS_VARIANT", true), Registries.ZOMBIE_NAUTILUS_VARIANT));
 
 
     // dynamic data tags lists
@@ -689,7 +689,7 @@ public class SuggestionHelper {
             if (client.level != null)
                 BlackMagick.getRegistryAccess(client).lookup(registryRef).ifPresent(reg -> {
                     reg.listTagIds().forEach(tag -> {
-                        list.add("#"+BlackMagick.identifierToString(tag.location()));
+                        list.add("#" + BlackMagick.identifierToString(tag.location()));
                     });
                 });
             sortUnique(list);
@@ -698,28 +698,28 @@ public class SuggestionHelper {
     }
 
     public static final SuggestionGetter DATA_TAG_BANNER_PATTERN = registerSuggsList("DATA_TAG_BANNER_PATTERN", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_BANNER_PATTERN",true),Registries.BANNER_PATTERN));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_BANNER_PATTERN", true), Registries.BANNER_PATTERN));
 
     public static final SuggestionGetter DATA_TAG_BLOCK = registerSuggsList("DATA_TAG_BLOCK", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_BLOCK",true),Registries.BLOCK));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_BLOCK", true), Registries.BLOCK));
 
     public static final SuggestionGetter DATA_TAG_DAMAGE_TYPE = registerSuggsList("DATA_TAG_DAMAGE_TYPE", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_DAMAGE_TYPE",true),Registries.DAMAGE_TYPE));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_DAMAGE_TYPE", true), Registries.DAMAGE_TYPE));
 
     public static final SuggestionGetter DATA_TAG_DIALOG = registerSuggsList("DATA_TAG_DIALOG", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_DIALOG",true),Registries.DIALOG));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_DIALOG", true), Registries.DIALOG));
 
     public static final SuggestionGetter DATA_TAG_ENCHANTMENT = registerSuggsList("DATA_TAG_ENCHANTMENT", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ENCHANTMENT",true),Registries.ENCHANTMENT));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ENCHANTMENT", true), Registries.ENCHANTMENT));
 
     public static final SuggestionGetter DATA_TAG_ENTITY_TYPE = registerSuggsList("DATA_TAG_ENTITY_TYPE", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ENTITY_TYPE",true),Registries.ENTITY_TYPE));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ENTITY_TYPE", true), Registries.ENTITY_TYPE));
 
     public static final SuggestionGetter DATA_TAG_ITEM = registerSuggsList("DATA_TAG_ITEM", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ITEM",true),Registries.ITEM));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_ITEM", true), Registries.ITEM));
 
     public static final SuggestionGetter DATA_TAG_PAINTING_VARIANT = registerSuggsList("DATA_TAG_PAINTING_VARIANT", () ->
-        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_PAINTING_VARIANT",true),Registries.PAINTING_VARIANT));
+        getTagsIfEmpty(createOrGetCacheList("DATA_TAG_PAINTING_VARIANT", true), Registries.PAINTING_VARIANT));
 
 
     // dynamic data tags entry lists
@@ -729,7 +729,7 @@ public class SuggestionHelper {
             final Minecraft client = Minecraft.getInstance();
             if (client.level != null)
                 BlackMagick.getRegistryAccess(client).lookup(Registries.ITEM).ifPresent(reg -> {
-                    for (Holder<Item> itemHolder : reg.getTagOrEmpty(TagKey.create(Registries.ITEM,Identifier.parse(tag)))) {
+                    for (Holder<Item> itemHolder : reg.getTagOrEmpty(TagKey.create(Registries.ITEM, Identifier.parse(tag)))) {
                         list.add(BlackMagick.itemToStringId(itemHolder.value()));
                     }
                 });
@@ -739,7 +739,7 @@ public class SuggestionHelper {
     }
 
     public static final SuggestionGetter DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS = registerSuggsList("DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS", () ->
-        getItemsInTag(createOrGetCacheList("DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS",true),"decorated_pot_ingredients"));
+        getItemsInTag(createOrGetCacheList("DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS", true), "decorated_pot_ingredients"));
 
 
     // static data lists from vanilla
@@ -752,14 +752,14 @@ public class SuggestionHelper {
                 ServerPacksSource.createVanillaPackSource().listResources(PackType.SERVER_DATA, namespace, path, map::putIfAbsent);
                 map.keySet().forEach(i -> {
                     String temp = BlackMagick.identifierToString(i);
-                    if (temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
-                        temp = namespace+":"+temp.substring(namespace.length()+1+path.length()+1,temp.length()-suffix.length());
+                    if (temp.startsWith(namespace + ":" + path + "/") && temp.endsWith(suffix) && temp.length() > (namespace.length() + 1 + path.length() + 1 + suffix.length())) {
+                        temp = namespace + ":" + temp.substring(namespace.length() + 1 + path.length() + 1, temp.length() - suffix.length());
                         if (path.startsWith("tags/"))
                             temp = "#"+temp;
                         list.add(temp);
                     }
                     else {
-                        FortytwoEdit.logWarn("Failed to add data path to list: "+BlackMagick.identifierToString(i));
+                        FortytwoEdit.logWarn("Failed to add data path to list: " + BlackMagick.identifierToString(i));
                     }
                 });
             } catch (Exception ex) {}
@@ -798,16 +798,16 @@ public class SuggestionHelper {
     protected final static String MCMETA_SUFFIX = ".mcmeta";
 
     public static final SuggestionGetter DATA_LOOT_TABLE = registerSuggsList("DATA_LOOT_TABLE", () ->
-        getVanillaDataIfEmpty(createOrGetCacheList("DATA_LOOT_TABLE",false),"loot_table",JSON_SUFFIX));
+        getVanillaDataIfEmpty(createOrGetCacheList("DATA_LOOT_TABLE", false), "loot_table", JSON_SUFFIX));
 
     public static final SuggestionGetter DATA_RECIPE = registerSuggsList("DATA_RECIPE", () ->
-        getVanillaDataIfEmpty(createOrGetCacheList("DATA_RECIPE",false),"recipe",JSON_SUFFIX));
+        getVanillaDataIfEmpty(createOrGetCacheList("DATA_RECIPE", false), "recipe", JSON_SUFFIX));
 
     public static final SuggestionGetter DATA_STRUCTURE = registerSuggsList("DATA_STRUCTURE", () ->
-        getVanillaDataIfEmpty(createOrGetCacheList("DATA_STRUCTURE",false),"structure",NBT_SUFFIX)); // if made dynamic, update structure block screen to refresh dynamic suggs
+        getVanillaDataIfEmpty(createOrGetCacheList("DATA_STRUCTURE", false), "structure", NBT_SUFFIX)); // if made dynamic, update structure block screen to refresh dynamic suggs
 
     public static final SuggestionGetter DATA_TRIAL_SPAWNER = registerSuggsList("DATA_TRIAL_SPAWNER", () ->
-        getVanillaDataIfEmpty(createOrGetCacheList("DATA_TRIAL_SPAWNER",false),"trial_spawner",JSON_SUFFIX));
+        getVanillaDataIfEmpty(createOrGetCacheList("DATA_TRIAL_SPAWNER", false), "trial_spawner", JSON_SUFFIX));
 
 
     // static assets lists from vanilla
@@ -820,13 +820,13 @@ public class SuggestionHelper {
                 ServerPacksSource.createVanillaPackSource().listResources(PackType.CLIENT_RESOURCES, namespace, path, map::putIfAbsent);
                 map.keySet().forEach(i -> {
                     String temp = BlackMagick.identifierToString(i);
-                    if (!temp.endsWith(suffix+MCMETA_SUFFIX)) {
-                        if (temp.startsWith(namespace+":"+path+"/") && temp.endsWith(suffix) && temp.length()>(namespace.length()+1+path.length()+1+suffix.length())) {
-                            temp = namespace+":"+temp.substring(namespace.length()+1+path.length()+1,temp.length()-suffix.length());
+                    if (!temp.endsWith(suffix + MCMETA_SUFFIX)) {
+                        if (temp.startsWith(namespace + ":" + path + "/") && temp.endsWith(suffix) && temp.length() > (namespace.length() + 1 + path.length() + 1 + suffix.length())) {
+                            temp = namespace + ":" + temp.substring(namespace.length() + 1 + path.length() + 1, temp.length() - suffix.length());
                             list.add(temp);
                         }
                         else {
-                            FortytwoEdit.logWarn("Failed to add assets path to list: "+BlackMagick.identifierToString(i));
+                            FortytwoEdit.logWarn("Failed to add assets path to list: " + BlackMagick.identifierToString(i));
                         }
                     }
                 });
@@ -837,19 +837,19 @@ public class SuggestionHelper {
     }
 
     public static final SuggestionGetter ASSETS_EQUIPMENT = registerSuggsList("ASSETS_EQUIPMENT", () ->
-        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_EQUIPMENT",false),"equipment",JSON_SUFFIX));
+        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_EQUIPMENT", false), "equipment", JSON_SUFFIX));
 
     public static final SuggestionGetter ASSETS_FONT = registerSuggsList("ASSETS_FONT", () ->
-        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_FONT",false),"font",JSON_SUFFIX));
+        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_FONT", false), "font", JSON_SUFFIX));
 
     public static final SuggestionGetter ASSETS_ITEMS = registerSuggsList("ASSETS_ITEMS", () ->
-        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_ITEMS",false),"items",JSON_SUFFIX));
+        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_ITEMS", false), "items", JSON_SUFFIX));
 
     public static final SuggestionGetter ASSETS_TEXTURES = registerSuggsList("ASSETS_TEXTURES", () ->
-        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_TEXTURES",false),"textures",PNG_SUFFIX));
+        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_TEXTURES", false), "textures", PNG_SUFFIX));
 
     public static final SuggestionGetter ASSETS_TEXTURES_PAINTING = registerSuggsList("ASSETS_TEXTURES_PAINTING", () ->
-        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_TEXTURES_PAINTING",false),"textures/painting",PNG_SUFFIX));
+        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_TEXTURES_PAINTING", false), "textures/painting", PNG_SUFFIX));
 
 
 }

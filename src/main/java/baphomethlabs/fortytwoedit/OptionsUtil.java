@@ -61,7 +61,7 @@ public class OptionsUtil {
                     }
                 }
                 if (!added)
-                    FortytwoEdit.logError("Failed to set keybind for binding "+k+" to key "+BlackMagick.nbtToSnbt(c.get(k)));
+                    FortytwoEdit.logError("Failed to set keybind for binding " + k + " to key " + BlackMagick.nbtToSnbt(c.get(k)));
             }
             if (!foundKeys.isEmpty()) {
                 for (String k : foundKeys)
@@ -77,7 +77,7 @@ public class OptionsUtil {
 
         unknownOptions = null;
         if (!options.isEmpty()) {
-            FortytwoEdit.logWarn("Config file contains unknown keys: "+BlackMagick.nbtToSnbt(options));
+            FortytwoEdit.logWarn("Config file contains unknown keys: " + BlackMagick.nbtToSnbt(options));
             unknownOptions = options.copy();
         }
 
@@ -99,12 +99,12 @@ public class OptionsUtil {
         else
             Keybinds.cachedKeybinds = Maps.newHashMap();
         for (KeyMapping keybind : Keybinds.ALL_KEYBINDS) {
-            keysCompound.put(keybind.getName(),StringTag.valueOf(keybind.saveString()));
-            Keybinds.cachedKeybinds.put(keybind.getName(),keybind.saveString());
+            keysCompound.put(keybind.getName(), StringTag.valueOf(keybind.saveString()));
+            Keybinds.cachedKeybinds.put(keybind.getName(), keybind.saveString());
         }
         options.put(MOD_OPTION_RESERVED_LABEL_KEYBINDS, keysCompound);
 
-        options.putInt(FileTools.FILE_FORMAT_LABEL,FileTools.FILE_FORMAT);
+        options.putInt(FileTools.FILE_FORMAT_LABEL, FileTools.FILE_FORMAT);
 
         FileTools.writeCompoundToFile(FileTools.FILE_OPTIONS, options, FileDisplayType.TREE);
 
@@ -126,7 +126,7 @@ public class OptionsUtil {
         Map<String,String> keybindSettings = Maps.newHashMap();
 
         for (KeyMapping keyMapping : Keybinds.ALL_KEYBINDS)
-            keybindSettings.put(keyMapping.getName(),keyMapping.saveString());
+            keybindSettings.put(keyMapping.getName(), keyMapping.saveString());
 
         readOptions();
 
@@ -182,7 +182,7 @@ public class OptionsUtil {
         public static final ModOptionBoolean DEBUG_SCREEN_REARRANGE = registerModOption(
             new ModOptionBoolean("debug_screen_rearrange", false, "Debug Screen Rearrange")).setDisplayItem(Items.COMMAND_BLOCK)
             .setDescription(true,
-            "The following debug screen entries are moved to the end of the list:"+getMovedLastDisplay());
+            "The following debug screen entries are moved to the end of the list:" + getMovedLastDisplay());
         public static final ModOptionBoolean DYNAMIC_PROFILE_TOOLTIP_INFO = registerModOption(
             new ModOptionBoolean("dynamic_profile_tooltip_info", false, "Dynamic Profile Tooltip Info")).setDisplayItem(Items.PLAYER_HEAD)
             .setDescription(true,
@@ -199,7 +199,7 @@ public class OptionsUtil {
 
         private static void registerModOptionCommon(ModOption<?> option) {
             if (MOD_OPTIONS.containsKey(option.id())) {
-                FortytwoEdit.logError("Duplicate ModOption created with id: "+option.id());
+                FortytwoEdit.logError("Duplicate ModOption created with id: " + option.id());
             }
             MOD_OPTIONS.put(option.id(), option);
         }
@@ -425,7 +425,7 @@ public class OptionsUtil {
             if (choices != null) {
                 List<StringOption> choiceOptions = choices.getChoices();
                 int foundIndex = -1;
-                for (int i=0; i<choiceOptions.size(); i++) {
+                for (int i = 0; i < choiceOptions.size(); i++) {
                     if (choiceOptions.get(i).choice().equals(getSetting())) {
                         foundIndex = i;
                         break;
@@ -478,7 +478,7 @@ public class OptionsUtil {
             MutableComponent btnTooltip = Component.empty().append("Default: ").append(Component.empty().append(foundDefault.displayName()).withStyle(ChatFormatting.GRAY));
 
             if (!didFindCurrent)
-                btnTooltip.append(Component.empty().append("\n\nUnknown option '"+getSetting()+"'").withStyle(ChatFormatting.YELLOW, ChatFormatting.ITALIC));
+                btnTooltip.append(Component.empty().append("\n\nUnknown option '" + getSetting() + "'").withStyle(ChatFormatting.YELLOW, ChatFormatting.ITALIC));
 
             if (description != null)
                 btnTooltip.append("\n\n").append(description);
@@ -608,7 +608,7 @@ public class OptionsUtil {
 
         public static final List<KeyMapping> ALL_KEYBINDS = Lists.newArrayList();
 
-        public static final KeyMapping.Category MOD_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("42edit","keybinds"));
+        public static final KeyMapping.Category MOD_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("42edit", "keybinds"));
 
         public static final KeyMapping KEY_AFK_CLICK = registerKeyMapping(new KeyMapping("42edit.key.afk_click", GLFW.GLFW_KEY_MINUS, MOD_CATEGORY));
         public static final KeyMapping KEY_AFK_MOVE = registerKeyMapping(new KeyMapping("42edit.key.afk_move", GLFW.GLFW_KEY_EQUAL, MOD_CATEGORY));

@@ -44,8 +44,8 @@ public class FileTools {
      */
     public static String buildFilePath(String... nodeList) {
         StringBuilder sb = new StringBuilder();
-        for (int i=0; i<nodeList.length; i++) {
-            if (i>0)
+        for (int i = 0; i < nodeList.length; i++) {
+            if (i > 0)
                 sb.append(PATH_SEPARATOR);
             sb.append(nodeList[i]);
         }
@@ -59,7 +59,7 @@ public class FileTools {
      */
     public static String pathFromMinecraft(String filePath) {
         final Minecraft client = Minecraft.getInstance();
-        return buildFilePath(client.gameDirectory.getAbsolutePath(),filePath);
+        return buildFilePath(client.gameDirectory.getAbsolutePath(), filePath);
     }
 
     /**
@@ -94,19 +94,19 @@ public class FileTools {
         if (readCompoundFromFile(filePath) != null) {
             oldFile = readStringFromFile(filePath);
         }
-        if (writeStringToFile(filePath,fileContents)) {
+        if (writeStringToFile(filePath, fileContents)) {
             CompoundTag nbtNew = readCompoundFromFile(filePath);
-            if (nbtNew != null && BlackMagick.elementsEqual(nbtCopy,nbtNew))
+            if (nbtNew != null && BlackMagick.elementsEqual(nbtCopy, nbtNew))
                 return true;
             else {
                 String errorMsg = "Failed to write compound to file '" + filePath + "'"
                     + "\nTried to save: " + BlackMagick.nbtToSnbt(nbtCopy)
-                    + "\nCompound loaded: " + (nbtNew==null ? "null" : BlackMagick.nbtToSnbt(nbtNew));
+                    + "\nCompound loaded: " + (nbtNew == null ? "null" : BlackMagick.nbtToSnbt(nbtNew));
                 if (oldFile == null) {
-                    FortytwoEdit.logError(errorMsg+"\nNo file to revert to.");
+                    FortytwoEdit.logError(errorMsg + "\nNo file to revert to.");
                 }
                 else {
-                    FortytwoEdit.logError(errorMsg+"\nReverting file.");
+                    FortytwoEdit.logError(errorMsg + "\nReverting file.");
                     writeStringToFile(filePath, oldFile);
                 }
             }
@@ -131,7 +131,7 @@ public class FileTools {
      */
     public static CompoundTag readCompoundFromFile(String filePath) {
         String fileContents = readStringFromFile(filePath);
-        if (fileContents != null && fileContents.length()>0) {
+        if (fileContents != null && fileContents.length() > 0) {
             Tag nbt = BlackMagick.nbtFromSnbt(fileContents);
             if (nbt != null && nbt.getId() == Tag.TAG_COMPOUND) {
                 return ((CompoundTag)nbt);
@@ -172,9 +172,9 @@ public class FileTools {
                     writer.close();
                 } catch (Exception ex) {}
 
-            String logMsg = "Failed to write to file '" + filePath + "': "+text;
+            String logMsg = "Failed to write to file '" + filePath + "': " + text;
             if (error != null)
-                logMsg += "\n\nError: "+error;
+                logMsg += "\n\nError: " + error;
             FortytwoEdit.logError(logMsg);
         }
 
@@ -199,7 +199,7 @@ public class FileTools {
             }
             String logMsg = "Failed to read from file '" + filePath + "'";
             if (error != null)
-                logMsg += ": "+error;
+                logMsg += ": " + error;
             FortytwoEdit.logError(logMsg);
         }
 
@@ -216,7 +216,7 @@ public class FileTools {
      */
     private static boolean verifyFileExists(String filePath) {
         String error = null;
-        if (filePath.length()>0) {
+        if (filePath.length() > 0) {
             try {
                 Path path = Paths.get(filePath);
                 Files.createDirectories(path.getParent());
@@ -237,7 +237,7 @@ public class FileTools {
 
         String logMsg = "Failed to access or create file '" + filePath + "'";
         if (error != null)
-            logMsg += ": "+error;
+            logMsg += ": " + error;
         FortytwoEdit.logError(logMsg);
         return false;
     }
@@ -250,7 +250,7 @@ public class FileTools {
      * @return
      */
     public static boolean testFileExists(String filePath) {
-        if (filePath.length()>0) {
+        if (filePath.length() > 0) {
             try {
                 File file = new File(pathFromMinecraft(filePath));
                 if (file.exists())
@@ -263,14 +263,14 @@ public class FileTools {
     public static boolean openModDir() {
         if (openMinecraftDirEntry(FILE_DIRECTORY))
             return true;
-        FortytwoEdit.showToast("File Error",".42edit folder could not be opened");
+        FortytwoEdit.showToast("File Error", ".42edit folder could not be opened");
         return false;
     }
 
     public static boolean openMinecraftScreenshots() {
         if (openMinecraftDirEntry(Screenshot.SCREENSHOT_DIR))
             return true;
-        FortytwoEdit.showToast("File Error","Screenshots folder could not be opened");
+        FortytwoEdit.showToast("File Error", "Screenshots folder could not be opened");
         return false;
     }
 
@@ -293,7 +293,7 @@ public class FileTools {
         }
         String logMsg = "Failed to open directory '" + filePath + "'";
         if (error != null)
-            logMsg += ": "+error;
+            logMsg += ": " + error;
         FortytwoEdit.logError(logMsg);
         return false;
     }
@@ -309,17 +309,17 @@ public class FileTools {
                 scanDirectoryFiles(modDir, unknownFiles);
             }
             catch (Exception ex) {
-                FortytwoEdit.logError("Error scanning '"+FILE_DIRECTORY+"' files: "+ex.getMessage());
+                FortytwoEdit.logError("Error scanning '" + FILE_DIRECTORY + "' files: " + ex.getMessage());
             }
             if (!unknownFiles.isEmpty()) {
                 StringBuilder logMsg = new StringBuilder();
-                logMsg.append("Found "+unknownFiles.size()+" unknown file(s) within .42edit directory:");
-                for (int i=0; i<unknownFiles.size(); i++) {
+                logMsg.append("Found " + unknownFiles.size() + " unknown file(s) within .42edit directory:");
+                for (int i = 0; i < unknownFiles.size(); i++) {
                     logMsg.append("\n  - ").append(unknownFiles.get(i));
-                    if (i==15) {
-                        int remaining = unknownFiles.size()-i-1;
+                    if (i == 15) {
+                        int remaining = unknownFiles.size() - i - 1;
                         if (remaining > 0)
-                            logMsg.append("\n    and "+remaining+" more");
+                            logMsg.append("\n    and " + remaining + " more");
                         break;
                     }
                 }
@@ -350,12 +350,12 @@ public class FileTools {
         }
     }
 
-    private static final String MOD_DIR_SEARCH_STRING = pathFromMinecraft(FILE_DIRECTORY)+PATH_SEPARATOR;
+    private static final String MOD_DIR_SEARCH_STRING = pathFromMinecraft(FILE_DIRECTORY) + PATH_SEPARATOR;
     private static String formatScannedFile(File file) {
         String path = file.getAbsolutePath();
         if (path.startsWith(MOD_DIR_SEARCH_STRING))
             return buildFilePath(FILE_DIRECTORY, path.substring(MOD_DIR_SEARCH_STRING.length()));
-        FortytwoEdit.logError("Failed to trim scanned file path: "+path);
+        FortytwoEdit.logError("Failed to trim scanned file path: " + path);
         return path;
     }
 

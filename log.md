@@ -70,13 +70,23 @@ This file is to log important information related to maintaining the mod.
 
 ## CODE CLEANUP REGEX
 
-+ files to exclude:
-    + `.git, crash-reports, run/logs, gradlew, run/resourcepacks, run/saves, .gradle/, gradle.properties, .md`
++ general
+    + files to exclude:
+        + `.git, crash-reports, run/logs, gradlew, run/resourcepacks, run/saves, .gradle/, gradle.properties, .md`
+    + regex search terms:
+        + `^import.*\n\n+import`
+        + `(if|while|for)\(`
+        + `[a-zA-Z0-9]\{`
+        + `(?<!\*)[ \t]+$`
 
-+ regex search terms:
-    + `^import.*\n\n+import`
-    + `(if|while|for)\(`
-    + `[a-zA-Z0-9]\{`
-    + `(?<!\*)[ \t]+$`
++ java files
+    + files to include:
+        + `.java`
+    + reged search terms:
+        + `([^ \t=!?+\-<>(][+\-=])|([+\-=][^ \t=?>+\-;)])`
+        + `([^ \t=!?+\-\*/<>][+\-=\*/<>])|([+\-=\*/<>][^ \t=\*/<>?+\-;])`
+        + `(,[^ \t])`
+        + `([^ \t][ \t][ \t]+[^ \t])`
+        + `([ \t][,;])|(;//)`
 
 ----------------------------------------------------------------

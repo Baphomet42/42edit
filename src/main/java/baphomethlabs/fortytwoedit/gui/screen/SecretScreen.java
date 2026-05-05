@@ -79,16 +79,16 @@ public class SecretScreen extends GenericScreen {
 
     protected static String flipString(String text) {
         StringBuilder sb = new StringBuilder(text.length());
-        for (int i=text.length()-1; i>=0; i--)
+        for (int i = text.length() - 1; i >= 0; i--)
             sb.append(flipChar(text.charAt(i)));
         return sb.toString();
     }
 
     protected static char flipChar(char character) {
         int c = UPSIDE_DOWN_REF.indexOf(character);
-        if (c>=0)
+        if (c >= 0)
             return UPSIDE_DOWN_CHARS.charAt(c);
-        FortytwoEdit.logWarn("Failed to flip char: "+character);
+        FortytwoEdit.logWarn("Failed to flip char: " + character);
         return character;
     }
 

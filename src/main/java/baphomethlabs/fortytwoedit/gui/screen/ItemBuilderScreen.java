@@ -2378,7 +2378,7 @@ public class ItemBuilderScreen extends GenericScreen {
         TAB_WIDGETS_SCROLL.get(tabNum).clear();
         TAB_WIDGETS_LOCKED.get(tabNum).clear();
 
-        if (tabNum == CACHE_TAB_MAIN) {   //createBlock components
+        if (tabNum == CACHE_TAB_MAIN) { //createBlock components
             ItemStack editItemInstance = selItem.copy();
             CompoundTag editItemStack = BlackMagick.itemToNbt(editItemInstance);
             {
@@ -2433,7 +2433,7 @@ public class ItemBuilderScreen extends GenericScreen {
                 addTabWidgetScroll(tabNum, new RowWidget());
             }
         }
-        else if (tabNum == CACHE_TAB_INV) {   //createBlock inventory
+        else if (tabNum == CACHE_TAB_INV) { //createBlock inventory
             {
                 addTabWidgetScroll(tabNum, new RowWidget("Inventory"));
             }
@@ -3664,7 +3664,7 @@ public class ItemBuilderScreen extends GenericScreen {
         protected Component lbl;
         protected boolean lblCentered = false;
         protected int lblColor = LABEL_COLOR;
-        protected ItemStack displayItem = null;//to_do remove
+        protected ItemStack displayItem = null; //to_do remove
         protected int displayItemXoff = 0;
         private List<PosWidget> wids = Lists.newArrayList();
 
@@ -3878,7 +3878,7 @@ public class ItemBuilderScreen extends GenericScreen {
                     context.text(ItemBuilderScreen.this.font, this.lbl, ItemBuilderScreen.this.x+ROW_LEFT_SCROLL+3, this.getContentY()+6, lblColor);
             }
             if (displayItem != null) {
-                drawItem(context,displayItem,this.getContentX()+ROW_LEFT_SCROLL+2+displayItemXoff,this.getContentY()+2);//to_do remove (used to draw item for component widget)
+                drawItem(context,displayItem,this.getContentX()+ROW_LEFT_SCROLL+2+displayItemXoff,this.getContentY()+2); //to_do remove (used to draw item for component widget)
             }
         }
 
@@ -4124,7 +4124,7 @@ public class ItemBuilderScreen extends GenericScreen {
                                 else if (path.equals("count")) {
                                     keyType = "count";
                                     try {
-                                        IntegerArgumentType.integer(1,selItem.getMaxStackSize()).parse(new StringReader(value));//to_do get from itemStack param
+                                        IntegerArgumentType.integer(1,selItem.getMaxStackSize()).parse(new StringReader(value)); //to_do get from itemStack param
                                     }
                                     catch (Exception ex) {
                                         if (ex instanceof CommandSyntaxException ex2) {
@@ -4206,7 +4206,7 @@ public class ItemBuilderScreen extends GenericScreen {
                                     }
                                     else {
                                         if (el != null) {
-                                            ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtExclusive(selItem),path,el));//to_do get from itemStack param
+                                            ItemStack newItem = BlackMagick.itemFromNbt(BlackMagick.setNbtPath(BlackMagick.itemToNbtExclusive(selItem),path,el)); //to_do get from itemStack param
                                             if (!newItem.isEmpty())
                                                 BlackMagick.setItemMain(newItem);
                                         }

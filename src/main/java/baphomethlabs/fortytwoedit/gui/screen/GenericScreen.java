@@ -36,7 +36,7 @@ public abstract class GenericScreen extends Screen {
     protected static final Identifier TEXTURE_MENU_BAR = Identifier.fromNamespaceAndPath("42edit","textures/gui/menu_bar.png");
     protected int backgroundWidth = 12*20;
     protected int backgroundHeight = 9*22;
-    protected int x;// to_do rename to leftPos and topPos (see AbstractContainerScreen)
+    protected int x; // to_do rename to leftPos and topPos (see AbstractContainerScreen)
     protected int y;
     protected static final int LABEL_COLOR = 0xFFA0A0A0;
     protected static final int LABEL_COLOR_DIM = 0xFF404040;

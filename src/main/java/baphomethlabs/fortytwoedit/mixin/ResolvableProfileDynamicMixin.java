@@ -29,13 +29,13 @@ public abstract class ResolvableProfileDynamicMixin {
         if (OptionsUtil.ModOptions.DYNAMIC_PROFILE_TOOLTIP_INFO.getSetting()) {
             String dynamicName = BlackMagick.getDynamicUUIDProfileName((ResolvableProfile.Dynamic)(Object)this);
             if (dynamicName != null && !dynamicName.isEmpty()) {
-                consumer.accept(Component.empty().append(DYNAMIC_TOOLTIP).append(Component.empty().append(" UUID ("+dynamicName+")").setStyle(DYNAMIC_TOOLTIP.getStyle())));
+                consumer.accept(Component.empty().append(DYNAMIC_TOOLTIP).append(Component.empty().append(" UUID (" + dynamicName + ")").setStyle(DYNAMIC_TOOLTIP.getStyle())));
                 ci.cancel();
             }
             else {
                 dynamicName = BlackMagick.getDynamicProfileName((ResolvableProfile.Dynamic)(Object)this);
                 if (dynamicName != null && !dynamicName.isEmpty()) {
-                    consumer.accept(Component.empty().append(DYNAMIC_TOOLTIP).append(Component.empty().append(" name ("+dynamicName+")").setStyle(DYNAMIC_TOOLTIP.getStyle())));
+                    consumer.accept(Component.empty().append(DYNAMIC_TOOLTIP).append(Component.empty().append(" name (" + dynamicName + ")").setStyle(DYNAMIC_TOOLTIP.getStyle())));
                     ci.cancel();
                 }
             }

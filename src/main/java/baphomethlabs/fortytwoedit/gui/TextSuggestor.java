@@ -109,12 +109,12 @@ public class TextSuggestor {
 
         String searchWrapper = "";
         String suggsWrapper = "";
-        if (suggestion.length() > 1 && SEARCH_WRAPPERS.contains(suggestion.substring(0,1))) {
-            suggsWrapper = suggestion.substring(0,1);
+        if (suggestion.length() > 1 && SEARCH_WRAPPERS.contains(suggestion.substring(0, 1))) {
+            suggsWrapper = suggestion.substring(0, 1);
             suggestion = suggestion.substring(1);
         }
-        if (searchTerm.length() > 1 && SEARCH_WRAPPERS.contains(searchTerm.substring(0,1))) {
-            searchWrapper = searchTerm.substring(0,1);
+        if (searchTerm.length() > 1 && SEARCH_WRAPPERS.contains(searchTerm.substring(0, 1))) {
+            searchWrapper = searchTerm.substring(0, 1);
             searchTerm = searchTerm.substring(1);
 
             if (!suggsWrapper.equals(searchWrapper))
@@ -127,12 +127,12 @@ public class TextSuggestor {
 
         String searchPrefix = "";
         String suggsPrefix = "";
-        if (suggestion.length() > 1 && SEARCH_PREFIXES.contains(suggestion.substring(0,1))) {
-            suggsPrefix = suggestion.substring(0,1);
+        if (suggestion.length() > 1 && SEARCH_PREFIXES.contains(suggestion.substring(0, 1))) {
+            suggsPrefix = suggestion.substring(0, 1);
             suggestion = suggestion.substring(1);
         }
-        if (searchTerm.length() > 1 && SEARCH_PREFIXES.contains(searchTerm.substring(0,1))) {
-            searchPrefix = searchTerm.substring(0,1);
+        if (searchTerm.length() > 1 && SEARCH_PREFIXES.contains(searchTerm.substring(0, 1))) {
+            searchPrefix = searchTerm.substring(0, 1);
             searchTerm = searchTerm.substring(1);
 
             if (!suggsPrefix.equals(searchPrefix))
@@ -189,27 +189,27 @@ public class TextSuggestor {
             MutableComponent formatted = Component.empty();
             String parseString = raw;
 
-            for (int i=0; i<SEARCH_WRAPPERS.length(); i++) {
-                if (parseString.startsWith(SEARCH_WRAPPERS.substring(i,i+1))) {
-                    if (searchTerm.startsWith(SEARCH_WRAPPERS.substring(i,i+1))) {
-                        formatted.append(Component.nullToEmpty(SEARCH_WRAPPERS.substring(i,i+1)).copy().withStyle(matching));
+            for (int i = 0; i < SEARCH_WRAPPERS.length(); i++) {
+                if (parseString.startsWith(SEARCH_WRAPPERS.substring(i, i + 1))) {
+                    if (searchTerm.startsWith(SEARCH_WRAPPERS.substring(i, i + 1))) {
+                        formatted.append(Component.nullToEmpty(SEARCH_WRAPPERS.substring(i, i + 1)).copy().withStyle(matching));
                         searchTerm = searchTerm.substring(1);
                     }
                     else {
-                        formatted.append(Component.nullToEmpty(SEARCH_WRAPPERS.substring(i,i+1)));
+                        formatted.append(Component.nullToEmpty(SEARCH_WRAPPERS.substring(i, i + 1)));
                     }
                     parseString = parseString.substring(1);
                     break;
                 }
             }
-            for (int i=0; i<SEARCH_PREFIXES.length(); i++) {
-                if (parseString.startsWith(SEARCH_PREFIXES.substring(i,i+1))) {
-                    if (searchTerm.startsWith(SEARCH_PREFIXES.substring(i,i+1))) {
-                        formatted.append(Component.nullToEmpty(SEARCH_PREFIXES.substring(i,i+1)).copy().withStyle(matching));
+            for (int i = 0; i < SEARCH_PREFIXES.length(); i++) {
+                if (parseString.startsWith(SEARCH_PREFIXES.substring(i, i + 1))) {
+                    if (searchTerm.startsWith(SEARCH_PREFIXES.substring(i, i + 1))) {
+                        formatted.append(Component.nullToEmpty(SEARCH_PREFIXES.substring(i, i + 1)).copy().withStyle(matching));
                         searchTerm = searchTerm.substring(1);
                     }
                     else {
-                        formatted.append(Component.nullToEmpty(SEARCH_PREFIXES.substring(i,i+1)));
+                        formatted.append(Component.nullToEmpty(SEARCH_PREFIXES.substring(i, i + 1)));
                     }
                     parseString = parseString.substring(1);
                     break;
@@ -270,11 +270,11 @@ public class TextSuggestor {
                 tooltipList.add(ClientTooltipComponent.create(text.getVisualOrderText()));
                 maxWidth = Math.max(maxWidth, TextSuggestor.this.font.width(text));
             }
-            rect.setWidth(maxWidth+WIDTH_PADDING*2);
+            rect.setWidth(maxWidth + WIDTH_PADDING*2);
 
             BelowOrAboveWidgetTooltipPositioner ttPositioner = new BelowOrAboveWidgetTooltipPositioner(TextSuggestor.this.input.getRectangle());
             Vector2ic vec = getTooltipPosition(TextSuggestor.this.font, guiGraphics, i, j, tooltipList, ttPositioner);
-            rect.setX(vec.x()-WIDTH_PADDING);
+            rect.setX(vec.x() - WIDTH_PADDING);
             rect.setY(vec.y());
 
             if (this.rect.contains(i, j)) {
@@ -325,7 +325,7 @@ public class TextSuggestor {
 
         public boolean mouseScrolled(double d) {
             int j = (int)TextSuggestor.this.client.mouseHandler.getScaledYPos(TextSuggestor.this.client.getWindow());
-            if (this.rect.getY() <= j && j <= this.rect.getY()+this.rect.getHeight()) {
+            if (this.rect.getY() <= j && j <= this.rect.getY() + this.rect.getHeight()) {
                 this.offset = Mth.clamp((int)(this.offset - d), 0, Math.max(this.suggestionList.size() - TextSuggestor.this.suggestionLineLimit, 0));
                 return true;
             }
