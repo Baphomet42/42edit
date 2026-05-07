@@ -54,22 +54,22 @@ public class LogScreen extends GenericScreen {
         FortytwoEdit.quickScreen = LogScreen::new;
         this.addBackButton(DebugScreen::new);
 
-        logFile = new File(minecraft.gameDirectory.getAbsolutePath()+"\\logs\\latest.log");
+        logFile = new File(minecraft.gameDirectory.getAbsolutePath() + "\\logs\\latest.log");
 
         this.addRenderableWidget(
             WIDGET_UTIL.newButton("", btn -> {
                     paused = !paused;
                     updateBox();
                     updatePauseButton();
-                }).setSize(40).setPosition(x+GUI_SPACE+40+WID_SPACE,y+GUI_SPACE).setTooltip("")
+                }).setSize(40).setPosition(x + GUI_SPACE + 40 + WID_SPACE, y + GUI_SPACE).setTooltip("")
                 .runWithSelf(w -> this.btnPause = w).build()
         );
         updatePauseButton();
 
         this.addRenderableWidget(
             WIDGET_UTIL.newButton(Component.nullToEmpty("Clear"),
-                (button, inputWithModifiers) -> btnClearLog(inputWithModifiers)).setSize(40).setPosition(x+backgroundWidth-GUI_SPACE-50-40-WID_SPACE,y+GUI_SPACE)
-                .setTooltip("Clear all logged messages\n\nShift click to restore all cleared messages").build()
+                (button, inputWithModifiers) -> btnClearLog(inputWithModifiers)).setSize(40).setPosition(x + backgroundWidth - GUI_SPACE - 50 - 40 - WID_SPACE,
+                y + GUI_SPACE).setTooltip("Clear all logged messages\n\nShift click to restore all cleared messages").build()
         );
 
         this.addRenderableWidget(
@@ -77,14 +77,14 @@ public class LogScreen extends GenericScreen {
                     onlyMod = !onlyMod;
                     updateBox();
                     updateSourceButton();
-                }).setSize(50).setPosition(x+backgroundWidth-GUI_SPACE-50,y+GUI_SPACE)
+                }).setSize(50).setPosition(x + backgroundWidth - GUI_SPACE - 50, y + GUI_SPACE)
                 .runWithSelf(w -> this.btnSource = w)
                 .setTooltip("Toggle log source between all logs or only 42edit logs").build()
         );
         updateSourceButton();
 
         box = this.addRenderableWidget(
-            MultiLineEditBox.builder().setX(x+15-3).setY(y+35).build(minecraft.font, 240-24, ROW_HEIGHT*6, Component.nullToEmpty(""))
+            MultiLineEditBox.builder().setX(x + 15 - 3).setY(y + 35).build(minecraft.font, 240 - 24, ROW_HEIGHT * 6, Component.nullToEmpty(""))
         );
 
         this.addRenderableWidget(
@@ -92,15 +92,15 @@ public class LogScreen extends GenericScreen {
                     useRegex = !useRegex;
                     updateBox();
                     updateSearchButton();
-                }).setSize(50).setPosition(x+backgroundWidth-5-50-7,y+35+ROW_HEIGHT*6+1)
+                }).setSize(50).setPosition(x + backgroundWidth - 5 - 50 - 7, y + 35 + ROW_HEIGHT * 6 + 1)
                 .runWithSelf(w -> this.btnSearchMode = w)
                 .setTooltip("Toggle search mode between classic and regex").build()
         );
         updateSearchButton();
 
         this.addRenderableWidget(
-            WIDGET_UTIL.newEditBox().setSize(160).setPosition(x+15-3,y+35+ROW_HEIGHT*6+1).runWithSelf(w -> this.txtRegex = w)
-                .setValue(""+regexInput).setResponder(this::editTxtRegex).build()
+            WIDGET_UTIL.newEditBox().setSize(160).setPosition(x + 15 - 3, y + 35 + ROW_HEIGHT * 6 + 1).runWithSelf(w -> this.txtRegex = w)
+                .setValue("" + regexInput).setResponder(this::editTxtRegex).build()
         );
 
         updateBox();
@@ -132,7 +132,7 @@ public class LogScreen extends GenericScreen {
 
         boolean firstLog = true;
         String regexError = null;
-        for (int i=logStart; i<logList.size(); i++) {
+        for (int i = logStart; i<logList.size(); i++) {
 
             if (regexInput.length()>0) {
                 boolean matchRegex = false;
@@ -142,9 +142,9 @@ public class LogScreen extends GenericScreen {
                         "".matches(regexMod); // used to get errors on original input regex
 
                         if (!regexMod.startsWith("^"))
-                            regexMod = ".*"+regexMod;
+                            regexMod = ".*" + regexMod;
                         if (!regexMod.matches(REGEX_STRING_ENDS_DOLLAR))
-                            regexMod = regexMod+".*";
+                            regexMod = regexMod + ".*";
 
                         if (logList.get(i).searchLine().matches(regexMod))
                             matchRegex = true;
@@ -173,8 +173,8 @@ public class LogScreen extends GenericScreen {
 
         if (regexError != null) {
             if (regexError.length()>1 && regexError.endsWith("^"))
-                regexError = regexError.substring(0,regexError.length()-1).trim();
-            sb = new StringBuilder(ss+"cInvalid Regex\n\n"+regexError.replace("\r",""));
+                regexError = regexError.substring(0, regexError.length() - 1).trim();
+            sb = new StringBuilder(ss + "cInvalid Regex\n\n" + regexError.replace("\r", ""));
         }
 
         box.setValue(sb.toString());
@@ -206,12 +206,12 @@ public class LogScreen extends GenericScreen {
             LogType logType = null;
 
             if (line.matches("^\\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\] .+")) {
-                timestamp = line.substring(0,line.indexOf("]")+1);
-                line = line.replaceFirst("^\\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\] ","");
+                timestamp = line.substring(0, line.indexOf("]") + 1);
+                line = line.replaceFirst("^\\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\] ", "");
 
                 if (line.matches("^\\[[^/\\]]+/[A-Z]+\\]:? .+")) {
-                    logType = LogType.build(line.substring(line.indexOf("/")+1,line.indexOf("]")));
-                    line = line.replaceFirst("^\\[[^/\\]]+/[A-Z]+\\]:? ","");
+                    logType = LogType.build(line.substring(line.indexOf("/") + 1, line.indexOf("]")));
+                    line = line.replaceFirst("^\\[[^/\\]]+/[A-Z]+\\]:? ", "");
                 }
             }
 
@@ -234,27 +234,27 @@ public class LogScreen extends GenericScreen {
                 searchLine.append(type.text()).append(" ");
             }
 
-            String formatMessage = message.replace("\t","  ");
+            String formatMessage = message.replace("\t", "  ");
             if (timestamp != null && type != null && formatMessage.matches("^\\([^)]+\\) .+")) {
-                formattedLine.append(ss).append("3").append(formatMessage.substring(0,formatMessage.indexOf(")")+1)).append(ss).append("r ");
-                searchLine.append(formatMessage.substring(0,formatMessage.indexOf(")")+1)).append(" ");
+                formattedLine.append(ss).append("3").append(formatMessage.substring(0, formatMessage.indexOf(")") + 1)).append(ss).append("r ");
+                searchLine.append(formatMessage.substring(0, formatMessage.indexOf(")") + 1)).append(" ");
 
-                formatMessage = formatMessage.replaceFirst("^\\([^)]+\\) ","");
+                formatMessage = formatMessage.replaceFirst("^\\([^)]+\\) ", "");
             }
             formattedLine.append(formatMessage);
             searchLine.append(formatMessage);
 
-            return new LogMessage(timestamp, type, message, formattedLine.toString(), searchLine.toString().replace("\n"," "));
+            return new LogMessage(timestamp, type, message, formattedLine.toString(), searchLine.toString().replace("\n", " "));
         }
     }
 
     public record LogType(String text, String formatCode) {
-        public static final LogType INFO = new LogType("[INFO]","2");
-        public static final LogType WARN = new LogType("[WARN]","6");
-        public static final LogType ERROR = new LogType("[ERROR]","c");
-        public static final LogType DEBUG = new LogType("[DEBUG]","a");
-        public static final LogType FATAL = new LogType("[FATAL]","4");
-        public static final LogType UNKNOWN = new LogType("[UNKNOWN]","f");
+        public static final LogType INFO = new LogType("[INFO]", "2");
+        public static final LogType WARN = new LogType("[WARN]", "6");
+        public static final LogType ERROR = new LogType("[ERROR]", "c");
+        public static final LogType DEBUG = new LogType("[DEBUG]", "a");
+        public static final LogType FATAL = new LogType("[FATAL]", "4");
+        public static final LogType UNKNOWN = new LogType("[UNKNOWN]", "f");
 
         public static LogType build(String text) {
             if (text != null && text.length()>0) {
@@ -272,7 +272,7 @@ public class LogScreen extends GenericScreen {
     }
 
     public static void logModLog(LogType type, String message) {
-        MOD_LOG_QUEUE.add(LogMessage.build(type,message));
+        MOD_LOG_QUEUE.add(LogMessage.build(type, message));
     }
 
     public static void debugTryRefreshVarious() {
@@ -319,7 +319,7 @@ public class LogScreen extends GenericScreen {
         if (!paused) {
 
             if (!MOD_LOG_QUEUE.isEmpty()) {
-                for (int i=0; i<MOD_LOG_QUEUE.size(); i++) {
+                for (int i = 0; i<MOD_LOG_QUEUE.size(); i++) {
                     MOD_LOG.add(MOD_LOG_QUEUE.get(i));
                 }
                 MOD_LOG_QUEUE.clear();
@@ -327,7 +327,7 @@ public class LogScreen extends GenericScreen {
                     updateBox();
             }
 
-            if (System.currentTimeMillis()-lastCheck >= UPDATE_WAIT_MS) {
+            if (System.currentTimeMillis() - lastCheck >= UPDATE_WAIT_MS) {
                 if (clearFullLogCache) {
                     clearFullLogCache = false;
                     refreshVariousOnTick();
@@ -342,14 +342,14 @@ public class LogScreen extends GenericScreen {
                         String line;
                         int i = 0;
                         while ((line = reader.readLine()) != null) {
-                            if (i>=fullLogLines) {
+                            if (i >= fullLogLines) {
                                 LogMessage temp = LogMessage.build(line);
 
                                 if (temp.timestamp() != null || FULL_LOG.isEmpty())
                                     FULL_LOG.add(temp);
                                 else {
                                     LogMessage lastLog = FULL_LOG.getLast();
-                                    FULL_LOG.set(FULL_LOG.size()-1, LogMessage.build(lastLog.timestamp(), lastLog.type(), lastLog.message()+"\n"+line));
+                                    FULL_LOG.set(FULL_LOG.size() - 1, LogMessage.build(lastLog.timestamp(), lastLog.type(), lastLog.message() + "\n" + line));
                                 }
 
                                 fullLogLines++;

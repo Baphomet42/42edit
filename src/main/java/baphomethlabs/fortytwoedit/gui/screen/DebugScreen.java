@@ -37,7 +37,7 @@ public class DebugScreen extends GenericScreen {
     }
 
     protected void btnRefreshRuntime() {
-        FortytwoEdit.showToast("Reset Misc","Variables reset");
+        FortytwoEdit.showToast("Reset Misc", "Variables reset");
         FortytwoEdit.debugTryRefreshVarious();
     }
 

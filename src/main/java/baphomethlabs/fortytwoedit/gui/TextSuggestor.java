@@ -222,11 +222,11 @@ public class TextSuggestor {
                     break;
                 }
                 else if (index == 0) {
-                    formatted.append(Component.nullToEmpty(parseString.substring(0,searchTerm.length())).copy().withStyle(matching));
+                    formatted.append(Component.nullToEmpty(parseString.substring(0, searchTerm.length())).copy().withStyle(matching));
                     parseString = parseString.substring(searchTerm.length());
                 }
                 else {
-                    formatted.append(Component.nullToEmpty(parseString.substring(0,index)));
+                    formatted.append(Component.nullToEmpty(parseString.substring(0, index)));
                     parseString = parseString.substring(index);
                 }
 

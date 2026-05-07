@@ -21,7 +21,7 @@ public abstract class MouseHandlerMixin {
             FortytwoEdit.cameraRotation[1] = Mth.clamp(FortytwoEdit.cameraRotation[1] + deltaY, -90.0f, 90.0f);
         }
         else if (!(FortytwoEdit.autoClicker && OptionsUtil.ModOptions.AUTO_CLICK_LOCK.getSetting()))
-            entity.turn(cursorDeltaX,cursorDeltaY);
+            entity.turn(cursorDeltaX, cursorDeltaY);
     }
 
 }

@@ -26,12 +26,12 @@ public abstract class ClientLanguageMixin {
         for (String lang : list) {
             InputStream stream = FortytwoEdit.getAssetsLang(lang);
             if (stream != null)
-                Language.loadFromJson(stream,modTranslations::put);
+                Language.loadFromJson(stream, modTranslations::put);
         }
 
         for (String key : modTranslations.keySet()) {
             if (!newTranslations.containsKey(key))
-                newTranslations.put(key,modTranslations.get(key));
+                newTranslations.put(key, modTranslations.get(key));
         }
 
         cir.setReturnValue(ClientLanguageInvoker.invokeClientLanguage(Map.copyOf(newTranslations), clientLanguage.isDefaultRightToLeft()));

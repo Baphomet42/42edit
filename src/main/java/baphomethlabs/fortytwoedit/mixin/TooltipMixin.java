@@ -36,8 +36,8 @@ public abstract class TooltipMixin {
                 cir.setReturnValue(cacheTooltip);
             else if (client.font.split(message, small).size()>lineSwap) {
 
-                int largeSafe = Math.min(large,client.gui.screen().width - safeZone);
-                int mediumSafe = Math.min(medium,client.gui.screen().width - safeZone);
+                int largeSafe = Math.min(large, client.gui.screen().width - safeZone);
+                int mediumSafe = Math.min(medium, client.gui.screen().width - safeZone);
 
                 if (client.font.split(message, largeSafe).size()>lineSwap) {
                     List<FormattedCharSequence> linesImmutable = client.font.split(message, client.gui.screen().width - safeZone);

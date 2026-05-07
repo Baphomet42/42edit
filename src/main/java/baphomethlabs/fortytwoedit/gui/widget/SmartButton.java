@@ -70,7 +70,7 @@ public class SmartButton extends Button.Plain {
 		int bottom = this.getY() + this.getHeight();
 		if (this.renderLeftItem != null) {
 			left += 17;
-			graphics.fakeItem(this.renderLeftItem,this.getX() + 2, this.getY() + 2);
+			graphics.fakeItem(this.renderLeftItem, this.getX() + 2, this.getY() + 2);
 		}
 		graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE).acceptScrollingWithDefaultCenter(this.getMessage(), left, right, top, bottom);
 	}

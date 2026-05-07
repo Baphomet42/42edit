@@ -73,7 +73,7 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
                     if (size[1]>0)
                         columns = size[1];
 
-                    NonNullList<ItemStack> items = NonNullList.withSize(rows*columns,ItemStack.EMPTY);
+                    NonNullList<ItemStack> items = NonNullList.withSize(rows * columns, ItemStack.EMPTY);
                     container.copyInto(items);
 
                     boolean empty = true;
@@ -83,8 +83,8 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
                     }
 
                     if (!empty) {
-                        stack.set(DataComponents.CONTAINER,ItemContainerContents.EMPTY);
-                        Optional<TooltipComponent> data = Optional.of(new ContainerTooltipData(items,rows,columns));
+                        stack.set(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
+                        Optional<TooltipComponent> data = Optional.of(new ContainerTooltipData(items, rows, columns));
                         context.setTooltipForNextFrame(this.font, this.getTooltipFromContainerItem(stack), data, x, y, stack.get(DataComponents.TOOLTIP_STYLE));
                         c.cancel();
                     }

@@ -32,8 +32,8 @@ import baphomethlabs.fortytwoedit.gui.widget.WidgetUtil;
 
 public abstract class GenericScreen extends Screen {
 
-    protected static final Identifier TEXTURE_GENERIC = Identifier.fromNamespaceAndPath("42edit","textures/gui/generic.png");
-    protected static final Identifier TEXTURE_MENU_BAR = Identifier.fromNamespaceAndPath("42edit","textures/gui/menu_bar.png");
+    protected static final Identifier TEXTURE_GENERIC = Identifier.fromNamespaceAndPath("42edit", "textures/gui/generic.png");
+    protected static final Identifier TEXTURE_MENU_BAR = Identifier.fromNamespaceAndPath("42edit", "textures/gui/menu_bar.png");
     protected int backgroundWidth = 12*20;
     protected int backgroundHeight = 9*22;
     protected int x; // to_do rename to leftPos and topPos (see AbstractContainerScreen)
@@ -54,7 +54,7 @@ public abstract class GenericScreen extends Screen {
     protected static final int SCROLL_ROW_LEFT_OFFSET = 3;
     protected static final int MULTI_LINE_TEXT_WIDGET_Y_OFFSET = 6;
     public static final int WID_MIN_WIDTH = 10;
-    public static final int WID_WIDTH_FULL = ROW_WIDTH-NARROW_OFFSET;
+    public static final int WID_WIDTH_FULL = ROW_WIDTH - NARROW_OFFSET;
     public static final int WID_WIDTH_HALF = (WID_WIDTH_FULL - WID_SPACE) / 2;
     public static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
     public static final Duration TOOLTIP_DELAY_SHORT = Duration.ofMillis(100L);
@@ -166,7 +166,7 @@ public abstract class GenericScreen extends Screen {
 
     protected void addBackButton(Supplier<GenericScreen> backScreen) {
         this.addRenderableWidget(WIDGET_UTIL.newButton("Back",
-            btn -> changeScreen(backScreen.get())).setPosition(x+GUI_SPACE,y+GUI_SPACE).setSize(40).build());
+            btn -> changeScreen(backScreen.get())).setPosition(x + GUI_SPACE, y + GUI_SPACE).setSize(40).build());
     }
 
     @Override
@@ -197,7 +197,7 @@ public abstract class GenericScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent keyEvent) {
-        if (suggs == null && System.currentTimeMillis()-prevTooltipTime < 100) {
+        if (suggs == null && System.currentTimeMillis() - prevTooltipTime < 100) {
             if (keyEvent.hasControlDown() && keyEvent.key() == GLFW.GLFW_KEY_C) {
                 if (prevTooltipNbt != null) {
                     if (keyEvent.hasAltDown()) {
@@ -291,9 +291,9 @@ public abstract class GenericScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.extractRenderState(context, mouseX, mouseY, delta);
         if (hasTitle) {
-            context.centeredText(this.font, this.getTitle(), this.width / 2, y+11, TEXT_COLOR);
+            context.centeredText(this.font, this.getTitle(), this.width / 2, y + 11, TEXT_COLOR);
             if (titleItem != null)
-                context.fakeItem(titleItem, (this.width - this.font.width(this.getTitle())) / 2 - 20, y+7);
+                context.fakeItem(titleItem, (this.width - this.font.width(this.getTitle())) / 2 - 20, y + 7);
         }
     }
 
@@ -315,7 +315,7 @@ public abstract class GenericScreen extends Screen {
     protected class ScrollList extends ContainerObjectSelectionList<ScrollRow> {
 
         public static final int AREA_WIDTH_OFFSET = -30;
-        public static final int AREA_HEIGHT_OFFSET = -32-5;
+        public static final int AREA_HEIGHT_OFFSET = -32 - 5;
         public static final int AREA_Y_OFFSET = 32;
         public static final int AREA_Y_OFFSET_NARROW = 9;
 
@@ -323,9 +323,9 @@ public abstract class GenericScreen extends Screen {
 
         public ScrollList(boolean narrow, int rowHeight) {
             super(GenericScreen.this.minecraft,
-                GenericScreen.this.width+AREA_WIDTH_OFFSET,
-                GenericScreen.this.backgroundHeight+AREA_HEIGHT_OFFSET-(narrow ? AREA_Y_OFFSET_NARROW : 0),
-                GenericScreen.this.y+AREA_Y_OFFSET+(narrow ? AREA_Y_OFFSET_NARROW : 0),
+                GenericScreen.this.width + AREA_WIDTH_OFFSET,
+                GenericScreen.this.backgroundHeight + AREA_HEIGHT_OFFSET - (narrow ? AREA_Y_OFFSET_NARROW : 0),
+                GenericScreen.this.y + AREA_Y_OFFSET + (narrow ? AREA_Y_OFFSET_NARROW : 0),
                 rowHeight);
             NARROW = narrow;
         }
@@ -436,7 +436,7 @@ public abstract class GenericScreen extends Screen {
 
         private ScrollRow set(int i, PosWidget posWidget) {
             childrenCache.clear();
-            if (i==-1)
+            if (i == -1)
                 children.add(posWidget);
             else
                 children.set(i, posWidget);
@@ -479,7 +479,7 @@ public abstract class GenericScreen extends Screen {
         }
 
         public ScrollRow shiftRight(int offset) {
-            for (int i=0; i<children.size(); i++) {
+            for (int i = 0; i<children.size(); i++) {
                 set(i, PosWidget.create(children.get(i).w(), children.get(i).x() + offset, children.get(i).y()));
             }
             return this;

@@ -59,7 +59,7 @@ public class ItemHistoryScreen extends GenericScreen {
         if (stack != null && !stack.isEmpty()) {
             String itemData = BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(stack));
             FortytwoEdit.setClipboard(itemData);
-            FortytwoEdit.showToast("Item History","Item NBT copied to clipboard");
+            FortytwoEdit.showToast("Item History", "Item NBT copied to clipboard");
         }
     }
 

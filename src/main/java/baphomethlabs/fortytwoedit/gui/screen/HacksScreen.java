@@ -57,7 +57,7 @@ public class HacksScreen extends GenericScreen {
                 ).build(),
             WIDGET_UTIL.newEditBox().setMaxLength(MAX_RANDO_SLOTS_LENGTH).setValue(getRandoSlotsValue()).setSmartTooltip(
                     "Mix mode slots\n\nChoose which slots should be randomized.\n\n"
-                    +"Example: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)"
+                    + "Example: (1233 will give slots 1 and 2 a 25% chance and slot 3 a 50% chance)"
                 )
                 .setResponder(this::editTxtRando).runWithSelf(w -> this.txtRando = w).build()
         );
@@ -118,12 +118,12 @@ public class HacksScreen extends GenericScreen {
         if (unsaved) {
             FortytwoEdit.randoSlots = null;
             if (txtRando.getValue() != null && !txtRando.getValue().equals("")) {
-                String inp = txtRando.getValue().replaceAll("[^1-9]","");
-                if (inp.length()>0) {
+                String inp = txtRando.getValue().replaceAll("[^1-9]", "");
+                if (inp.length() > 0) {
                     int[] slots = new int[inp.length()];
-                    for (int i=0; i<slots.length; i++) {
+                    for (int i = 0; i < slots.length; i++) {
                         try {
-                            slots[i]=Integer.parseInt(""+inp.charAt(i));
+                            slots[i] = Integer.parseInt("" + inp.charAt(i));
                         } catch (NumberFormatException ex) {}
                     }
                     if (slots != null && slots.length > 0)
@@ -156,29 +156,29 @@ public class HacksScreen extends GenericScreen {
         while (entities.hasNext()) {
             Entity current = entities.next();
             if (current.getType() != EntityTypes.PLAYER
-            && current.getX()>x-range && current.getX()<x+range
-            && current.getY()>y-range && current.getY()<y+range
-            && current.getZ()>z-range && current.getZ()<z+range) {
+            && current.getX() > x - range && current.getX() < x + range
+            && current.getY() > y - range && current.getY() < y + range
+            && current.getZ() > z - range && current.getZ() < z + range) {
                 CompoundTag nbt = new CompoundTag();
                 CompoundTag components = new CompoundTag();
-                nbt.put("components",components);
+                nbt.put("components", components);
                 CompoundTag entityData = new CompoundTag();
-                if ((new EntityDataAccessor(current)).getData()!=null)
+                if ((new EntityDataAccessor(current)).getData() != null)
                     entityData = (new EntityDataAccessor(current)).getData();
-                components.put("entity_data",entityData);
+                components.put("entity_data", entityData);
                 if (current.getType() == EntityTypes.ARMOR_STAND) {
-                    nbt.putString("id","minecraft:armor_stand");
-                    entityData.putString("id","minecraft:armor_stand");
+                    nbt.putString("id", "minecraft:armor_stand");
+                    entityData.putString("id", "minecraft:armor_stand");
                     if (mode == 1) {
                         entityData.remove("Brain");
                         entityData.remove("Health");
                     }
                 }
                 else {
-                    nbt.putString("id","minecraft:endermite_spawn_egg");
-                    entityData.putString("id",BlackMagick.identifierToString(EntityType.getKey(current.getType())));
-                    components.putString("minecraft:item_name","Custom "
-                        +BlackMagick.textComponentToStringLiteral(current.getType().getDescription())+" Spawn Egg");
+                    nbt.putString("id", "minecraft:endermite_spawn_egg");
+                    entityData.putString("id", BlackMagick.identifierToString(EntityType.getKey(current.getType())));
+                    components.putString("minecraft:item_name", "Custom "
+                        + BlackMagick.textComponentToStringLiteral(current.getType().getDescription()) + " Spawn Egg");
                 }
                 if (mode == 1) {
                     entityData.remove("Air");
@@ -206,27 +206,27 @@ public class HacksScreen extends GenericScreen {
         }
         if (!items.isEmpty()) {
             CompoundTag nbt = new CompoundTag();
-            nbt.putString("id","bundle");
+            nbt.putString("id", "bundle");
             CompoundTag components = new CompoundTag();
-            nbt.put("components",components);
+            nbt.put("components", components);
             ListTag bundle = new ListTag();
-            components.put("bundle_contents",bundle);
-            for (int i=0; i<items.size(); i++) {
+            components.put("bundle_contents", bundle);
+            for (int i = 0; i < items.size(); i++) {
                 bundle.add(items.get(i));
             }
             ItemStack item = BlackMagick.itemFromNbt(nbt);
-            if (items.size()==1)
+            if (items.size() == 1)
                 item = BlackMagick.itemFromNbtTag(bundle.get(0));
 
             FortytwoEdit.setClipboard(BlackMagick.nbtToSnbt(BlackMagick.itemToNbtStorage(item)));
-            FortytwoEdit.showToast("Get Entity","Entity data copied");
+            FortytwoEdit.showToast("Get Entity", "Entity data copied");
 
             if (BlackMagick.isCreative(minecraft) && !item.isEmpty()) {
                 BlackMagick.setItemMain(item);
             }
         }
         else {
-            FortytwoEdit.showToast("Get Entity","No entities within range");
+            FortytwoEdit.showToast("Get Entity", "No entities within range");
         }
     }
 
@@ -237,10 +237,10 @@ public class HacksScreen extends GenericScreen {
             Entity current = entities.next();
             if (current.getType() == EntityTypes.ARMOR_STAND) {
                 CompoundTag nbt = new CompoundTag();
-                if ((new EntityDataAccessor(current)).getData()!=null)
+                if ((new EntityDataAccessor(current)).getData() != null)
                     nbt = (new EntityDataAccessor(current)).getData();
-                if ((nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1)
-                && !(nbt.getByte("CustomNameVisible").isPresent() && nbt.getByte("CustomNameVisible").get()==1)
+                if ((nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get() == 1)
+                && !(nbt.getByte("CustomNameVisible").isPresent() && nbt.getByte("CustomNameVisible").get() == 1)
                 && !nbt.getCompound("equipment").isPresent()) {
                     reportInvis(current);
                     found++;
@@ -248,9 +248,9 @@ public class HacksScreen extends GenericScreen {
             }
             else if (current.getType() == EntityTypes.ITEM_FRAME || current.getType() == EntityTypes.GLOW_ITEM_FRAME) {
                 CompoundTag nbt = new CompoundTag();
-                if ((new EntityDataAccessor(current)).getData()!=null)
+                if ((new EntityDataAccessor(current)).getData() != null)
                     nbt = (new EntityDataAccessor(current)).getData();
-                if (nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get()==1) {
+                if (nbt.getByte("Invisible").isPresent() && nbt.getByte("Invisible").get() == 1) {
                     if (!nbt.contains("Item")) {
                         reportInvis(current);
                         found++;
@@ -259,23 +259,24 @@ public class HacksScreen extends GenericScreen {
             }
         }
         if (found>0)
-            FortytwoEdit.showToast("Find Invis","Found "+found+" invisible entities");
+            FortytwoEdit.showToast("Find Invis", "Found " + found + " invisible entities");
         else
-            FortytwoEdit.showToast("Find Invis","No invisible entities detected");
+            FortytwoEdit.showToast("Find Invis", "No invisible entities detected");
     }
 
     private void reportInvis(Entity entity) {
         BlackMagick.sendClientChat(
-            Component.empty().append(entity.getName()).append(" ["+entity.getBlockX()+", "+entity.getBlockY()+", "+entity.getBlockZ()+"]")
+            Component.empty().append(entity.getName()).append(" [" + entity.getBlockX() + ", " + entity.getBlockY() + ", " + entity.getBlockZ() + "]")
             .withStyle(style -> style.withHoverEvent(
             new HoverEvent.ShowEntity(new HoverEvent.EntityTooltipInfo(entity.getType(), entity.getUUID(), entity.getName())))
-            .withClickEvent(new ClickEvent.SuggestCommand("/tp @s "+entity.getBlockX() + " " + entity.getBlockY() + " " + entity.getBlockZ()))));
+            .withClickEvent(new ClickEvent.SuggestCommand("/tp @s " + entity.getBlockX() + " " + entity.getBlockY() + " " + entity.getBlockZ()))));
     }
 
     protected void btnDeathPos() {
         if (minecraft.player.getLastDeathLocation().isPresent()) {
             GlobalPos pos = minecraft.player.getLastDeathLocation().get();
-            String coords = "Last death [X: "+pos.pos().getX()+", Y: "+pos.pos().getY()+", Z: "+pos.pos().getZ()+"] in "+BlackMagick.identifierToString(pos.dimension().identifier());
+            String coords = "Last death [X: " + pos.pos().getX() + ", Y: " + pos.pos().getY() + ", Z: " + pos.pos().getZ() + "] in "
+                + BlackMagick.identifierToString(pos.dimension().identifier());
             BlackMagick.sendClientChat(coords);
             FortytwoEdit.showToast("Death Pos", "Death coords sent to chat");
         }

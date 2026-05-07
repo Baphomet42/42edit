@@ -25,13 +25,13 @@ public abstract class HudMixin {
         if (FortytwoEdit.autoMove || FortytwoEdit.autoClicker || FortytwoEdit.isRandoModeActive() || OptionsUtil.ModOptions.COORD_HUD.getSetting()) {
             final Minecraft client = Minecraft.getInstance();
             if (!client.gui.hud.isHidden() && client.player != null) {
-                int x = client.getWindow().getGuiScaledWidth()-80;
-                int y = client.getWindow().getGuiScaledHeight()-15;
+                int x = client.getWindow().getGuiScaledWidth() - 80;
+                int y = client.getWindow().getGuiScaledHeight() - 15;
                 if (FortytwoEdit.autoMove)
                     context.text(client.font, "[Auto Move]", x, y - 20, TEXT_COLOR, true);
                 if (FortytwoEdit.autoClicker) {
                     if (FortytwoEdit.autoFish && !client.options.showSubtitles().get())
-                        context.text(client.font, "\u00a7cAuto Fish requires Subtitles", x-64, y - 10, TEXT_COLOR, true);
+                        context.text(client.font, "\u00a7cAuto Fish requires Subtitles", x - 64, y - 10, TEXT_COLOR, true);
                     else
                         context.text(client.font, "[Auto Click]", x, y - 10, TEXT_COLOR, true);
                 }
@@ -50,7 +50,7 @@ public abstract class HudMixin {
                             case WEST: coordFacing = "W"; break;
                             default: break;
                         }
-                        cacheCoordHud = Component.empty().append(coordFacing+" "+feetPos.getX()+" "+feetPos.getY()+" "+feetPos.getZ());
+                        cacheCoordHud = Component.empty().append(coordFacing + " " + feetPos.getX() + " " + feetPos.getY() + " " + feetPos.getZ());
                     }
                     context.text(client.font, cacheCoordHud, 2, 2, TEXT_COLOR, true);
                 }

@@ -19,7 +19,7 @@ public abstract class WindowMixin {
         catch (Exception ex) {
             FortytwoEdit.logError("Failed to set game icon");
         }
-        return new NativeImage(16,16,true);
+        return new NativeImage(16, 16, true);
     }
 
 }

@@ -67,7 +67,7 @@ public class CapeScreen extends GenericScreen {
                     rebuildWidgets();
                 }).setBoolName(OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.getSetting()).setSize(80)
                 .setTooltip(OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.getButtonTooltip()).build(),
-            WIDGET_UTIL.newButton("Cape: ["+FortytwoEdit.getCurrentClientCape().name()+"]", btn -> {
+            WIDGET_UTIL.newButton("Cape: [" + FortytwoEdit.getCurrentClientCape().name() + "]", btn -> {
                     OptionsUtil.ModOptions.CUSTOM_CAPE_TOGGLE.setSetting(true);
                     changeScreen(new CapeSelectorScreen());
                 }).setTooltip("Select custom cape").build()
@@ -95,22 +95,22 @@ public class CapeScreen extends GenericScreen {
     }
 
     protected void btnReloadCapes() {
-        FortytwoEdit.showToast("OptiCapes cache cleared",FortytwoEdit.debugCapeNamesSize()+" name(s) and "+FortytwoEdit.debugCapeNames2Size()+" cape(s) deleted");
+        FortytwoEdit.showToast("OptiCapes cache cleared", FortytwoEdit.debugCapeNamesSize() + " name(s) and " + FortytwoEdit.debugCapeNames2Size() + " cape(s) deleted");
         FortytwoEdit.clearOptiCapes();
     }
 
     protected void btnEditCape() {
         try {
             String randomId = (new BigInteger(128, new Random())).xor(new BigInteger(128, new Random(System.identityHashCode(new Object())))).toString(16);
-            minecraft.services().sessionService().joinServer(minecraft.getUser().getProfileId(),minecraft.getUser().getAccessToken(),randomId);
+            minecraft.services().sessionService().joinServer(minecraft.getUser().getProfileId(), minecraft.getUser().getAccessToken(), randomId);
             Util.getPlatform().openUri(
                 "https://optifine.net/capeChange"
-                + "?u=" + minecraft.getUser().getProfileId().toString().replace("-","")
+                + "?u=" + minecraft.getUser().getProfileId().toString().replace("-", "")
                 + "&n=" + minecraft.getUser().getName()
                 + "&s=" + randomId);
         }
         catch (Exception ex) {
-            FortytwoEdit.showToast("Failed to edit cape","Could not open OptiFine cape editor webpage");
+            FortytwoEdit.showToast("Failed to edit cape", "Could not open OptiFine cape editor webpage");
         }
     }
 
@@ -124,7 +124,7 @@ public class CapeScreen extends GenericScreen {
         //cape
         if (FortytwoEdit.opticapesWorking && OptionsUtil.ModOptions.OPTICAPES.getSetting()) {
             if (FortytwoEdit.capeCached(name)) {
-                Identifier id = Identifier.fromNamespaceAndPath("42edit","cache/cape/"+name.toLowerCase());
+                Identifier id = Identifier.fromNamespaceAndPath("42edit", "cache/cape/" + name.toLowerCase());
                 cape = new ClientAsset.ResourceTexture(id);
                 elytra = cape;
                 changed = true;
@@ -169,25 +169,25 @@ public class CapeScreen extends GenericScreen {
             File file = paths.get(0).toFile();
             if (file.isFile() && file.getName().endsWith(".png")) {
                 BufferedImage skin = ImageIO.read(file);
-                if ((skin.getWidth()==64 && skin.getHeight()==64) || (skin.getWidth()==128 && skin.getHeight()==128)) {
+                if ((skin.getWidth() == 64 && skin.getHeight() == 64) || (skin.getWidth() == 128 && skin.getHeight() == 128)) {
                     if (FortytwoEdit.setCustomSkin(file)) {
-                        FortytwoEdit.showToast("Custom skin loaded",file.getName());
+                        FortytwoEdit.showToast("Custom skin loaded", file.getName());
                         rebuildWidgets();
                         return;
                     }
                     rebuildWidgets();
                 }
                 else {
-                    FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE,"File is not a valid 64x64 or 128x128 skin");
+                    FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE, "File is not a valid 64x64 or 128x128 skin");
                     return;
                 }
             }
             else {
-                FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE,"File type must be a PNG");
+                FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE, "File type must be a PNG");
                 return;
             }
         } catch (Exception ex) {}
-        FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE,"File could not be read");
+        FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE, "File could not be read");
     }
 
     /**

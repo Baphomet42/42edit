@@ -54,7 +54,7 @@ public class SecretScreen extends GenericScreen {
                     for (String k : sortKeys) {
                         Tag el = nbt.get(k);
                         if (el.getId() == Tag.TAG_STRING && !k.contains("\"")) {
-                            String flip = flipString(((StringTag)el).asString().get()).replace("\"","\\\"");
+                            String flip = flipString(((StringTag)el).asString().get()).replace("\"", "\\\"");
                             if (!firstEntry)
                                 json.append(",");
                             else

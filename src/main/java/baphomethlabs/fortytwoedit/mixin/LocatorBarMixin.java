@@ -60,8 +60,9 @@ public abstract class LocatorBarMixin {
         if (playerInfo == null)
             guiGraphics.blitSprite(renderPipeline, location, x, y, width, height, color);
         else {
-            guiGraphics.fill(x-size, y-size, x+width+size, y+height+size, color);
-            PlayerFaceExtractor.extractRenderState(guiGraphics, playerInfo.getSkin().body().texturePath(), x+1-size, y+1-size, width-2+size+size, playerInfo.showHat(), isUpsideDown, -1);
+            guiGraphics.fill(x - size, y - size, x + width + size, y + height + size, color);
+            PlayerFaceExtractor.extractRenderState(guiGraphics, playerInfo.getSkin().body().texturePath(),
+                x + 1 - size, y + 1 - size, width - 2 + size + size, playerInfo.showHat(), isUpsideDown, -1);
         }
 	}
 

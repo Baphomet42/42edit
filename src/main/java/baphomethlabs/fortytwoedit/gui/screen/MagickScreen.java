@@ -72,19 +72,19 @@ public class MagickScreen extends GenericScreen {
 
         switch (autoClickCycle) {
             case 0:
-                FortytwoEdit.updateAutoClick(true,false,false,false,FortytwoEdit.attackWait);
+                FortytwoEdit.updateAutoClick(true, false, false, false, FortytwoEdit.attackWait);
                 break;
             case 1:
-                FortytwoEdit.updateAutoClick(false,true,false,false,FortytwoEdit.attackWait);
+                FortytwoEdit.updateAutoClick(false, true, false, false, FortytwoEdit.attackWait);
                 break;
             case 2:
-                FortytwoEdit.updateAutoClick(false,false,true,false,1500);
+                FortytwoEdit.updateAutoClick(false, false, true, false, 1500);
                 break;
             case 3:
-                FortytwoEdit.updateAutoClick(false,false,true,false,650);
+                FortytwoEdit.updateAutoClick(false, false, true, false, 650);
                 break;
             case 4:
-                FortytwoEdit.updateAutoClick(false,false,false,true,FortytwoEdit.attackWait);
+                FortytwoEdit.updateAutoClick(false, false, false, true, FortytwoEdit.attackWait);
                 break;
             default: break;
         }
