@@ -34,8 +34,8 @@ public abstract class GenericScreen extends Screen {
 
     protected static final Identifier TEXTURE_GENERIC = Identifier.fromNamespaceAndPath("42edit", "textures/gui/generic.png");
     protected static final Identifier TEXTURE_MENU_BAR = Identifier.fromNamespaceAndPath("42edit", "textures/gui/menu_bar.png");
-    protected int backgroundWidth = 12*20;
-    protected int backgroundHeight = 9*22;
+    protected int backgroundWidth = 12 * 20;
+    protected int backgroundHeight = 9 * 22;
     protected int x; // to_do rename to leftPos and topPos (see AbstractContainerScreen)
     protected int y;
     protected static final int LABEL_COLOR = 0xFFA0A0A0;
@@ -479,7 +479,7 @@ public abstract class GenericScreen extends Screen {
         }
 
         public ScrollRow shiftRight(int offset) {
-            for (int i = 0; i<children.size(); i++) {
+            for (int i = 0; i < children.size(); i++) {
                 set(i, PosWidget.create(children.get(i).w(), children.get(i).x() + offset, children.get(i).y()));
             }
             return this;

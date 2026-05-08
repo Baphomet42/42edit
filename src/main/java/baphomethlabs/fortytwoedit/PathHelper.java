@@ -195,7 +195,7 @@ public class PathHelper {
             "seed", PathInfo.create(DataType.ElementLiteral.of(NbtType.LONG)).getter()
         ))).setIcon(Items.CHEST));
 
-        registerPathInfo("components.minecraft:custom_data", PathInfo.create(// always stores as compound to_do [data storage]
+        registerPathInfo("components.minecraft:custom_data", PathInfo.create( // always stores as compound to_do [data storage]
             DataType.CompoundUnstructured.create(),
             DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newInline("{}"))
         ).setInfo("Unstructured NBT in a compound or stringified compound").setIcon(Items.COMMAND_BLOCK));
@@ -295,7 +295,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:glider", PathInfo.create(DataType.Unit.create()).setIcon(Items.ELYTRA));
 
-        registerPathInfo("components.minecraft:instrument", PathInfo.create(// stores in specified form [data storage]
+        registerPathInfo("components.minecraft:instrument", PathInfo.create( // stores in specified form [data storage]
             DataType.CompoundStructured.allRequired(Map.of(
                 "sound_event", PathInfoGetter.of("sound_event_or_definition"),
                 "description", PathInfoGetter.of("text_component"),
@@ -317,7 +317,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:lock", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "items", PathInfoGetter.of("item_id_tag_or_list"),
-            "count", PathInfo.create(// stores in specified form [data storage]
+            "count", PathInfo.create( // stores in specified form [data storage]
                 DataType.ElementLiteral.of(NbtType.INT),
                 DataType.CompoundStructured.allOptional(Map.of(
                     "min", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).getter(),
@@ -389,7 +389,7 @@ public class PathHelper {
             PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS)).setInfo("Front face of pot").getter()
         )).setIcon(Items.DECORATED_POT));
 
-        registerPathInfo("components.minecraft:potion_contents", PathInfo.create(// always stores as compound [data storage]
+        registerPathInfo("components.minecraft:potion_contents", PathInfo.create( // always stores as compound [data storage]
             DataType.CompoundStructured.allOptional(Map.of(
                 "potion", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_POTION)).setInfo("Potion ID").getter(),
                 "custom_color", PathInfo.copyOf("color_rgb_int").getter(),
@@ -403,7 +403,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:potion_duration_scale", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.25f","1.0f"))).setInfo("Lingering potions use 0.25f").setUnsetInfo(FloatTag.valueOf(1f)).setIcon(Items.LINGERING_POTION));
 
-        registerPathInfo("components.minecraft:profile", PathInfo.create(// always stores as compound [data storage]
+        registerPathInfo("components.minecraft:profile", PathInfo.create( // always stores as compound [data storage]
             DataType.CompoundStructured.allOptional(Map.of(
                 "name", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Player username to resolve skin. Once resolved, only used for the item name.").getter(),
                 "id", PathInfo.copyOf("uuid").setInfo("Player UUID to resolve skin. Once resolved, has no use.").getter(),
@@ -514,7 +514,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:writable_book_content", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "pages", PathInfo.create(DataType.ListUnordered.of(
-                PathInfo.create(// test storage [data storage]
+                PathInfo.create( // test storage [data storage]
                     DataType.ElementLiteral.of(NbtType.STRING),
                     DataType.CompoundStructured.of(Map.of(
                         "raw", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).getter()
@@ -527,7 +527,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:written_book_content", PathInfo.create(DataType.CompoundStructured.of(Map.of(
             "author", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).getter(),
-            "title", PathInfo.create(// test storage [data storage]
+            "title", PathInfo.create( // test storage [data storage]
                 DataType.ElementLiteral.of(NbtType.STRING),
                 DataType.CompoundStructured.of(Map.of(
                     "raw", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).getter()
@@ -536,8 +536,8 @@ public class PathHelper {
                 ))
             ).getter()
             ),Map.of(
-            "pages", PathInfo.create(DataType.ListUnordered.of(//to_do allow list of text components or list of objects with raw/filtered
-                PathInfo.create(// test storage [data storage]
+            "pages", PathInfo.create(DataType.ListUnordered.of( // to_do allow list of text components or list of objects with raw/filtered
+                PathInfo.create( // test storage [data storage]
                     DataType.CompoundStructured.of(Map.of(
                         "raw", PathInfo.copyOf("text_component").setFlag(PathFlag.TEXT_COMPONENT_BOOK).getter()
                         ),Map.of(
@@ -614,7 +614,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:zombie_nautilus/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_ZOMBIE_NAUTILUS_VARIANT)).setIcon(Items.ZOMBIE_NAUTILUS_SPAWN_EGG));
 
-        registerPathInfo("text_component", PathInfo.create(// list storage [data storage]
+        registerPathInfo("text_component", PathInfo.create( // list storage [data storage]
             DataType.CompoundStructured.of(Map.of(
                 "text", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'text' type - string text").getter(),
                 "keybind", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.LIST_KEYBIND)).setInfo("For 'keybind' type - string keybinding ID").getter(),
@@ -702,11 +702,11 @@ public class PathHelper {
                                 DataType.ListUnordered.of(
                                     PathInfo.create(
                                         DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_DIALOG)
-                                        //to_do handle ref to dialog definition compound pathinfo
+                                        // to_do handle ref to dialog definition compound pathinfo
                                     ).getter()
                                 ),
                                 DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newJoined(SuggestionHelper.DATA_DIALOG,SuggestionHelper.DATA_TAG_DIALOG))
-                                //to_do handle ref to dialog definition compound pathinfo
+                                // to_do handle ref to dialog definition compound pathinfo
                             ).setInfo("A single dialog ID, tag, or inline definition, or a list containing only dialog IDs or only inline definitions").getter())
                         )),
                         DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_DIALOG)
@@ -759,7 +759,7 @@ public class PathHelper {
             "show_icon", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter()
         ))));
 
-        registerPathInfo("sound_event_or_definition", PathInfo.create(// stores in specified form [data storage]
+        registerPathInfo("sound_event_or_definition", PathInfo.create( // stores in specified form [data storage]
             DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_SOUND_EVENT),
             DataType.CompoundStructured.of(Map.of(
                 "sound_id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).getter()
@@ -776,7 +776,7 @@ public class PathHelper {
 
         registerPathInfo("color_rgb_int", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0x112233"))).setFlag(PathFlag.COLOR_RGB_INT).setInfo("RGB color in decimal form"));
 
-        registerPathInfo("color_rgb_int_or_list", PathInfo.create(// test storage [data storage]
+        registerPathInfo("color_rgb_int_or_list", PathInfo.create( // test storage [data storage]
             DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0x112233")),
             DataType.ListStructured.of(
                 SuggestionGetter.newInlineSnbt("[0.0d,0.0d,0.0d]"),
@@ -786,7 +786,7 @@ public class PathHelper {
             )
         ).setFlag(PathFlag.COLOR_RGB_INT_OR_LIST).setInfo("RGB color in decimal form, or a list of R,G,B values from 0.0-1.0"));
 
-        registerPathInfo("color_argb_int_or_list", PathInfo.create(// test storage [data storage]
+        registerPathInfo("color_argb_int_or_list", PathInfo.create( // test storage [data storage]
             DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0xFF112233")),
             DataType.ListStructured.of(
                 SuggestionGetter.newInlineSnbt("[0.0d,0.0d,0.0d,1.0d]"),
@@ -800,54 +800,54 @@ public class PathHelper {
         registerPathInfo("consume_effect", PathInfo.create(DataType.CompoundStructured.of(Map.of(
             "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_CONSUME_EFFECT_TYPE)).getter()
             ),Map.of(
-            "effects", PathInfo.create().setInfo("For 'apply_effects' type - list of effect instances\n\nFor 'remove_effects' type - effect ID or a list of effect IDs").getter(),//to_do handle apply_effects vs remove_effects
+            "effects", PathInfo.create().setInfo("For 'apply_effects' type - list of effect instances\n\nFor 'remove_effects' type - effect ID or a list of effect IDs").getter(), // to_do handle apply_effects vs remove_effects
             "probability", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.0f","1.0f"))).setInfo("For 'apply_effects' type - chance from 0.0 to 1.0 of all the effects to be applied").setUnsetInfo(FloatTag.valueOf(1f)).getter(),
             "diameter", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("16.0f"))).setInfo("For 'teleport_randomly' type - diameter of teleportation region").setUnsetInfo(FloatTag.valueOf(16f)).getter(),
             "sound", PathInfo.copyOf("sound_event_or_definition").setInfo("For 'play_sound' type - sound event or new sound event definition").getter()
         ))));
 
-        registerPathInfo("block_predicate_or_list", PathInfo.create(// test storage [data storage]
+        registerPathInfo("block_predicate_or_list", PathInfo.create( // test storage [data storage]
             DataType.ListUnordered.of(PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
                 "blocks", PathInfoGetter.of("block_id_tag_or_list"),
-                "nbt", PathInfo.create().getter(),//to_do compound or stringified compound
+                "nbt", PathInfo.create().getter(), // to_do compound or stringified compound
                 "state", PathInfo.create().getter()
             ))).getter()),
             DataType.CompoundStructured.allOptional(Map.of(
                 "blocks", PathInfoGetter.of("block_id_tag_or_list"),
-                "nbt", PathInfo.create().getter(),//to_do compound or stringified compound
+                "nbt", PathInfo.create().getter(), // to_do compound or stringified compound
                 "state", PathInfo.create().getter()
             ))
         ).setIcon(Items.CHAIN_COMMAND_BLOCK).setInfo("Block predicate (blocks/nbt/state) or list of block predicates"));
 
-        registerPathInfo("block_id_tag_or_list", PathInfo.create(// test storage [data storage]
+        registerPathInfo("block_id_tag_or_list", PathInfo.create( // test storage [data storage]
             DataType.ListUnordered.of(
                 PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_BLOCK)).getter()
             ),
             DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newJoined(SuggestionHelper.REGISTRY_BLOCK,SuggestionHelper.DATA_TAG_BLOCK))
         ).setInfo("Block ID or tag, or a list of block IDs"));
 
-        registerPathInfo("damage_type_id_tag_or_list", PathInfo.create(// test storage [data storage]
+        registerPathInfo("damage_type_id_tag_or_list", PathInfo.create( // test storage [data storage]
             DataType.ListUnordered.of(
                 PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_DAMAGE_TYPE)).getter()
             ),
             DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newJoined(SuggestionHelper.DATA_DAMAGE_TYPE,SuggestionHelper.DATA_TAG_DAMAGE_TYPE))
         ).setInfo("Damage type ID or tag, or a list of damage type IDs"));
 
-        registerPathInfo("entity_id_tag_or_list", PathInfo.create(// test storage [data storage]
+        registerPathInfo("entity_id_tag_or_list", PathInfo.create( // test storage [data storage]
             DataType.ListUnordered.of(
                 PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_ENTITY_TYPE)).getter()
             ),
             DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newJoined(SuggestionHelper.REGISTRY_ENTITY_TYPE,SuggestionHelper.DATA_TAG_ENTITY_TYPE))
         ).setInfo("Entity type ID or tag, or a list of entity type IDs"));
 
-        registerPathInfo("item_id_tag_or_list", PathInfo.create(// test storage [data storage]
+        registerPathInfo("item_id_tag_or_list", PathInfo.create( // test storage [data storage]
             DataType.ListUnordered.of(
                 PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.REGISTRY_ITEM)).getter()
             ),
             DataType.ElementLiteral.of(NbtType.STRING,SuggestionGetter.newJoined(SuggestionHelper.REGISTRY_ITEM,SuggestionHelper.DATA_TAG_ITEM))
         ).setInfo("Item ID or tag, or a list of item IDs"));
 
-        registerPathInfo("banner_pattern_id_tag_or_list", PathInfo.create(// test storage [data storage]
+        registerPathInfo("banner_pattern_id_tag_or_list", PathInfo.create( // test storage [data storage]
             DataType.ListUnordered.of(
                 PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING,SuggestionHelper.DATA_BANNER_PATTERN)).getter()
             ),
@@ -856,7 +856,7 @@ public class PathHelper {
 
         registerPathInfo("pos_int_array", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT_ARRAY,SuggestionGetter.newInlineSnbt("[I;0,0,0]"))).setInfo("Block position represented by [I; X, Y, Z]"));
 
-        registerPathInfo("sign_text", PathInfo.create(// test storage [data storage]
+        registerPathInfo("sign_text", PathInfo.create( // test storage [data storage]
             DataType.CompoundStructured.allOptional(Map.of(
                 "color", PathInfo.copyOf("dye_color").setUnsetInfo(StringTag.valueOf("black")).getter(),
                 "has_glowing_text", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).getter(),
@@ -1637,7 +1637,7 @@ public class PathHelper {
                 Identifier componentId = BlackMagick.identifierOrNull(key);
                 if (componentId != null && SuggestionHelper.DATA_ENCHANTMENT.getList().contains(BlackMagick.identifierToString(componentId))) {
                     int max = SuggestionHelper.getEnchantmentMaxLevel(key);
-                    if (max>0)
+                    if (max > 0)
                         return PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt(BlackMagick.getIntRangeArray(1, max))))
                             .setInfo("Max level: "+max);
                 }
@@ -2006,7 +2006,7 @@ public class PathHelper {
                         edit = edit.substring(edit.indexOf("]")+1);
                         try {
                             int index = Integer.parseInt(thisNode);
-                            if (index>=0) {
+                            if (index >= 0) {
                                 nodeList.add(PathNode.of(index));
                                 valid = true;
                                 continue;
@@ -2033,15 +2033,15 @@ public class PathHelper {
                         boolean repeatSearch = true;
                         while (!edit.isEmpty() && repeatSearch) {
                             repeatSearch = false;
-                            if (edit.charAt(0)=='\\') {
-                                if (edit.length()>1) {
+                            if (edit.charAt(0) == '\\') {
+                                if (edit.length() > 1) {
                                     thisKey.append(edit.charAt(1));
                                     edit = edit.substring(2);
                                     repeatSearch = true;
                                 }
                             }
-                            else if (edit.charAt(0)==quoteChar) {
-                                if (thisKey.length()>0) {
+                            else if (edit.charAt(0) == quoteChar) {
+                                if (thisKey.length() > 0) {
                                     nodeList.add(PathNode.of(thisKey.toString()));
                                     edit = edit.substring(1);
                                     valid = true;
@@ -2061,7 +2061,7 @@ public class PathHelper {
                             thisKey.append(edit.charAt(0));
                             edit = edit.substring(1);
                         }
-                        if (thisKey.length()>0) {
+                        if (thisKey.length() > 0) {
                             nodeList.add(PathNode.of(thisKey.toString()));
                             valid = true;
                         }

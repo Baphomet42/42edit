@@ -132,9 +132,9 @@ public class LogScreen extends GenericScreen {
 
         boolean firstLog = true;
         String regexError = null;
-        for (int i = logStart; i<logList.size(); i++) {
+        for (int i = logStart; i < logList.size(); i++) {
 
-            if (regexInput.length()>0) {
+            if (regexInput.length() > 0) {
                 boolean matchRegex = false;
                 if (useRegex) {
                     try {
@@ -172,7 +172,7 @@ public class LogScreen extends GenericScreen {
             sb.append("\n");
 
         if (regexError != null) {
-            if (regexError.length()>1 && regexError.endsWith("^"))
+            if (regexError.length() > 1 && regexError.endsWith("^"))
                 regexError = regexError.substring(0, regexError.length() - 1).trim();
             sb = new StringBuilder(ss + "cInvalid Regex\n\n" + regexError.replace("\r", ""));
         }
@@ -257,7 +257,7 @@ public class LogScreen extends GenericScreen {
         public static final LogType UNKNOWN = new LogType("[UNKNOWN]", "f");
 
         public static LogType build(String text) {
-            if (text != null && text.length()>0) {
+            if (text != null && text.length() > 0) {
                 switch (text) {
                     case "INFO": return LogType.INFO;
                     case "WARN": return LogType.WARN;
@@ -319,7 +319,7 @@ public class LogScreen extends GenericScreen {
         if (!paused) {
 
             if (!MOD_LOG_QUEUE.isEmpty()) {
-                for (int i = 0; i<MOD_LOG_QUEUE.size(); i++) {
+                for (int i = 0; i < MOD_LOG_QUEUE.size(); i++) {
                     MOD_LOG.add(MOD_LOG_QUEUE.get(i));
                 }
                 MOD_LOG_QUEUE.clear();
@@ -335,7 +335,7 @@ public class LogScreen extends GenericScreen {
                 }
 
                 lastCheck = System.currentTimeMillis();
-                if (logFile.lastModified()>lastUpdate) {
+                if (logFile.lastModified() > lastUpdate) {
                     lastUpdate = logFile.lastModified();
 
                     try(BufferedReader reader = new BufferedReader(new FileReader(logFile))) {

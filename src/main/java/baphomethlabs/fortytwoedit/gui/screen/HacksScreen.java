@@ -69,7 +69,7 @@ public class HacksScreen extends GenericScreen {
         );
         paneScroll().addRow(
             WIDGET_UTIL.newButton("Xray", btn -> {
-                    //minecraft.levelRenderer.allChanged(); // to_do enable if invis block mixins are reimplemented
+                    // minecraft.levelRenderer.allChanged(); // to_do enable if invis block mixins are reimplemented
                     FortytwoEdit.seeInvis = !FortytwoEdit.seeInvis;
                     FortytwoEdit.xrayEntity = FortytwoEdit.seeInvis;
                     rebuildWidgets();
@@ -258,7 +258,7 @@ public class HacksScreen extends GenericScreen {
                 }
             }
         }
-        if (found>0)
+        if (found > 0)
             FortytwoEdit.showToast("Find Invis", "Found " + found + " invisible entities");
         else
             FortytwoEdit.showToast("Find Invis", "No invisible entities detected");

@@ -368,8 +368,8 @@ public class BlackMagick {
         if (item != null && !item.isEmpty()) {
             CompoundTag comps = new CompoundTag();
             String compsString = componentsAsString(item.getComponents());
-            if (compsString != null && compsString.length()>0)
-                comps = validCompoundFromString("{"+compsString+"}");
+            if (compsString != null && compsString.length() > 0)
+                comps = validCompoundFromString("{" + compsString + "}");
 
             CompoundTag itemComps = BlackMagick.validCompound(BlackMagick.getNbtPath(BlackMagick.itemToNbtStorage(item),"components"));
             for (String k : itemComps.keySet()) {
@@ -398,8 +398,8 @@ public class BlackMagick {
         if (item != null && !item.isEmpty()) {
             CompoundTag comps = new CompoundTag();
             String compsString = componentsAsString(item.getComponents());
-            if (compsString != null && compsString.length()>0)
-                comps = validCompoundFromString("{"+compsString+"}");
+            if (compsString != null && compsString.length() > 0)
+                comps = validCompoundFromString("{" + compsString + "}");
 
             Set<String> unusedComps = Sets.newHashSet();
             for (String comp : SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList())
@@ -455,7 +455,7 @@ public class BlackMagick {
                 }
                 cmd += "]";
             }
-            if (item.getInt("count").isPresent() && item.getInt("count").get()>1)
+            if (item.getInt("count").isPresent() && item.getInt("count").get() > 1)
                 cmd += " "+item.getInt("count").get();
             return cmd;
         }
@@ -667,14 +667,14 @@ public class BlackMagick {
     public static CompoundTag moveListElement(CompoundTag base, String path, int index, boolean up) {
         if (base == null)
             return null;
-        if (path == null || path.isEmpty() || index<0)
+        if (path == null || path.isEmpty() || index < 0)
             return base.copy();
 
         CompoundTag nbt = base.copy();
 
         if (getNbtPath(nbt,path,Tag.TAG_LIST) != null) {
             ListTag list = (ListTag)getNbtPath(nbt,path);
-            if (list.size()>index && index>=0 && !((index==0 && up) || (index==list.size()-1 && !up))) {
+            if (list.size() > index && index >= 0 && !((index==0 && up) || (index==list.size()-1 && !up))) {
                 Tag el = list.remove(index);
                 if (up)
                     list.add(index-1,el);
@@ -698,14 +698,14 @@ public class BlackMagick {
     public static CompoundTag cloneListElement(CompoundTag base, String path, int index) {
         if (base == null)
             return null;
-        if (path == null || path.isEmpty() || index<0)
+        if (path == null || path.isEmpty() || index < 0)
             return base.copy();
 
         CompoundTag nbt = base.copy();
 
         if (getNbtPath(nbt,path,Tag.TAG_LIST) != null) {
             ListTag list = (ListTag)getNbtPath(nbt,path);
-            if (list.size()>index && index>=0) {
+            if (list.size() > index && index >= 0) {
                 Tag el = list.get(index).copy();
                 list.add(index,el);
                 nbt = setNbtPath(nbt, path, list);
@@ -1174,7 +1174,7 @@ public class BlackMagick {
             max = temp;
         }
         String[] arr = new String[max-min+1];
-        for (int i=0; i<arr.length; i++) {
+        for (int i = 0; i < arr.length; i++) {
             arr[i] = "" + (min + i);
         }
         return arr;
@@ -1191,12 +1191,12 @@ public class BlackMagick {
         if (dec != null)
             try {
                 int col = Integer.parseInt(dec);
-                if (col>=0 && col <=16777215) {
+                if (col >= 0 && col <= 16777215) {
                     String hex = Integer.toHexString(col).toUpperCase();
-                    while (hex.length()<6)
-                        hex = "0"+hex;
-                    if (hex.length()==6)
-                        return "#"+hex;
+                    while (hex.length() < 6)
+                        hex = "0" + hex;
+                    if (hex.length() == 6)
+                        return "#" + hex;
                 }
             } catch (NumberFormatException ex) {}
         return null;
@@ -1341,16 +1341,16 @@ public class BlackMagick {
                 int maxSize = Math.max(((ListTag)left).size(),((ListTag)right).size());
 
                 boolean first = true;
-                for (int i=0; i<maxSize; i++) {
+                for (int i=0; i < maxSize; i++) {
                     if (!first)
                         output.append(Component.nullToEmpty(","));
                     else
                         first = false;
 
-                    if (leftList.size()>i && rightList.size()>i) {
+                    if (leftList.size() > i && rightList.size() > i) {
                         output.append(getElementDifferences(leftList.get(i),rightList.get(i)));
                     }
-                    else if (leftList.size()>i) {
+                    else if (leftList.size() > i) {
                         output.append((Component.nullToEmpty(BlackMagick.nbtToSnbt(leftList.get(i))).copy()).withStyle(ChatFormatting.RED));
                     }
                     else {
@@ -1385,7 +1385,7 @@ public class BlackMagick {
 
         StringBuilder current = new StringBuilder(128);
         StringBuilder indentBuilder = new StringBuilder();
-        for (int i=0; i<indents; i++)
+        for (int i = 0; i < indents; i++)
             indentBuilder.append("\t");
         String indent = indentBuilder.toString();
 
@@ -1421,8 +1421,8 @@ public class BlackMagick {
                 else {
                     current.append("[\n");
 
-                    for (int i=0; i<nbt.size(); i++) {
-                        if (i>0)
+                    for (int i=0; i < nbt.size(); i++) {
+                        if (i > 0)
                             current.append(",\n");
 
                         current.append(indent + "\t" + formatSnbtAsTree(nbt.get(i), collapseItems, indents+1));

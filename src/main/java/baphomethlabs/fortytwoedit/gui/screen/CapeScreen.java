@@ -121,7 +121,7 @@ public class CapeScreen extends GenericScreen {
         PlayerModelType model = current.model();
         boolean changed = false;
 
-        //cape
+        // cape
         if (FortytwoEdit.opticapesWorking && OptionsUtil.ModOptions.OPTICAPES.getSetting()) {
             if (FortytwoEdit.capeCached(name)) {
                 Identifier id = Identifier.fromNamespaceAndPath("42edit", "cache/cape/" + name.toLowerCase());
@@ -139,14 +139,14 @@ public class CapeScreen extends GenericScreen {
             changed = true;
         }
 
-        //skin
+        // skin
         if (FortytwoEdit.showClientSkin && !FortytwoEdit.customSkinName.equals("") && name.equals(FortytwoEdit.USERNAME)) {
             body = FortytwoEdit.CUSTOM_SKIN_TEXTURE;
             changed = true;
         }
 
 
-        //model
+        // model
         if (FortytwoEdit.showClientSkin && name.equals(FortytwoEdit.USERNAME)) {
             if (FortytwoEdit.clientSkinSlim)
                 model = PlayerModelType.SLIM;

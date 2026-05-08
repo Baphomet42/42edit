@@ -34,18 +34,18 @@ public abstract class TooltipMixin {
             List<FormattedCharSequence> cacheTooltip = GenericScreen.setCurrentTooltip(message);
             if (cacheTooltip != null)
                 cir.setReturnValue(cacheTooltip);
-            else if (client.font.split(message, small).size()>lineSwap) {
+            else if (client.font.split(message, small).size() > lineSwap) {
 
                 int largeSafe = Math.min(large, client.gui.screen().width - safeZone);
                 int mediumSafe = Math.min(medium, client.gui.screen().width - safeZone);
 
-                if (client.font.split(message, largeSafe).size()>lineSwap) {
+                if (client.font.split(message, largeSafe).size() > lineSwap) {
                     List<FormattedCharSequence> linesImmutable = client.font.split(message, client.gui.screen().width - safeZone);
                     List<FormattedCharSequence> lines = Lists.newArrayList();
-                    int maxLines = Math.max(lineSwap, ((client.gui.screen().height - safeZone) / 10) - 1); //10 pixels per line, -1 line gives space to see hotbar
+                    int maxLines = Math.max(lineSwap, ((client.gui.screen().height - safeZone) / 10) - 1); // 10 pixels per line, -1 line gives space to see hotbar
                     for (FormattedCharSequence t : linesImmutable)
                         lines.add(t);
-                    if (lines.size()>maxLines) {
+                    if (lines.size() > maxLines) {
                         int originalLines = lines.size();
                         int startLine = 1;
                         int endLine = lines.size();
@@ -71,7 +71,7 @@ public abstract class TooltipMixin {
                     }
                     cir.setReturnValue(lines);
                 }
-                else if (client.font.split(message, mediumSafe).size()>lineSwap)
+                else if (client.font.split(message, mediumSafe).size() > lineSwap)
                     cir.setReturnValue(client.font.split(message, largeSafe));
                 else
                     cir.setReturnValue(client.font.split(message, mediumSafe));

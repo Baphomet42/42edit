@@ -94,7 +94,7 @@ public class FortytwoEdit implements ClientModInitializer {
         boolean added = CHAT_ICON_KEY_SET.add(key);
         if (added) {
             CHAT_ICON_KEY_LIST.add(key);
-            if (CHAT_ICON_KEY_LIST.size()>250) {
+            if (CHAT_ICON_KEY_LIST.size() > 250) {
                 String removed = CHAT_ICON_KEY_LIST.remove(0);
                 CHAT_ICON_COMPONENT_CACHE.remove(removed);
                 CHAT_ICON_MESSAGE_CACHE.remove(removed);
@@ -275,7 +275,7 @@ public class FortytwoEdit implements ClientModInitializer {
     }
     public static void mixinLocatorBarCycle() {
         int index=-1;
-        for (int i=0; i<MIXIN_LOCATOR_BAR_PROFILE_OPTIONS.length; i++) {
+        for (int i=0; i < MIXIN_LOCATOR_BAR_PROFILE_OPTIONS.length; i++) {
             if (MIXIN_LOCATOR_BAR_PROFILE_OPTIONS[i].equals(OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting())) {
                 index = i;
                 break;
@@ -359,7 +359,7 @@ public class FortytwoEdit implements ClientModInitializer {
         return RNG.nextDouble();
     }
     public static double randomDouble(int range) {
-        return random()*range;
+        return random() * range;
     }
     public static int randomInt(int range) {
         return (int)randomDouble(range);
@@ -379,17 +379,17 @@ public class FortytwoEdit implements ClientModInitializer {
 
             int found = -1;
 
-            for (int i=0; i<itemHistList.size(); i++) {
-                if (BlackMagick.elementsEqual(itemHistList.get(i),item)) {
+            for (int i = 0; i < itemHistList.size(); i++) {
+                if (BlackMagick.elementsEqual(itemHistList.get(i), item)) {
                     found = i;
                     break;
                 }
             }
 
-            if (found<0) {
-                itemHistList.add(0,item.copy());
-                if (itemHistList.size()>ITEM_HIST_ROWS*9)
-                    itemHistList.remove(itemHistList.size()-1);
+            if (found < 0) {
+                itemHistList.add(0, item.copy());
+                if (itemHistList.size() > ITEM_HIST_ROWS * 9)
+                    itemHistList.remove(itemHistList.size() - 1);
             }
             else {
                 itemHistList.add(0,itemHistList.remove(found));
@@ -435,7 +435,7 @@ public class FortytwoEdit implements ClientModInitializer {
             return false;
     }
 
-    public static boolean opticapesWorking = true; //if optifine connection is working
+    public static boolean opticapesWorking = true; // if optifine connection is working
 
     private static void checkCapesEnabled() {
         opticapesWorking = true;
@@ -664,7 +664,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static IntArrayTag UUID = new IntArrayTag(new int[]{0,0,0,0});
     public static String[] PROFILE_SUGGS = null;
 
-    //skin testing
+    // skin testing
     public static boolean showClientSkin = false;
     public static boolean clientSkinSlim = false;
     public static String customSkinName = "";
@@ -724,7 +724,7 @@ public class FortytwoEdit implements ClientModInitializer {
         return false;
     }
 
-    private static final String[] MOD_ASSETS_TEXTURES = new String[]{//to_do replace with real solution
+    private static final String[] MOD_ASSETS_TEXTURES = new String[]{ // to_do replace with real solution
         "cape/42banner",
         "cape/christmas",
         "cape/spartan",
@@ -778,15 +778,15 @@ public class FortytwoEdit implements ClientModInitializer {
         return null;
     }
 
-    //freelook
+    // freelook
     public static boolean isFreeLooking = false;
     private static CameraType lastPerspective;
     public static float[] cameraRotation = {0f,0f};
 
-    //see feature items
+    // see feature items
     public static final FeatureFlagSet FEATURES = FeatureFlagSet.of(FeatureFlags.VANILLA);
 
-    //supersecretsettings
+    // supersecretsettings
     public static final Identifier[] SUPER_SECRET_SETTING_PROGRAMS = new Identifier[]{/*Identifier.of("42edit","shaders/post/notch.json"), Identifier.of("42edit","shaders/post/fxaa.json"), Identifier.of("42edit","shaders/post/art.json"), Identifier.of("42edit","shaders/post/bumpy.json"), Identifier.of("42edit","shaders/post/blobs2.json"), Identifier.of("42edit","shaders/post/pencil.json"), Identifier.of("42edit","shaders/post/color_convolve.json"), Identifier.of("42edit","shaders/post/deconverge.json"), Identifier.of("42edit","shaders/post/flip.json"),*/ Identifier.withDefaultNamespace("invert"),/* Identifier.of("42edit","shaders/post/ntsc.json"), Identifier.of("42edit","shaders/post/outline.json"), Identifier.of("42edit","shaders/post/phosphor.json"), Identifier.of("42edit","shaders/post/scan_pincushion.json"), Identifier.of("42edit","shaders/post/sobel.json"), Identifier.of("42edit","shaders/post/bits.json"), Identifier.of("42edit","shaders/post/desaturate.json"), Identifier.of("42edit","shaders/post/green.json"), Identifier.of("42edit","shaders/post/blur.json"), Identifier.of("42edit","shaders/post/wobble.json"), Identifier.of("42edit","shaders/post/blobs.json"), Identifier.of("42edit","shaders/post/antialias.json"),*/ Identifier.withDefaultNamespace("creeper"), Identifier.withDefaultNamespace("spider")};
     private static int superSecretSettingIndex = SUPER_SECRET_SETTING_PROGRAMS.length;
     private static final Identifier[] SECRETSOUNDS = getSecretSounds();
@@ -844,10 +844,10 @@ public class FortytwoEdit implements ClientModInitializer {
     public static final CompoundTag LORE_BAPHOMETHLABS = BlackMagick.validCompoundFromString("{color:\"gold\",\"text\":\"BaphomethLabs\"}");
     public static final CompoundTag LORE_BAPHOMETHLABS_BOTTLE = BlackMagick.validCompoundFromString("{color:\"gold\",\"text\":\"Bottled by BaphomethLabs\"}");
 
-    //saved items
+    // saved items
     public static final int SAVED_ROWS = 12;
 
-    //web items
+    // web items
     public static List<String> webItems = Lists.newArrayList();
     private static final String WEB_ITEMS_URL_DEFAULT = "https://baphomet42.github.io/mc/blackmarket/items.json";
     private static String webItemsUrlOverride = "";
@@ -946,7 +946,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 client.options.keyUp.setDown(true);
         }
 
-        //afkClick
+        // afkClick
         if (OptionsUtil.Keybinds.KEY_AFK_CLICK.consumeClick()) {
             toggleAutoClicker();
             client.options.keyUse.setDown(false);
@@ -958,7 +958,7 @@ public class FortytwoEdit implements ClientModInitializer {
             if (autoClick) {
                 client.options.keyUse.setDown(true);
             }
-            if (autoAttack && System.currentTimeMillis()>=lastAttack + attackWait && client.hitResult instanceof EntityHitResult) {
+            if (autoAttack && System.currentTimeMillis() >= lastAttack + attackWait && client.hitResult instanceof EntityHitResult) {
                 lastAttack = System.currentTimeMillis();
                 suppressKeybind = true;
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyAttack).getBoundKey());
@@ -968,7 +968,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 client.options.keyAttack.setDown(true);
             }
         }
-        if (autoFishClickQueue && System.currentTimeMillis()>=(lastFish+fishWait)) {
+        if (autoFishClickQueue && System.currentTimeMillis() >= (lastFish + fishWait)) {
             if (autoClicker && autoFish && ((!client.player.getMainHandItem().isEmpty()
                     && client.player.getMainHandItem().is(Items.FISHING_ROD)) || (client.player.getMainHandItem().isEmpty()
                     && !client.player.getOffhandItem().isEmpty() && client.player.getOffhandItem().is(Items.FISHING_ROD))) ) {
@@ -978,17 +978,17 @@ public class FortytwoEdit implements ClientModInitializer {
             autoFishClickQueue = false;
             lastFish = System.currentTimeMillis() + 100+randomInt(400);
         }
-        if (didFish && System.currentTimeMillis()>=(lastFish+fishWait)) {
+        if (didFish && System.currentTimeMillis() >= (lastFish + fishWait)) {
             if (autoClicker && autoFish && ((!client.player.getMainHandItem().isEmpty()
                     && client.player.getMainHandItem().is(Items.FISHING_ROD)) || (client.player.getMainHandItem().isEmpty()
                     && !client.player.getOffhandItem().isEmpty() && client.player.getOffhandItem().is(Items.FISHING_ROD))) ) {
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyUse).getBoundKey());
             }
             didFish = false;
-            lastFish = System.currentTimeMillis() + 100+randomInt(400);
+            lastFish = System.currentTimeMillis() + 100 + randomInt(400);
         }
 
-        //freelook
+        // freelook
         if (OptionsUtil.Keybinds.KEY_FREE_LOOK.isDown()) {
             if (!isFreeLooking) {
                 lastPerspective = client.options.getCameraType();
@@ -1007,8 +1007,8 @@ public class FortytwoEdit implements ClientModInitializer {
             client.options.setCameraType(lastPerspective);
         }
 
-        //spam
-        if (OptionsUtil.Keybinds.KEY_SPAM_CLICK.isDown() && System.currentTimeMillis()>=lastSpam + 20) {
+        // spam
+        if (OptionsUtil.Keybinds.KEY_SPAM_CLICK.isDown() && System.currentTimeMillis() >= lastSpam + 20) {
             if (OptionsUtil.Keybinds.KEY_KEY_MOD.isDown())
                 KeyMapping.click(((KeyMappingAccessor)client.options.keyAttack).getBoundKey());
             else {
@@ -1182,10 +1182,10 @@ public class FortytwoEdit implements ClientModInitializer {
             foundItems = true;
             if (!storedItems.isEmpty()) {
                 boolean itemsOutOfRange = false;
-                final int MAX_SAVED_ITEM_SLOT = FortytwoEdit.SAVED_ROWS*9-1;
+                final int MAX_SAVED_ITEM_SLOT = FortytwoEdit.SAVED_ROWS * 9 - 1;
                 int currentDupeSlot = MAX_SAVED_ITEM_SLOT+1;
                 ListTag unknownItemHolders = new ListTag();
-                for (int i=0; i<storedItems.size(); i++) {
+                for (int i = 0; i < storedItems.size(); i++) {
                     if (storedItems.get(i).getId() == Tag.TAG_COMPOUND) {
                         CompoundTag itemHolder = storedItems.getCompound(i).get();
                         if (itemHolder.isEmpty())
@@ -1203,7 +1203,7 @@ public class FortytwoEdit implements ClientModInitializer {
                             if (!itemHolder.isEmpty()) {
                                 FortytwoEdit.logError("Saved item contains unknown keys: "+BlackMagick.nbtToSnbt(itemHolder));
                             }
-                            if (slot<0 || slot>MAX_SAVED_ITEM_SLOT) {
+                            if (slot < 0 || slot > MAX_SAVED_ITEM_SLOT) {
                                 itemsOutOfRange = true;
                             }
                             if (itemsMap.containsKey(slot)) {
@@ -1212,7 +1212,7 @@ public class FortytwoEdit implements ClientModInitializer {
                                     newSlot++;
                                 }
                                 currentDupeSlot = newSlot+1;
-                                FortytwoEdit.logError("Saved items file contains duplicate slot "+slot+". Item will move to slot "+newSlot+" after saving.");
+                                FortytwoEdit.logError("Saved items file contains duplicate slot " + slot + ". Item will move to slot " + newSlot + " after saving.");
                                 slot = newSlot;
                             }
                             itemsMap.put(slot,itemString);
@@ -1284,7 +1284,7 @@ public class FortytwoEdit implements ClientModInitializer {
         CompoundTag newItems = cacheNbt.copy();
 
         {
-            String webItemsUrlActive = webItemsUrlOverride.length()>0 ? webItemsUrlOverride : WEB_ITEMS_URL_DEFAULT;
+            String webItemsUrlActive = webItemsUrlOverride.length() > 0 ? webItemsUrlOverride : WEB_ITEMS_URL_DEFAULT;
             String webJson = "";
             boolean didError = false;
 
@@ -1341,7 +1341,7 @@ public class FortytwoEdit implements ClientModInitializer {
             int itemsVerMinor = 0;
             ListTag jsonItems = null;
 
-            for (int i=0; i<versionsList.size(); i++) {
+            for (int i = 0; i < versionsList.size(); i++) {
                 if (versionsList.get(i).getId() == Tag.TAG_COMPOUND) {
                     CompoundTag versionData = versionsList.getCompound(i).get();
                     if (versionData.getInt("version").isPresent() && versionData.getList("items").isPresent()) {
@@ -1363,7 +1363,7 @@ public class FortytwoEdit implements ClientModInitializer {
             }
 
             if (jsonItems != null && !jsonItems.isEmpty()) {
-                for (int i=0; i<jsonItems.size(); i++) {
+                for (int i = 0; i < jsonItems.size(); i++) {
                     if (jsonItems.get(i).getId() == Tag.TAG_COMPOUND) {
                         CompoundTag itemHolder = jsonItems.getCompound(i).get();
                         if (itemHolder.getCompound("item").isPresent() || itemHolder.getString("item").isPresent()) {
@@ -1397,8 +1397,8 @@ public class FortytwoEdit implements ClientModInitializer {
 
         if (webItems.isEmpty())
             logWarn("No source of Black Market items available");
-        else if (webItems.size()>SAVED_ROWS*9)
-            FortytwoEdit.logWarn("Web items list contains more than " + (SAVED_ROWS*9) + " items ("+webItems.size()+")");
+        else if (webItems.size() > SAVED_ROWS * 9)
+            FortytwoEdit.logWarn("Web items list contains more than " + (SAVED_ROWS * 9) + " items (" + webItems.size() + ")");
 
         return result;
     }

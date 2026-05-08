@@ -40,7 +40,7 @@ public class WidgetUtil {
             w.setSize(GenericScreen.WID_HEIGHT, GenericScreen.WID_HEIGHT);
         }
 
-        public SELF setPosition(int x, int y) {//to_do remove
+        public SELF setPosition(int x, int y) { // to_do remove
             w.setPosition(x, y);
             return self();
         }

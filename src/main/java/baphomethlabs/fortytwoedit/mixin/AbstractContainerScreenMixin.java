@@ -68,9 +68,9 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
                     int rows = 3;
                     int columns = 9;
                     int[] size = SuggestionHelper.getContainerSize(stack.getItem());
-                    if (size[0]>0)
+                    if (size[0] > 0)
                         rows = size[0];
-                    if (size[1]>0)
+                    if (size[1] > 0)
                         columns = size[1];
 
                     NonNullList<ItemStack> items = NonNullList.withSize(rows * columns, ItemStack.EMPTY);

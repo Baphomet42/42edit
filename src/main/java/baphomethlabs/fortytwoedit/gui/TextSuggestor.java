@@ -270,7 +270,7 @@ public class TextSuggestor {
                 tooltipList.add(ClientTooltipComponent.create(text.getVisualOrderText()));
                 maxWidth = Math.max(maxWidth, TextSuggestor.this.font.width(text));
             }
-            rect.setWidth(maxWidth + WIDTH_PADDING*2);
+            rect.setWidth(maxWidth + WIDTH_PADDING * 2);
 
             BelowOrAboveWidgetTooltipPositioner ttPositioner = new BelowOrAboveWidgetTooltipPositioner(TextSuggestor.this.input.getRectangle());
             Vector2ic vec = getTooltipPosition(TextSuggestor.this.font, guiGraphics, i, j, tooltipList, ttPositioner);
@@ -333,29 +333,29 @@ public class TextSuggestor {
         }
 
         public boolean keyPressed(KeyEvent keyEvent) {
-            if (keyEvent.key() == 265) {//arrow up
+            if (keyEvent.key() == 265) { // arrow up
                 this.cycle(-1);
                 this.tabCycles = false;
                 return true;
             }
-            if (keyEvent.key() == 264) {//arrow down
+            if (keyEvent.key() == 264) { // arrow down
                 this.cycle(1);
                 this.tabCycles = false;
                 return true;
             }
-            if (keyEvent.key() == 258) {//tab
+            if (keyEvent.key() == 258) { // tab
                 if (this.tabCycles) {
                     this.cycle(keyEvent.hasShiftDown() ? -1 : 1);
                 }
                 this.useSuggestion();
                 return true;
             }
-            if (keyEvent.key() == GLFW.GLFW_KEY_ENTER || keyEvent.key() == GLFW.GLFW_KEY_KP_ENTER) {//enter
+            if (keyEvent.key() == GLFW.GLFW_KEY_ENTER || keyEvent.key() == GLFW.GLFW_KEY_KP_ENTER) { // enter
                 this.useSuggestion();
                 TextSuggestor.this.hide();
                 return true;
             }
-            if (keyEvent.key() == 256) {//escape
+            if (keyEvent.key() == 256) { // escape
                 TextSuggestor.this.hide();
                 return true;
             }
