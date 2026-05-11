@@ -42,7 +42,7 @@ public class LogScreen extends GenericScreen {
     private long lastCheck = 0;
     private long lastUpdate = 0;
     private static final int UPDATE_WAIT_MS = 1000;
-    private static final String ss = "\u00a7";
+    private static final String ss = GenericScreen.UNICODE_SECTION_SIGN;
 
     public LogScreen() {
         super("Log");

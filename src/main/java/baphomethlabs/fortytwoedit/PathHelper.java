@@ -238,7 +238,7 @@ public class PathHelper {
         registerPathInfo("components.minecraft:dyed_color", PathInfo.copyOf("color_rgb_int_or_list").setIcon(Items.LEATHER_CHESTPLATE));
 
         registerPathInfo("components.minecraft:enchantable", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
-            "value", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("1",""+Integer.MAX_VALUE))).setInfo("Positive integer that allows better enchantments to be picked").getter()
+            "value", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("1","" + Integer.MAX_VALUE))).setInfo("Positive integer that allows better enchantments to be picked").getter()
         ))).setIcon(Items.ENCHANTED_BOOK));
 
         registerPathInfo("components.minecraft:enchantment_glint_override", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setIcon(Items.ENCHANTED_BOOK));
@@ -356,19 +356,19 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:max_damage", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,
             SuggestionGetter.newInlineSnbt(
-                ""+ToolMaterial.WOOD.durability(),
-                ""+ToolMaterial.STONE.durability(),
-                ""+ToolMaterial.GOLD.durability(),
-                ""+ToolMaterial.IRON.durability(),
-                ""+ToolMaterial.DIAMOND.durability(),
-                ""+ToolMaterial.NETHERITE.durability()
+                "" + ToolMaterial.WOOD.durability(),
+                "" + ToolMaterial.STONE.durability(),
+                "" + ToolMaterial.GOLD.durability(),
+                "" + ToolMaterial.IRON.durability(),
+                "" + ToolMaterial.DIAMOND.durability(),
+                "" + ToolMaterial.NETHERITE.durability()
             ))).setInfo("Vanilla values for reference:\n  Wood tools - "
-                +ToolMaterial.WOOD.durability()+"\n  Stone tools - "
-                +ToolMaterial.STONE.durability()+"\n  Gold tools - "
-                +ToolMaterial.GOLD.durability()+"\n  Iron tools - "
-                +ToolMaterial.IRON.durability()+"\n  Diamond tools - "
-                +ToolMaterial.DIAMOND.durability()+"\n  Netherite tools - "
-                +ToolMaterial.NETHERITE.durability()
+                + ToolMaterial.WOOD.durability() + "\n  Stone tools - "
+                + ToolMaterial.STONE.durability() + "\n  Gold tools - "
+                + ToolMaterial.GOLD.durability() + "\n  Iron tools - "
+                + ToolMaterial.IRON.durability() + "\n  Diamond tools - "
+                + ToolMaterial.DIAMOND.durability() + "\n  Netherite tools - "
+                + ToolMaterial.NETHERITE.durability()
             ).setIcon(Items.DIAMOND_PICKAXE));
 
         registerPathInfo("components.minecraft:max_stack_size", PathInfo.copyOf("item_count").setInfo("Integer 1-99").setIcon(Items.STONE));
@@ -443,7 +443,7 @@ public class PathHelper {
             "items", PathInfo.copyOf("item_id_tag_or_list").getter()
         ))).setIcon(Items.ANVIL));
 
-        registerPathInfo("components.minecraft:repair_cost", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0",""+Integer.MAX_VALUE))).setIcon(Items.ANVIL));
+        registerPathInfo("components.minecraft:repair_cost", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0","" + Integer.MAX_VALUE))).setIcon(Items.ANVIL));
 
         registerPathInfo("components.minecraft:stored_enchantments", PathInfo.create(DataType.CompoundEnchantmentsMap.create()).setIcon(Items.ENCHANTED_BOOK));
 
@@ -473,7 +473,7 @@ public class PathHelper {
             )).getter()
             ),Map.of(
             "default_mining_speed", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT,SuggestionGetter.newInlineSnbt("0.0f","1.0f"))).setUnsetInfo(FloatTag.valueOf(1f)).getter(),
-            "damage_per_block", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0","1",""+Integer.MAX_VALUE))).setUnsetInfo(IntTag.valueOf(1)).getter(),
+            "damage_per_block", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt("0","1","" + Integer.MAX_VALUE))).setUnsetInfo(IntTag.valueOf(1)).getter(),
             "can_destroy_blocks_in_creative", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter()
         ))).setIcon(Items.DIAMOND_PICKAXE));
 
@@ -882,13 +882,13 @@ public class PathHelper {
     protected static PathInfo getRegisteredPathInfo(String refKey) {
         if (testRegisteredPathInfo(refKey))
             return PATH_INFO_REF_MAP.get(refKey);
-        FortytwoEdit.logWarn("PathInfo map is missing a registered key: "+refKey);
+        FortytwoEdit.logWarn("PathInfo map is missing a registered key: " + refKey);
         return PathInfo.EMPTY;
     }
 
     protected static PathInfoGetter registerPathInfo(String refKey, PathInfo pi) {
         if (PATH_INFO_REF_MAP.containsKey(refKey))
-            FortytwoEdit.logWarn("Duplicate PathInfo registry key detected: "+refKey);
+            FortytwoEdit.logWarn("Duplicate PathInfo registry key detected: " + refKey);
         PATH_INFO_REF_MAP.put(refKey, pi);
         return PathInfoGetter.of(refKey);
     }
@@ -1258,7 +1258,7 @@ public class PathHelper {
                 cacheAllNbtTypes = true;
 
                 allNbtTypes.clear();
-                if (this.isUnstructured || (elementSupplier != null && elementSupplier.getNbtType()==NbtType.ANY)) {
+                if (this.isUnstructured || (elementSupplier != null && elementSupplier.getNbtType() == NbtType.ANY)) {
                     allNbtTypes.add(NbtType.ANY);
                 }
                 else {
@@ -1460,7 +1460,7 @@ public class PathHelper {
                         this.keyInfo.put(s, required.get(s));
                         this.requiredKeys.add(s);
                         if (this.optionalKeys.contains(s)) {
-                            FortytwoEdit.logWarn("PathInfoComoundStructured tried to create 2 PathInfo's for key: "+s);
+                            FortytwoEdit.logWarn("PathInfoComoundStructured tried to create 2 PathInfo's for key: " + s);
                             this.optionalKeys.remove(s);
                         }
                     }
@@ -1594,8 +1594,8 @@ public class PathHelper {
                 if (key.startsWith("!")) {
                     if (this.allowRemoved) {
                         Identifier componentId = BlackMagick.identifierOrNull(key.substring(1));
-                        if (componentId != null && testRegisteredPathInfo("components."+BlackMagick.identifierToString(componentId))) {
-                            ItemStack icon = getRegisteredPathInfo("components."+BlackMagick.identifierToString(componentId)).getIcon();
+                        if (componentId != null && testRegisteredPathInfo("components." + BlackMagick.identifierToString(componentId))) {
+                            ItemStack icon = getRegisteredPathInfo("components." + BlackMagick.identifierToString(componentId)).getIcon();
                             return PathInfo.create(DataType.Unit.create()).setInfo("Removed default component").setIcon(icon);
                         }
                         if (componentId != null && SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList().contains(BlackMagick.identifierToString(componentId)))
@@ -1604,8 +1604,8 @@ public class PathHelper {
                 }
                 else {
                     Identifier componentId = BlackMagick.identifierOrNull(key);
-                    if (componentId != null && testRegisteredPathInfo("components."+BlackMagick.identifierToString(componentId)))
-                        return getRegisteredPathInfo("components."+BlackMagick.identifierToString(componentId));
+                    if (componentId != null && testRegisteredPathInfo("components." + BlackMagick.identifierToString(componentId)))
+                        return getRegisteredPathInfo("components." + BlackMagick.identifierToString(componentId));
                 }
                 return PathInfo.EMPTY;
             }
@@ -1639,7 +1639,7 @@ public class PathHelper {
                     int max = SuggestionHelper.getEnchantmentMaxLevel(key);
                     if (max > 0)
                         return PathInfo.create(DataType.ElementLiteral.of(NbtType.INT,SuggestionGetter.newInlineSnbt(BlackMagick.getIntRangeArray(1, max))))
-                            .setInfo("Max level: "+max);
+                            .setInfo("Max level: " + max);
                 }
                 return PathInfo.EMPTY;
             }
@@ -1830,9 +1830,9 @@ public class PathHelper {
 
             public static ElementLiteral of(NbtType nbtType, SuggestionGetter suggs) {
                 PathType thisPathType = PathType.ELEMENT;
-                if (nbtType==NbtType.BOOLEAN)
+                if (nbtType == NbtType.BOOLEAN)
                     thisPathType = PathType.BOOLEAN;
-                else if (nbtType==NbtType.STRING)
+                else if (nbtType == NbtType.STRING)
                     thisPathType = PathType.STRING;
                 return new ElementLiteral(nbtType, thisPathType, suggs);
             }
@@ -1882,10 +1882,10 @@ public class PathHelper {
 
     public enum NbtType {
 
-        BYTE("Byte", "0b",""+Byte.MIN_VALUE+"b",""+Byte.MAX_VALUE+"b"),
-        SHORT("Short", "0s",""+Short.MIN_VALUE+"s",""+Short.MAX_VALUE+"s"),
-        INT("Int", "0",""+Integer.MIN_VALUE,""+Integer.MAX_VALUE),
-        LONG("Long", "0l",""+Long.MIN_VALUE+"l",""+Long.MAX_VALUE+"l"),
+        BYTE("Byte", "0b","" + Byte.MIN_VALUE + "b","" + Byte.MAX_VALUE + "b"),
+        SHORT("Short", "0s","" + Short.MIN_VALUE + "s","" + Short.MAX_VALUE + "s"),
+        INT("Int", "0","" + Integer.MIN_VALUE,"" + Integer.MAX_VALUE),
+        LONG("Long", "0l","" + Long.MIN_VALUE + "l","" + Long.MAX_VALUE + "l"),
         DOUBLE("Double", "0.0d"),
         FLOAT("Float", "0.0f"),
 
@@ -1975,7 +1975,7 @@ public class PathHelper {
                 if (node.isKey())
                     sb.append(node.getPathKey());
                 else
-                    sb.append("["+node.index()+"]");
+                    sb.append("[" + node.index() + "]");
             }
             return sb.toString();
         }
@@ -2000,10 +2000,10 @@ public class PathHelper {
             boolean valid = true;
             while (!edit.isEmpty() && valid) {
                 valid = false;
-                if (!nodeList.isEmpty() && edit.charAt(0)=='[') {
+                if (!nodeList.isEmpty() && edit.charAt(0) == '[') {
                     if (edit.contains("]")) {
                         String thisNode = edit.substring(1,edit.indexOf("]"));
-                        edit = edit.substring(edit.indexOf("]")+1);
+                        edit = edit.substring(edit.indexOf("]") + 1);
                         try {
                             int index = Integer.parseInt(thisNode);
                             if (index >= 0) {
@@ -2014,19 +2014,19 @@ public class PathHelper {
                         } catch (Exception ex) {}
                     }
                 }
-                else if (nodeList.isEmpty() || edit.charAt(0)=='.') {
-                    if (nodeList.isEmpty() && edit.charAt(0)=='.') {
+                else if (nodeList.isEmpty() || edit.charAt(0) == '.') {
+                    if (nodeList.isEmpty() && edit.charAt(0) == '.') {
                         valid = false;
                         break;
                     }
-                    if (edit.charAt(0)=='.') {
+                    if (edit.charAt(0) == '.') {
                         edit = edit.substring(1);
                         if (edit.isEmpty()) {
                             valid = true;
                             break;
                         }
                     }
-                    if (edit.charAt(0)=='"' || edit.charAt(0)=='\'') {
+                    if (edit.charAt(0) == '"' || edit.charAt(0) == '\'') {
                         char quoteChar = edit.charAt(0);
                         edit = edit.substring(1);
                         StringBuilder thisKey = new StringBuilder();

@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.OptionsUtil;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -19,6 +20,7 @@ public abstract class HudMixin {
     private static final int TEXT_COLOR = 0xFFFFFFFF;
     private static long lastRefreshTime = 0;
     private static Component cacheCoordHud = null;
+    private static final Component FISH_SUBTITLE_WARNING = Component.empty().append("Auto Fish requires Subtitles").withStyle(ChatFormatting.RED);
 
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void injectExtractRenderState(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo c) {
@@ -31,7 +33,7 @@ public abstract class HudMixin {
                     context.text(client.font, "[Auto Move]", x, y - 20, TEXT_COLOR, true);
                 if (FortytwoEdit.autoClicker) {
                     if (FortytwoEdit.autoFish && !client.options.showSubtitles().get())
-                        context.text(client.font, "\u00a7cAuto Fish requires Subtitles", x - 64, y - 10, TEXT_COLOR, true);
+                        context.text(client.font, FISH_SUBTITLE_WARNING, x - 64, y - 10, TEXT_COLOR, true);
                     else
                         context.text(client.font, "[Auto Click]", x, y - 10, TEXT_COLOR, true);
                 }

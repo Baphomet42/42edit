@@ -48,6 +48,7 @@ public abstract class GenericScreen extends Screen {
     protected static final int WID_LEFT = 10; // standard spacing before first widget in row
     protected static final int ROW_HEIGHT = 22; // standard spacing amounts between rows of widgets
     protected static final int ROW_WIDTH = 208;
+    protected static final int ROW_WIDTH_HALF_WID = (ROW_WIDTH - WID_SPACE) / 2;
     protected static final int TOP_OFFSET = (ROW_HEIGHT - WID_HEIGHT) / 2;
     protected static final int NARROW_OFFSET = 10;
     protected static final int WID_LEFT_NARROW = WID_LEFT + NARROW_OFFSET;
@@ -59,7 +60,8 @@ public abstract class GenericScreen extends Screen {
     public static final Duration TOOLTIP_DELAY = Duration.ofMillis(500L);
     public static final Duration TOOLTIP_DELAY_SHORT = Duration.ofMillis(100L);
     public static final int MAX_TEXT_LENGTH = 131072;
-    public static final String UNICODE_SECTION_SIGN = "\u00a7";
+    public static final char UNICODE_SECTION_SIGN_CHAR = '\u00a7';
+    public static final String UNICODE_SECTION_SIGN = "" + UNICODE_SECTION_SIGN_CHAR;
     public static final String UNICODE_UP_ARROW = "\u2227";
     public static final String UNICODE_DOWN_ARROW = "\u2228";
     public static final String UNICODE_CHECK = "\u2611";

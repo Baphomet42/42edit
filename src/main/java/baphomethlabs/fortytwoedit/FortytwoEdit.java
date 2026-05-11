@@ -107,7 +107,7 @@ public class FortytwoEdit implements ClientModInitializer {
             final Minecraft minecraft = Minecraft.getInstance();
             PlayerInfo playerInfo = minecraft.player.connection.getPlayerInfo(uuid);
             if (playerInfo != null) {
-                String mapKey = ""+minecraft.gui.hud.getGuiTicks()+"_"+BlackMagick.textComponentToSnbt(text);
+                String mapKey = "" + minecraft.gui.hud.getGuiTicks() + "_" + BlackMagick.textComponentToSnbt(text);
                 MutableComponent newComponent = Component.empty();
 
                 ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{id:"
@@ -118,7 +118,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     newComponent.append(parsedText.text());
                     newComponent.append(" ");
                     newComponent.append(text);
-                    CHAT_ICON_COMPONENT_CACHE.put(mapKey,newComponent);
+                    CHAT_ICON_COMPONENT_CACHE.put(mapKey, newComponent);
                     chatCache(mapKey);
                 }
             }
@@ -127,7 +127,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void chatIconNew(Component text, String name) {
         try {
             final Minecraft minecraft = Minecraft.getInstance();
-            String mapKey = "" + minecraft.gui.hud.getGuiTicks() + "_"+BlackMagick.textComponentToSnbt(text);
+            String mapKey = "" + minecraft.gui.hud.getGuiTicks() + "_" + BlackMagick.textComponentToSnbt(text);
             MutableComponent newComponent = Component.empty();
 
             String hat = ",hat:true";
@@ -136,19 +136,19 @@ public class FortytwoEdit implements ClientModInitializer {
                 hat = ",hat:false";
             }
 
-            ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{name:"+BlackMagick.nbtToSnbt(StringTag.valueOf(name))+"}"+hat+",shadow_color:0}");
+            ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{name:" + BlackMagick.nbtToSnbt(StringTag.valueOf(name)) + "}" + hat + ",shadow_color:0}");
 
             if (parsedText.isValid()) {
                 newComponent.append(parsedText.text());
                 newComponent.append(" ");
                 newComponent.append(text);
-                CHAT_ICON_COMPONENT_CACHE.put(mapKey,newComponent);
+                CHAT_ICON_COMPONENT_CACHE.put(mapKey, newComponent);
                 chatCache(mapKey);
             }
         } catch (Exception ex) {}
     }
     public static GuiMessage chatIconGet(GuiMessage guiMessage) {
-        String mapKey = ""+guiMessage.addedTime()+"_"+BlackMagick.textComponentToSnbt(guiMessage.content());
+        String mapKey = "" + guiMessage.addedTime() + "_" + BlackMagick.textComponentToSnbt(guiMessage.content());
 
         GuiMessage testCache = CHAT_ICON_MESSAGE_CACHE.get(mapKey);
         if (testCache != null)
@@ -157,7 +157,7 @@ public class FortytwoEdit implements ClientModInitializer {
         Component testComponent = CHAT_ICON_COMPONENT_CACHE.get(mapKey);
         if (testComponent != null) {
             GuiMessage newMessage = new GuiMessage(guiMessage.addedTime(), testComponent, guiMessage.signature(), guiMessage.source(), guiMessage.tag());
-            CHAT_ICON_MESSAGE_CACHE.put(mapKey,newMessage);
+            CHAT_ICON_MESSAGE_CACHE.put(mapKey, newMessage);
             chatCache(mapKey);
             return newMessage;
         }
@@ -177,17 +177,17 @@ public class FortytwoEdit implements ClientModInitializer {
                         case "chat.type.announcement" :
                         case "commands.message.display.incoming" :
                         {
-                            Tag hoverUUID = BlackMagick.getNbtPath(compound,"with[0].hover_event.uuid");
+                            Tag hoverUUID = BlackMagick.getNbtPath(compound, "with[0].hover_event.uuid");
                             if (hoverUUID != null && hoverUUID.getId() == Tag.TAG_INT_ARRAY) {
                                 uuid = UUIDUtil.uuidFromIntArray(((IntArrayTag)hoverUUID).getAsIntArray());
                             }
                             else {
-                                Tag textTag = BlackMagick.getNbtPath(compound,"with[0]");
+                                Tag textTag = BlackMagick.getNbtPath(compound, "with[0]");
                                 if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
                                     name = BlackMagick.nbtToSnbtOrString(textTag);
                                 }
                                 else {
-                                    textTag = BlackMagick.getNbtPath(compound,"with[0].text");
+                                    textTag = BlackMagick.getNbtPath(compound, "with[0].text");
                                     if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
                                         name = BlackMagick.nbtToSnbtOrString(textTag);
                                     }
@@ -198,17 +198,17 @@ public class FortytwoEdit implements ClientModInitializer {
                         case "chat.type.team.text" :
                         case "chat.type.team.sent" :
                         {
-                            Tag hoverUUID = BlackMagick.getNbtPath(compound,"with[1].hover_event.uuid");
+                            Tag hoverUUID = BlackMagick.getNbtPath(compound, "with[1].hover_event.uuid");
                             if (hoverUUID != null && hoverUUID.getId() == Tag.TAG_INT_ARRAY) {
                                 uuid = UUIDUtil.uuidFromIntArray(((IntArrayTag)hoverUUID).getAsIntArray());
                             }
                             else {
-                                Tag textTag = BlackMagick.getNbtPath(compound,"with[1]");
+                                Tag textTag = BlackMagick.getNbtPath(compound, "with[1]");
                                 if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
                                     name = BlackMagick.nbtToSnbtOrString(textTag);
                                 }
                                 else {
-                                    textTag = BlackMagick.getNbtPath(compound,"with[1].text");
+                                    textTag = BlackMagick.getNbtPath(compound, "with[1].text");
                                     if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
                                         name = BlackMagick.nbtToSnbtOrString(textTag);
                                     }
@@ -233,13 +233,13 @@ public class FortytwoEdit implements ClientModInitializer {
             testComponent = CHAT_ICON_COMPONENT_CACHE.get(mapKey);
             if (testComponent != null) {
                 GuiMessage newMessage = new GuiMessage(guiMessage.addedTime(), testComponent, guiMessage.signature(), guiMessage.source(), guiMessage.tag());
-                CHAT_ICON_MESSAGE_CACHE.put(mapKey,newMessage);
+                CHAT_ICON_MESSAGE_CACHE.put(mapKey, newMessage);
                 chatCache(mapKey);
                 return newMessage;
             }
         } catch (Exception ex) {}
 
-        CHAT_ICON_MESSAGE_CACHE.put(mapKey,guiMessage);
+        CHAT_ICON_MESSAGE_CACHE.put(mapKey, guiMessage);
         chatCache(mapKey);
         return guiMessage;
     }
@@ -274,8 +274,8 @@ public class FortytwoEdit implements ClientModInitializer {
         return true;
     }
     public static void mixinLocatorBarCycle() {
-        int index=-1;
-        for (int i=0; i < MIXIN_LOCATOR_BAR_PROFILE_OPTIONS.length; i++) {
+        int index = -1;
+        for (int i = 0; i < MIXIN_LOCATOR_BAR_PROFILE_OPTIONS.length; i++) {
             if (MIXIN_LOCATOR_BAR_PROFILE_OPTIONS[i].equals(OptionsUtil.ModOptions.LOCATOR_BAR_PROFILE.getSetting())) {
                 index = i;
                 break;
@@ -353,7 +353,7 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean suppressKeybind = false;
     public static void queueAutoFish() {
         autoFishClickQueue = true;
-        lastFish = Math.max(lastFish, System.currentTimeMillis() + 100+randomInt(400) - fishWait);
+        lastFish = Math.max(lastFish, System.currentTimeMillis() + 100 + randomInt(400) - fishWait);
     }
     private static double random() {
         return RNG.nextDouble();
@@ -392,7 +392,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     itemHistList.remove(itemHistList.size() - 1);
             }
             else {
-                itemHistList.add(0,itemHistList.remove(found));
+                itemHistList.add(0, itemHistList.remove(found));
             }
         }
     }
@@ -584,7 +584,7 @@ public class FortytwoEdit implements ClientModInitializer {
     private static final Map<String,String> CAPE_URLS_QUEUE_MAP = Maps.newHashMap();
     private static final Set<String> CAPE_REGISTERED_IDS = Sets.newHashSet();
     public static Identifier capeIdentifier(String id) {
-        return Identifier.fromNamespaceAndPath(MOD_ID_MC, "cape/"+id);
+        return Identifier.fromNamespaceAndPath(MOD_ID_MC, "cape/" + id);
     }
     private static void registerCustomCape(String id, String name, String desc) {
         registerCape(CapeTexture.newCustom(id, name, desc), new ClientAsset.ResourceTexture(capeIdentifier(id)));
@@ -615,7 +615,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 for (String url : CAPE_URLS_QUEUE) {
                     try {
                         CompletableFuture<PlayerSkin> futurePlayerSkin = ((SkinManagerInvoker)client.getSkinManager())
-                            .invokeRegisterTextures(new UUID(0,0), new MinecraftProfileTextures(null,
+                            .invokeRegisterTextures(new UUID(0, 0), new MinecraftProfileTextures(null,
                             new MinecraftProfileTexture(url, null), null, SignatureState.SIGNED));
                             futurePlayerSkin.thenAccept(playerSkin -> {
                                 if (CAPE_URLS_QUEUE_MAP.containsKey(url) && playerSkin != null && playerSkin.cape() != null) {
@@ -624,12 +624,12 @@ public class FortytwoEdit implements ClientModInitializer {
                                     CAPE_ID_TO_TEXTURE.put(capeId, playerSkin.cape().texturePath());
                                 }
                                 else
-                                    FortytwoEdit.logWarn("Failed to load cape id for: "+url);
+                                    FortytwoEdit.logWarn("Failed to load cape id for: " + url);
                             }
                         );
                     }
                     catch (Exception ex) {
-                        FortytwoEdit.logWarn("Failed to load cape texture for: "+url);
+                        FortytwoEdit.logWarn("Failed to load cape texture for: " + url);
                     }
                 }
                 CAPE_URLS_QUEUE.clear();
@@ -638,7 +638,7 @@ public class FortytwoEdit implements ClientModInitializer {
         else if (!CAPE_REGISTERED_IDS.contains(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting())
         && (warnedCapeCache == null || !warnedCapeCache.equals(OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting()))) {
             warnedCapeCache = OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting();
-            FortytwoEdit.logWarn("Failed to find custom cape with ID: "+OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting());
+            FortytwoEdit.logWarn("Failed to find custom cape with ID: " + OptionsUtil.ModOptions.CUSTOM_CAPE.getSetting());
         }
     }
     private static final Map<String,ClientAsset.Texture> CAPE_MAP = Maps.newHashMap();
@@ -661,7 +661,7 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     public static String USERNAME = "";
-    public static IntArrayTag UUID = new IntArrayTag(new int[]{0,0,0,0});
+    public static IntArrayTag UUID = new IntArrayTag(new int[]{0, 0, 0, 0});
     public static String[] PROFILE_SUGGS = null;
 
     // skin testing
@@ -669,8 +669,8 @@ public class FortytwoEdit implements ClientModInitializer {
     public static boolean clientSkinSlim = false;
     public static String customSkinName = "";
     private static final String CUSTOM_SKIN_PATH = "cache/custom_skin";
-    private static final Identifier CUSTOM_SKIN_ID = Identifier.fromNamespaceAndPath(MOD_ID_MC,CUSTOM_SKIN_PATH);
-    private static final Identifier CUSTOM_SKIN_ID_FULL = Identifier.fromNamespaceAndPath(MOD_ID_MC,getTexturesFullPath(CUSTOM_SKIN_PATH));
+    private static final Identifier CUSTOM_SKIN_ID = Identifier.fromNamespaceAndPath(MOD_ID_MC, CUSTOM_SKIN_PATH);
+    private static final Identifier CUSTOM_SKIN_ID_FULL = Identifier.fromNamespaceAndPath(MOD_ID_MC, getTexturesFullPath(CUSTOM_SKIN_PATH));
     public static final ClientAsset.Texture CUSTOM_SKIN_TEXTURE = new ClientAsset.ResourceTexture(CUSTOM_SKIN_ID);
 
     public static String getTexturesFullPath(String path) {
@@ -695,7 +695,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     inp = new FileInputStream(file);
                     skinFile = NativeImage.read(inp);
                     inp.close();
-                    skin = new NativeImage(skinFile.getWidth(),skinFile.getHeight(),true);
+                    skin = new NativeImage(skinFile.getWidth(), skinFile.getHeight(), true);
 
                     for (int x = 0; x < skinFile.getWidth(); x++)
                         for (int y = 0; y < skinFile.getHeight(); y++)
@@ -749,14 +749,14 @@ public class FortytwoEdit implements ClientModInitializer {
 
     public static void loadAssetsTexture(Minecraft client, String path) {
         try {
-            NativeImage texture = NativeImage.read(client.getClass().getClassLoader().getResourceAsStream("assets/"+MOD_ID_MC+"/textures/"+path+".png"));
-            Identifier id = Identifier.fromNamespaceAndPath(MOD_ID_MC,path);
-            Identifier idFull = Identifier.fromNamespaceAndPath(MOD_ID_MC,getTexturesFullPath(path));
+            NativeImage texture = NativeImage.read(client.getClass().getClassLoader().getResourceAsStream("assets/" + MOD_ID_MC + "/textures/" + path + ".png"));
+            Identifier id = Identifier.fromNamespaceAndPath(MOD_ID_MC, path);
+            Identifier idFull = Identifier.fromNamespaceAndPath(MOD_ID_MC, getTexturesFullPath(path));
             client.getTextureManager().release(idFull);
-            client.getTextureManager().register(idFull,new DynamicTexture(id::toString,texture));
+            client.getTextureManager().register(idFull, new DynamicTexture(id::toString, texture));
         }
         catch (Exception ex) {
-            FortytwoEdit.logError("Failed to load mod texture: "+path);
+            FortytwoEdit.logError("Failed to load mod texture: " + path);
         }
     }
 
@@ -769,10 +769,10 @@ public class FortytwoEdit implements ClientModInitializer {
         if (found) {
             final Minecraft client = Minecraft.getInstance();
             try {
-                return client.getClass().getClassLoader().getResourceAsStream("assets/"+MOD_ID_MC+"/lang/"+lang+".json");
+                return client.getClass().getClassLoader().getResourceAsStream("assets/" + MOD_ID_MC + "/lang/" + lang + ".json");
             }
             catch (Exception ex) {
-                FortytwoEdit.logError("Failed to load mod language: "+lang);
+                FortytwoEdit.logError("Failed to load mod language: " + lang);
             }
         }
         return null;
@@ -781,13 +781,17 @@ public class FortytwoEdit implements ClientModInitializer {
     // freelook
     public static boolean isFreeLooking = false;
     private static CameraType lastPerspective;
-    public static float[] cameraRotation = {0f,0f};
+    public static float[] cameraRotation = {0f, 0f};
 
     // see feature items
     public static final FeatureFlagSet FEATURES = FeatureFlagSet.of(FeatureFlags.VANILLA);
 
     // supersecretsettings
-    public static final Identifier[] SUPER_SECRET_SETTING_PROGRAMS = new Identifier[]{/*Identifier.of("42edit","shaders/post/notch.json"), Identifier.of("42edit","shaders/post/fxaa.json"), Identifier.of("42edit","shaders/post/art.json"), Identifier.of("42edit","shaders/post/bumpy.json"), Identifier.of("42edit","shaders/post/blobs2.json"), Identifier.of("42edit","shaders/post/pencil.json"), Identifier.of("42edit","shaders/post/color_convolve.json"), Identifier.of("42edit","shaders/post/deconverge.json"), Identifier.of("42edit","shaders/post/flip.json"),*/ Identifier.withDefaultNamespace("invert"),/* Identifier.of("42edit","shaders/post/ntsc.json"), Identifier.of("42edit","shaders/post/outline.json"), Identifier.of("42edit","shaders/post/phosphor.json"), Identifier.of("42edit","shaders/post/scan_pincushion.json"), Identifier.of("42edit","shaders/post/sobel.json"), Identifier.of("42edit","shaders/post/bits.json"), Identifier.of("42edit","shaders/post/desaturate.json"), Identifier.of("42edit","shaders/post/green.json"), Identifier.of("42edit","shaders/post/blur.json"), Identifier.of("42edit","shaders/post/wobble.json"), Identifier.of("42edit","shaders/post/blobs.json"), Identifier.of("42edit","shaders/post/antialias.json"),*/ Identifier.withDefaultNamespace("creeper"), Identifier.withDefaultNamespace("spider")};
+    public static final Identifier[] SUPER_SECRET_SETTING_PROGRAMS = new Identifier[]{
+        Identifier.withDefaultNamespace("invert"),
+        Identifier.withDefaultNamespace("creeper"),
+        Identifier.withDefaultNamespace("spider")
+    };
     private static int superSecretSettingIndex = SUPER_SECRET_SETTING_PROGRAMS.length;
     private static final Identifier[] SECRETSOUNDS = getSecretSounds();
     private static Identifier[] getSecretSounds() {
@@ -823,26 +827,29 @@ public class FortytwoEdit implements ClientModInitializer {
 
     // common
     public static final ItemStackPreset HEAD42 = ItemStackPreset.set("{id:player_head,components:{profile:{name:\"42Richtofen42\","
-        +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlc"
-        +"yIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lNDliNjliNWU3MzVlYjUyMmIyNGM2OTczNTQ5ZGRhODMzYjE1ZD"
-        +"kxYjg3NDM1NjRjZmIxN2QwZjk2MWMwZjU0Ig0KICAgIH0NCiAgfQ0KfQ==\"}]}}}");
+        + "properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlc"
+        + "yIgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lNDliNjliNWU3MzVlYjUyMmIyNGM2OTczNTQ5ZGRhODMzYjE1ZD"
+        + "kxYjg3NDM1NjRjZmIxN2QwZjk2MWMwZjU0Ig0KICAgIH0NCiAgfQ0KfQ==\"}]}}}");
     public static final ItemStackPreset BANNER42 = ItemStackPreset.set("{id:red_banner,components:{banner_patterns:[{color:\"black\",pattern:\"minecraft:curly_border\"}"
-        +",{color:\"black\",pattern:\"minecraft:bricks\"},{color:\"red\",pattern:\"minecraft:triangle_bottom\"},{color:\"black\",pattern:\"minecraft:triangle_bottom\"}"
-        +",{color:\"purple\",pattern:\"minecraft:flower\"},{color:\"black\",pattern:\"minecraft:gradient\"}]}}");
+        + ",{color:\"black\",pattern:\"minecraft:bricks\"},{color:\"red\",pattern:\"minecraft:triangle_bottom\"},{color:\"black\",pattern:\"minecraft:triangle_bottom\"}"
+        + ",{color:\"purple\",pattern:\"minecraft:flower\"},{color:\"black\",pattern:\"minecraft:gradient\"}]}}");
     public static final ItemStackPreset BANNERBRICK = ItemStackPreset.set("{id:orange_banner,components:{banner_patterns:[{color:\"black\",pattern:\"minecraft:gradient\"}"
-        +",{color:\"black\",pattern:\"minecraft:gradient\"},{color:\"black\",pattern:\"minecraft:gradient\"},{color:\"orange\",pattern:\"minecraft:triangles_bottom\"}"
-        +",{color:\"red\",pattern:\"minecraft:bricks\"},{color:\"green\",pattern:\"minecraft:creeper\"}]}}");
+        + ",{color:\"black\",pattern:\"minecraft:gradient\"},{color:\"black\",pattern:\"minecraft:gradient\"},{color:\"orange\",pattern:\"minecraft:triangles_bottom\"}"
+        + ",{color:\"red\",pattern:\"minecraft:bricks\"},{color:\"green\",pattern:\"minecraft:creeper\"}]}}");
     public static final ItemStackPreset ITEM_ERROR = ItemStackPreset.set("{id:player_head,components:{profile:{"
-        +"properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcy"
-        +"IgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hZTE4MjM2NzExOTYzMTMxNzY5MjM0Mzc4OGNkNWM4NTRjMTNiNDQ5"
-        +"ZDM2ZTYyMmI4NTU0YTU2MzhlZDM4NTkzIg0KICAgIH0NCiAgfQ0KfQ==\"}]}}}");
+        + "properties:[{name:\"textures\",value:\"ew0KICAic2lnbmF0dXJlUmVxdWlyZWQiIDogZmFsc2UsDQogICJ0ZXh0dXJlcy"
+        + "IgOiB7DQogICAgIlNLSU4iIDogew0KICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hZTE4MjM2NzExOTYzMTMxNzY5MjM0Mzc4OGNkNWM4NTRjMTNiNDQ5"
+        + "ZDM2ZTYyMmI4NTU0YTU2MzhlZDM4NTkzIg0KICAgIH0NCiAgfQ0KfQ==\"}]}}}");
     public static final ItemStackPreset ITEM_QUESTION = ItemStackPreset.set("{components:{\"minecraft:profile\":"
-        +"{id:[I;1617833968,-310949822,-1653808685,840726584],name:\"MHF_Question\",properties:[{name:\"textures\",value:\"ewogICJzaWduYXR1cmVSZXF1aXJlZCIg"
-        +"OiBmYWxzZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2QzNGUwNjNjYWZiNDY3Y"
-        +"TVjOGRlNDNlYzc4NjE5Mzk5ZjM2OWY0YTUyNDM0ZGE4MDE3YTk4M2NkZDkyNTE2YTAiCiAgICB9CiAgfQp9\"}]}},count:1,id:\"minecraft:player_head\"}");
+        + "{id:[I;1617833968,-310949822,-1653808685,840726584],name:\"MHF_Question\",properties:[{name:\"textures\",value:\"ewogICJzaWduYXR1cmVSZXF1aXJlZCIg"
+        + "OiBmYWxzZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2QzNGUwNjNjYWZiNDY3Y"
+        + "TVjOGRlNDNlYzc4NjE5Mzk5ZjM2OWY0YTUyNDM0ZGE4MDE3YTk4M2NkZDkyNTE2YTAiCiAgICB9CiAgfQp9\"}]}},count:1,id:\"minecraft:player_head\"}");
 
+    public static final Component BAPHOMETHLABS_GOLD_ITALIC = Component.empty().append("BaphomethLabs").withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC);
     public static final CompoundTag LORE_BAPHOMETHLABS = BlackMagick.validCompoundFromString("{color:\"gold\",\"text\":\"BaphomethLabs\"}");
     public static final CompoundTag LORE_BAPHOMETHLABS_BOTTLE = BlackMagick.validCompoundFromString("{color:\"gold\",\"text\":\"Bottled by BaphomethLabs\"}");
+    public static final Component LORE_BAPHOMETHLABS_TOOLTIP = Component.empty().append("Add ").append(Component.empty().append("BaphomethLabs").withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC)).append(" watermark to lore");
+    public static final Component LORE_BAPHOMETHLABS_BOTTLE_TOOLTIP = Component.empty().append("Add ").append(Component.empty().append("Bottled by BaphomethLabs").withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC)).append(" watermark to lore");
 
     // saved items
     public static final int SAVED_ROWS = 12;
@@ -865,7 +872,7 @@ public class FortytwoEdit implements ClientModInitializer {
         USERNAME = client.getUser().getName();
         if (client.getUser().getProfileId() != null)
             UUID = new IntArrayTag(UUIDUtil.uuidToIntArray(client.getUser().getProfileId()));
-        PROFILE_SUGGS = new String[]{USERNAME,BlackMagick.nbtToSnbt(UUID)};
+        PROFILE_SUGGS = new String[]{USERNAME, BlackMagick.nbtToSnbt(UUID)};
         clearOptiCapes();
 
         getSavedItems(); // used to show log errors
@@ -976,7 +983,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 didFish = true;
             }
             autoFishClickQueue = false;
-            lastFish = System.currentTimeMillis() + 100+randomInt(400);
+            lastFish = System.currentTimeMillis() + 100 + randomInt(400);
         }
         if (didFish && System.currentTimeMillis() >= (lastFish + fishWait)) {
             if (autoClicker && autoFish && ((!client.player.getMainHandItem().isEmpty()
@@ -1049,7 +1056,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
             if (!blockState.getProperties().isEmpty()) {
                 CompoundTag stack = new CompoundTag();
-                stack.put("id",StringTag.valueOf(BlackMagick.itemToStringId(blockState.getBlock().asItem())));
+                stack.put("id", StringTag.valueOf(BlackMagick.itemToStringId(blockState.getBlock().asItem())));
                 CompoundTag tag = new CompoundTag();
 
                 String states = "";
@@ -1061,13 +1068,13 @@ public class FortytwoEdit implements ClientModInitializer {
                     }
                     states += entry.getName();
                     states += ":";
-                    states += "\""+getValueString(blockState,entry)+"\"";
+                    states += "\"" + getValueString(blockState, entry) + "\"";
                     bl = true;
                 }
                 states += "}";
 
-                tag.put("block_state",BlackMagick.nbtFromSnbt(states));
-                stack.put("components",tag);
+                tag.put("block_state", BlackMagick.nbtFromSnbt(states));
+                stack.put("components", tag);
                 return BlackMagick.itemFromNbt(stack);
             }
         }
@@ -1088,7 +1095,7 @@ public class FortytwoEdit implements ClientModInitializer {
         return client.keyboardHandler.getClipboard();
     }
 
-    private static final String LOG_PREFIX = "("+MOD_ID_MC+") ";
+    private static final String LOG_PREFIX = "(" + MOD_ID_MC + ") ";
     private static final SystemToast.SystemToastId TOAST_TYPE = new SystemToast.SystemToastId();
     private static final MutableComponent TOAST_PREFIX = Component.empty().append("").append(Component.empty().append(LOG_PREFIX).withStyle(ChatFormatting.BLACK));
 
@@ -1108,7 +1115,7 @@ public class FortytwoEdit implements ClientModInitializer {
     }
 
     public static void showToast(String title, String desc) {
-        showToast(Component.nullToEmpty(title),Component.nullToEmpty(desc));
+        showToast(Component.nullToEmpty(title), Component.nullToEmpty(desc));
     }
 
     public static void showToast(Component title, Component desc) {
@@ -1117,7 +1124,7 @@ public class FortytwoEdit implements ClientModInitializer {
             client.gui.toastManager().addToast(new SystemToast(TOAST_TYPE, TOAST_PREFIX.copy().append(title), desc));
         }
         catch (Exception ex) {
-            logError("Failed to show toast ("+BlackMagick.textComponentToStringLiteral(title)+") ("+BlackMagick.textComponentToStringLiteral(desc)+"): "+ex.getMessage());
+            logError("Failed to show toast (" + BlackMagick.textComponentToStringLiteral(title) + ") (" + BlackMagick.textComponentToStringLiteral(desc) + "): " + ex.getMessage());
         }
     }
 
@@ -1183,7 +1190,7 @@ public class FortytwoEdit implements ClientModInitializer {
             if (!storedItems.isEmpty()) {
                 boolean itemsOutOfRange = false;
                 final int MAX_SAVED_ITEM_SLOT = FortytwoEdit.SAVED_ROWS * 9 - 1;
-                int currentDupeSlot = MAX_SAVED_ITEM_SLOT+1;
+                int currentDupeSlot = MAX_SAVED_ITEM_SLOT + 1;
                 ListTag unknownItemHolders = new ListTag();
                 for (int i = 0; i < storedItems.size(); i++) {
                     if (storedItems.get(i).getId() == Tag.TAG_COMPOUND) {
@@ -1192,8 +1199,8 @@ public class FortytwoEdit implements ClientModInitializer {
                             continue;
                         if ((itemHolder.getCompound("item").isPresent() || itemHolder.getString("item").isPresent())
                         && itemHolder.getInt("slot").isPresent()) {
-                            String itemString = itemHolder.getStringOr("item","");
-                            if (itemHolder.get("item").getId()==Tag.TAG_COMPOUND)
+                            String itemString = itemHolder.getStringOr("item", "");
+                            if (itemHolder.get("item").getId() == Tag.TAG_COMPOUND)
                                 itemString = BlackMagick.nbtToSnbt(itemHolder.getCompound("item").get());
                             itemHolder.remove("item");
                             if (itemString.isEmpty() || itemString.equals("{}"))
@@ -1201,7 +1208,7 @@ public class FortytwoEdit implements ClientModInitializer {
                             int slot = itemHolder.getInt("slot").get();
                             itemHolder.remove("slot");
                             if (!itemHolder.isEmpty()) {
-                                FortytwoEdit.logError("Saved item contains unknown keys: "+BlackMagick.nbtToSnbt(itemHolder));
+                                FortytwoEdit.logError("Saved item contains unknown keys: " + BlackMagick.nbtToSnbt(itemHolder));
                             }
                             if (slot < 0 || slot > MAX_SAVED_ITEM_SLOT) {
                                 itemsOutOfRange = true;
@@ -1211,11 +1218,11 @@ public class FortytwoEdit implements ClientModInitializer {
                                 while (itemsMap.containsKey(newSlot)) {
                                     newSlot++;
                                 }
-                                currentDupeSlot = newSlot+1;
+                                currentDupeSlot = newSlot + 1;
                                 FortytwoEdit.logError("Saved items file contains duplicate slot " + slot + ". Item will move to slot " + newSlot + " after saving.");
                                 slot = newSlot;
                             }
-                            itemsMap.put(slot,itemString);
+                            itemsMap.put(slot, itemString);
                         }
                         else
                             unknownItemHolders.add(itemHolder);
@@ -1224,10 +1231,10 @@ public class FortytwoEdit implements ClientModInitializer {
                         unknownItemHolders.add(storedItems.get(i));
                 }
                 if (itemsOutOfRange) {
-                    FortytwoEdit.logWarn("Saved items file contains slots outside of range 0-"+MAX_SAVED_ITEM_SLOT);
+                    FortytwoEdit.logWarn("Saved items file contains slots outside of range 0-" + MAX_SAVED_ITEM_SLOT);
                 }
                 if (!unknownItemHolders.isEmpty()) {
-                    FortytwoEdit.logError("Saved items file contains invalid entries. After saving, the following will be deleted: "+BlackMagick.nbtToSnbt(unknownItemHolders));
+                    FortytwoEdit.logError("Saved items file contains invalid entries. After saving, the following will be deleted: " + BlackMagick.nbtToSnbt(unknownItemHolders));
                 }
             }
         }
@@ -1243,14 +1250,14 @@ public class FortytwoEdit implements ClientModInitializer {
         ListTag itemsList = new ListTag();
         for (int slot : BlackMagick.sortIntSet(savedItemsMap.keySet())) {
             CompoundTag nbt = new CompoundTag();
-            nbt.putInt("slot",slot);
-            nbt.putString("item",savedItemsMap.get(slot));
+            nbt.putInt("slot", slot);
+            nbt.putString("item", savedItemsMap.get(slot));
             itemsList.add(nbt);
         }
 
         CompoundTag savedItemsNbt = new CompoundTag();
-        savedItemsNbt.put("items",itemsList);
-        savedItemsNbt.putInt(FileTools.FILE_FORMAT_LABEL,FileTools.FILE_FORMAT);
+        savedItemsNbt.put("items", itemsList);
+        savedItemsNbt.putInt(FileTools.FILE_FORMAT_LABEL, FileTools.FILE_FORMAT);
         if (FileTools.writeCompoundToFile(FileTools.FILE_SAVED_ITEMS, savedItemsNbt, FileDisplayType.TREE_CONDITIONAL_COLLAPSE)) {
             getSavedItems(); // used to show log errors
             return true;
@@ -1260,7 +1267,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     public static boolean testSavedItems(Map<Integer,String> oldMap) {
         Map<Integer,String> newMap = getSavedItems();
-        if (newMap.keySet().size()==oldMap.keySet().size()) {
+        if (newMap.keySet().size() == oldMap.keySet().size()) {
             for (int slot : oldMap.keySet()) {
                 if (!(newMap.containsKey(slot) && newMap.get(slot).equals(oldMap.get(slot))))
                     return false;
@@ -1303,7 +1310,7 @@ public class FortytwoEdit implements ClientModInitializer {
                 }
             }
             catch (Exception ex) {
-                logWarn("Failed connection to BaphomethLabs Black Market ("+webItemsUrlActive+")");
+                logWarn("Failed connection to BaphomethLabs Black Market (" + webItemsUrlActive + ")");
                 didError = true;
             }
             if (con != null)
@@ -1316,22 +1323,22 @@ public class FortytwoEdit implements ClientModInitializer {
                 } catch (Exception ex) {}
 
             Tag parseWebJson = BlackMagick.nbtFromSnbt(webJson);
-            if (parseWebJson != null && parseWebJson.getId()==Tag.TAG_COMPOUND) {
+            if (parseWebJson != null && parseWebJson.getId() == Tag.TAG_COMPOUND) {
                 CompoundTag webNbt = (CompoundTag)parseWebJson;
                 newItems = webNbt.copy();
 
-                if (BlackMagick.elementsEqual(webNbt,cacheNbt)) {
+                if (BlackMagick.elementsEqual(webNbt, cacheNbt)) {
                     logInfo("Black Market items are up to date");
-                    result.put("site_match_catch",new CompoundTag());
+                    result.put("site_match_catch", new CompoundTag());
                 }
                 else {
                     logInfo("Updating Black Market items");
-                    result.put("site_updated_catch",new CompoundTag());
+                    result.put("site_updated_catch", new CompoundTag());
                     FileTools.writeCompoundToFile(FileTools.FILE_WEB_CACHE, newItems, FileDisplayType.TREE_CONDITIONAL_COLLAPSE);
                 }
             }
             else if (!didError)
-                logError("Failed to parse BaphomethLabs Black Market ("+webItemsUrlActive+"): "+webJson);
+                logError("Failed to parse BaphomethLabs Black Market (" + webItemsUrlActive + "): " + webJson);
         }
 
         if (newItems != null && newItems.getList("versions").isPresent() && !newItems.getList("versions").get().isEmpty()) {
@@ -1367,8 +1374,8 @@ public class FortytwoEdit implements ClientModInitializer {
                     if (jsonItems.get(i).getId() == Tag.TAG_COMPOUND) {
                         CompoundTag itemHolder = jsonItems.getCompound(i).get();
                         if (itemHolder.getCompound("item").isPresent() || itemHolder.getString("item").isPresent()) {
-                            String itemString = itemHolder.getStringOr("item","");
-                            if (itemHolder.get("item").getId()==Tag.TAG_COMPOUND)
+                            String itemString = itemHolder.getStringOr("item", "");
+                            if (itemHolder.get("item").getId() == Tag.TAG_COMPOUND)
                                 itemString = BlackMagick.nbtToSnbt(itemHolder.getCompound("item").get());
                             webItems.add(itemString);
                         }
@@ -1386,7 +1393,7 @@ public class FortytwoEdit implements ClientModInitializer {
                         String name = thisCompound.getString("name").get();
                         String url = thisCompound.getString("url").get();
                         String id = thisCompound.getString("id").orElse(
-                            name.replace(" ","_").toLowerCase().replaceAll("[^a-z0-9_:./-]",""));
+                            name.replace(" ", "_").toLowerCase().replaceAll("[^a-z0-9_:./-]", ""));
                         String desc = thisCompound.getString("description").orElse(null);
                         registerCapeUrl(url, id, name, desc);
                     }

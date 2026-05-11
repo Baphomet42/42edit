@@ -228,7 +228,7 @@ public class SuggestionHelper {
      * <li> Remove ender chest. </li>
      * 
      * @param item
-     * @return int array with [rows,columns] or [-1,-1] depending on storage size of blockentity for item
+     * @return int array with [rows, columns] or [-1, -1] depending on storage size of blockentity for item
      */
     public static int[] getContainerSize(Item item) {
 
@@ -237,35 +237,35 @@ public class SuggestionHelper {
             String id = BlackMagick.identifierToString(identifier);
 
             if (id.startsWith("minecraft:") && id.endsWith("shulker_box"))
-                return new int[]{3,9};
+                return new int[]{3, 9};
 
             switch (id) {
                 case "minecraft:chest":
                 case "minecraft:trapped_chest":
                 case "minecraft:barrel":
-                    return new int[]{3,9};
+                    return new int[]{3, 9};
                 case "minecraft:dispenser":
                 case "minecraft:dropper":
                 case "minecraft:crafter":
-                    return new int[]{3,3};
+                    return new int[]{3, 3};
                 case "minecraft:hopper":
                 case "minecraft:brewing_stand":
-                    return new int[]{1,5};
+                    return new int[]{1, 5};
                 case "minecraft:furnace":
                 case "minecraft:blast_furnace":
                 case "minecraft:smoker":
-                    return new int[]{1,3};
+                    return new int[]{1, 3};
                 case "minecraft:chiseled_bookshelf":
-                    return new int[]{2,3};
+                    return new int[]{2, 3};
                 case "minecraft:campfire":
                 case "minecraft:soul_campfire":
-                    return new int[]{1,4};
+                    return new int[]{1, 4};
                 case "minecraft:decorated_pot":
-                    return new int[]{1,1};
+                    return new int[]{1, 1};
                 default: break;
             }
         }
-        return new int[]{-1,-1};
+        return new int[]{-1, -1};
     }
 
 
@@ -315,7 +315,7 @@ public class SuggestionHelper {
             BuiltInRegistries.DATA_COMPONENT_TYPE.forEach(i -> {
                 if (!i.isTransient()) {
                     list.add(BlackMagick.identifierToString(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i)));
-                    list.add("!"+BlackMagick.identifierToString(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i)));
+                    list.add("!" + BlackMagick.identifierToString(BuiltInRegistries.DATA_COMPONENT_TYPE.getKey(i)));
                 }
             });
             sortUnique(list);
@@ -755,7 +755,7 @@ public class SuggestionHelper {
                     if (temp.startsWith(namespace + ":" + path + "/") && temp.endsWith(suffix) && temp.length() > (namespace.length() + 1 + path.length() + 1 + suffix.length())) {
                         temp = namespace + ":" + temp.substring(namespace.length() + 1 + path.length() + 1, temp.length() - suffix.length());
                         if (path.startsWith("tags/"))
-                            temp = "#"+temp;
+                            temp = "#" + temp;
                         list.add(temp);
                     }
                     else {
