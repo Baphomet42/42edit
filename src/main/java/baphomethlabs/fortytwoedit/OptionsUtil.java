@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.compress.utils.Lists;
-import org.lwjgl.glfw.GLFW;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -610,13 +609,13 @@ public class OptionsUtil {
 
         public static final KeyMapping.Category MOD_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("42edit", "keybinds"));
 
-        public static final KeyMapping KEY_AFK_CLICK = registerKeyMapping(new KeyMapping("42edit.key.afk_click", GLFW.GLFW_KEY_MINUS, MOD_CATEGORY));
-        public static final KeyMapping KEY_AFK_MOVE = registerKeyMapping(new KeyMapping("42edit.key.afk_move", GLFW.GLFW_KEY_EQUAL, MOD_CATEGORY));
-        public static final KeyMapping KEY_FREE_LOOK = registerKeyMapping(new KeyMapping("42edit.key.free_look", GLFW.GLFW_KEY_LEFT_ALT, MOD_CATEGORY));
-        public static final KeyMapping KEY_OPEN_MAGICK_GUI = registerKeyMapping(new KeyMapping("42edit.key.open_magick_gui", GLFW.GLFW_KEY_J, MOD_CATEGORY));
+        public static final KeyMapping KEY_AFK_CLICK = registerKeyMapping(new KeyMapping("42edit.key.afk_click", InputConstants.KEY_MINUS, MOD_CATEGORY));
+        public static final KeyMapping KEY_AFK_MOVE = registerKeyMapping(new KeyMapping("42edit.key.afk_move", InputConstants.KEY_EQUALS, MOD_CATEGORY));
+        public static final KeyMapping KEY_FREE_LOOK = registerKeyMapping(new KeyMapping("42edit.key.free_look", InputConstants.KEY_LALT, MOD_CATEGORY));
+        public static final KeyMapping KEY_OPEN_MAGICK_GUI = registerKeyMapping(new KeyMapping("42edit.key.open_magick_gui", InputConstants.KEY_J, MOD_CATEGORY));
         public static final KeyMapping KEY_KEY_MOD = registerKeyMapping(new KeyMapping("42edit.key.key_mod", InputConstants.UNKNOWN.getValue(), MOD_CATEGORY));
         public static final KeyMapping KEY_SPAM_CLICK = registerKeyMapping(new KeyMapping("42edit.key.spam_click", InputConstants.UNKNOWN.getValue(), MOD_CATEGORY));
-        public static final KeyMapping KEY_ZOOM = registerKeyMapping(new KeyMapping("42edit.key.zoom", GLFW.GLFW_KEY_R, MOD_CATEGORY));
+        public static final KeyMapping KEY_ZOOM = registerKeyMapping(new KeyMapping("42edit.key.zoom", InputConstants.KEY_R, MOD_CATEGORY));
         public static KeyMapping registerKeyMapping(KeyMapping keyMapping) {
             ALL_KEYBINDS.add(keyMapping);
             return keyMapping;

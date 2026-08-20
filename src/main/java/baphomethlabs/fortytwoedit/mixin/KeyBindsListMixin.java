@@ -17,10 +17,10 @@ import net.minecraft.network.chat.Component;
 public abstract class KeyBindsListMixin extends ContainerObjectSelectionList<KeyBindsList.Entry> {
 
     @Shadow
-	private int maxNameWidth;
+    private int maxNameWidth;
 
-	protected KeyBindsListMixin(KeyBindsScreen keyBindsScreen, Minecraft minecraft) {
-		super(minecraft, keyBindsScreen.width, keyBindsScreen.layout.getContentHeight(), keyBindsScreen.layout.getHeaderHeight(), 20);
+    protected KeyBindsListMixin(KeyBindsScreen keyBindsScreen, Minecraft minecraft) {
+        super(minecraft, keyBindsScreen.width, keyBindsScreen.layout.getContentHeight(), keyBindsScreen.layout.getHeaderHeight(), 20);
         throw new AssertionError();
     }
 
@@ -31,7 +31,7 @@ public abstract class KeyBindsListMixin extends ContainerObjectSelectionList<Key
         this.addEntry(self.new CategoryEntry(OptionsUtil.Keybinds.MOD_CATEGORY));
 
         for (KeyMapping keyMapping : OptionsUtil.Keybinds.ALL_KEYBINDS) {
-			Component component = Component.translatable(keyMapping.getName());
+            Component component = Component.translatable(keyMapping.getName());
             int i = minecraft.font.width(component);
             if (i > this.maxNameWidth) {
                 this.maxNameWidth = i;

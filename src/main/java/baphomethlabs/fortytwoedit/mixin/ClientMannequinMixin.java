@@ -14,10 +14,10 @@ import net.minecraft.world.item.component.ResolvableProfile;
 @Mixin(ClientMannequin.class)
 public abstract class ClientMannequinMixin extends Mannequin {
 
-	public ClientMannequinMixin() {
-		super(null);
+    public ClientMannequinMixin() {
+        super(null);
         throw new AssertionError();
-	}
+    }
 
     @Inject(method = "getSkin", at = @At("RETURN"), cancellable = true)
     public void injectSkin(CallbackInfoReturnable<PlayerSkin> cir) {

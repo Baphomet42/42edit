@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(ClientLanguage.class)
 public interface ClientLanguageAccessor {
 
-	@Accessor("storage")
-	Map<String, String> getTranslations();
+    @Accessor("storage")
+    Map<String, String> getTranslations();
 
 }

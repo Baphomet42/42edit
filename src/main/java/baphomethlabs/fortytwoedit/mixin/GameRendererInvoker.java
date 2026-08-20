@@ -9,10 +9,10 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(GameRenderer.class)
 public interface GameRendererInvoker {
 
-    @Invoker("setPostEffect")
-    public void invokeSetPostEffect(Identifier id);
+    @Invoker("setSpectatedEntityPostEffect")
+    public void invokeSetSpectatedEntityPostEffect(Identifier id);
 
-	@Accessor("effectActive")
-	public void setEffectActive(boolean enabled);
+    @Accessor("spectatedEntityEffectActive")
+    public void setSpectatedEntityEffectActive(boolean enabled);
 
 }

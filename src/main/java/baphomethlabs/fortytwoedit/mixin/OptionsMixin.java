@@ -17,33 +17,33 @@ import baphomethlabs.fortytwoedit.OptionsUtil;
 @Mixin(Options.class)
 public abstract class OptionsMixin {
 
-	@Mutable
-	@Final
-	@Shadow
-	public KeyMapping[] keyMappings;
+    @Mutable
+    @Final
+    @Shadow
+    public KeyMapping[] keyMappings;
 
-	@Redirect(method = "processOptions", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Options;keyMappings:[Lnet/minecraft/client/KeyMapping;"))
-	private KeyMapping[] removeModBindings(Options gameOptions) {
-		List<KeyMapping> allKeysList = Lists.newArrayList(keyMappings);
+    @Redirect(method = "processOptions", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Options;keyMappings:[Lnet/minecraft/client/KeyMapping;"))
+    private KeyMapping[] removeModBindings(Options gameOptions) {
+        List<KeyMapping> allKeysList = Lists.newArrayList(keyMappings);
 
         for (KeyMapping k : OptionsUtil.Keybinds.ALL_KEYBINDS)
             allKeysList.remove(k);
 
-		return allKeysList.toArray(new KeyMapping[0]);
-	}
+        return allKeysList.toArray(new KeyMapping[0]);
+    }
 
     @Inject(method = "save", at = @At("RETURN"))
     private void saveModKeybinds(CallbackInfo ci) {
-		if (OptionsUtil.Keybinds.cachedKeybinds != null) {
-			for (KeyMapping keyMapping : OptionsUtil.Keybinds.ALL_KEYBINDS) {
-				if (!OptionsUtil.Keybinds.cachedKeybinds.containsKey(keyMapping.getName())
-						|| !OptionsUtil.Keybinds.cachedKeybinds.get(keyMapping.getName()).equals(keyMapping.saveString())) {
+        if (OptionsUtil.Keybinds.cachedKeybinds != null) {
+            for (KeyMapping keyMapping : OptionsUtil.Keybinds.ALL_KEYBINDS) {
+                if (!OptionsUtil.Keybinds.cachedKeybinds.containsKey(keyMapping.getName())
+                        || !OptionsUtil.Keybinds.cachedKeybinds.get(keyMapping.getName()).equals(keyMapping.saveString())) {
 
-					OptionsUtil.saveKeybindOptions();
-					break;
-				}
-			}
-		}
+                    OptionsUtil.saveKeybindOptions();
+                    break;
+                }
+            }
+        }
     }
 
 }

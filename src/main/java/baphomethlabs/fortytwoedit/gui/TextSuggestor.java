@@ -18,7 +18,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2ic;
-import org.lwjgl.glfw.GLFW;
 
 /**
  * Modified from {@link net.minecraft.client.gui.components.CommandSuggestions}
@@ -149,12 +148,12 @@ public class TextSuggestor {
             || (!starting && suggestion.contains(searchTerm));
     }
 
-	public void refresh() {
+    public void refresh() {
         if (!keepSuggestions) {
             this.suggestionsWindow = null;
             this.showSuggestions();
         }
-	}
+    }
 
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int i, int j) {
         this.renderSuggestions(guiGraphics, i, j);
@@ -286,7 +285,7 @@ public class TextSuggestor {
                 }
             }
 
-            guiGraphics.tooltip(TextSuggestor.this.font, tooltipList, i, j, ttPositioner, null);
+            guiGraphics.tooltip(TextSuggestor.this.font, tooltipList, i, j, ttPositioner, null, false);
         }
 
         /**
@@ -332,30 +331,31 @@ public class TextSuggestor {
             return false;
         }
 
-        public boolean keyPressed(KeyEvent keyEvent) {
-            if (keyEvent.key() == 265) { // arrow up
+        public boolean keyPressed(KeyEvent event) {
+            if (event.isUp()) {
                 this.cycle(-1);
                 this.tabCycles = false;
                 return true;
             }
-            if (keyEvent.key() == 264) { // arrow down
+            if (event.isDown()) {
                 this.cycle(1);
                 this.tabCycles = false;
                 return true;
             }
-            if (keyEvent.key() == 258) { // tab
+            if (event.isCycleFocus()) {
                 if (this.tabCycles) {
-                    this.cycle(keyEvent.hasShiftDown() ? -1 : 1);
+                    this.cycle(event.hasShiftDown() ? -1 : 1);
                 }
+
                 this.useSuggestion();
                 return true;
             }
-            if (keyEvent.key() == GLFW.GLFW_KEY_ENTER || keyEvent.key() == GLFW.GLFW_KEY_KP_ENTER) { // enter
+            if (event.isConfirmation()) {
                 this.useSuggestion();
                 TextSuggestor.this.hide();
                 return true;
             }
-            if (keyEvent.key() == 256) { // escape
+            if (event.isEscape()) {
                 TextSuggestor.this.hide();
                 return true;
             }

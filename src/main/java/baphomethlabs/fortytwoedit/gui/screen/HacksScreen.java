@@ -286,12 +286,12 @@ public class HacksScreen extends GenericScreen {
     }
 
     protected void btnLookN() {
-		minecraft.player.setXRot(0);
-		minecraft.player.setYRot(180);
+        minecraft.player.setXRot(0);
+        minecraft.player.setYRot(180);
     }
 
     protected void btnLookR() {
-		minecraft.player.setYRot(minecraft.player.getYRot() + 90);
+        minecraft.player.setYRot(minecraft.player.getYRot() + 90);
     }
 
     protected void btnPano() {

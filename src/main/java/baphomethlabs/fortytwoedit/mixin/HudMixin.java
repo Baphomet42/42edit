@@ -44,7 +44,7 @@ public abstract class HudMixin {
                     long currentTime = System.currentTimeMillis();
                     if (cacheCoordHud == null || currentTime - lastRefreshTime > 50) {
                         lastRefreshTime = currentTime;
-			            BlockPos feetPos = client.player.blockPosition();
+                        BlockPos feetPos = client.player.blockPosition();
                         String coordFacing = "S";
                         switch (client.player.getDirection()) {
                             case NORTH: coordFacing = "N"; break;

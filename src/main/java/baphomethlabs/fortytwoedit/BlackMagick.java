@@ -303,11 +303,11 @@ public class BlackMagick {
     /**
      * 
      * @param inp
-     * @return literal text from text component, or null if inp is null
+     * @return literal text from text component, or empty string if inp is null
      */
     public static String textComponentToStringLiteral(Component inp) {
         if (inp == null)
-            return null;
+            return "";
         return inp.getString();
     }
 
@@ -350,7 +350,7 @@ public class BlackMagick {
     public static CompoundTag itemToNbtStorage(ItemStack item) {
         if (item != null && !item.isEmpty()) {
             try {
-				return (CompoundTag)ItemStack.CODEC.encodeStart(BlackMagick.getOps(), item).getOrThrow();
+                return (CompoundTag)ItemStack.CODEC.encodeStart(BlackMagick.getOps(), item).getOrThrow();
             } catch (Exception ex) {}
         }
         return new CompoundTag();

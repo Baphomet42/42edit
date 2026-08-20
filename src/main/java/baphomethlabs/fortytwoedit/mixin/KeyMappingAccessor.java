@@ -9,12 +9,12 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(KeyMapping.class)
 public interface KeyMappingAccessor {
 
-	@Accessor("ALL")
-	public static Map<String, KeyMapping> getKeysList() {
-		throw new AssertionError();
-	}
+    @Accessor("ALL")
+    public static Map<String, KeyMapping> getKeysList() {
+        throw new AssertionError();
+    }
 
-	@Accessor("key")
-	InputConstants.Key getBoundKey();
+    @Accessor("key")
+    InputConstants.Key getBoundKey();
 
 }

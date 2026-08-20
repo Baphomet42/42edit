@@ -4,7 +4,7 @@ import baphomethlabs.fortytwoedit.gui.screen.GenericScreen;
 import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton.ItemError;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -63,15 +63,15 @@ public class SpriteButton extends SmartButton {
     }
 
     public SpriteButton missingno() {
-        return setSprite(TextureManager.INTENTIONAL_MISSING_TEXTURE, 16, 16).canStretch();
+        return setSprite(MissingTextureAtlasSprite.getLocation(), 16, 16).canStretch();
     }
 
     public void setError(ItemError error) {
         this.error = error == null ? ItemError.NONE : error;
     }
 
-	@Override
-	protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    @Override
+    protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.extractContents(context, mouseX, mouseY, delta);
 
         if (spriteId != null) {
@@ -109,6 +109,6 @@ public class SpriteButton extends SmartButton {
             }
         }
 
-	}
+    }
 
 }

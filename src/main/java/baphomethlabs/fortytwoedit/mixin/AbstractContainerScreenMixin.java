@@ -62,7 +62,7 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
             ItemStack stack = this.hoveredSlot.getItem().copy();
             if (((AbstractContainerMenu)this.menu).getCarried().isEmpty() || this.showTooltipWithItemInHand(stack)) {
                 DataComponentMap components = stack.getComponents();
-		        TooltipDisplay tooltipDisplay = stack.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT);
+                TooltipDisplay tooltipDisplay = stack.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT);
                 if (components.has(DataComponents.CONTAINER) && tooltipDisplay.shows(DataComponents.CONTAINER)) {
                     ItemContainerContents container = components.get(DataComponents.CONTAINER);
                     int rows = 3;

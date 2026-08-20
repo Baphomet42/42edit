@@ -22,7 +22,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ToolMaterial;
-import net.minecraft.world.item.component.MapItemColor;
 
 public class PathHelper {
 
@@ -70,6 +69,11 @@ public class PathHelper {
             "count", PathInfo.copyOf("item_count").setIcon(Items.STONE).getter(),
             "components", PathInfo.create(DataType.CompoundComponentsMap.create()).setIcon(Items.STONE).getter()
         ))).setIcon(Items.STONE).setFlag(PathFlag.ITEM_STACK));
+
+        registerPathInfo("components.minecraft:attack_animation", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
+            "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_SWING_ANIMATION_TYPE)).setUnsetInfo(StringTag.valueOf("whack")).getter(),
+            "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionGetter.newInlineSnbt("6"))).setUnsetInfo(IntTag.valueOf(6)).getter()
+        ))).setIcon(Items.IRON_SPEAR));
 
         registerPathInfo("components.minecraft:attack_range", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "min_reach", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT, SuggestionGetter.newInlineSnbt("0.0f"))).setUnsetInfo(FloatTag.valueOf(0f)).getter(),
@@ -307,6 +311,11 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:intangible_projectile", PathInfo.create(DataType.Unit.create()).setIcon(Items.ARROW));
 
+        registerPathInfo("components.minecraft:interact_animation", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
+            "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_SWING_ANIMATION_TYPE)).setUnsetInfo(StringTag.valueOf("whack")).getter(),
+            "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionGetter.newInlineSnbt("6"))).setUnsetInfo(IntTag.valueOf(6)).getter()
+        ))).setIcon(Items.IRON_SPEAR));
+
         registerPathInfo("components.minecraft:item_model", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.ASSETS_ITEMS)).setIcon(Items.STONE));
 
         registerPathInfo("components.minecraft:item_name", PathInfo.copyOf("text_component"));
@@ -339,8 +348,6 @@ public class PathHelper {
         registerPathInfo("components.minecraft:lore", PathInfo.create(DataType.ListUnordered.of(
             PathInfo.copyOf("text_component").setFlag(PathFlag.TEXT_COMPONENT_LORE).getter()
         )).setIcon(Items.NAME_TAG));
-
-        registerPathInfo("components.minecraft:map_color", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionHelper.LIST_MAP_COLOR)).setUnsetInfo(Component.empty().append(BlackMagick.hexFromInt(MapItemColor.DEFAULT.rgb())).withStyle(ChatFormatting.GOLD)).setFlag(PathFlag.COLOR_RGB_INT).setIcon(Items.FILLED_MAP));
 
         registerPathInfo("components.minecraft:map_decorations", PathInfo.create(DataType.CompoundMap.of(
             PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
@@ -456,11 +463,6 @@ public class PathHelper {
                 "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionGetter.newInlineSnbt("-1", "160"))).setInfo("Duration in ticks, or -1 for infinite").setUnsetInfo(IntTag.valueOf(160)).getter()
             ))).getter()
         )).setIcon(Items.SUSPICIOUS_STEW));
-
-        registerPathInfo("components.minecraft:swing_animation", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
-            "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_SWING_ANIMATION_TYPE)).setUnsetInfo(StringTag.valueOf("whack")).getter(),
-            "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionGetter.newInlineSnbt("6"))).setUnsetInfo(IntTag.valueOf(6)).getter()
-        ))).setIcon(Items.IRON_SPEAR));
 
         registerPathInfo("components.minecraft:tool", PathInfo.create(DataType.CompoundStructured.of(Map.of(
             "rules", PathInfo.create(DataType.ListUnordered.of(
@@ -890,6 +892,21 @@ public class PathHelper {
         if (PATH_INFO_REF_MAP.containsKey(refKey))
             FortytwoEdit.logWarn("Duplicate PathInfo registry key detected: " + refKey);
         PATH_INFO_REF_MAP.put(refKey, pi);
+        if (refKey.startsWith("components.")) {
+            String componentName = refKey.replaceFirst("components\\.", "");
+            if (!componentName.isEmpty()) {
+                boolean found = false;
+                for (String c : SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
+                    if (componentName.equals(c)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    FortytwoEdit.logWarn("PathInfo found for unknown component \"" + componentName + "\"");
+                }
+            }
+        }
         return PathInfoGetter.of(refKey);
     }
 

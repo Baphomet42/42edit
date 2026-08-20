@@ -41,18 +41,18 @@ public abstract class CameraMixin {
         return player.getFieldOfViewModifier(firstPerson, effectScale);
     }
 
-	@Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewXRot(F)F"))
-	private float redirectAlignWithEntityGetViewXRot(Entity entity, float partialTicks) {
+    @Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewXRot(F)F"))
+    private float redirectAlignWithEntityGetViewXRot(Entity entity, float partialTicks) {
         if (FortytwoEdit.isFreeLooking)
             return FortytwoEdit.cameraRotation[1];
         return entity.getViewXRot(partialTicks);
-	}
+    }
 
-	@Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewYRot(F)F"))
-	private float redirectAlignWithEntityGetViewYRot(Entity entity, float partialTicks) {
+    @Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewYRot(F)F"))
+    private float redirectAlignWithEntityGetViewYRot(Entity entity, float partialTicks) {
         if (FortytwoEdit.isFreeLooking)
             return FortytwoEdit.cameraRotation[0];
         return entity.getViewYRot(partialTicks);
-	}
+    }
 
 }

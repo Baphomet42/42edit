@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -55,8 +55,8 @@ public abstract class LocatorBarMixin {
 
     }
 
-	@Redirect(method = "lambda$extractRenderState$1", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
-	private void redirectBlitSprite(GuiGraphicsExtractor guiGraphics, final RenderPipeline renderPipeline, final Identifier location, final int x, final int y, final int width, final int height, final int color) {
+    @Redirect(method = "lambda$extractRenderState$1", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
+    private void redirectBlitSprite(GuiGraphicsExtractor guiGraphics, final RenderPipeline renderPipeline, final Identifier location, final int x, final int y, final int width, final int height, final int color) {
         if (playerInfo == null)
             guiGraphics.blitSprite(renderPipeline, location, x, y, width, height, color);
         else {
@@ -64,6 +64,6 @@ public abstract class LocatorBarMixin {
             PlayerFaceExtractor.extractRenderState(guiGraphics, playerInfo.getSkin().body().texturePath(),
                 x + 1 - size, y + 1 - size, width - 2 + size + size, playerInfo.showHat(), isUpsideDown, -1);
         }
-	}
+    }
 
 }

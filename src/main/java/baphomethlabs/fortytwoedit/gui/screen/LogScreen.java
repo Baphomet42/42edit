@@ -187,7 +187,7 @@ public class LogScreen extends GenericScreen {
         }
     }
 
-	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss"); // from CommandBlockExecutor.class
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss"); // from CommandBlockExecutor.class
 
     /**
      * Get the current timestamp in the pattern `[HH:mm:ss]`

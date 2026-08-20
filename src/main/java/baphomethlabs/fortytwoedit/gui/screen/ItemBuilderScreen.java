@@ -44,7 +44,6 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.Item.TooltipContext;
@@ -52,7 +51,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.storage.TagValueOutput;
-import org.lwjgl.glfw.GLFW;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -209,7 +207,7 @@ public class ItemBuilderScreen extends GenericScreen {
 
                 int foundComponentPaths = 0;
                 for (String c : SuggestionHelper.LIST_DATA_COMPONENT_TYPE.getList()) {
-                    // this will log warnings if PathHelper doesnt include a vanilla component
+                    // this will log warnings if PathHelper is missing a vanilla component
                     PathInfo pi = PathHelper.getItemPath(null, PathNode.of("components"), PathNode.of(c));
                     if (!pi.isEmpty())
                         foundComponentPaths++;
@@ -422,15 +420,11 @@ public class ItemBuilderScreen extends GenericScreen {
     protected void btnThrow(boolean copy) {
         if (!BlackMagick.isSpectator(minecraft)) {
             if (!copy) {
-                if (minecraft.player.drop(true))
-                    minecraft.player.swing(InteractionHand.MAIN_HAND);
-                minecraft.player.inventoryMenu.broadcastChanges();
+                minecraft.player.drop(true);
             }
             else if (BlackMagick.isCreative(minecraft)) {
                 ItemStack item = minecraft.player.getMainHandItem().copy();
-                if (minecraft.player.drop(true))
-                    minecraft.player.swing(InteractionHand.MAIN_HAND);
-                minecraft.player.inventoryMenu.broadcastChanges();
+                minecraft.player.drop(true);
                 BlackMagick.setItemMain(item);
             }
         }
@@ -5627,19 +5621,19 @@ public class ItemBuilderScreen extends GenericScreen {
     }
 
     @Override
-    public boolean keyPressed(KeyEvent keyEvent) {
-        if (suggs != null && suggs.keyPressed(keyEvent)) {
+    public boolean keyPressed(KeyEvent event) {
+        if (suggs != null && suggs.keyPressed(event)) {
             return true;
         }
-        if (keyEvent.key() == GLFW.GLFW_KEY_LEFT || keyEvent.key() == GLFW.GLFW_KEY_RIGHT || keyEvent.key() == GLFW.GLFW_KEY_UP || keyEvent.key() == GLFW.GLFW_KEY_DOWN) {
+        if (event.isLeft() || event.isRight() || event.isUp() || event.isDown()) {
             if (!activeTxt() && !activeSlider()) {
-                if ((keyEvent.key() == GLFW.GLFW_KEY_LEFT || keyEvent.key() == GLFW.GLFW_KEY_RIGHT) && this.UNSAVED_TEXT_WIDGETS.isEmpty() && !tabs[tab].hideTabs() && hotbarLeftBtn.active) {
-                    btnChangeSlot(keyEvent.key() == GLFW.GLFW_KEY_LEFT);
+                if ((event.isLeft() || event.isRight()) && this.UNSAVED_TEXT_WIDGETS.isEmpty() && !tabs[tab].hideTabs() && hotbarLeftBtn.active) {
+                    btnChangeSlot(event.isLeft());
                 }
                 return true;
             }
         }
-        if (super.keyPressed(keyEvent)) {
+        if (super.keyPressed(event)) {
             return true;
         }
         return false;

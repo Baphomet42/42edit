@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 public class SmartEditBox extends EditBox {
 
     private Tooltip smartTooltip = null;
-	private Consumer<String> clickResponder = null;
+    private Consumer<String> clickResponder = null;
 
     public SmartEditBox(Font font, int x, int y, int width, int height, Component component) {
         super(font, x, y, width, height, component);
@@ -22,25 +22,25 @@ public class SmartEditBox extends EditBox {
     }
 
     public void setSuggsResponder(final Consumer<String> responder) {
-		this.clickResponder = responder;
+        this.clickResponder = responder;
         this.setResponder(responder);
-	}
-
-    private void handleClickResponder() {
-		if (this.clickResponder != null) {
-			this.clickResponder.accept(this.getValue());
-		}
     }
 
-	@Override
-	public void onClick(final MouseButtonEvent event, final boolean doubleClick) {
+    private void handleClickResponder() {
+        if (this.clickResponder != null) {
+            this.clickResponder.accept(this.getValue());
+        }
+    }
+
+    @Override
+    public void onClick(final MouseButtonEvent event, final boolean doubleClick) {
         super.onClick(event, doubleClick);
 
         this.handleClickResponder();
-	}
+    }
 
-	@Override
-	public void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int i, int j, float f) {
+    @Override
+    public void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int i, int j, float f) {
         super.extractWidgetRenderState(guiGraphics, i, j, f);
 
         if (this.smartTooltip != null) {

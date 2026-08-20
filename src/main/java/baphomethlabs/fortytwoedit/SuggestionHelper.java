@@ -15,6 +15,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.IoSupplier;
@@ -36,14 +37,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.SwingAnimationType;
 import net.minecraft.world.item.component.FireworkExplosion;
-import net.minecraft.world.item.component.MapItemColor;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import net.minecraft.world.scores.TeamColor;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -404,21 +402,6 @@ public class SuggestionHelper {
         return list;
     });
 
-    public static final SuggestionGetter LIST_MAP_COLOR = registerSuggsListSnbt("LIST_MAP_COLOR", () -> {
-        List<String> list = createOrGetCacheList("LIST_MAP_COLOR", false);
-        if (list.isEmpty()) {
-            list.add(BlackMagick.hexFromInt(MapItemColor.DEFAULT.rgb()));
-            for (Identifier i : BuiltInRegistries.MAP_DECORATION_TYPE.keySet()) {
-                MapDecorationType t = BuiltInRegistries.MAP_DECORATION_TYPE.get(i).get().value();
-                if (t.hasMapColor()) {
-                    list.add(BlackMagick.hexFromInt(t.mapColor()));
-                }
-            }
-            sortUnique(list);
-        }
-        return list;
-    });
-
     public static final SuggestionGetter LIST_MOOSHROOM_VARIANT = registerSuggsList("LIST_MOOSHROOM_VARIANT", () -> {
         List<String> list = createOrGetCacheList("LIST_MOOSHROOM_VARIANT", false);
         if (list.isEmpty()) {
@@ -742,114 +725,72 @@ public class SuggestionHelper {
         getItemsInTag(createOrGetCacheList("DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS", true), "decorated_pot_ingredients"));
 
 
-    // static data lists from vanilla
+    // static vanilla resources lists
 
-    private static List<String> getVanillaDataIfEmpty(List<String> list, String path, String suffix) {
+    private static List<String> getVanillaResourcesIfEmpty(List<String> list, String path, String suffix, boolean isAssets) {
         if (list.isEmpty()) {
             try {
-                Map<Identifier,IoSupplier<InputStream>> map = Maps.newHashMap();
-                final String namespace = "minecraft";
-                ServerPacksSource.createVanillaPackSource().listResources(PackType.SERVER_DATA, namespace, path, map::putIfAbsent);
-                map.keySet().forEach(i -> {
-                    String temp = BlackMagick.identifierToString(i);
-                    if (temp.startsWith(namespace + ":" + path + "/") && temp.endsWith(suffix) && temp.length() > (namespace.length() + 1 + path.length() + 1 + suffix.length())) {
-                        temp = namespace + ":" + temp.substring(namespace.length() + 1 + path.length() + 1, temp.length() - suffix.length());
-                        if (path.startsWith("tags/"))
-                            temp = "#" + temp;
-                        list.add(temp);
-                    }
-                    else {
-                        FortytwoEdit.logWarn("Failed to add data path to list: " + BlackMagick.identifierToString(i));
-                    }
-                });
+                PackType packType = isAssets ? PackType.CLIENT_RESOURCES : PackType.SERVER_DATA;
+                PackResources resources = ServerPacksSource.createVanillaPackSource().fullResources();
+                for (String namespace : resources.getNamespaces(packType)) {
+                    Map<Identifier,IoSupplier<InputStream>> map = Maps.newHashMap();
+                    resources.listResources(packType, namespace, path, map::putIfAbsent);
+                    map.keySet().forEach(i -> {
+                        String temp = BlackMagick.identifierToString(i);
+                        if (!temp.endsWith(suffix + MCMETA_SUFFIX)) {
+                            if (temp.startsWith(namespace + ":" + path + "/") && temp.endsWith(suffix) && temp.length() > (namespace.length() + 1 + path.length() + 1 + suffix.length())) {
+                                temp = namespace + ":" + temp.substring(namespace.length() + 1 + path.length() + 1, temp.length() - suffix.length());
+                                if (!isAssets && path.startsWith("tags/"))
+                                    temp = "#" + temp;
+                                list.add(temp);
+                            }
+                            else {
+                                FortytwoEdit.logWarn("Failed to add vanilla " + (isAssets ? "assets" : "data") + " path to list: " + BlackMagick.identifierToString(i));
+                            }
+                        }
+                    });
+                }
             } catch (Exception ex) {}
             sortUnique(list);
         }
         return list;
     }
-
-    // private static List<String> setCommandSuggs(List<String> list, String cmd) { to_do live command suggs
-    //     if (list.isEmpty()) {
-    //         final MinecraftClient client = MinecraftClient.getInstance();
-    //         CommandDispatcher<CommandSource> commandDispatcher = client.player.networkHandler.getCommandDispatcher();
-    //         ParseResults<CommandSource> cmdSuggsParse = commandDispatcher.parse(cmd, (CommandSource)client.player.networkHandler.getCommandSource());
-    //         CompletableFuture<Suggestions> cmdSuggsPendingSuggestions = commandDispatcher.getCompletionSuggestions(cmdSuggsParse, cmd.length());
-    //         cmdSuggsPendingSuggestions.thenRun(() -> {
-    //             Suggestions suggestions;
-    //             if (cmdSuggsPendingSuggestions.isDone() && !(suggestions = cmdSuggsPendingSuggestions.join()).isEmpty()) {
-    //                 list.clear();
-    //                 for (Suggestion suggestion : suggestions.getList())
-    //                     list.add(suggestion.getText());
-    //                 sortUnique(list);
-    //             }
-    //         });
-    //     }
-    //     return list;
-    // }
-    //
-    // `loot give @s loot `
-    // `recipe give @s ` (remove `*`)
-    // `place template `
-    // dimension
 
     protected final static String JSON_SUFFIX = ".json";
     protected final static String NBT_SUFFIX = ".nbt";
     protected final static String PNG_SUFFIX = ".png";
     protected final static String MCMETA_SUFFIX = ".mcmeta";
+    
+    // data
 
     public static final SuggestionGetter DATA_LOOT_TABLE = registerSuggsList("DATA_LOOT_TABLE", () ->
-        getVanillaDataIfEmpty(createOrGetCacheList("DATA_LOOT_TABLE", false), "loot_table", JSON_SUFFIX));
+        getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_LOOT_TABLE", false), "loot_table", JSON_SUFFIX, false));
 
     public static final SuggestionGetter DATA_RECIPE = registerSuggsList("DATA_RECIPE", () ->
-        getVanillaDataIfEmpty(createOrGetCacheList("DATA_RECIPE", false), "recipe", JSON_SUFFIX));
+        getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_RECIPE", false), "recipe", JSON_SUFFIX, false));
 
     public static final SuggestionGetter DATA_STRUCTURE = registerSuggsList("DATA_STRUCTURE", () ->
-        getVanillaDataIfEmpty(createOrGetCacheList("DATA_STRUCTURE", false), "structure", NBT_SUFFIX)); // if made dynamic, update structure block screen to refresh dynamic suggs
+        getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_STRUCTURE", false), "structure", NBT_SUFFIX, false)); // to_do if made dynamic, update structure block screen to refresh dynamic suggs
 
     public static final SuggestionGetter DATA_TRIAL_SPAWNER = registerSuggsList("DATA_TRIAL_SPAWNER", () ->
-        getVanillaDataIfEmpty(createOrGetCacheList("DATA_TRIAL_SPAWNER", false), "trial_spawner", JSON_SUFFIX));
+        getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_TRIAL_SPAWNER", false), "trial_spawner", JSON_SUFFIX, false));
 
-
-    // static assets lists from vanilla
-
-    private static List<String> getVanillaAssetsIfEmpty(List<String> list, String path, String suffix) {
-        if (list.isEmpty()) {
-            try {
-                Map<Identifier,IoSupplier<InputStream>> map = Maps.newHashMap();
-                final String namespace = "minecraft";
-                ServerPacksSource.createVanillaPackSource().listResources(PackType.CLIENT_RESOURCES, namespace, path, map::putIfAbsent);
-                map.keySet().forEach(i -> {
-                    String temp = BlackMagick.identifierToString(i);
-                    if (!temp.endsWith(suffix + MCMETA_SUFFIX)) {
-                        if (temp.startsWith(namespace + ":" + path + "/") && temp.endsWith(suffix) && temp.length() > (namespace.length() + 1 + path.length() + 1 + suffix.length())) {
-                            temp = namespace + ":" + temp.substring(namespace.length() + 1 + path.length() + 1, temp.length() - suffix.length());
-                            list.add(temp);
-                        }
-                        else {
-                            FortytwoEdit.logWarn("Failed to add assets path to list: " + BlackMagick.identifierToString(i));
-                        }
-                    }
-                });
-            } catch (Exception ex) {}
-            sortUnique(list);
-        }
-        return list;
-    }
+    // assets
 
     public static final SuggestionGetter ASSETS_EQUIPMENT = registerSuggsList("ASSETS_EQUIPMENT", () ->
-        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_EQUIPMENT", false), "equipment", JSON_SUFFIX));
+        getVanillaResourcesIfEmpty(createOrGetCacheList("ASSETS_EQUIPMENT", false), "equipment", JSON_SUFFIX, true));
 
     public static final SuggestionGetter ASSETS_FONT = registerSuggsList("ASSETS_FONT", () ->
-        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_FONT", false), "font", JSON_SUFFIX));
+        getVanillaResourcesIfEmpty(createOrGetCacheList("ASSETS_FONT", false), "font", JSON_SUFFIX, true));
 
     public static final SuggestionGetter ASSETS_ITEMS = registerSuggsList("ASSETS_ITEMS", () ->
-        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_ITEMS", false), "items", JSON_SUFFIX));
+        getVanillaResourcesIfEmpty(createOrGetCacheList("ASSETS_ITEMS", false), "items", JSON_SUFFIX, true));
 
     public static final SuggestionGetter ASSETS_TEXTURES = registerSuggsList("ASSETS_TEXTURES", () ->
-        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_TEXTURES", false), "textures", PNG_SUFFIX));
+        getVanillaResourcesIfEmpty(createOrGetCacheList("ASSETS_TEXTURES", false), "textures", PNG_SUFFIX, true));
 
     public static final SuggestionGetter ASSETS_TEXTURES_PAINTING = registerSuggsList("ASSETS_TEXTURES_PAINTING", () ->
-        getVanillaAssetsIfEmpty(createOrGetCacheList("ASSETS_TEXTURES_PAINTING", false), "textures/painting", PNG_SUFFIX));
+        getVanillaResourcesIfEmpty(createOrGetCacheList("ASSETS_TEXTURES_PAINTING", false), "textures/painting", PNG_SUFFIX, true));
 
 
 }

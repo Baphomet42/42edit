@@ -19,10 +19,10 @@ public abstract class MinecraftMixin {
         FortytwoEdit.onMinecraftInit();
     }
 
-	@Inject(method = "tick", at = @At("RETURN"))
-	private void appendClientTick(CallbackInfo ci) {
-		FortytwoEdit.clientTick((Minecraft)(Object)this);
-	}
+    @Inject(method = "tick", at = @At("RETURN"))
+    private void appendClientTick(CallbackInfo ci) {
+        FortytwoEdit.clientTick((Minecraft)(Object)this);
+    }
 
     @Inject(method = "shouldEntityAppearGlowing", at = @At("RETURN"), cancellable = true)
     private void setGlow(Entity entity, CallbackInfoReturnable<Boolean> cir) {
@@ -38,12 +38,12 @@ public abstract class MinecraftMixin {
         }
     }
 
-	@Redirect(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/FramerateLimitTracker;getFramerateLimit()I"))
-	private int redirectFramerate(FramerateLimitTracker inactivityFpsLimiter) {
+    @Redirect(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/FramerateLimitTracker;getFramerateLimit()I"))
+    private int redirectFramerate(FramerateLimitTracker inactivityFpsLimiter) {
         if (FortytwoEdit.shouldReduceFramerate() && ((Minecraft)(Object)this).player != null) {
             return 10;
         }
         return inactivityFpsLimiter.getFramerateLimit();
-	}
+    }
 
 }

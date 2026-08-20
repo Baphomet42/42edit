@@ -42,13 +42,13 @@ public class ItemSlotButton extends SmartButton {
     private static final int SIZE_ERROR = 20;
     private static final int SIZE_EMPTY_SLOT_SPRITE = 16;
 
-	public ItemSlotButton(GenericScreen screen, int x, int y, int size, ItemStack item, Button.OnPress onPress) {
+    public ItemSlotButton(GenericScreen screen, int x, int y, int size, ItemStack item, Button.OnPress onPress) {
         super(screen, Component.empty(), onPress);
         setPosition(x, y);
         setSize(size, size);
         this.size = size;
         setItem(item);
-	}
+    }
 
     public ItemSlotButton(GenericScreen screen, int size, ItemStack item, Button.OnPress onPress) {
         this(screen, 0, 0, size, item, onPress);
@@ -97,8 +97,8 @@ public class ItemSlotButton extends SmartButton {
         ERROR
     }
 
-	@Override
-	protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    @Override
+    protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.extractContents(context, mouseX, mouseY, delta);
 
         if (this.showSlot)
@@ -137,6 +137,6 @@ public class ItemSlotButton extends SmartButton {
             }
         }
 
-	}
+    }
 
 }

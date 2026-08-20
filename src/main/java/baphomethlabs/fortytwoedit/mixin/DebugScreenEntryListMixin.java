@@ -16,10 +16,10 @@ public abstract class DebugScreenEntryListMixin {
 
     @Shadow
     @Final
-	protected List<Identifier> currentlyEnabled;
+    protected List<Identifier> currentlyEnabled;
 
     @Inject(method = "rebuildCurrentList", at = @At("RETURN"), cancellable = true)
-	public void injectRebuildCurrentList(CallbackInfo ci) {
+    public void injectRebuildCurrentList(CallbackInfo ci) {
         if (OptionsUtil.ModOptions.DEBUG_SCREEN_REARRANGE.getSetting()) {
             for (Identifier rl : OptionsUtil.DEBUG_SCREEN_REARRANGE_MOVE_LAST) {
                 if (currentlyEnabled.contains(rl)) {
@@ -28,6 +28,6 @@ public abstract class DebugScreenEntryListMixin {
                 }
             }
         }
-	}
+    }
 
 }

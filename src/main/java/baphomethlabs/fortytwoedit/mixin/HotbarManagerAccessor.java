@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(HotbarManager.class)
 public interface HotbarManagerAccessor {
 
-	@Accessor("loaded")
-	public void setLoaded(boolean loaded);
+    @Accessor("loaded")
+    public void setLoaded(boolean loaded);
 
 }

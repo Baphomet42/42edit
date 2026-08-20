@@ -31,10 +31,8 @@ public abstract class TooltipMixin {
     @Inject(method = "toCharSequence", at = @At("RETURN"), cancellable = true)
     private void injectToCharSequence(Minecraft client, CallbackInfoReturnable<List<FormattedCharSequence>> cir) {
         if (client.gui != null && client.gui.screen() != null && client.gui.screen() instanceof GenericScreen) {
-            List<FormattedCharSequence> cacheTooltip = GenericScreen.setCurrentTooltip(message);
-            if (cacheTooltip != null)
-                cir.setReturnValue(cacheTooltip);
-            else if (client.font.split(message, small).size() > lineSwap) {
+            GenericScreen.setCurrentTooltip(message);
+            if (client.font.split(message, small).size() > lineSwap) {
 
                 int largeSafe = Math.min(large, client.gui.screen().width - safeZone);
                 int mediumSafe = Math.min(medium, client.gui.screen().width - safeZone);
@@ -43,6 +41,7 @@ public abstract class TooltipMixin {
                     List<FormattedCharSequence> linesImmutable = client.font.split(message, client.gui.screen().width - safeZone);
                     List<FormattedCharSequence> lines = Lists.newArrayList();
                     int maxLines = Math.max(lineSwap, ((client.gui.screen().height - safeZone) / 10) - 1); // 10 pixels per line, -1 line gives space to see hotbar
+                    GenericScreen.setCurrentTooltipLines(maxLines - 1);
                     for (FormattedCharSequence t : linesImmutable)
                         lines.add(t);
                     if (lines.size() > maxLines) {

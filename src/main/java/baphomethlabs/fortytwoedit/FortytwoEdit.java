@@ -73,7 +73,7 @@ public class FortytwoEdit implements ClientModInitializer {
     // log
     public static final String MOD_ID_JAVA = "fortytwoedit";
     public static final String MOD_ID_MC = "42edit";
-	private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID_MC);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID_MC);
     /**
      * Used for creating ProblemReporter.ScopedCollector objects only
      */
@@ -812,14 +812,14 @@ public class FortytwoEdit implements ClientModInitializer {
     public static void cycleSuperSecretSetting() {
         final Minecraft client = Minecraft.getInstance();
         if (client.getCameraEntity() instanceof Player) {
-            if (client.gameRenderer.currentPostEffect() != null) {
-                client.gameRenderer.clearPostEffect();
+            if (client.gameRenderer.spectatedEntityPostEffect() != null) {
+                client.gameRenderer.clearSpectatedEntityPostEffect();
             }
             superSecretSettingIndex = (superSecretSettingIndex + 1) % (SUPER_SECRET_SETTING_PROGRAMS.length + 1);
             if (superSecretSettingIndex == SUPER_SECRET_SETTING_PROGRAMS.length) {
-                ((GameRendererInvoker)client.gameRenderer).setEffectActive(false);
+                ((GameRendererInvoker)client.gameRenderer).setSpectatedEntityEffectActive(false);
             } else {
-                ((GameRendererInvoker)client.gameRenderer).invokeSetPostEffect(SUPER_SECRET_SETTING_PROGRAMS[superSecretSettingIndex]);
+                ((GameRendererInvoker)client.gameRenderer).invokeSetSpectatedEntityPostEffect(SUPER_SECRET_SETTING_PROGRAMS[superSecretSettingIndex]);
             }
         }
         secretSound();
@@ -1092,7 +1092,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
     public static String getClipboard() {
         final Minecraft client = Minecraft.getInstance();
-        return client.keyboardHandler.getClipboard();
+        return client.keyboardHandler.getClipboard().replace("\r\n", "\n").replace("\r", "\n");
     }
 
     private static final String LOG_PREFIX = "(" + MOD_ID_MC + ") ";
