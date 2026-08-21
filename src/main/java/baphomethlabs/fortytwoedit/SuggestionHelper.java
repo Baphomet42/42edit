@@ -648,6 +648,9 @@ public class SuggestionHelper {
     public static final SuggestionGetter DATA_PIG_VARIANT = registerSuggsList("DATA_PIG_VARIANT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_PIG_VARIANT", true), Registries.PIG_VARIANT));
 
+    public static final SuggestionGetter DATA_DECORATED_POT_PATTERN = registerSuggsList("DATA_DECORATED_POT_PATTERN", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_DECORATED_POT_PATTERN", true), Registries.DECORATED_POT_PATTERN));
+
     public static final SuggestionGetter DATA_TRIM_MATERIAL = registerSuggsList("DATA_TRIM_MATERIAL", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_TRIM_MATERIAL", true), Registries.TRIM_MATERIAL));
 

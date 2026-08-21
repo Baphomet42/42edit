@@ -101,6 +101,8 @@ public class PathHelper {
             ))).setFlag(PathFlag.ATTRIBUTE_MODIFIER).getter()
         )).setIcon(Items.DIAMOND_SWORD));
 
+        registerPathInfo("components.minecraft:axolotl/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_AXOLOTL_VARIANT)).setIcon(Items.AXOLOTL_SPAWN_EGG));
+
         registerPathInfo("components.minecraft:banner_patterns", PathInfo.create(DataType.ListUnordered.of(
             PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
                 "color", PathInfoGetter.of("dye_color"),
@@ -129,6 +131,8 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:block_state", PathInfo.create(DataType.CompoundBlockStateMap.create()).setIcon(Items.PALE_OAK_STAIRS));
 
+        registerPathInfo("components.minecraft:block_transformer", PathInfo.create().setIcon(Items.IRON_HOE));//TODO
+
         registerPathInfo("components.minecraft:blocks_attacks", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "block_delay_seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).getter(),
             "disable_cooldown_scale", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).getter(),
@@ -153,6 +157,8 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:break_sound", PathInfo.copyOf("sound_event_or_definition"));
 
+        registerPathInfo("components.minecraft:brewing_fuel", PathInfo.create().setIcon(Items.BLAZE_POWDER));//TODO
+
         registerPathInfo("components.minecraft:bucket_entity_data", PathInfo.create(DataType.CompoundStructured.allOptional(Map.ofEntries(
             Map.entry("NoAI", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter()),
             Map.entry("Silent", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter()),
@@ -172,9 +178,21 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:can_place_on", PathInfo.copyOf("block_predicate_or_list"));
 
+        registerPathInfo("components.minecraft:cat/collar", PathInfo.copyOf("dye_color").setIcon(Items.CAT_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:cat/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CAT_SOUND_VARIANT)).setIcon(Items.CAT_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:cat/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CAT_VARIANT)).setIcon(Items.CAT_SPAWN_EGG));
+
         registerPathInfo("components.minecraft:charged_projectiles", PathInfo.create(DataType.ListUnordered.of(
             PathInfoGetter.of("item_stack")
         )).setIcon(Items.CROSSBOW));
+
+        registerPathInfo("components.minecraft:chicken/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CHICKEN_SOUND_VARIANT)).setIcon(Items.CHICKEN_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:chicken/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CHICKEN_VARIANT)).setIcon(Items.CHICKEN_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:compostable", PathInfo.create().setIcon(Items.OAK_LEAVES));//TODO
 
         registerPathInfo("components.minecraft:consumable", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "consume_seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT, SuggestionGetter.newInlineSnbt("1.6f"))).setUnsetInfo(FloatTag.valueOf(1.6f)).getter(),
@@ -198,6 +216,14 @@ public class PathHelper {
             ), Map.of(
             "seed", PathInfo.create(DataType.ElementLiteral.of(NbtType.LONG)).getter()
         ))).setIcon(Items.CHEST));
+
+        registerPathInfo("components.minecraft:cooking_fuel", PathInfo.create().setIcon(Items.COAL));//TODO
+
+        registerPathInfo("components.minecraft:cow/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_COW_SOUND_VARIANT)).setIcon(Items.COW_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:cow/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_COW_VARIANT)).setIcon(Items.COW_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:cushion/color", PathInfo.copyOf("dye_color").setIcon(Items.CUSHION.purple()));
 
         registerPathInfo("components.minecraft:custom_data", PathInfo.create( // always stores as compound to_do [data storage]
             DataType.CompoundUnstructured.create(),
@@ -297,7 +323,13 @@ public class PathHelper {
             "can_always_eat", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter()
         ))).setIcon(Items.APPLE));
 
+        registerPathInfo("components.minecraft:fox/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_FOX_VARIANT)).setIcon(Items.FOX_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:frog/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_FROG_VARIANT)).setIcon(Items.FROG_SPAWN_EGG));
+
         registerPathInfo("components.minecraft:glider", PathInfo.create(DataType.Unit.create()).setIcon(Items.ELYTRA));
+
+        registerPathInfo("components.minecraft:horse/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_HORSE_VARIANT)).setIcon(Items.HORSE_SPAWN_EGG));
 
         registerPathInfo("components.minecraft:instrument", PathInfo.create( // stores in specified form [data storage]
             DataType.CompoundStructured.allRequired(Map.of(
@@ -323,6 +355,8 @@ public class PathHelper {
         registerPathInfo("components.minecraft:jukebox_playable", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_JUKEBOX_SONG)).setIcon(Items.MUSIC_DISC_13));
 
         registerPathInfo("components.minecraft:kinetic_weapon", PathInfo.create().setIcon(Items.IRON_SPEAR));
+
+        registerPathInfo("components.minecraft:llama/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_LLAMA_VARIANT)).setIcon(Items.LLAMA_SPAWN_EGG));
 
         registerPathInfo("components.minecraft:lock", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "items", PathInfoGetter.of("item_id_tag_or_list"),
@@ -382,19 +416,30 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:minimum_attack_charge", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT, SuggestionGetter.newInlineSnbt("0.0f", "1.0f"))).setInfo("Minimum percent of attack charge required to attack").setIcon(Items.IRON_SPEAR));
 
+        registerPathInfo("components.minecraft:mob_visibility", PathInfo.create().setIcon(Items.CREEPER_HEAD));//TODO
+
+        registerPathInfo("components.minecraft:mooshroom/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_MOOSHROOM_VARIANT)).setIcon(Items.MOOSHROOM_SPAWN_EGG));
+
         registerPathInfo("components.minecraft:note_block_sound", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.REGISTRY_SOUND_EVENT)).setInfo("Identifier of a sound event").setIcon(Items.PLAYER_HEAD));
 
         registerPathInfo("components.minecraft:ominous_bottle_amplifier", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionGetter.newInlineSnbt("0", "1", "2", "3", "4"))).setIcon(Items.OMINOUS_BOTTLE));
 
+        registerPathInfo("components.minecraft:painting/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_PAINTING_VARIANT)).setIcon(Items.PAINTING));
+
+        registerPathInfo("components.minecraft:parrot/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_PARROT_VARIANT)).setIcon(Items.PARROT_SPAWN_EGG));
+
         registerPathInfo("components.minecraft:piercing_weapon", PathInfo.create().setIcon(Items.IRON_SPEAR));
 
-        registerPathInfo("components.minecraft:pot_decorations", PathInfo.create(DataType.ListStructured.of(
-            SuggestionGetter.newInline("[\"minecraft:brick\",\"minecraft:brick\",\"minecraft:brick\",\"minecraft:brick\"]"),
-            PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS)).setInfo("Back face of pot").getter(),
-            PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS)).setInfo("Left face of pot").getter(),
-            PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS)).setInfo("Right face of pot").getter(),
-            PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TAG_ENTRY_DECORATED_POT_INGREDIENTS)).setInfo("Front face of pot").getter()
-        )).setIcon(Items.DECORATED_POT));
+        registerPathInfo("components.minecraft:pig/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_PIG_SOUND_VARIANT)).setIcon(Items.PIG_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:pig/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_PIG_VARIANT)).setIcon(Items.PIG_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:pot_decorations", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
+            "front", PathInfoGetter.of("item_stack"),
+            "left", PathInfoGetter.of("item_stack"),
+            "back", PathInfoGetter.of("item_stack"),
+            "right", PathInfoGetter.of("item_stack")
+        ))).setIcon(Items.DECORATED_POT));
 
         registerPathInfo("components.minecraft:potion_contents", PathInfo.create( // always stores as compound [data storage]
             DataType.CompoundStructured.allOptional(Map.of(
@@ -432,7 +477,11 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:provides_banner_patterns", PathInfo.copyOf("banner_pattern_id_tag_or_list").setIcon(Items.CREEPER_BANNER_PATTERN));
 
+        registerPathInfo("components.minecraft:provides_pottery_pattern", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_DECORATED_POT_PATTERN)).setIcon(Items.SKULL_POTTERY_SHERD));
+
         registerPathInfo("components.minecraft:provides_trim_material", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TRIM_MATERIAL)).setIcon(Items.SMITHING_TABLE));
+
+        registerPathInfo("components.minecraft:rabbit/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_RABBIT_VARIANT)).setIcon(Items.RABBIT_SPAWN_EGG));
 
         registerPathInfo("components.minecraft:rarity", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionGetter.newInline("common", "uncommon", "rare", "epic")))
             .setInfo(Component.empty().append("Used for item name color:")
@@ -451,6 +500,16 @@ public class PathHelper {
         ))).setIcon(Items.ANVIL));
 
         registerPathInfo("components.minecraft:repair_cost", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionGetter.newInlineSnbt("0", "" + Integer.MAX_VALUE))).setIcon(Items.ANVIL));
+
+        registerPathInfo("components.minecraft:salmon/size", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_SALMON_VARIANT)).setIcon(Items.SALMON_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:sheep/color", PathInfo.copyOf("dye_color").setIcon(Items.SHEEP_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:shulker/color", PathInfo.copyOf("dye_color").setIcon(Items.SHULKER_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:sign_text_back", PathInfo.create().setIcon(Items.SPRUCE_SIGN));//TODO
+
+        registerPathInfo("components.minecraft:sign_text_front", PathInfo.create().setIcon(Items.SPRUCE_SIGN));//TODO
 
         registerPathInfo("components.minecraft:stored_enchantments", PathInfo.create(DataType.CompoundEnchantmentsMap.create()).setIcon(Items.ENCHANTED_BOOK));
 
@@ -493,6 +552,12 @@ public class PathHelper {
             "material", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TRIM_MATERIAL)).getter()
         ))).setIcon(Items.SMITHING_TABLE));
 
+        registerPathInfo("components.minecraft:tropical_fish/base_color", PathInfo.copyOf("dye_color").setIcon(Items.TROPICAL_FISH_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:tropical_fish/pattern", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_TROPICAL_FISH_VARIANT)).setIcon(Items.TROPICAL_FISH_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:tropical_fish/pattern_color", PathInfo.copyOf("dye_color").setIcon(Items.TROPICAL_FISH_SPAWN_EGG));
+
         registerPathInfo("components.minecraft:unbreakable", PathInfo.create(DataType.Unit.create()).setIcon(Items.DIAMOND_PICKAXE));
 
         registerPathInfo("components.minecraft:use_cooldown", PathInfo.create(DataType.CompoundStructured.of(Map.of(
@@ -509,10 +574,24 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:use_remainder", PathInfo.copyOf("item_stack"));
 
+        registerPathInfo("components.minecraft:villager/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.REGISTRY_VILLAGER_TYPE)).setIcon(Items.VILLAGER_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:villager_food", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
+            "nutrition", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).getter()
+        ))).setIcon(Items.BREAD));
+
+        registerPathInfo("components.minecraft:waxed", PathInfo.create(DataType.Unit.create()).setIcon(Items.SPRUCE_SIGN));
+
         registerPathInfo("components.minecraft:weapon", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "item_damage_per_attack", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionGetter.newInlineSnbt("1"))).setUnsetInfo(IntTag.valueOf(1)).getter(),
             "disable_blocking_for_seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT, SuggestionGetter.newInlineSnbt("0.0f"))).setUnsetInfo(FloatTag.valueOf(0f)).getter()
         ))).setIcon(Items.GOLDEN_SWORD));
+
+        registerPathInfo("components.minecraft:wolf/collar", PathInfo.copyOf("dye_color").setIcon(Items.WOLF_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:wolf/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_WOLF_SOUND_VARIANT)).setIcon(Items.WOLF_SPAWN_EGG));
+
+        registerPathInfo("components.minecraft:wolf/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_WOLF_VARIANT)).setIcon(Items.WOLF_SPAWN_EGG));
 
         registerPathInfo("components.minecraft:writable_book_content", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "pages", PathInfo.create(DataType.ListUnordered.of(
@@ -557,62 +636,6 @@ public class PathHelper {
                 ).getter(),
             "resolved", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter()
         ))).setIcon(Items.WRITTEN_BOOK));
-
-        registerPathInfo("components.minecraft:axolotl/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_AXOLOTL_VARIANT)).setIcon(Items.AXOLOTL_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:cat/collar", PathInfo.copyOf("dye_color").setIcon(Items.CAT_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:cat/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CAT_SOUND_VARIANT)).setIcon(Items.CAT_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:cat/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CAT_VARIANT)).setIcon(Items.CAT_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:chicken/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CHICKEN_SOUND_VARIANT)).setIcon(Items.CHICKEN_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:chicken/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CHICKEN_VARIANT)).setIcon(Items.CHICKEN_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:cow/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_COW_SOUND_VARIANT)).setIcon(Items.COW_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:cow/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_COW_VARIANT)).setIcon(Items.COW_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:fox/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_FOX_VARIANT)).setIcon(Items.FOX_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:frog/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_FROG_VARIANT)).setIcon(Items.FROG_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:horse/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_HORSE_VARIANT)).setIcon(Items.HORSE_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:llama/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_LLAMA_VARIANT)).setIcon(Items.LLAMA_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:mooshroom/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_MOOSHROOM_VARIANT)).setIcon(Items.MOOSHROOM_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:painting/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_PAINTING_VARIANT)).setIcon(Items.PAINTING));
-
-        registerPathInfo("components.minecraft:parrot/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_PARROT_VARIANT)).setIcon(Items.PARROT_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:pig/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_PIG_SOUND_VARIANT)).setIcon(Items.PIG_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:pig/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_PIG_VARIANT)).setIcon(Items.PIG_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:rabbit/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_RABBIT_VARIANT)).setIcon(Items.RABBIT_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:salmon/size", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_SALMON_VARIANT)).setIcon(Items.SALMON_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:sheep/color", PathInfo.copyOf("dye_color").setIcon(Items.SHEEP_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:shulker/color", PathInfo.copyOf("dye_color").setIcon(Items.SHULKER_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:tropical_fish/base_color", PathInfo.copyOf("dye_color").setIcon(Items.TROPICAL_FISH_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:tropical_fish/pattern", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_TROPICAL_FISH_VARIANT)).setIcon(Items.TROPICAL_FISH_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:tropical_fish/pattern_color", PathInfo.copyOf("dye_color").setIcon(Items.TROPICAL_FISH_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:villager/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.REGISTRY_VILLAGER_TYPE)).setIcon(Items.VILLAGER_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:wolf/collar", PathInfo.copyOf("dye_color").setIcon(Items.WOLF_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:wolf/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_WOLF_SOUND_VARIANT)).setIcon(Items.WOLF_SPAWN_EGG));
-
-        registerPathInfo("components.minecraft:wolf/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_WOLF_VARIANT)).setIcon(Items.WOLF_SPAWN_EGG));
 
         registerPathInfo("components.minecraft:zombie_nautilus/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_ZOMBIE_NAUTILUS_VARIANT)).setIcon(Items.ZOMBIE_NAUTILUS_SPAWN_EGG));
 
