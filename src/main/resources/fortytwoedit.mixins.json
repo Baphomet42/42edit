@@ -28,6 +28,7 @@
     "OptionsMixin",
     "ResolvableProfileDynamicMixin",
     "SkinManagerInvoker",
+    "SoundEngineMixin",
     "StringUtilMixin",
     "StructureBlockEditScreenMixin",
     "SubtitleOverlayMixin",

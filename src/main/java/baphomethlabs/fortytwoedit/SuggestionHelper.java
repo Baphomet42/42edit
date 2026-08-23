@@ -769,6 +769,9 @@ public class SuggestionHelper {
     public static final SuggestionGetter DATA_LOOT_TABLE = registerSuggsList("DATA_LOOT_TABLE", () ->
         getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_LOOT_TABLE", false), "loot_table", JSON_SUFFIX, false));
 
+    public static final SuggestionGetter DATA_NUMBER_PROVIDER = registerSuggsList("DATA_NUMBER_PROVIDER", () ->
+        getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_NUMBER_PROVIDER", false), "number_provider", JSON_SUFFIX, false));
+
     public static final SuggestionGetter DATA_RECIPE = registerSuggsList("DATA_RECIPE", () ->
         getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_RECIPE", false), "recipe", JSON_SUFFIX, false));
 

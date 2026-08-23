@@ -121,17 +121,16 @@ public class PathHelper {
             ))).getter()
         )).setIcon(Items.BEE_NEST));
 
-        registerPathInfo("components.minecraft:block_entity_data", PathInfo.create(DataType.CompoundStructured.of(Map.of(
+        registerPathInfo("components.minecraft:block_entity_data", PathInfo.create(DataType.CompoundStructured.of(Map.of( // to_do block_entity_data suggs
             "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.REGISTRY_BLOCK_ENTITY_TYPE)).getter()
             ), Map.ofEntries(
-            Map.entry("front_text", PathInfoGetter.of("sign_text")),
-            Map.entry("back_text", PathInfoGetter.of("sign_text")),
-            Map.entry("is_waxed", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).getter())
+            Map.entry("Command", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).getter()),
+            Map.entry("allow_op_features", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setInfo("Controls if the sign should resolve text components and allow `run_command`, `show_dialog`, and `custom` click events").setUnsetInfo(false).getter())
         ))).setIcon(Items.SPAWNER));
 
         registerPathInfo("components.minecraft:block_state", PathInfo.create(DataType.CompoundBlockStateMap.create()).setIcon(Items.PALE_OAK_STAIRS));
 
-        registerPathInfo("components.minecraft:block_transformer", PathInfo.create().setIcon(Items.IRON_HOE));//TODO
+        registerPathInfo("components.minecraft:block_transformer", PathInfo.create().setIcon(Items.IRON_HOE)); // to_do component suggs
 
         registerPathInfo("components.minecraft:blocks_attacks", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "block_delay_seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).getter(),
@@ -157,7 +156,14 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:break_sound", PathInfo.copyOf("sound_event_or_definition"));
 
-        registerPathInfo("components.minecraft:brewing_fuel", PathInfo.create().setIcon(Items.BLAZE_POWDER));//TODO
+        registerPathInfo("components.minecraft:brewing_fuel", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
+            "uses", PathInfo.create( // to_do allow string or float
+                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_NUMBER_PROVIDER)
+            ).setInfo("Float or identifier of a number provider").getter(),
+            "speed_multiplier", PathInfo.create( // to_do allow string or float
+                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_NUMBER_PROVIDER)
+            ).setInfo("Float or identifier of a number provider").getter()
+        ))).setIcon(Items.BLAZE_POWDER));
 
         registerPathInfo("components.minecraft:bucket_entity_data", PathInfo.create(DataType.CompoundStructured.allOptional(Map.ofEntries(
             Map.entry("NoAI", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter()),
@@ -192,7 +198,11 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:chicken/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CHICKEN_VARIANT)).setIcon(Items.CHICKEN_SPAWN_EGG));
 
-        registerPathInfo("components.minecraft:compostable", PathInfo.create().setIcon(Items.OAK_LEAVES));//TODO
+        registerPathInfo("components.minecraft:compostable", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
+            "layers", PathInfo.create( // to_do allow string or float
+                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_NUMBER_PROVIDER)
+            ).setInfo("Float or identifier of a number provider").getter()
+        ))).setIcon(Items.COMPOSTER));
 
         registerPathInfo("components.minecraft:consumable", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "consume_seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT, SuggestionGetter.newInlineSnbt("1.6f"))).setUnsetInfo(FloatTag.valueOf(1.6f)).getter(),
@@ -217,7 +227,14 @@ public class PathHelper {
             "seed", PathInfo.create(DataType.ElementLiteral.of(NbtType.LONG)).getter()
         ))).setIcon(Items.CHEST));
 
-        registerPathInfo("components.minecraft:cooking_fuel", PathInfo.create().setIcon(Items.COAL));//TODO
+        registerPathInfo("components.minecraft:cooking_fuel", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
+            "burn_time", PathInfo.create( // to_do allow string or float
+                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_NUMBER_PROVIDER)
+            ).setInfo("Float or identifier of a number provider").getter(),
+            "speed_multiplier", PathInfo.create( // to_do allow string or float
+                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_NUMBER_PROVIDER)
+            ).setInfo("Float or identifier of a number provider").getter()
+        ))).setIcon(Items.COAL));
 
         registerPathInfo("components.minecraft:cow/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_COW_SOUND_VARIANT)).setIcon(Items.COW_SPAWN_EGG));
 
@@ -261,7 +278,7 @@ public class PathHelper {
             )).setInfo("List of consume effects to trigger after using the death protection item").getter()
         ))).setIcon(Items.TOTEM_OF_UNDYING));
 
-        registerPathInfo("components.minecraft:debug_stick_state", PathInfo.create().setIcon(Items.DEBUG_STICK));
+        registerPathInfo("components.minecraft:debug_stick_state", PathInfo.create().setIcon(Items.DEBUG_STICK)); // to_do component suggs
 
         registerPathInfo("components.minecraft:dye", PathInfo.copyOf("dye_color").setIcon(Items.DYE.red()));
 
@@ -275,7 +292,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:enchantments", PathInfo.create(DataType.CompoundEnchantmentsMap.create()).setIcon(Items.ENCHANTED_BOOK));
 
-        registerPathInfo("components.minecraft:entity_data", PathInfo.create(DataType.CompoundStructured.of(Map.of(
+        registerPathInfo("components.minecraft:entity_data", PathInfo.create(DataType.CompoundStructured.of(Map.of( // to_do entity_data suggs
             "id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.REGISTRY_ENTITY_TYPE)).getter()
             ), Map.ofEntries(
             Map.entry("Tags", PathInfo.create().getter())
@@ -335,8 +352,9 @@ public class PathHelper {
             DataType.CompoundStructured.allRequired(Map.of(
                 "sound_event", PathInfoGetter.of("sound_event_or_definition"),
                 "description", PathInfoGetter.of("text_component"),
-                "use_duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).setInfo("Positive float of length in seconds").getter(),
-                "range", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).getter()
+                "use_duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).setInfo("Non-negative float of length in seconds").getter(),
+                "range", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).setInfo("Positive float for sound range in distance of blocks").getter(),
+                "durability_damage", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT)).setUnsetInfo(IntTag.valueOf(0)).getter()
             )),
             DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_INSTRUMENT)
         ).setIcon(Items.GOAT_HORN));
@@ -354,7 +372,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:jukebox_playable", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_JUKEBOX_SONG)).setIcon(Items.MUSIC_DISC_13));
 
-        registerPathInfo("components.minecraft:kinetic_weapon", PathInfo.create().setIcon(Items.IRON_SPEAR));
+        registerPathInfo("components.minecraft:kinetic_weapon", PathInfo.create().setIcon(Items.IRON_SPEAR)); // to_do component suggs
 
         registerPathInfo("components.minecraft:llama/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_LLAMA_VARIANT)).setIcon(Items.LLAMA_SPAWN_EGG));
 
@@ -368,7 +386,7 @@ public class PathHelper {
                 ))
             ).getter(),
             "components", PathInfo.create(DataType.CompoundComponentsMap.createOnlyPresent()).setInfo("Exact component matches").getter(),
-            "predicates", PathInfo.create().setInfo("Component predicates").getter()
+            "predicates", PathInfo.create().setInfo("Component predicates").getter() // to_do
         ))).setIcon(Items.CHEST));
 
         registerPathInfo("components.minecraft:lodestone_tracker", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
@@ -416,7 +434,10 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:minimum_attack_charge", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT, SuggestionGetter.newInlineSnbt("0.0f", "1.0f"))).setInfo("Minimum percent of attack charge required to attack").setIcon(Items.IRON_SPEAR));
 
-        registerPathInfo("components.minecraft:mob_visibility", PathInfo.create().setIcon(Items.CREEPER_HEAD));//TODO
+        registerPathInfo("components.minecraft:mob_visibility", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
+            "targeting_entity_types", PathInfo.copyOf("entity_id_tag_or_list").getter(),
+            "visibility", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).setInfo("Float multiplier of visibility. Minimum ranges is 2 blocks, maximum multiplier is 10f").getter()
+        ))).setIcon(Items.CREEPER_HEAD));
 
         registerPathInfo("components.minecraft:mooshroom/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_MOOSHROOM_VARIANT)).setIcon(Items.MOOSHROOM_SPAWN_EGG));
 
@@ -428,7 +449,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:parrot/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_PARROT_VARIANT)).setIcon(Items.PARROT_SPAWN_EGG));
 
-        registerPathInfo("components.minecraft:piercing_weapon", PathInfo.create().setIcon(Items.IRON_SPEAR));
+        registerPathInfo("components.minecraft:piercing_weapon", PathInfo.create().setIcon(Items.IRON_SPEAR)); // to_do component suggs
 
         registerPathInfo("components.minecraft:pig/sound_variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_PIG_SOUND_VARIANT)).setIcon(Items.PIG_SPAWN_EGG));
 
@@ -479,7 +500,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:provides_pottery_pattern", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_DECORATED_POT_PATTERN)).setIcon(Items.SKULL_POTTERY_SHERD));
 
-        registerPathInfo("components.minecraft:provides_trim_material", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TRIM_MATERIAL)).setIcon(Items.SMITHING_TABLE));
+        registerPathInfo("components.minecraft:provides_trim_material", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TRIM_MATERIAL)).setIcon(Items.SMITHING_TABLE));//to_do inline option
 
         registerPathInfo("components.minecraft:rabbit/variant", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_RABBIT_VARIANT)).setIcon(Items.RABBIT_SPAWN_EGG));
 
@@ -507,9 +528,9 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:shulker/color", PathInfo.copyOf("dye_color").setIcon(Items.SHULKER_SPAWN_EGG));
 
-        registerPathInfo("components.minecraft:sign_text_back", PathInfo.create().setIcon(Items.SPRUCE_SIGN));//TODO
+        registerPathInfo("components.minecraft:sign_text_back", PathInfo.copyOf("sign_text").setIcon(Items.SPRUCE_SIGN));
 
-        registerPathInfo("components.minecraft:sign_text_front", PathInfo.create().setIcon(Items.SPRUCE_SIGN));//TODO
+        registerPathInfo("components.minecraft:sign_text_front", PathInfo.copyOf("sign_text").setIcon(Items.SPRUCE_SIGN));
 
         registerPathInfo("components.minecraft:stored_enchantments", PathInfo.create(DataType.CompoundEnchantmentsMap.create()).setIcon(Items.ENCHANTED_BOOK));
 
@@ -548,8 +569,8 @@ public class PathHelper {
         registerPathInfo("components.minecraft:tooltip_style", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Identifier to reference tooltip sprites at `assets/<namespace>/textures/gui/sprites/tooltip/<id>_background` and `assets/<namespace>/textures/gui/sprites/tooltip/<id>_frame`").setIcon(Items.COMMAND_BLOCK));
 
         registerPathInfo("components.minecraft:trim", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
-            "pattern", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TRIM_PATTERN)).getter(),
-            "material", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TRIM_MATERIAL)).getter()
+            "pattern", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TRIM_PATTERN)).getter(),//to_do inline option
+            "material", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_TRIM_MATERIAL)).getter()//to_do inline option
         ))).setIcon(Items.SMITHING_TABLE));
 
         registerPathInfo("components.minecraft:tropical_fish/base_color", PathInfo.copyOf("dye_color").setIcon(Items.TROPICAL_FISH_SPAWN_EGG));
@@ -705,7 +726,7 @@ public class PathHelper {
                     "command", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'run_command' action - string command with or without a slash\n\nFor 'suggest_command' action - string command starting with a slash, or chat message without a slash").getter(),
                     "value", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'copy_to_clipboard' action - string to copy").getter(),
                     "url", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("For 'open_url' action - url to open").getter(),
-                    "dialog", PathInfo.create(
+                    "dialog", PathInfo.create( // to_do missing suggs
                         DataType.CompoundStructured.of(Map.of(
                             "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.REGISTRY_DIALOG_TYPE)).getter(),
                             "title", PathInfo.copyOf("text_component").setInfo("Text component to show on page").getter()
@@ -748,7 +769,7 @@ public class PathHelper {
                     "count", PathInfo.copyOf("item_count").setInfo("For 'show_item' action - int count of the item").getter(),
                     "components", PathInfo.create(DataType.CompoundComponentsMap.create()).setInfo("For 'show_item' action - components on the item").getter(),
                     "name", PathInfo.copyOf("text_component").setInfo("For 'show_entity' action - custom name of the entity").getter(),
-                    "uuid", PathInfo.create().setInfo("For 'show_entity' action - UUID of the entity (either in string hex form or int array form)").getter()
+                    "uuid", PathInfo.create().setInfo("For 'show_entity' action - UUID of the entity (either in string hex form or int array form)").getter() // to_do
                 ))).setInfo("Action when hovered (only works in chat and written books)").getter()),
 
                 Map.entry("fallback", PathInfo.copyOf("text_component").setInfo("For 'translatable' type - string to display when translation key not found\n\nFor 'object' type - text component to display when object cannot be rendered").getter()),
@@ -835,12 +856,12 @@ public class PathHelper {
             DataType.ListUnordered.of(PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
                 "blocks", PathInfoGetter.of("block_id_tag_or_list"),
                 "nbt", PathInfo.create().getter(), // to_do compound or stringified compound
-                "state", PathInfo.create().getter()
+                "state", PathInfo.create().getter() // to_do
             ))).getter()),
             DataType.CompoundStructured.allOptional(Map.of(
                 "blocks", PathInfoGetter.of("block_id_tag_or_list"),
                 "nbt", PathInfo.create().getter(), // to_do compound or stringified compound
-                "state", PathInfo.create().getter()
+                "state", PathInfo.create().getter() //to_do
             ))
         ).setIcon(Items.CHAIN_COMMAND_BLOCK).setInfo("Block predicate (blocks/nbt/state) or list of block predicates"));
 

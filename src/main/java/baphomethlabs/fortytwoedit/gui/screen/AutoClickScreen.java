@@ -53,6 +53,12 @@ public class AutoClickScreen extends GenericScreen {
                 "Toggle auto fish in auto click mode\n\nWhen on: auto click mode will attempt to reel in fish then cast again\n\nRequires closed captions to detect fish").build()
         );
         paneScroll().addRow(
+            WIDGET_UTIL.newButton("Mute Audio", btn -> {
+                    OptionsUtil.ModOptions.AUTO_CLICK_MUTE.toggleSetting();
+                    rebuildWidgets();
+                }).setBoolName(OptionsUtil.ModOptions.AUTO_CLICK_MUTE.getSetting()).setTooltip(OptionsUtil.ModOptions.AUTO_CLICK_MUTE.getButtonTooltip()).build()
+        );
+        paneScroll().addRow(
             WIDGET_UTIL.newButton("Lock Screen", btn -> {
                     OptionsUtil.ModOptions.AUTO_CLICK_LOCK.toggleSetting();
                     rebuildWidgets();

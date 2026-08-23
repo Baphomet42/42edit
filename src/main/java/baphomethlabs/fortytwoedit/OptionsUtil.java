@@ -162,6 +162,10 @@ public class OptionsUtil {
             new ModOptionBoolean("auto_click_lock", false, "AutoClick Lock")).setDisplayItem(Items.GOLDEN_SWORD)
             .setDescription(true,
             "While AutoClick is in use, mouse movement will be ignored and FPS reduced.");
+        public static final ModOptionBoolean AUTO_CLICK_MUTE = registerModOption(
+            new ModOptionBoolean("auto_click_mute", false, "AutoClick Mute")).setDisplayItem(Items.GOLDEN_SWORD)
+            .setDescription(true,
+            "While AutoClick is in use, game volume will be muted.");
         public static final ModOptionBoolean CHAT_ICONS = registerModOption(
             new ModOptionBoolean("chat_icons", false, "Chat Icons")).setDisplayItem(Items.PLAYER_HEAD)
             .setDescription(true,

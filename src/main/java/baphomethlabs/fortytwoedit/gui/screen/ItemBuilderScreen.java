@@ -3,7 +3,9 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.HotbarManager;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -22,6 +24,7 @@ import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.PlayerSkinRenderCache;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.core.BlockPos;
@@ -34,6 +37,7 @@ import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -50,10 +54,12 @@ import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.storage.TagValueOutput;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -183,6 +189,10 @@ public class ItemBuilderScreen extends GenericScreen {
     private ItemStack[] cacheInv = new ItemStack[41]; // 0-26 for inventory, 27-35 for hotbar, 36-40 for armor, 41 for offhand
     private int cacheInvSlot = -1;
     public static Tooltip FORMAT_CODES_TT = null;
+    private static long fetchProfileTimestamp = -1;
+    private ItemStack fetchProfileOldStack = null;
+    private int fetchProfileSlot = -1;
+	private static CompletableFuture<Optional<GameProfile>> fetchProfileTask = null;
 
     public ItemBuilderScreen() {
         super("");
@@ -1550,40 +1560,57 @@ public class ItemBuilderScreen extends GenericScreen {
             }
             {
                 final int i = tabNum; final int j = getTabWidgetScrollIndex(tabNum);
-                addTabWidgetScroll(tabNum, new RowWidget("Skin", "Create static player head from base64 properties", btn -> {
+                addTabWidgetScroll(tabNum, new RowWidget("Skin", "Create static player head from username or base64 properties", btn -> {
                     String inp = TAB_WIDGETS_SCROLL.get(i).get(j).btn()[0];
-                    if (inp.equals("")) {
-                        if (minecraft.player.getMainHandItem().isEmpty())
-                            BlackMagick.setItemMain(new ItemStack(Items.PLAYER_HEAD));
+                    fetchProfileTimestamp = -1;
+                    if (fetchProfileTask != null) {
+			            CompletableFuture<Optional<GameProfile>> future = fetchProfileTask;
+                        fetchProfileTask = null;
+                        try {
+                            future.cancel(false);
+                        } catch (Exception ex) {}
                     }
-                    else {
-                        String base64 = inp;
-                        if (inp.contains("name:\"textures\"") && inp.contains(",value:\"")) {
-                            String value = inp;
-                            value = value.substring(value.indexOf(",value:\"") + 8);
-                            if (value.contains("\""))
-                                base64 = value.substring(0, value.indexOf("\""));
+                    if (!inp.equals("")) {
+                        if (inp.length() < 40 && inp.matches("^[a-zA-Z0-9_]*$")) {
+                            try {
+                                fetchProfileTimestamp = System.currentTimeMillis();
+                                fetchProfileSlot = minecraft.player.getInventory().getSelectedSlot();
+                                fetchProfileOldStack = minecraft.player.getMainHandItem().isEmpty() ?
+                                    null : minecraft.player.getMainHandItem().copy();
+                                fetchProfileTask = minecraft.playerSkinRenderCache()
+                                    .lookup(ResolvableProfile.createUnresolved(inp))
+                                    .thenApply(info -> info.map(PlayerSkinRenderCache.RenderInfo::gameProfile));
+                            } catch (Exception ex) {}
                         }
+                        else {
+                            String base64 = inp;
+                            if (inp.contains("name:\"textures\"") && inp.contains(",value:\"")) {
+                                String value = inp;
+                                value = value.substring(value.indexOf(",value:\"") + 8);
+                                if (value.contains("\""))
+                                    base64 = value.substring(0, value.indexOf("\""));
+                            }
 
-                        String testBase64 = base64;
-                        while (testBase64.endsWith("="))
-                            testBase64 = testBase64.substring(0, testBase64.length() - 1);
-                        testBase64 = testBase64.replaceAll("[a-zA-Z0-9+/]", "");
-                        if (testBase64.length() == 0) {
-                            CompoundTag temp;
-                            if (selItem.isEmpty())
-                                temp = BlackMagick.validCompoundFromString("{id:player_head}");
-                            else
-                                temp = BlackMagick.itemToNbt(selItem);
-                            temp = BlackMagick.setNbtPath(
-                                BlackMagick.setNbtPath(temp, "components.minecraft:profile.properties", BlackMagick.nbtFromSnbt("[{name:\"textures\",value:\"\"}]")),
-                                "components.minecraft:profile.properties[0].value",
-                                StringTag.valueOf(base64)
-                                );
+                            String testBase64 = base64;
+                            while (testBase64.endsWith("="))
+                                testBase64 = testBase64.substring(0, testBase64.length() - 1);
+                            testBase64 = testBase64.replaceAll("[a-zA-Z0-9+/]", "");
+                            if (testBase64.length() == 0) {
+                                CompoundTag temp;
+                                if (selItem.isEmpty())
+                                    temp = BlackMagick.validCompoundFromString("{id:player_head}");
+                                else
+                                    temp = BlackMagick.itemToNbt(selItem);
+                                temp = BlackMagick.setNbtPath(
+                                    BlackMagick.setNbtPath(temp, "components.minecraft:profile.properties", BlackMagick.nbtFromSnbt("[{name:\"textures\",value:\"\"}]")),
+                                    "components.minecraft:profile.properties[0].value",
+                                    StringTag.valueOf(base64)
+                                    );
 
-                            ItemStack newItem = BlackMagick.itemFromNbt(temp);
-                            if (!newItem.isEmpty())
-                                BlackMagick.setItemMain(newItem);
+                                ItemStack newItem = BlackMagick.itemFromNbt(temp);
+                                if (!newItem.isEmpty())
+                                    BlackMagick.setItemMain(newItem);
+                            }
                         }
                     }
                 }, null, false));
@@ -5665,6 +5692,44 @@ public class ItemBuilderScreen extends GenericScreen {
             updateInvTab();
         else if (tab == CACHE_TAB_MAIN && TAB_WIDGETS_SCROLL.get(tab).isEmpty())
             createTab(tab);
+
+        if (fetchProfileTask != null) {
+            if (fetchProfileTask.isDone()) {
+                try {
+                    fetchProfileTask.get().ifPresent(gameProfile -> {
+                        ResolvableProfile.CODEC
+                            .encodeStart(NbtOps.INSTANCE, ResolvableProfile.createResolved(gameProfile))
+                            .ifSuccess(
+                                encodedProfile -> {
+                                    String encodedProfileAsString = encodedProfile.toString();
+                                    int currentSlot = minecraft.player.getInventory().getSelectedSlot();
+                                    ItemStack currentStack = minecraft.player.getMainHandItem().isEmpty() ?
+                                        null : minecraft.player.getMainHandItem().copy();
+                                    if (currentSlot == fetchProfileSlot && (
+                                        (currentStack == null && fetchProfileOldStack == null)
+                                        || (ItemStack.isSameItemSameComponents(currentStack, fetchProfileOldStack))
+                                    )) {
+                                        ItemStack head = BlackMagick.itemFromString(
+                                            "{id:'minecraft:player_head',components:{'minecraft:profile':"+encodedProfileAsString+"}}");
+                                        if (!head.isEmpty())
+                                            BlackMagick.setItemMain(head);
+                                    }
+                                }
+                            );
+                    });
+                    fetchProfileTask = null;
+                    fetchProfileTimestamp = -1;
+                } catch (Exception ex) {}
+            }
+            else if (System.currentTimeMillis() - fetchProfileTimestamp > 5000) {
+                CompletableFuture<Optional<GameProfile>> future = fetchProfileTask;
+                fetchProfileTask = null;
+                fetchProfileTimestamp = -1;
+                try {
+                    future.cancel(false);
+                } catch (Exception ex) {}
+            }
+        }
 
         super.tick();
     }

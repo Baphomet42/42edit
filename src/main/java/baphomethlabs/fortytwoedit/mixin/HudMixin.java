@@ -1,7 +1,10 @@
 package baphomethlabs.fortytwoedit.mixin;
 
+import java.util.List;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.include.com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.Window;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
@@ -22,39 +25,89 @@ public abstract class HudMixin {
     private static Component cacheCoordHud = null;
     private static final Component FISH_SUBTITLE_WARNING = Component.empty().append("Auto Fish requires Subtitles").withStyle(ChatFormatting.RED);
 
+    /**
+     * see {@link net.minecraft.client.gui.components.DebugScreenOverlay#extractRenderState}
+     */
     @Inject(method = "extractRenderState", at = @At("TAIL"))
-    private void injectExtractRenderState(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo c) {
+    private void injectExtractRenderState(GuiGraphicsExtractor graphics, DeltaTracker tickCounter, CallbackInfo c) {
         if (FortytwoEdit.autoMove || FortytwoEdit.autoClicker || FortytwoEdit.isRandoModeActive() || OptionsUtil.ModOptions.COORD_HUD.getSetting()) {
-            final Minecraft client = Minecraft.getInstance();
-            if (!client.gui.hud.isHidden() && client.player != null) {
-                int x = client.getWindow().getGuiScaledWidth() - 80;
-                int y = client.getWindow().getGuiScaledHeight() - 15;
+            final Minecraft minecraft = Minecraft.getInstance();
+            if (!minecraft.gui.hud.isHidden() && minecraft.player != null) {
+
+                List<Component> rightText = Lists.newArrayList();
                 if (FortytwoEdit.autoMove)
-                    context.text(client.font, "[Auto Move]", x, y - 20, TEXT_COLOR, true);
+                    rightText.add(Component.nullToEmpty("[Auto Move]"));
                 if (FortytwoEdit.autoClicker) {
-                    if (FortytwoEdit.autoFish && !client.options.showSubtitles().get())
-                        context.text(client.font, FISH_SUBTITLE_WARNING, x - 64, y - 10, TEXT_COLOR, true);
+                    if (FortytwoEdit.autoFish && !minecraft.options.showSubtitles().get())
+                        rightText.add(FISH_SUBTITLE_WARNING);
                     else
-                        context.text(client.font, "[Auto Click]", x, y - 10, TEXT_COLOR, true);
+                        rightText.add(Component.nullToEmpty("[Auto Click]"));
                 }
                 if (FortytwoEdit.isRandoModeActive())
-                    context.text(client.font, "[Rando Mode]", x, y, TEXT_COLOR, true);
-                if (OptionsUtil.ModOptions.COORD_HUD.getSetting() && !client.debugEntries.isOverlayVisible() && !client.showOnlyReducedInfo()) {
-                    // see net.minecraft.client.gui.components.debug.DebugEntryPosition
-                    long currentTime = System.currentTimeMillis();
-                    if (cacheCoordHud == null || currentTime - lastRefreshTime > 50) {
-                        lastRefreshTime = currentTime;
-                        BlockPos feetPos = client.player.blockPosition();
-                        String coordFacing = "S";
-                        switch (client.player.getDirection()) {
-                            case NORTH: coordFacing = "N"; break;
-                            case EAST: coordFacing = "E"; break;
-                            case WEST: coordFacing = "W"; break;
-                            default: break;
-                        }
-                        cacheCoordHud = Component.empty().append(coordFacing + " " + feetPos.getX() + " " + feetPos.getY() + " " + feetPos.getZ());
+                    rightText.add(Component.nullToEmpty("[Rando Mode]"));
+
+                boolean showCoordHud = OptionsUtil.ModOptions.COORD_HUD.getSetting() && !minecraft.debugEntries.isOverlayVisible() && !minecraft.showOnlyReducedInfo();
+
+                if (showCoordHud || !rightText.isEmpty()) {
+                    graphics.nextStratum();
+
+                    Window window = minecraft.getWindow();
+                    int standardGuiScale = window.getGuiScale();
+                    int newScale = minecraft.options.debugGuiScale().get();
+                    if (newScale == -1) {
+                        newScale = standardGuiScale;
+                    } else if (newScale == 0) {
+                        int maxGuiScale = minecraft.getWindow().calculateScale(0, minecraft.isEnforceUnicode());
+                        newScale = maxGuiScale / 2;
+                    } else {
+                        newScale = window.calculateScale(newScale, minecraft.isEnforceUnicode());
                     }
-                    context.text(client.font, cacheCoordHud, 2, 2, TEXT_COLOR, true);
+
+                    graphics.pose().pushMatrix();
+                    int scaledScreenHeight;
+                    int scaledScreenWidth;
+                    if (newScale < standardGuiScale && newScale > 0) {
+                        graphics.pose().scale((float)newScale / standardGuiScale, (float)newScale / standardGuiScale);
+                        scaledScreenWidth = window.getWidth() / newScale;
+                        scaledScreenHeight = window.getHeight() / newScale;
+                    } else {
+                        scaledScreenWidth = graphics.guiWidth();
+                        scaledScreenHeight = graphics.guiHeight();
+                    }
+
+                    if (showCoordHud) {
+                        // see net.minecraft.client.gui.components.debug.DebugEntryPosition
+                        long currentTime = System.currentTimeMillis();
+                        if (cacheCoordHud == null || currentTime - lastRefreshTime > 50) {
+                            lastRefreshTime = currentTime;
+                            BlockPos feetPos = minecraft.player.blockPosition();
+                            String coordFacing = "S";
+                            switch (minecraft.player.getDirection()) {
+                                case NORTH: coordFacing = "N"; break;
+                                case EAST: coordFacing = "E"; break;
+                                case WEST: coordFacing = "W"; break;
+                                default: break;
+                            }
+                            cacheCoordHud = Component.empty().append(coordFacing + " " + feetPos.getX() + " " + feetPos.getY() + " " + feetPos.getZ());
+                        }
+                        graphics.text(minecraft.font, cacheCoordHud, 2, 2, TEXT_COLOR, true);
+                    }
+
+                    if (!rightText.isEmpty()) {
+                        int height = 9;
+                        int right = scaledScreenWidth - 30;
+                        int bottom = scaledScreenHeight - 30;
+                        for (int i = 0; i < rightText.size(); i++) {
+                            Component line = rightText.get(i);
+                            int width = minecraft.font.width(line);
+                            int left = right - width;
+                            int top = bottom - (height * i);
+                            graphics.text(minecraft.font, line, left, top, TEXT_COLOR, true);
+                        }
+                    }
+
+                    graphics.nextStratum();
+                    graphics.pose().popMatrix();
                 }
             }
         }
