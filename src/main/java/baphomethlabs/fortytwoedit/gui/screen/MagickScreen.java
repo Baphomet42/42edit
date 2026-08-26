@@ -93,23 +93,23 @@ public class MagickScreen extends GenericScreen {
     }
 
     private void setAutoClickMessage() {
-        if (FortytwoEdit.autoClick && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack && !FortytwoEdit.autoFish) {
+        if (FortytwoEdit.autoUse && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack && !FortytwoEdit.autoFish) {
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.use"));
             autoClickCycle = 0;
         }
-        else if (!FortytwoEdit.autoClick && FortytwoEdit.autoMine && !FortytwoEdit.autoAttack && !FortytwoEdit.autoFish) {
+        else if (!FortytwoEdit.autoUse && FortytwoEdit.autoMine && !FortytwoEdit.autoAttack && !FortytwoEdit.autoFish) {
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.mine"));
             autoClickCycle = 1;
         }
-        else if (!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && !FortytwoEdit.autoFish && FortytwoEdit.attackWait == 1500) {
+        else if (!FortytwoEdit.autoUse && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && !FortytwoEdit.autoFish && FortytwoEdit.attackWait == 1500) {
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.attack_slow"));
             autoClickCycle = 2;
         }
-        else if (!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && !FortytwoEdit.autoFish && FortytwoEdit.attackWait == 650) {
+        else if (!FortytwoEdit.autoUse && !FortytwoEdit.autoMine && FortytwoEdit.autoAttack && !FortytwoEdit.autoFish && FortytwoEdit.attackWait == 650) {
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.attack_fast"));
             autoClickCycle = 3;
         }
-        else if (!FortytwoEdit.autoClick && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack && FortytwoEdit.autoFish) {
+        else if (!FortytwoEdit.autoUse && !FortytwoEdit.autoMine && !FortytwoEdit.autoAttack && FortytwoEdit.autoFish) {
             btnWgtAutoClick.setMessage(Component.translatable("42edit.gui.magick_screen.auto_click.fish"));
             autoClickCycle = 4;
         }

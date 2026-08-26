@@ -41,7 +41,7 @@ public abstract class KeyMappingMixin {
 
             if ((FortytwoEdit.autoMine || FortytwoEdit.autoAttack) && key.equals(((KeyMappingAccessor)client.options.keyAttack).getBoundKey()))
                 stopAutoClicker = true;
-            else if ((FortytwoEdit.autoClick || FortytwoEdit.autoFish) && key.equals(((KeyMappingAccessor)client.options.keyUse).getBoundKey()))
+            else if ((FortytwoEdit.autoUse && !FortytwoEdit.autoFish) && key.equals(((KeyMappingAccessor)client.options.keyUse).getBoundKey()))
                 stopAutoClicker = true;
 
             if (stopAutoClicker) {

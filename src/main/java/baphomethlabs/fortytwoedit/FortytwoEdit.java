@@ -102,44 +102,33 @@ public class FortytwoEdit implements ClientModInitializer {
             }
         }
     }
-    public static void chatIconNew(Component text, UUID uuid) {
+    public static void chatIconNew(Component text, UUID uuid, String name, boolean bypassKnownPlayer) {
+        if (uuid == null && name == null)
+            return;
         try {
             final Minecraft minecraft = Minecraft.getInstance();
             String mapKey = "" + minecraft.gui.hud.getGuiTicks() + "_" + BlackMagick.textComponentToSnbt(text);
             MutableComponent newComponent = Component.empty();
 
             String hat = "true";
-            PlayerInfo playerInfo = minecraft.player.connection.getPlayerInfo(uuid);
+            PlayerInfo playerInfo = null;
+            if (uuid != null)
+                playerInfo = minecraft.player.connection.getPlayerInfo(uuid);
+            else
+                playerInfo = minecraft.player.connection.getPlayerInfo(name);
+            if (!bypassKnownPlayer && playerInfo == null)
+                return;
             if (playerInfo != null && !playerInfo.showHat()) {
                 hat = "false";
             }
 
-            ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{id:"
-                + BlackMagick.nbtToSnbt(new IntArrayTag(UUIDUtil.uuidToIntArray(uuid))) + "},hat:" + hat + ",shadow_color:0}");
-
-            if (parsedText.isValid()) {
-                newComponent.append(parsedText.text());
-                newComponent.append(" ");
-                newComponent.append(text);
-                CHAT_ICON_COMPONENT_CACHE.put(mapKey, newComponent);
-                chatCache(mapKey);
-            }
-        } catch (Exception ex) {}
-    }
-    public static void chatIconNew(Component text, String name) {
-        try {
-            final Minecraft minecraft = Minecraft.getInstance();
-            String mapKey = "" + minecraft.gui.hud.getGuiTicks() + "_" + BlackMagick.textComponentToSnbt(text);
-            MutableComponent newComponent = Component.empty();
-
-            String hat = "true";
-            PlayerInfo playerInfo = minecraft.player.connection.getPlayerInfo(name);
-            if (playerInfo != null && !playerInfo.showHat()) {
-                hat = "false";
-            }
-
-            ParsedText parsedText = BlackMagick.textComponentFromSnbt("{object:'player',player:{name:"
-                + BlackMagick.nbtToSnbt(StringTag.valueOf(name)) + "},hat:" + hat + ",shadow_color:0}");
+            ParsedText parsedText =
+                uuid != null ?
+                    (BlackMagick.textComponentFromSnbt("{object:'player',player:{id:"
+                    + BlackMagick.nbtToSnbt(new IntArrayTag(UUIDUtil.uuidToIntArray(uuid))) + "},hat:" + hat + ",shadow_color:0}"))
+                    :
+                    (BlackMagick.textComponentFromSnbt("{object:'player',player:{name:"
+                    + BlackMagick.nbtToSnbt(StringTag.valueOf(name)) + "},hat:" + hat + ",shadow_color:0}"));
 
             if (parsedText.isValid()) {
                 newComponent.append(parsedText.text());
@@ -168,6 +157,7 @@ public class FortytwoEdit implements ClientModInitializer {
         try {
             String name = null;
             UUID uuid = null;
+            boolean bypassKnownPlayer = false;
             Tag nbt = BlackMagick.textComponentToNbt(guiMessage.content());
             if (nbt.getId() == Tag.TAG_COMPOUND) {
                 CompoundTag compound = (CompoundTag)nbt;
@@ -175,27 +165,50 @@ public class FortytwoEdit implements ClientModInitializer {
                     switch (compound.getString("translate").get()) {
                         case "multiplayer.player.joined" :
                         case "multiplayer.player.left" :
-                        case "chat.type.text" :
-                        case "chat.type.emote" :
-                        case "chat.type.announcement" :
-                        case "commands.message.display.incoming" :
                         {
                             Tag hoverUUID = BlackMagick.getNbtPath(compound, "with[0].hover_event.uuid");
                             if (hoverUUID != null && hoverUUID.getId() == Tag.TAG_INT_ARRAY) {
                                 uuid = UUIDUtil.uuidFromIntArray(((IntArrayTag)hoverUUID).getAsIntArray());
+                                bypassKnownPlayer = true;
                             }
                             else {
                                 Tag textTag = BlackMagick.getNbtPath(compound, "with[0]");
                                 if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
                                     name = BlackMagick.nbtToSnbtOrString(textTag);
+                                    bypassKnownPlayer = true;
                                 }
                                 else {
                                     textTag = BlackMagick.getNbtPath(compound, "with[0].text");
                                     if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
                                         name = BlackMagick.nbtToSnbtOrString(textTag);
+                                        bypassKnownPlayer = true;
                                     }
                                 }
                             }
+                            break;
+                        }
+                        case "chat.type.text" :
+                        case "chat.type.emote" :
+                        case "chat.type.announcement" :
+                        case "commands.message.display.incoming" :
+                        case "commands.random.roll" :
+                        {
+                            Tag hoverUUID = BlackMagick.getNbtPath(compound, "with[0].hover_event.uuid");
+                            if (hoverUUID != null && hoverUUID.getId() == Tag.TAG_INT_ARRAY) {
+                                uuid = UUIDUtil.uuidFromIntArray(((IntArrayTag)hoverUUID).getAsIntArray());
+                            }
+                            // else {
+                            //     Tag textTag = BlackMagick.getNbtPath(compound, "with[0]");
+                            //     if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
+                            //         name = BlackMagick.nbtToSnbtOrString(textTag);
+                            //     }
+                            //     else {
+                            //         textTag = BlackMagick.getNbtPath(compound, "with[0].text");
+                            //         if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
+                            //             name = BlackMagick.nbtToSnbtOrString(textTag);
+                            //         }
+                            //     }
+                            // }
                             break;
                         }
                         case "chat.type.team.text" :
@@ -205,18 +218,18 @@ public class FortytwoEdit implements ClientModInitializer {
                             if (hoverUUID != null && hoverUUID.getId() == Tag.TAG_INT_ARRAY) {
                                 uuid = UUIDUtil.uuidFromIntArray(((IntArrayTag)hoverUUID).getAsIntArray());
                             }
-                            else {
-                                Tag textTag = BlackMagick.getNbtPath(compound, "with[1]");
-                                if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
-                                    name = BlackMagick.nbtToSnbtOrString(textTag);
-                                }
-                                else {
-                                    textTag = BlackMagick.getNbtPath(compound, "with[1].text");
-                                    if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
-                                        name = BlackMagick.nbtToSnbtOrString(textTag);
-                                    }
-                                }
-                            }
+                            // else {
+                            //     Tag textTag = BlackMagick.getNbtPath(compound, "with[1]");
+                            //     if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
+                            //         name = BlackMagick.nbtToSnbtOrString(textTag);
+                            //     }
+                            //     else {
+                            //         textTag = BlackMagick.getNbtPath(compound, "with[1].text");
+                            //         if (textTag != null && textTag.getId() == Tag.TAG_STRING) {
+                            //             name = BlackMagick.nbtToSnbtOrString(textTag);
+                            //         }
+                            //     }
+                            // }
                             break;
                         }
                         case "commands.message.display.outgoing" :
@@ -228,11 +241,8 @@ public class FortytwoEdit implements ClientModInitializer {
                     }
                 }
             }
-            if (uuid != null)
-                chatIconNew(guiMessage.content(), uuid);
-            else if (name != null)
-                chatIconNew(guiMessage.content(), name);
 
+            chatIconNew(guiMessage.content(), uuid, name, bypassKnownPlayer);
             testComponent = CHAT_ICON_COMPONENT_CACHE.get(mapKey);
             if (testComponent != null) {
                 GuiMessage newMessage = new GuiMessage(guiMessage.addedTime(), testComponent, guiMessage.signature(), guiMessage.source(), guiMessage.tag());
@@ -333,7 +343,7 @@ public class FortytwoEdit implements ClientModInitializer {
     private static final SecureRandom RNG = new SecureRandom();
     public static boolean autoMove = false;
     public static boolean autoClicker = false;
-    public static boolean autoClick = true;
+    public static boolean autoUse = true;
     public static boolean autoAttack = false;
     public static boolean autoMine = false;
     public static int attackWait = 1500;
@@ -968,7 +978,7 @@ public class FortytwoEdit implements ClientModInitializer {
             while (client.options.keyAttack.consumeClick()) {}
         }
         if (autoClicker && client.player != null) {
-            if (autoClick) {
+            if (autoUse && !autoFish) {
                 client.options.keyUse.setDown(true);
             }
             if (autoAttack && System.currentTimeMillis() >= lastAttack + attackWait && client.hitResult instanceof EntityHitResult) {
@@ -1036,7 +1046,7 @@ public class FortytwoEdit implements ClientModInitializer {
         final Minecraft client = Minecraft.getInstance();
         autoClicker = false;
 
-        autoClick = click;
+        autoUse = click;
         autoMine = mine;
         autoAttack = attack;
         attackWait = wait;

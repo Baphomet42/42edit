@@ -17,7 +17,7 @@ public abstract class ChatListenerMixin {
 
     @Inject(method = "showMessageToPlayer", at = @At("HEAD"), cancellable = true)
     public void injectShowMessageToPlayer(ChatType.Bound bound, PlayerChatMessage playerChatMessage, Component component, GameProfile gameProfile, boolean bl, Instant instant, CallbackInfoReturnable<Boolean> cir) {
-        FortytwoEdit.chatIconNew(component, gameProfile.id());
+        FortytwoEdit.chatIconNew(component, gameProfile.id(), null, true);
     }
 
 }

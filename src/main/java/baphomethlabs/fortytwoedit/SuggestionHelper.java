@@ -603,6 +603,9 @@ public class SuggestionHelper {
     public static final SuggestionGetter DATA_BANNER_PATTERN = registerSuggsList("DATA_BANNER_PATTERN", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_BANNER_PATTERN", true), Registries.BANNER_PATTERN));
 
+    public static final SuggestionGetter DATA_BLOCK_TRANSFORMER = registerSuggsList("DATA_BLOCK_TRANSFORMER", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_BLOCK_TRANSFORMER", true), Registries.BLOCK_TRANSFORMER));
+
     public static final SuggestionGetter DATA_CAT_SOUND_VARIANT = registerSuggsList("DATA_CAT_SOUND_VARIANT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_CAT_SOUND_VARIANT", true), Registries.CAT_SOUND_VARIANT));
 

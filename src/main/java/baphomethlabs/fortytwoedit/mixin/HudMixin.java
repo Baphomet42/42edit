@@ -9,7 +9,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.OptionsUtil;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -23,7 +22,6 @@ public abstract class HudMixin {
     private static final int TEXT_COLOR = 0xFFFFFFFF;
     private static long lastRefreshTime = 0;
     private static Component cacheCoordHud = null;
-    private static final Component FISH_SUBTITLE_WARNING = Component.empty().append("Auto Fish requires Subtitles").withStyle(ChatFormatting.RED);
 
     /**
      * see {@link net.minecraft.client.gui.components.DebugScreenOverlay#extractRenderState}
@@ -37,12 +35,8 @@ public abstract class HudMixin {
                 List<Component> rightText = Lists.newArrayList();
                 if (FortytwoEdit.autoMove)
                     rightText.add(Component.nullToEmpty("[Auto Move]"));
-                if (FortytwoEdit.autoClicker) {
-                    if (FortytwoEdit.autoFish && !minecraft.options.showSubtitles().get())
-                        rightText.add(FISH_SUBTITLE_WARNING);
-                    else
-                        rightText.add(Component.nullToEmpty("[Auto Click]"));
-                }
+                if (FortytwoEdit.autoClicker)
+                    rightText.add(Component.nullToEmpty("[Auto Click]"));
                 if (FortytwoEdit.isRandoModeActive())
                     rightText.add(Component.nullToEmpty("[Rando Mode]"));
 

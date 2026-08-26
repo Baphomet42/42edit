@@ -72,7 +72,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:attack_animation", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_SWING_ANIMATION_TYPE)).setUnsetInfo(StringTag.valueOf("whack")).getter(),
-            "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionGetter.newInlineSnbt("6"))).setUnsetInfo(IntTag.valueOf(6)).getter()
+            "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionGetter.newInlineSnbt("6"))).setInfo("Non-negative number of ticks").setUnsetInfo(IntTag.valueOf(6)).getter()
         ))).setIcon(Items.IRON_SPEAR));
 
         registerPathInfo("components.minecraft:attack_range", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
@@ -130,7 +130,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:block_state", PathInfo.create(DataType.CompoundBlockStateMap.create()).setIcon(Items.PALE_OAK_STAIRS));
 
-        registerPathInfo("components.minecraft:block_transformer", PathInfo.create().setIcon(Items.IRON_HOE)); // to_do component suggs
+        registerPathInfo("components.minecraft:block_transformer", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_BLOCK_TRANSFORMER)).setIcon(Items.IRON_HOE)); // to_do component suggs
 
         registerPathInfo("components.minecraft:blocks_attacks", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "block_delay_seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).getter(),
@@ -363,7 +363,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:interact_animation", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_SWING_ANIMATION_TYPE)).setUnsetInfo(StringTag.valueOf("whack")).getter(),
-            "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionGetter.newInlineSnbt("6"))).setUnsetInfo(IntTag.valueOf(6)).getter()
+            "duration", PathInfo.create(DataType.ElementLiteral.of(NbtType.INT, SuggestionGetter.newInlineSnbt("6"))).setInfo("Non-negative number of ticks").setUnsetInfo(IntTag.valueOf(6)).getter()
         ))).setIcon(Items.IRON_SPEAR));
 
         registerPathInfo("components.minecraft:item_model", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.ASSETS_ITEMS)).setIcon(Items.STONE));
@@ -849,7 +849,8 @@ public class PathHelper {
             "effects", PathInfo.create().setInfo("For 'apply_effects' type - list of effect instances\n\nFor 'remove_effects' type - effect ID or a list of effect IDs").getter(), // to_do handle apply_effects vs remove_effects
             "probability", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT, SuggestionGetter.newInlineSnbt("0.0f", "1.0f"))).setInfo("For 'apply_effects' type - chance from 0.0 to 1.0 of all the effects to be applied").setUnsetInfo(FloatTag.valueOf(1f)).getter(),
             "diameter", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT, SuggestionGetter.newInlineSnbt("16.0f"))).setInfo("For 'teleport_randomly' type - diameter of teleportation region").setUnsetInfo(FloatTag.valueOf(16f)).getter(),
-            "sound", PathInfo.copyOf("sound_event_or_definition").setInfo("For 'play_sound' type - sound event or new sound event definition").getter()
+            "sound", PathInfo.copyOf("sound_event_or_definition").setInfo("For 'play_sound' type - sound event or new sound event definition").getter(),
+            "directional_particles", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter()
         ))));
 
         registerPathInfo("block_predicate_or_list", PathInfo.create( // test storage [data storage]

@@ -31,7 +31,6 @@
     "SoundEngineMixin",
     "StringUtilMixin",
     "StructureBlockEditScreenMixin",
-    "SubtitleOverlayMixin",
     "TextureAtlasAccessor",
     "TooltipMixin",
     "TooltipPositionerMixin",
