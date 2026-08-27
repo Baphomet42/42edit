@@ -30,7 +30,7 @@ public abstract class LocatorBarMixin {
     private static boolean isUpsideDown = false;
     private static int size = 0;
 
-    @Inject(method = "lambda$extractRenderState$1", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"), cancellable = true)
+    @Inject(method = "lambda$extractRenderState$1", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"), cancellable = true)
     public void injectExtractRenderState(Entity entity, Level level, PartialTickSupplier partialTickSupplier, GuiGraphicsExtractor guiGraphics, int i, TrackedWaypoint trackedWaypoint, CallbackInfo ci) {
 
         playerInfo = null;
@@ -55,7 +55,7 @@ public abstract class LocatorBarMixin {
 
     }
 
-    @Redirect(method = "lambda$extractRenderState$1", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
+    @Redirect(method = "lambda$extractRenderState$1", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
     private void redirectBlitSprite(GuiGraphicsExtractor guiGraphics, final RenderPipeline renderPipeline, final Identifier location, final int x, final int y, final int width, final int height, final int color) {
         if (playerInfo == null)
             guiGraphics.blitSprite(renderPipeline, location, x, y, width, height, color);

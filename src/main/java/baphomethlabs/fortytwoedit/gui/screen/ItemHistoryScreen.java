@@ -18,7 +18,7 @@ public class ItemHistoryScreen extends GenericScreen {
     protected void init() {
         super.init();
         FortytwoEdit.quickScreen = ItemHistoryScreen::new;
-        this.addBackButton(DebugScreen::new);
+        this.addBackButton(SecretScreen::new);
 
         setupScrollPane(false, ItemSlotButton.SLOT_HEIGHT);
 

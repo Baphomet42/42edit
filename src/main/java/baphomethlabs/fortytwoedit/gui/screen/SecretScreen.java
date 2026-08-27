@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import baphomethlabs.fortytwoedit.BlackMagick;
+import baphomethlabs.fortytwoedit.FileTools;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 
 public class SecretScreen extends GenericScreen {
@@ -26,10 +27,18 @@ public class SecretScreen extends GenericScreen {
 
         setupScrollPane();
         paneScroll().addRow(
-            WIDGET_UTIL.newButton("42edit Options...", btn -> changeScreen(new OptionsScreen())).build()
+            WIDGET_UTIL.newButton("View Log...", btn -> changeScreen(new LogScreen())).build()
         );
         paneScroll().addRow(
-            WIDGET_UTIL.newButton("Debug Tools...", btn -> changeScreen(new DebugScreen())).build()
+            WIDGET_UTIL.newButton("Item History...", btn -> changeScreen(new ItemHistoryScreen())).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Open Dir", btn -> btnOpenDir())
+                .setTooltip("Open 42edit file directory").build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton("Reset Misc", btn -> btnRefreshRuntime())
+                .setTooltip("Clear various caches, refresh files, etc.").build()
         );
         this.txtUpsideDown = WIDGET_UTIL.newEditBox().build();
         paneScroll().addRow(
@@ -37,6 +46,15 @@ public class SecretScreen extends GenericScreen {
             this.txtUpsideDown
         );
         finalizeScrollPane();
+    }
+
+    protected void btnRefreshRuntime() {
+        FortytwoEdit.showToast("Reset Misc", "Variables reset");
+        FortytwoEdit.debugTryRefreshVarious();
+    }
+
+    protected void btnOpenDir() {
+        FileTools.openModDir();
     }
 
     protected void flipTextBox() {

@@ -52,7 +52,7 @@ public class LogScreen extends GenericScreen {
     protected void init() {
         super.init();
         FortytwoEdit.quickScreen = LogScreen::new;
-        this.addBackButton(DebugScreen::new);
+        this.addBackButton(SecretScreen::new);
 
         logFile = new File(minecraft.gameDirectory.getAbsolutePath() + "\\logs\\latest.log");
 

@@ -190,6 +190,10 @@ public class FortytwoEdit implements ClientModInitializer {
                         case "chat.type.text" :
                         case "chat.type.emote" :
                         case "chat.type.announcement" :
+                        case "chat.type.admin" :
+                        case "chat.type.advancement.challenge" :
+                        case "chat.type.advancement.goal" :
+                        case "chat.type.advancement.task" :
                         case "commands.message.display.incoming" :
                         case "commands.random.roll" :
                         {
@@ -839,6 +843,19 @@ public class FortytwoEdit implements ClientModInitializer {
             }
         }
         secretSound();
+    }
+    public static void resetSuperSecretSettings() {
+        if (superSecretSettingIndex != SUPER_SECRET_SETTING_PROGRAMS.length) {
+            final Minecraft client = Minecraft.getInstance();
+            if (client.getCameraEntity() instanceof Player) {
+                if (client.gameRenderer.spectatedEntityPostEffect() != null) {
+                    client.gameRenderer.clearSpectatedEntityPostEffect();
+                }
+                superSecretSettingIndex = SUPER_SECRET_SETTING_PROGRAMS.length;
+                ((GameRendererInvoker)client.gameRenderer).setSpectatedEntityEffectActive(false);
+            }
+            secretSound();
+        }
     }
 
     // common

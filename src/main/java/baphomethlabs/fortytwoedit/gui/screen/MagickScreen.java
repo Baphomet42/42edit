@@ -26,26 +26,26 @@ public class MagickScreen extends GenericScreen {
         setupScrollPane();
         paneScroll().addRow(
             WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.item_builder"), btn -> changeScreen(new ItemBuilderScreen()))
-                .setRenderItem(Items.SPONGE).build()
-        );
-        paneScroll().addRow(
-            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.hacks"), btn -> changeScreen(new HacksScreen()))
-                .setRenderItem(Items.REPEATING_COMMAND_BLOCK).build()
-        );
-        paneScroll().addRow(
-            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.super_secret"),
-                (button, inputWithModifiers) -> this.btnSuperSecretSettings(inputWithModifiers)).fullWidth()
-                .setRenderItem(Items.STRUCTURE_BLOCK).build()
+                .fullWidth().setRenderItem(Items.SPONGE).build()
         );
         paneScroll().addRow(
             WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.capes"), btn -> changeScreen(new CapeScreen()))
-                .setRenderItem(Items.ELYTRA).build()
+                .fullWidth().setRenderItem(Items.ELYTRA).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.hacks"), btn -> changeScreen(new HacksScreen()))
+                .fullWidth().setRenderItem(Items.REPEATING_COMMAND_BLOCK).build()
         );
         paneScroll().addRow(
             WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.auto_click"), btn -> changeScreen(new AutoClickScreen()))
                 .setRenderItem(Items.GOLDEN_SWORD).build(),
             WIDGET_UTIL.newButton(Component.empty(), (btn, inputs) -> this.btnAutoClick(inputs)).runWithSelf(w -> this.btnWgtAutoClick = w).setTooltip(
                 Component.translatable("42edit.gui.magick_screen.auto_click.cycle_tooltip")).build()
+        );
+        paneScroll().addRow(
+            WIDGET_UTIL.newButton(Component.translatable("42edit.gui.magick_screen.super_secret"),
+                (button, inputWithModifiers) -> this.btnSuperSecretSettings(inputWithModifiers)).fullWidth()
+                .setRenderItem(Items.STRUCTURE_BLOCK).build()
         );
         setAutoClickMessage();
         finalizeScrollPane();
@@ -55,8 +55,12 @@ public class MagickScreen extends GenericScreen {
     protected void btnSuperSecretSettings(InputWithModifiers inputs) {
         if (inputs.hasShiftDown())
             changeScreen(new SecretScreen());
-        else
+        else if (inputs.hasControlDown())
             FortytwoEdit.cycleSuperSecretSetting();
+        else if (inputs.hasAltDown())
+            FortytwoEdit.resetSuperSecretSettings();
+        else
+            changeScreen(new OptionsScreen());
     }
 
     protected void btnAutoClick(InputWithModifiers inputs) {

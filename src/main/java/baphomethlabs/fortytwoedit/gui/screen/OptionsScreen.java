@@ -16,7 +16,7 @@ public class OptionsScreen extends GenericScreen {
     protected void init() {
         super.init();
         FortytwoEdit.quickScreen = OptionsScreen::new;
-        this.addBackButton(SecretScreen::new);
+        this.addBackButton();
 
         setupScrollPane();
         

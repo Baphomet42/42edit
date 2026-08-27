@@ -186,6 +186,10 @@ public class OptionsUtil {
             new ModOptionBoolean("debug_screen_rearrange", false, "Debug Screen Rearrange")).setDisplayItem(Items.COMMAND_BLOCK)
             .setDescription(true,
             "The following debug screen entries are moved to the end of the list:" + getMovedLastDisplay());
+        public static final ModOptionBoolean SKIP_EXPERIMENTAL_WARNING = registerModOption(
+            new ModOptionBoolean("skip_experimental_warning", false, "Skip Experimental Warning").setDisplayItem(Items.STRUCTURE_BLOCK)
+            .setDescription(true,
+            "Bypass the experimental warning screen when joining a world with experimental datapacks."));
         public static final ModOptionBoolean DYNAMIC_PROFILE_TOOLTIP_INFO = registerModOption(
             new ModOptionBoolean("dynamic_profile_tooltip_info", false, "Dynamic Profile Tooltip Info")).setDisplayItem(Items.PLAYER_HEAD)
             .setDescription(true,

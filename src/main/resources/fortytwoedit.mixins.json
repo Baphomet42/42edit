@@ -34,7 +34,8 @@
     "TextureAtlasAccessor",
     "TooltipMixin",
     "TooltipPositionerMixin",
-    "WindowMixin"
+    "WindowMixin",
+    "WorldOpenFlowsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
