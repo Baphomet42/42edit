@@ -733,7 +733,7 @@ public class SuggestionHelper {
 
     // static vanilla resources lists
 
-    private static List<String> getVanillaResourcesIfEmpty(List<String> list, String path, String suffix, boolean isAssets) {
+    private static List<String> getVanillaResourcesIfEmpty(List<String> list, String path, String fileSuffix, boolean isAssets) {
         if (list.isEmpty()) {
             try {
                 PackType packType = isAssets ? PackType.CLIENT_RESOURCES : PackType.SERVER_DATA;
@@ -743,9 +743,9 @@ public class SuggestionHelper {
                     resources.listResources(packType, namespace, path, map::putIfAbsent);
                     map.keySet().forEach(i -> {
                         String temp = BlackMagick.identifierToString(i);
-                        if (!temp.endsWith(suffix + MCMETA_SUFFIX)) {
-                            if (temp.startsWith(namespace + ":" + path + "/") && temp.endsWith(suffix) && temp.length() > (namespace.length() + 1 + path.length() + 1 + suffix.length())) {
-                                temp = namespace + ":" + temp.substring(namespace.length() + 1 + path.length() + 1, temp.length() - suffix.length());
+                        if (!temp.endsWith(fileSuffix + MCMETA_SUFFIX)) {
+                            if (temp.startsWith(namespace + ":" + path + "/") && temp.endsWith(fileSuffix) && temp.length() > (namespace.length() + 1 + path.length() + 1 + fileSuffix.length())) {
+                                temp = namespace + ":" + temp.substring(namespace.length() + 1 + path.length() + 1, temp.length() - fileSuffix.length());
                                 if (!isAssets && path.startsWith("tags/"))
                                     temp = "#" + temp;
                                 list.add(temp);
@@ -769,11 +769,14 @@ public class SuggestionHelper {
     
     // data
 
+    public static final SuggestionGetter DATA_CONTEXT_FLOAT_PROVIDER = registerSuggsList("DATA_CONTEXT_FLOAT_PROVIDER", () ->
+        getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_CONTEXT_FLOAT_PROVIDER", false), "context_float_provider", JSON_SUFFIX, false));
+
+    public static final SuggestionGetter DATA_CONTEXT_INT_PROVIDER = registerSuggsList("DATA_CONTEXT_INT_PROVIDER", () ->
+        getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_CONTEXT_INT_PROVIDER", false), "context_int_provider", JSON_SUFFIX, false));
+
     public static final SuggestionGetter DATA_LOOT_TABLE = registerSuggsList("DATA_LOOT_TABLE", () ->
         getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_LOOT_TABLE", false), "loot_table", JSON_SUFFIX, false));
-
-    public static final SuggestionGetter DATA_NUMBER_PROVIDER = registerSuggsList("DATA_NUMBER_PROVIDER", () ->
-        getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_NUMBER_PROVIDER", false), "number_provider", JSON_SUFFIX, false));
 
     public static final SuggestionGetter DATA_RECIPE = registerSuggsList("DATA_RECIPE", () ->
         getVanillaResourcesIfEmpty(createOrGetCacheList("DATA_RECIPE", false), "recipe", JSON_SUFFIX, false));

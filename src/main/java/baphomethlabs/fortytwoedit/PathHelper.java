@@ -158,10 +158,10 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:brewing_fuel", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
             "uses", PathInfo.create( // to_do allow string or float
-                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_NUMBER_PROVIDER)
+                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CONTEXT_INT_PROVIDER)
             ).setInfo("Float or identifier of a number provider").getter(),
             "speed_multiplier", PathInfo.create( // to_do allow string or float
-                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_NUMBER_PROVIDER)
+                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CONTEXT_FLOAT_PROVIDER)
             ).setInfo("Float or identifier of a number provider").getter()
         ))).setIcon(Items.BLAZE_POWDER));
 
@@ -200,7 +200,7 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:compostable", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
             "layers", PathInfo.create( // to_do allow string or float
-                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_NUMBER_PROVIDER)
+                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CONTEXT_INT_PROVIDER)
             ).setInfo("Float or identifier of a number provider").getter()
         ))).setIcon(Items.COMPOSTER));
 
@@ -229,10 +229,10 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:cooking_fuel", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
             "burn_time", PathInfo.create( // to_do allow string or float
-                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_NUMBER_PROVIDER)
+                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CONTEXT_INT_PROVIDER)
             ).setInfo("Float or identifier of a number provider").getter(),
             "speed_multiplier", PathInfo.create( // to_do allow string or float
-                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_NUMBER_PROVIDER)
+                DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_CONTEXT_FLOAT_PROVIDER)
             ).setInfo("Float or identifier of a number provider").getter()
         ))).setIcon(Items.COAL));
 

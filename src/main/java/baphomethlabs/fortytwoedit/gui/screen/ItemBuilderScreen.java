@@ -430,11 +430,11 @@ public class ItemBuilderScreen extends GenericScreen {
     protected void btnThrow(boolean copy) {
         if (!BlackMagick.isSpectator(minecraft)) {
             if (!copy) {
-                minecraft.player.drop(true);
+                minecraft.gameMode.dropItem(minecraft.player, true);
             }
             else if (BlackMagick.isCreative(minecraft)) {
                 ItemStack item = minecraft.player.getMainHandItem().copy();
-                minecraft.player.drop(true);
+                minecraft.gameMode.dropItem(minecraft.player, true);
                 BlackMagick.setItemMain(item);
             }
         }
