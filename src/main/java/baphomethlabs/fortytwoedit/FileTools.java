@@ -12,8 +12,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.util.Util;
 import org.apache.commons.compress.utils.Lists;
+import com.mojang.blaze3d.Blaze3D;
 
 /**
  * Class containing static methods used for working with files
@@ -284,7 +284,7 @@ public class FileTools {
         try {
             File dir = new File(pathFromMinecraft(filePath));
             if (dir.exists() && dir.isDirectory()) {
-                Util.getPlatform().openFile(dir);
+                Blaze3D.openPath(dir.toPath());
                 return true;
             }
         }

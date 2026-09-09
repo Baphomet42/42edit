@@ -3,6 +3,7 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.math.BigInteger;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
@@ -15,13 +16,13 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.core.ClientAsset;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.Util;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.PlayerModelType;
 import net.minecraft.world.entity.player.PlayerSkin;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import com.mojang.blaze3d.Blaze3D;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.OptionsUtil;
 import baphomethlabs.fortytwoedit.gui.widget.SmartEditBox;
@@ -103,11 +104,11 @@ public class CapeScreen extends GenericScreen {
         try {
             String randomId = (new BigInteger(128, new Random())).xor(new BigInteger(128, new Random(System.identityHashCode(new Object())))).toString(16);
             minecraft.services().sessionService().joinServer(minecraft.getUser().getProfileId(), minecraft.getUser().getAccessToken(), randomId);
-            Util.getPlatform().openUri(
+            Blaze3D.openUri(URI.create(
                 "https://optifine.net/capeChange"
                 + "?u=" + minecraft.getUser().getProfileId().toString().replace("-", "")
                 + "&n=" + minecraft.getUser().getName()
-                + "&s=" + randomId);
+                + "&s=" + randomId));
         }
         catch (Exception ex) {
             FortytwoEdit.showToast("Failed to edit cape", "Could not open OptiFine cape editor webpage");
