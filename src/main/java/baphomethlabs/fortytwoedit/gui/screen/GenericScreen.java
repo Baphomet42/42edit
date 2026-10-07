@@ -3,10 +3,13 @@ package baphomethlabs.fortytwoedit.gui.screen;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.Supplier;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
@@ -18,8 +21,14 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import baphomethlabs.fortytwoedit.BlackMagick;
@@ -170,6 +179,53 @@ public abstract class GenericScreen extends Screen {
     protected void addBackButton(Supplier<GenericScreen> backScreen) {
         this.addRenderableWidget(WIDGET_UTIL.newButton("Back",
             btn -> changeScreen(backScreen.get())).setPosition(x + GUI_SPACE, y + GUI_SPACE).setSize(40).build());
+    }
+
+    public static void drawEntity(GuiGraphicsExtractor guiGraphics, int i, int j, int k, int l, int m, float f, float g, float h, LivingEntity livingEntity, boolean flip) {
+        try {
+            EntityRenderState entityRenderState = extractRenderState(livingEntity);
+            drawEntity(guiGraphics, i, j, k, l, m, f, g, h, entityRenderState, flip);
+        } catch (Exception ex) {}
+    }
+
+    /**
+     * Modified from {@link net.minecraft.client.gui.screens.inventory.InventoryScreen#extractEntityInInventoryFollowsMouse}
+     * Replace y body rot 180.0F occurances with 0.0F to flip player backwards. Do not replace 180.0 in quaternion
+     * Copy referenced `extractRenderState` method here
+     */
+    private static void drawEntity(GuiGraphicsExtractor guiGraphics, int i, int j, int k, int l, int m, float f, float g, float h, EntityRenderState entityRenderState, boolean flip) {
+        float n = (i + k) / 2.0F;
+        float o = (j + l) / 2.0F;
+        float p = (float)Math.atan((n - g) / 40.0F);
+        float q = (float)Math.atan((o - h) / 40.0F);
+        Quaternionf quaternionf = new Quaternionf().rotateZ((float) Math.PI);
+        Quaternionf quaternionf2 = new Quaternionf().rotateX(q * 20.0F * (float) (Math.PI / 180.0));
+        quaternionf.mul(quaternionf2);
+        if (entityRenderState instanceof LivingEntityRenderState livingEntityRenderState) {
+            livingEntityRenderState.bodyRot = (flip ? 0.0F : 180.0F) + p * 20.0F;
+            livingEntityRenderState.yRot = p * 20.0F;
+            if (livingEntityRenderState.pose != Pose.FALL_FLYING) {
+                livingEntityRenderState.xRot = -q * 20.0F;
+            } else {
+                livingEntityRenderState.xRot = 0.0F;
+            }
+
+            livingEntityRenderState.boundingBoxWidth = livingEntityRenderState.boundingBoxWidth / livingEntityRenderState.scale;
+            livingEntityRenderState.boundingBoxHeight = livingEntityRenderState.boundingBoxHeight / livingEntityRenderState.scale;
+            livingEntityRenderState.scale = 1.0F;
+        }
+
+        Vector3f vector3f = new Vector3f(0.0F, entityRenderState.boundingBoxHeight / 2.0F + f, 0.0F);
+        guiGraphics.entity(entityRenderState, m, vector3f, quaternionf, quaternionf2, i, j, k, l);
+    }
+    private static EntityRenderState extractRenderState(LivingEntity livingEntity) {
+        EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        EntityRenderer<? super LivingEntity, ?> entityRenderer = entityRenderDispatcher.getRenderer(livingEntity);
+        EntityRenderState entityRenderState = entityRenderer.createRenderState(livingEntity, 1.0F);
+        entityRenderState.lightCoords = 15728880;
+        entityRenderState.shadowPieces.clear();
+        entityRenderState.outlineColor = 0;
+        return entityRenderState;
     }
 
     @Override

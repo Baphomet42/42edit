@@ -8,20 +8,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.core.ClientAsset;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.PlayerModelType;
 import net.minecraft.world.entity.player.PlayerSkin;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 import com.mojang.blaze3d.Blaze3D;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.OptionsUtil;
@@ -191,51 +183,10 @@ public class CapeScreen extends GenericScreen {
         FortytwoEdit.showToast(CUSTOM_SKIN_ERROR_TITLE, "File could not be read");
     }
 
-    /**
-     * Modified from {@link net.minecraft.client.gui.screens.inventory.InventoryScreen#renderEntityInInventoryFollowsMouse}
-     * Replace y body rot 180.0F occurances with 0.0F to flip player backwards. Do not replace 180.0 in quaternion
-     * Copy referenced `extractRenderState` method here
-     */
-    public static void drawPlayer(GuiGraphicsExtractor guiGraphics, int i, int j, int k, int l, int m, float f, float g, float h, LivingEntity livingEntity) {
-        float n = (i + k) / 2.0F;
-        float o = (j + l) / 2.0F;
-        float p = (float)Math.atan((n - g) / 40.0F);
-        float q = (float)Math.atan((o - h) / 40.0F);
-        Quaternionf quaternionf = new Quaternionf().rotateZ((float) Math.PI);
-        Quaternionf quaternionf2 = new Quaternionf().rotateX(q * 20.0F * (float) (Math.PI / 180.0));
-        quaternionf.mul(quaternionf2);
-        EntityRenderState entityRenderState = extractRenderState(livingEntity);
-        if (entityRenderState instanceof LivingEntityRenderState livingEntityRenderState) {
-            livingEntityRenderState.bodyRot = 0.0F + p * 20.0F;
-            livingEntityRenderState.yRot = p * 20.0F;
-            if (livingEntityRenderState.pose != Pose.FALL_FLYING) {
-                livingEntityRenderState.xRot = -q * 20.0F;
-            } else {
-                livingEntityRenderState.xRot = 0.0F;
-            }
-
-            livingEntityRenderState.boundingBoxWidth = livingEntityRenderState.boundingBoxWidth / livingEntityRenderState.scale;
-            livingEntityRenderState.boundingBoxHeight = livingEntityRenderState.boundingBoxHeight / livingEntityRenderState.scale;
-            livingEntityRenderState.scale = 1.0F;
-        }
-
-        Vector3f vector3f = new Vector3f(0.0F, entityRenderState.boundingBoxHeight / 2.0F + f, 0.0F);
-        guiGraphics.entity(entityRenderState, m, vector3f, quaternionf, quaternionf2, i, j, k, l);
-    }
-    private static EntityRenderState extractRenderState(LivingEntity livingEntity) {
-        EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-        EntityRenderer<? super LivingEntity, ?> entityRenderer = entityRenderDispatcher.getRenderer(livingEntity);
-        EntityRenderState entityRenderState = entityRenderer.createRenderState(livingEntity, 1.0F);
-        entityRenderState.lightCoords = 15728880;
-        entityRenderState.shadowPieces.clear();
-        entityRenderState.outlineColor = 0;
-        return entityRenderState;
-    }
-
     @Override
     public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.extractRenderState(context, mouseX, mouseY, delta);
-        drawPlayer(context, x + playerX, y + playerY, x + playerX + playerWidth, y + playerY + playerHeight, 60, 0.0F, mouseX, mouseY, (LivingEntity)this.minecraft.player);
+        drawEntity(context, x + playerX, y + playerY, x + playerX + playerWidth, y + playerY + playerHeight, 60, 0.0F, mouseX, mouseY, (LivingEntity)this.minecraft.player, true);
     }
 
 }

@@ -21,7 +21,6 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.PlayerSkinRenderCache;
@@ -55,7 +54,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ResolvableProfile;
-import net.minecraft.world.level.storage.TagValueOutput;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -372,14 +370,14 @@ public class ItemBuilderScreen extends GenericScreen {
         }
 
         // banner prev
-        if (bannerChangePreview == null) {
-            bannerChangePreview = new ArmorStand(this.minecraft.level, 0.0, 0.0, 0.0);
-            bannerChangePreview.yBodyRot = 210.0f;
-            bannerChangePreview.setXRot(25.0f);
-            bannerChangePreview.yHeadRot = bannerChangePreview.getYRot();
-            bannerChangePreview.yHeadRotO = bannerChangePreview.getYRot();
-            bannerChangePreview.load(BlackMagick.valueInputFromCompound(BlackMagick.validCompoundFromString("{Invisible:true,Pose:{RightArm:[-90f,-90f,0f]}}")));
-        }
+        // if (bannerChangePreview == null) {
+        //     bannerChangePreview = new ArmorStand(this.minecraft.level, 0.0, 0.0, 0.0);
+        //     bannerChangePreview.yBodyRot = 210.0f;
+        //     bannerChangePreview.setXRot(25.0f);
+        //     bannerChangePreview.yHeadRot = bannerChangePreview.getYRot();
+        //     bannerChangePreview.yHeadRotO = bannerChangePreview.getYRot();
+        //     bannerChangePreview.load(BlackMagick.valueInputFromCompound(BlackMagick.validCompoundFromString("{Invisible:true,Pose:{RightArm:[-90f,-90f,0f]}}")));
+        // }
 
         // banner
         int i = 1;
@@ -669,6 +667,7 @@ public class ItemBuilderScreen extends GenericScreen {
         renderArmorStand.setXRot(25.0f);
         renderArmorStand.yHeadRot = renderArmorStand.getYRot();
         renderArmorStand.yHeadRotO = renderArmorStand.getYRot();
+        renderArmorStand.setId(-1);
 
         if (stand != null && !stand.isEmpty() && BlackMagick.getNbtPath(BlackMagick.itemToNbt(stand), "components.minecraft:entity_data", Tag.TAG_COMPOUND) != null) {
             CompoundTag entity = (CompoundTag)BlackMagick.getNbtPath(BlackMagick.itemToNbt(stand), "components.minecraft:entity_data");
@@ -683,64 +682,64 @@ public class ItemBuilderScreen extends GenericScreen {
     }
 
     protected void updatePose() {
-        if (!editorLocked) {
-            editorLocked = true;
+        // if (!editorLocked) {
+        //     editorLocked = true;
 
-            renderArmorPose = new ArmorStand(this.minecraft.level, 0.0, 0.0, 0.0);
-            renderArmorPose.yBodyRot = 210f;
-            renderArmorPose.setXRot(25f);
-            renderArmorPose.yHeadRot = renderArmorPose.getYRot();
-            renderArmorPose.yHeadRotO = renderArmorPose.getYRot();
-            CompoundTag nbt = new CompoundTag();
-            if (renderArmorStand != null) {
-                TagValueOutput val = BlackMagick.valueOutputNew();
-                renderArmorStand.saveWithoutId(val);
-                nbt = BlackMagick.valueOutputToCompound(val);
-            }
+        //     renderArmorPose = new ArmorStand(this.minecraft.level, 0.0, 0.0, 0.0);
+        //     renderArmorPose.yBodyRot = 210f;
+        //     renderArmorPose.setXRot(25f);
+        //     renderArmorPose.yHeadRot = renderArmorPose.getYRot();
+        //     renderArmorPose.yHeadRotO = renderArmorPose.getYRot();
+        //     CompoundTag nbt = new CompoundTag();
+        //     if (renderArmorStand != null) {
+        //         TagValueOutput val = BlackMagick.valueOutputNew();
+        //         renderArmorStand.saveWithoutId(val);
+        //         nbt = BlackMagick.valueOutputToCompound(val);
+        //     }
 
-            for (int i = 0; i < poseSliders.size(); i++) {
-                ListTag poseList = null;
-                if (poseCompound.getList(poseTypes[i]).isPresent()) {
-                    ListTag l = poseCompound.getListOrEmpty(poseTypes[i]);
-                    if (l.size() == 3)
-                        poseList = l.copy();
-                }
-                for (int j = 0; j < 3; j++) {
-                    float val = 0f;
-                    if (poseList != null)
-                        val = poseList.getFloatOr(j, 0);
-                    for (PoseSlider p : poseSliders.get(i).get(j))
-                        p.setVal(val);
-                }
-                for (Button w : poseSliderBtns.get(i)) {
-                    if (poseCompound.contains(poseTypes[i])) {
-                        w.setTooltip(Tooltip.create(Component.nullToEmpty("Remove pose")));
-                        w.active = true;
-                    }
-                    else {
-                        w.setTooltip(Tooltip.create(Component.nullToEmpty("No pose")));
-                        w.active = false;
-                    }
-                }
-            }
+        //     for (int i = 0; i < poseSliders.size(); i++) {
+        //         ListTag poseList = null;
+        //         if (poseCompound.getList(poseTypes[i]).isPresent()) {
+        //             ListTag l = poseCompound.getListOrEmpty(poseTypes[i]);
+        //             if (l.size() == 3)
+        //                 poseList = l.copy();
+        //         }
+        //         for (int j = 0; j < 3; j++) {
+        //             float val = 0f;
+        //             if (poseList != null)
+        //                 val = poseList.getFloatOr(j, 0);
+        //             for (PoseSlider p : poseSliders.get(i).get(j))
+        //                 p.setVal(val);
+        //         }
+        //         for (Button w : poseSliderBtns.get(i)) {
+        //             if (poseCompound.contains(poseTypes[i])) {
+        //                 w.setTooltip(Tooltip.create(Component.nullToEmpty("Remove pose")));
+        //                 w.active = true;
+        //             }
+        //             else {
+        //                 w.setTooltip(Tooltip.create(Component.nullToEmpty("No pose")));
+        //                 w.active = false;
+        //             }
+        //         }
+        //     }
 
-            nbt.put("Pose", poseCompound.copy());
-            renderArmorPose.load(BlackMagick.valueInputFromCompound(nbt.copy()));
+        //     nbt.put("Pose", poseCompound.copy());
+        //     renderArmorPose.load(BlackMagick.valueInputFromCompound(nbt.copy()));
 
-            if (!editorOutputLocked) {
-                if (widgetCacheTest(WidgetCacheType.TXT_POSE)) {
-                    SmartEditBox txt = (SmartEditBox)widgetCacheGet(WidgetCacheType.TXT_POSE);
-                    if (poseCompound.isEmpty())
-                        txt.setValue("");
-                    else
-                        txt.setValue(BlackMagick.nbtToSnbt(poseCompound));
-                    resetSuggs();
-                }
-            }
+        //     if (!editorOutputLocked) {
+        //         if (widgetCacheTest(WidgetCacheType.TXT_POSE)) {
+        //             SmartEditBox txt = (SmartEditBox)widgetCacheGet(WidgetCacheType.TXT_POSE);
+        //             if (poseCompound.isEmpty())
+        //                 txt.setValue("");
+        //             else
+        //                 txt.setValue(BlackMagick.nbtToSnbt(poseCompound));
+        //             resetSuggs();
+        //         }
+        //     }
 
-            editorLocked = false;
-            editorLockedWidget.clear();
-        }
+        //     editorLocked = false;
+        //     editorLockedWidget.clear();
+        // }
     }
 
     private void setPoseVal(String partKey, int axis, float val) {
@@ -5556,8 +5555,8 @@ public class ItemBuilderScreen extends GenericScreen {
                 context.centeredText(this.font,
                     Component.nullToEmpty("Failed to read saved items"), this.width / 2, y + this.backgroundHeight + 3, ERROR_COLOR);
 
-            InventoryScreen.extractEntityInInventoryFollowsMouse(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
-                mouseX, mouseY, (LivingEntity)(prevArmorStand ? renderArmorStand : this.minecraft.player));
+            drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
+                mouseX, mouseY, (LivingEntity)((prevArmorStand && renderArmorStand != null) ? renderArmorStand : this.minecraft.player), false);
 
             txtFormat.setX(x + 50);
             txtFormat.extractRenderState(context, mouseX, mouseY, delta);
@@ -5593,16 +5592,16 @@ public class ItemBuilderScreen extends GenericScreen {
             }
 
             if (showBannerPreview && bannerChangePreview != null) {
-                InventoryScreen.extractEntityInInventoryFollowsMouse(context, x + backgroundWidth, y,
+                drawEntity(context, x + backgroundWidth, y,
                     x + backgroundWidth + 100, y + (bannerShield ? 200 : 400),
                     2 * ENTITY_RENDER_SIZE, 0f,
                     x + backgroundWidth + 50, y + (bannerShield ? 100 : 200),
-                    (LivingEntity)bannerChangePreview);
+                    (LivingEntity)bannerChangePreview, false);
             }
 
             if (showPosePreview) {
-                InventoryScreen.extractEntityInInventoryFollowsMouse(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
-                    mouseX, mouseY, (LivingEntity)renderArmorPose);
+                drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
+                    mouseX, mouseY, (LivingEntity)renderArmorPose, false);
             }
         }
         if (lblInpError != null)
