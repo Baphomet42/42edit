@@ -1,6 +1,7 @@
 package baphomethlabs.fortytwoedit;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -39,6 +40,10 @@ public abstract class ItemStackPreset {
 
     public static ItemStackPreset set(String snbt) {
         return new ItemStackPresetFromString(snbt);
+    }
+
+    public static ItemStackPreset playerHeadSelf() {
+        return new ItemStackPresetPlayerHeadSelf();
     }
 
     protected static class ItemStackPresetFromItemStack extends ItemStackPreset {
@@ -81,6 +86,21 @@ public abstract class ItemStackPreset {
         @Override
         protected void resolve() {
             this.setStack(BlackMagick.itemFromString(snbt));
+        }
+
+    }
+
+    protected static class ItemStackPresetPlayerHeadSelf extends ItemStackPreset {
+
+        protected ItemStackPresetPlayerHeadSelf() {
+            super();
+        }
+
+        @Override
+        protected void resolve() {
+            this.setStack(BlackMagick.itemFromNbt(BlackMagick.setNbtPath(
+                BlackMagick.validCompound(BlackMagick.nbtFromSnbt("{id:\"minecraft:player_head\"}")),
+                "components.minecraft:profile", StringTag.valueOf(FortytwoEdit.USERNAME))));
         }
 
     }

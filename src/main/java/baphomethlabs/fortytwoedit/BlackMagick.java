@@ -875,6 +875,8 @@ public class BlackMagick {
         return NbtOps.INSTANCE;
     }
 
+    public static final String BANNER_PRESET_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 .'/\\%";
+
     /**
      * Get the Nbt representation of an item for pre-made banner designs for various characters
      * 
@@ -921,6 +923,11 @@ public class BlackMagick {
             case '7': return validCompoundFromString("{components:{\"minecraft:banner_patterns\":[{color:" + charColor + ",pattern:\"minecraft:stripe_downleft\"},{color:" + charColor + ",pattern:\"minecraft:stripe_top\"},{color:" + baseColor + ",pattern:\"minecraft:border\"}]},id:\"minecraft:" + baseColor + "_banner\"}");
             case '8': return validCompoundFromString("{components:{\"minecraft:banner_patterns\":[{color:" + charColor + ",pattern:\"minecraft:stripe_top\"},{color:" + charColor + ",pattern:\"minecraft:stripe_bottom\"},{color:" + baseColor + ",pattern:\"minecraft:rhombus\"},{color:" + charColor + ",pattern:\"minecraft:stripe_downright\"},{color:" + charColor + ",pattern:\"minecraft:stripe_downleft\"},{color:" + baseColor + ",pattern:\"minecraft:border\"}]},id:\"minecraft:" + baseColor + "_banner\"}");
             case '9': return validCompoundFromString("{components:{\"minecraft:banner_patterns\":[{color:" + charColor + ",pattern:\"minecraft:stripe_left\"},{color:" + baseColor + ",pattern:\"minecraft:half_horizontal_bottom\"},{color:" + charColor + ",pattern:\"minecraft:stripe_top\"},{color:" + charColor + ",pattern:\"minecraft:stripe_right\"},{color:" + charColor + ",pattern:\"minecraft:stripe_middle\"},{color:" + baseColor + ",pattern:\"minecraft:border\"}]},id:\"minecraft:" + baseColor + "_banner\"}");
+            case '.': return validCompoundFromString("{components:{\"minecraft:banner_patterns\":[{color:" + charColor + ",pattern:\"minecraft:square_bottom_left\"},{color:" + baseColor + ",pattern:\"minecraft:border\"}]},count:1,id:\"minecraft:" + baseColor + "_banner\"}");
+            case '\'': return validCompoundFromString("{components:{\"minecraft:banner_patterns\":[{color:" + charColor + ",pattern:\"minecraft:square_top_right\"},{color:" + charColor + ",pattern:\"minecraft:stripe_right\"},{color:" + baseColor + ",pattern:\"minecraft:half_horizontal_bottom\"},{color:" + baseColor + ",pattern:\"minecraft:border\"}]},count:1,id:\"minecraft:" + baseColor + "_banner\"}");
+            case '/': return validCompoundFromString("{components:{\"minecraft:banner_patterns\":[{color:" + charColor + ",pattern:\"minecraft:stripe_downleft\"},{color:" + baseColor + ",pattern:\"minecraft:border\"}]},count:1,id:\"minecraft:" + baseColor + "_banner\"}");
+            case '\\': return validCompoundFromString("{components:{\"minecraft:banner_patterns\":[{color:" + charColor + ",pattern:\"minecraft:stripe_downright\"},{color:" + baseColor + ",pattern:\"minecraft:border\"}]},count:1,id:\"minecraft:" + baseColor + "_banner\"}");
+            case '%': return validCompoundFromString("{components:{\"minecraft:banner_patterns\":[{color:" + charColor + ",pattern:\"minecraft:stripe_downleft\"},{color:" + charColor + ",pattern:\"minecraft:square_top_left\"},{color:" + charColor + ",pattern:\"minecraft:square_bottom_right\"},{color:" + baseColor + ",pattern:\"minecraft:border\"}]},count:1,id:\"minecraft:" + baseColor + "_banner\"}");
             default: return null;
         }
     }

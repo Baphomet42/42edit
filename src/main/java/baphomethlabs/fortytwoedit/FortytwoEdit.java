@@ -25,7 +25,6 @@ import com.mojang.blaze3d.platform.NativeImage;
 import baphomethlabs.fortytwoedit.BlackMagick.ParsedText;
 import baphomethlabs.fortytwoedit.FileTools.FileDisplayType;
 import baphomethlabs.fortytwoedit.gui.screen.GenericScreen;
-import baphomethlabs.fortytwoedit.gui.screen.ItemBuilderScreen;
 import baphomethlabs.fortytwoedit.gui.screen.LogScreen;
 import baphomethlabs.fortytwoedit.gui.screen.MagickScreen;
 import baphomethlabs.fortytwoedit.mixin.GameRendererInvoker;
@@ -908,7 +907,7 @@ public class FortytwoEdit implements ClientModInitializer {
         PROFILE_SUGGS = new String[]{USERNAME, BlackMagick.nbtToSnbt(UUID)};
         clearOptiCapes();
 
-        getSavedItems(); // used to show log errors
+        FileTools.SavedItems.fetch(); // used to show log errors
         refreshWebItems();
 
         FileTools.scanModFiles();
@@ -1178,7 +1177,7 @@ public class FortytwoEdit implements ClientModInitializer {
         ((HotbarManagerAccessor)client.getHotbarManager()).setLoaded(false);
         client.getHotbarManager().get(0);
 
-        getSavedItems(); // used to show log errors
+        FileTools.SavedItems.fetch(); // used to show log errors
 
         SuggestionHelper.runAllListMethods();
 
@@ -1197,117 +1196,6 @@ public class FortytwoEdit implements ClientModInitializer {
         LogScreen.debugTryRefreshVarious();
 
         logInfo("Debug complete");
-    }
-
-    public static Map<Integer,String> getSavedItems() {
-        Map<Integer,String> itemsMap = Maps.newHashMap();
-        ItemBuilderScreen.savedItemsError = false;
-        CompoundTag savedItemsNbt = FileTools.readCompoundFromFile(FileTools.FILE_SAVED_ITEMS);
-        if (savedItemsNbt == null) {
-            savedItemsNbt = new CompoundTag();
-            if (FileTools.testFileExists(FileTools.FILE_SAVED_ITEMS)) {
-                String fileString = FileTools.readStringFromFile(FileTools.FILE_SAVED_ITEMS);
-                if (fileString != null && !fileString.isEmpty()) {
-                    ItemBuilderScreen.savedItemsError = true;
-                }
-            }
-            else {
-                setSavedItems(itemsMap);
-            }
-        }
-
-        boolean foundItems = false;
-        if (savedItemsNbt.getList("items").isPresent()) {
-            ListTag storedItems = savedItemsNbt.getList("items").get();
-            foundItems = true;
-            if (!storedItems.isEmpty()) {
-                boolean itemsOutOfRange = false;
-                final int MAX_SAVED_ITEM_SLOT = FortytwoEdit.SAVED_ROWS * 9 - 1;
-                int currentDupeSlot = MAX_SAVED_ITEM_SLOT + 1;
-                ListTag unknownItemHolders = new ListTag();
-                for (int i = 0; i < storedItems.size(); i++) {
-                    if (storedItems.get(i).getId() == Tag.TAG_COMPOUND) {
-                        CompoundTag itemHolder = storedItems.getCompound(i).get();
-                        if (itemHolder.isEmpty())
-                            continue;
-                        if ((itemHolder.getCompound("item").isPresent() || itemHolder.getString("item").isPresent())
-                        && itemHolder.getInt("slot").isPresent()) {
-                            String itemString = itemHolder.getStringOr("item", "");
-                            if (itemHolder.get("item").getId() == Tag.TAG_COMPOUND)
-                                itemString = BlackMagick.nbtToSnbt(itemHolder.getCompound("item").get());
-                            itemHolder.remove("item");
-                            if (itemString.isEmpty() || itemString.equals("{}"))
-                                continue;
-                            int slot = itemHolder.getInt("slot").get();
-                            itemHolder.remove("slot");
-                            if (!itemHolder.isEmpty()) {
-                                FortytwoEdit.logError("Saved item contains unknown keys: " + BlackMagick.nbtToSnbt(itemHolder));
-                            }
-                            if (slot < 0 || slot > MAX_SAVED_ITEM_SLOT) {
-                                itemsOutOfRange = true;
-                            }
-                            if (itemsMap.containsKey(slot)) {
-                                int newSlot = currentDupeSlot;
-                                while (itemsMap.containsKey(newSlot)) {
-                                    newSlot++;
-                                }
-                                currentDupeSlot = newSlot + 1;
-                                FortytwoEdit.logError("Saved items file contains duplicate slot " + slot + ". Item will move to slot " + newSlot + " after saving.");
-                                slot = newSlot;
-                            }
-                            itemsMap.put(slot, itemString);
-                        }
-                        else
-                            unknownItemHolders.add(itemHolder);
-                    }
-                    else
-                        unknownItemHolders.add(storedItems.get(i));
-                }
-                if (itemsOutOfRange) {
-                    FortytwoEdit.logWarn("Saved items file contains slots outside of range 0-" + MAX_SAVED_ITEM_SLOT);
-                }
-                if (!unknownItemHolders.isEmpty()) {
-                    FortytwoEdit.logError("Saved items file contains invalid entries. After saving, the following will be deleted: " + BlackMagick.nbtToSnbt(unknownItemHolders));
-                }
-            }
-        }
-        if (!foundItems && !savedItemsNbt.isEmpty()) {
-            logError("Failed to read saved items: " + BlackMagick.nbtToSnbt(savedItemsNbt));
-            ItemBuilderScreen.savedItemsError = true;
-        }
-
-        return itemsMap;
-    }
-
-    public static boolean setSavedItems(Map<Integer,String> savedItemsMap) {
-        ListTag itemsList = new ListTag();
-        for (int slot : BlackMagick.sortIntSet(savedItemsMap.keySet())) {
-            CompoundTag nbt = new CompoundTag();
-            nbt.putInt("slot", slot);
-            nbt.putString("item", savedItemsMap.get(slot));
-            itemsList.add(nbt);
-        }
-
-        CompoundTag savedItemsNbt = new CompoundTag();
-        savedItemsNbt.put("items", itemsList);
-        savedItemsNbt.putInt(FileTools.FILE_FORMAT_LABEL, FileTools.FILE_FORMAT);
-        if (FileTools.writeCompoundToFile(FileTools.FILE_SAVED_ITEMS, savedItemsNbt, FileDisplayType.TREE_CONDITIONAL_COLLAPSE)) {
-            getSavedItems(); // used to show log errors
-            return true;
-        }
-        return false;
-    }
-
-    public static boolean testSavedItems(Map<Integer,String> oldMap) {
-        Map<Integer,String> newMap = getSavedItems();
-        if (newMap.keySet().size() == oldMap.keySet().size()) {
-            for (int slot : oldMap.keySet()) {
-                if (!(newMap.containsKey(slot) && newMap.get(slot).equals(oldMap.get(slot))))
-                    return false;
-            }
-            return true;
-        }
-        return false;
     }
 
     /**
