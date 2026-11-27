@@ -207,7 +207,7 @@ public class PathHelper {
         registerPathInfo("components.minecraft:consumable", PathInfo.create(DataType.CompoundStructured.allOptional(Map.of(
             "consume_seconds", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT, SuggestionGetter.newInlineSnbt("1.6f"))).setUnsetInfo(FloatTag.valueOf(1.6f)).getter(),
             "animation", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_USE_ACTION)).setUnsetInfo(StringTag.valueOf("eat")).getter(),
-            "sound", PathInfo.copyOf("sound_event_or_definition").setUnsetInfo(StringTag.valueOf("minecraft:entity.generic.eat")).getter(),
+            "sound", PathInfoGetter.of("sound_event_or_definition"),
             "has_consume_particles", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter(),
             "on_consume_effects", PathInfo.create(DataType.ListUnordered.of(
                 PathInfoGetter.of("consume_effect")
@@ -280,6 +280,31 @@ public class PathHelper {
 
         registerPathInfo("components.minecraft:debug_stick_state", PathInfo.create().setIcon(Items.DEBUG_STICK)); // to_do component suggs
 
+        registerPathInfo("components.minecraft:dispense_behavior", PathInfo.create(
+            DataType.ListUnordered.of(
+                PathInfo.create(DataType.CompoundStructured.of(Map.of(
+                    "type", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.REGISTRY_DISPENSE_BEHAVIOR_TYPE)).getter()
+                    ), Map.of(
+                    "transformer", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_BLOCK_TRANSFORMER)).setInfo("For 'minecraft:transform_block' type - identifier of a block transformer").getter(),
+                    "offset", PathInfo.create(DataType.ListStructured.of(
+                        SuggestionGetter.newInlineSnbt("[0.0d,0.0d,0.0d]"),
+                        PathInfo.create(DataType.ElementLiteral.of(NbtType.DOUBLE)).setInfo("X axis vector component").getter(),
+                        PathInfo.create(DataType.ElementLiteral.of(NbtType.DOUBLE)).setInfo("Y axis vector component").getter(),
+                        PathInfo.create(DataType.ElementLiteral.of(NbtType.DOUBLE)).setInfo("Z axis vector component").getter()
+                    )).setInfo("For 'minecraft:shoot_projectile' type - list of 3 doubles X,Y,Z representing a vector for the offset").getter(),
+                    "scale", PathInfo.create(DataType.ElementLiteral.of(NbtType.DOUBLE)).setInfo("For 'minecraft:shoot_projectile' type - scale of the offset vector").getter(),
+                    "uncertainty", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).setInfo("For 'minecraft:shoot_projectile' type - non-negative float").getter(),
+                    "power", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT)).setInfo("For 'minecraft:shoot_projectile' type - non-negative float").getter(),
+                    "sound", PathInfo.create(DataType.CompoundStructured.allRequired(Map.of(
+                        "sound", PathInfoGetter.of("sound_event_or_definition"),
+                        "volume", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT, SuggestionGetter.newInlineSnbt("1.0f"))).getter(), // to_do allow float_provider string
+                        "pitch", PathInfo.create(DataType.ElementLiteral.of(NbtType.FLOAT, SuggestionGetter.newInlineSnbt("0.0f", "1.0f", "2.0f"))).getter() // to_do allow float_provider string
+                    ))).setInfo("For 'minecraft:shoot_projectile' type").setUnsetInfo(BlackMagick.nbtFromSnbt("{sound:'minecraft:block.dispenser.launch',volume:1.0f,pitch:1.2f}")).getter()
+                ))).getter()
+            ),
+            DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.DATA_DISPENSE_BEHAVIOR)
+        ).setIcon(Items.DISPENSER));
+
         registerPathInfo("components.minecraft:dye", PathInfo.copyOf("dye_color").setIcon(Items.DYE.red()));
 
         registerPathInfo("components.minecraft:dyed_color", PathInfo.copyOf("color_rgb_int_or_list").setIcon(Items.LEATHER_CHESTPLATE));
@@ -301,8 +326,8 @@ public class PathHelper {
         registerPathInfo("components.minecraft:equippable", PathInfo.create(DataType.CompoundStructured.of(Map.of(
             "slot", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_EQUIPMENT_SLOT)).getter()
             ), Map.of(
-            "equip_sound", PathInfo.copyOf("sound_event_or_definition").setUnsetInfo(StringTag.valueOf("minecraft:item.armor.equip_generic")).getter(),
-            "shearing_sound", PathInfo.copyOf("sound_event_or_definition").setUnsetInfo(StringTag.valueOf("minecraft:item.shears.snip")).getter(),
+            "equip_sound", PathInfoGetter.of("sound_event_or_definition"),
+            "shearing_sound", PathInfoGetter.of("sound_event_or_definition"),
             "asset_id", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.ASSETS_EQUIPMENT)).setInfo("Identifier of an equipment model at `assets/<namespace>/equipment/<id>`").getter(),
             "allowed_entities", PathInfo.copyOf("entity_id_tag_or_list").setUnsetInfo("Applies to all entity types").getter(),
             "can_be_sheared", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(false).getter(),
@@ -563,7 +588,8 @@ public class PathHelper {
             "hide_tooltip", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).getter(),
             "hidden_components", PathInfo.create(DataType.ListUnordered.of(
                 PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING, SuggestionHelper.LIST_DATA_COMPONENT_TYPE)).getter()
-            )).getter()
+            )).getter(),
+            "split_lines", PathInfo.create(DataType.ElementLiteral.of(NbtType.BOOLEAN)).setUnsetInfo(true).getter()
         ))).setIcon(Items.COMMAND_BLOCK));
 
         registerPathInfo("components.minecraft:tooltip_style", PathInfo.create(DataType.ElementLiteral.of(NbtType.STRING)).setInfo("Identifier to reference tooltip sprites at `assets/<namespace>/textures/gui/sprites/tooltip/<id>_background` and `assets/<namespace>/textures/gui/sprites/tooltip/<id>_frame`").setIcon(Items.COMMAND_BLOCK));

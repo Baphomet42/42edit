@@ -37,7 +37,7 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
     private void injectInit(CallbackInfo c) {
         nameEdit.setResponder(value -> {
 
-            if (loadButton.visible) {
+            if (loadButton.isVisible()) {
                 // SuggestionHelper.clearDynamicListCaches(); to_do uncomment if list made dynamic
 
                 if (suggs != null)
@@ -55,9 +55,9 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
     }
 
     @Inject(method = "extractRenderState", at = @At("TAIL"), cancellable = true)
-    private void injectExtractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo c) {
+    private void injectExtractRenderState(GuiGraphicsExtractor context, CallbackInfo c) {
         if (suggs != null)
-            suggs.extractRenderState(context, mouseX, mouseY);
+            suggs.extractRenderState(context);
     }
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
@@ -82,10 +82,10 @@ public abstract class StructureBlockEditScreenMixin extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
-        if (suggs != null && suggs.mouseClicked(mouseButtonEvent, doubleTap)) {
+        if (suggs != null && suggs.mouseClicked(mouseButtonEvent)) {
             return true;
         }
-        if (suggs == null && loadButton.visible && nameEdit.isHovered()) {
+        if (suggs == null && loadButton.isVisible() && nameEdit.isHovered()) {
             suggs = new TextSuggestor(minecraft, nameEdit, font);
             suggs.setSuggestions(SuggestionHelper.DATA_STRUCTURE.getArray());
         }

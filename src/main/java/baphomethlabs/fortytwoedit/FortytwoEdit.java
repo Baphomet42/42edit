@@ -40,7 +40,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.multiplayer.chat.GuiMessage;
-import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.ExternalTextureProvider;
+import net.minecraft.client.renderer.texture.TextureResources;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.ClientAsset;
 import net.minecraft.core.UUIDUtil;
@@ -83,6 +84,28 @@ public class FortytwoEdit implements ClientModInitializer {
     // gui
     public static final Supplier<GenericScreen> DEFAULT_SCREEN = MagickScreen::new;
     public static Supplier<GenericScreen> quickScreen = DEFAULT_SCREEN;
+
+    // textures
+    private static final Map<Identifier,TextureResources> textureResourcesMap = Maps.newHashMap();
+    private static void releaseTexture(Minecraft minecraft, Identifier id) {
+        try {
+            minecraft.getTextureManager().release(id);
+            TextureResources old = textureResourcesMap.remove(id);
+            if (old != null)
+                old.close();
+        } catch (Exception ex) {
+            FortytwoEdit.logWarn("Failed to release texture '" + BlackMagick.identifierToString(id) + "': " + ex.getMessage());
+        }
+    }
+    private static void registerTexture(Minecraft minecraft, Identifier id, TextureResources texture) {
+        try {
+            releaseTexture(minecraft, id);
+            textureResourcesMap.put(id, texture);
+            minecraft.getTextureManager().registerProvider(id, new ExternalTextureProvider(texture));
+        } catch (Exception ex) {
+            FortytwoEdit.logWarn("Failed to register texture '" + BlackMagick.identifierToString(id) + "': " + ex.getMessage());
+        }
+    }
 
     // chat icons
     private static final Set<String> CHAT_ICON_KEY_SET = Sets.newHashSet();
@@ -497,7 +520,7 @@ public class FortytwoEdit implements ClientModInitializer {
         capeNames.clear();
         final Minecraft client = Minecraft.getInstance();
         for (String name : capeNames2) {
-            client.getTextureManager().release(getCapeCacheID(name, true));
+            releaseTexture(client, getCapeCacheID(name, true));
         }
         capeNames2.clear();
         checkCapesEnabled();
@@ -541,7 +564,7 @@ public class FortytwoEdit implements ClientModInitializer {
                     cape.setPixel(x, y, capeInp.getPixel(x, y));
 
             capeInp.close();
-            client.getTextureManager().register(getCapeCacheID(name, true), new DynamicTexture(getCapeCacheID(name, false)::toString, cape));
+            registerTexture(client, getCapeCacheID(name, true), TextureResources.from2dImage(getCapeCacheID(name, false)::toString, cape));
             cape.close();
             capeNames2.add(name);
             return true;
@@ -703,7 +726,7 @@ public class FortytwoEdit implements ClientModInitializer {
         final Minecraft client = Minecraft.getInstance();
         customSkinName = "";
         showClientSkin = false;
-        client.getTextureManager().release(CUSTOM_SKIN_ID_FULL);
+        releaseTexture(client, CUSTOM_SKIN_ID_FULL);
 
         if (file != null) {
             FileInputStream inp = null;
@@ -722,7 +745,7 @@ public class FortytwoEdit implements ClientModInitializer {
 
                     skinFile.close();
                     customSkinName = file.getName();
-                    client.getTextureManager().register(CUSTOM_SKIN_ID_FULL, new DynamicTexture(CUSTOM_SKIN_ID::toString, skin));
+                    registerTexture(client, CUSTOM_SKIN_ID_FULL, TextureResources.from2dImage(CUSTOM_SKIN_ID::toString, skin));
                     skin.close();
                     showClientSkin = true;
                     return true;
@@ -771,8 +794,7 @@ public class FortytwoEdit implements ClientModInitializer {
             NativeImage texture = NativeImage.read(client.getClass().getClassLoader().getResourceAsStream("assets/" + MOD_ID_MC + "/textures/" + path + ".png"));
             Identifier id = Identifier.fromNamespaceAndPath(MOD_ID_MC, path);
             Identifier idFull = Identifier.fromNamespaceAndPath(MOD_ID_MC, getTexturesFullPath(path));
-            client.getTextureManager().release(idFull);
-            client.getTextureManager().register(idFull, new DynamicTexture(id::toString, texture));
+            registerTexture(client, idFull, TextureResources.from2dImage(id::toString, texture));
         }
         catch (Exception ex) {
             FortytwoEdit.logError("Failed to load mod texture: " + path);

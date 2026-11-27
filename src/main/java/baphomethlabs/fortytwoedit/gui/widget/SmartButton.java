@@ -60,7 +60,7 @@ public class SmartButton extends Button.Plain {
     }
 
     @Override
-    protected void extractContents(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY, final float a) {
+    protected void extractContents(final GuiGraphicsExtractor graphics) {
         this.extractDefaultSprite(graphics);
 
         int margin = 2;

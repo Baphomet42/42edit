@@ -11,6 +11,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiPipeline;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.MultiLineTextWidget;
@@ -20,7 +21,6 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
@@ -237,13 +237,13 @@ public abstract class GenericScreen extends Screen {
     }
 
     @Override
-    public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    public void extractBackground(GuiGraphicsExtractor context) {
         this.extractTransparentBackground(context);
         this.extractBehindBackgroundTexture(context);
 
         Identifier backgroundTexture = getBackgroundTexture();
         if (backgroundTexture != null)
-            context.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, this.x, this.y, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
+            context.blit(GuiPipeline.TEXTURED, backgroundTexture, this.x, this.y, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
     }
 
     @Override
@@ -346,8 +346,8 @@ public abstract class GenericScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context) {
+        super.extractRenderState(context);
         if (hasTitle) {
             context.centeredText(this.font, this.getTitle(), this.width / 2, y + 11, TEXT_COLOR);
             if (titleItem != null)
@@ -610,10 +610,10 @@ public abstract class GenericScreen extends Screen {
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void extractContent(GuiGraphicsExtractor context, boolean hovered) {
             for (PosWidget posWidget : this.children) {
                 posWidget.repositionInRow(this);
-                posWidget.w().extractRenderState(context, mouseX, mouseY, tickDelta);
+                posWidget.w().extractRenderState(context);
             }
         }
 

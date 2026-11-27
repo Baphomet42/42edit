@@ -3,8 +3,8 @@ package baphomethlabs.fortytwoedit.gui.widget;
 import baphomethlabs.fortytwoedit.gui.screen.GenericScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiPipeline;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -88,7 +88,7 @@ public class ItemSlotButton extends SmartButton {
     }
 
     private boolean shouldShowSlotHighlight() {
-        return isHoveredOrFocused() && this.showSlot;
+        return this.isHighlighted() && this.showSlot;
     }
 
     public enum ItemError {
@@ -98,30 +98,30 @@ public class ItemSlotButton extends SmartButton {
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-        super.extractContents(context, mouseX, mouseY, delta);
+    protected void extractContents(GuiGraphicsExtractor context) {
+        super.extractContents(context);
 
         if (this.showSlot)
-            context.blitSprite(RenderPipelines.GUI_TEXTURED,
+            context.blitSprite(GuiPipeline.TEXTURED,
                 SPRITE_SLOT, this.getX() + ((size - SIZE_SLOT) / 2), this.getY() + ((size - SIZE_SLOT) / 2), SIZE_SLOT, SIZE_SLOT);
 
         if (shouldShowSlotHighlight())
-            context.blitSprite(RenderPipelines.GUI_TEXTURED,
+            context.blitSprite(GuiPipeline.TEXTURED,
                 SPRITE_HIGHLIGHT_BACK, this.getX() + ((size - SIZE_HIGHLIGHT) / 2), this.getY() + ((size - SIZE_HIGHLIGHT) / 2), SIZE_HIGHLIGHT, SIZE_HIGHLIGHT);
 
         drawItem(context, this.item, this.getX() + ((size - SIZE_ITEM) / 2), this.getY() + ((size - SIZE_ITEM) / 2));
 
         if (this.emptySlotSprite != null && this.item.isEmpty())
-            context.blitSprite(RenderPipelines.GUI_TEXTURED,
+            context.blitSprite(GuiPipeline.TEXTURED,
                 this.emptySlotSprite, this.getX() + ((size - SIZE_EMPTY_SLOT_SPRITE) / 2), this.getY() + ((size - SIZE_EMPTY_SLOT_SPRITE) / 2),
                 SIZE_EMPTY_SLOT_SPRITE, SIZE_EMPTY_SLOT_SPRITE);
 
         if (shouldShowSlotHighlight())
-            context.blitSprite(RenderPipelines.GUI_TEXTURED,
+            context.blitSprite(GuiPipeline.TEXTURED,
                 SPRITE_HIGHLIGHT_FRONT, this.getX() + ((size - SIZE_HIGHLIGHT) / 2), this.getY() + ((size - SIZE_HIGHLIGHT) / 2), SIZE_HIGHLIGHT, SIZE_HIGHLIGHT);
 
         if (this.overlay != null)
-            context.blitSprite(RenderPipelines.GUI_TEXTURED,
+            context.blitSprite(GuiPipeline.TEXTURED,
                 this.overlay, this.getX() + ((size - overlaySize) / 2), this.getY() + ((size - overlaySize) / 2), overlaySize, overlaySize);
 
         if (this.error != ItemError.NONE) {
@@ -132,7 +132,7 @@ public class ItemSlotButton extends SmartButton {
                 case NONE: break;
             }
             if (sprite != null) {
-                context.blitSprite(RenderPipelines.GUI_TEXTURED,
+                context.blitSprite(GuiPipeline.TEXTURED,
                     sprite, this.getX() + ((getWidth() - SIZE_ERROR) / 2), this.getY() + ((getHeight() - SIZE_ERROR) / 2), SIZE_ERROR, SIZE_ERROR);
             }
         }

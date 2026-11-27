@@ -142,21 +142,6 @@ public class OptionsUtil {
         writeOptions();
     }
 
-    public static final Identifier[] DEBUG_SCREEN_REARRANGE_MOVE_LAST = {
-        Identifier.withDefaultNamespace("looking_at_entity"),
-        Identifier.withDefaultNamespace("looking_at_fluid"),
-        Identifier.withDefaultNamespace("looking_at_block")
-    };
-    private static String movedLastDisplay = null;
-    private static String getMovedLastDisplay() {
-        if (movedLastDisplay == null) {
-            movedLastDisplay = "";
-            for (Identifier i : DEBUG_SCREEN_REARRANGE_MOVE_LAST)
-                movedLastDisplay += "\n  \u2022 " + BlackMagick.identifierToStringSimplified(i);
-        }
-        return movedLastDisplay;
-    }
-
     public static class ModOptions {
         public static final ModOptionBoolean AUTO_CLICK_LOCK = registerModOption(
             new ModOptionBoolean("auto_click_lock", false, "AutoClick Lock")).setDisplayItem(Items.GOLDEN_SWORD)
@@ -170,6 +155,10 @@ public class OptionsUtil {
             new ModOptionBoolean("chat_icons", false, "Chat Icons")).setDisplayItem(Items.PLAYER_HEAD)
             .setDescription(true,
             "Player icons will render by chat messages.");
+        public static final ModOptionBoolean CONTAINER_TOOLTIP = registerModOption(
+            new ModOptionBoolean("container_tooltip", false, "Container Tooltip")).setDisplayItem(Items.SHULKER_BOX)
+            .setDescription(true,
+            "Container contents will show in item tooltips.");
         public static final ModOptionBoolean COORD_HUD = registerModOption(
             new ModOptionBoolean("coord_hud", false, "Coord HUD")).setDisplayItem(Items.COMPASS)
             .setDescription(true,
@@ -182,10 +171,6 @@ public class OptionsUtil {
             new ModOptionBoolean("custom_cape_toggle", false, "Custom Cape Toggle")).setDisplayItem(Items.CREEPER_HEAD)
             .setDescription(true,
             "Your player will render with the cape specified in the Custom Cape option.");
-        public static final ModOptionBoolean DEBUG_SCREEN_REARRANGE = registerModOption(
-            new ModOptionBoolean("debug_screen_rearrange", false, "Debug Screen Rearrange")).setDisplayItem(Items.COMMAND_BLOCK)
-            .setDescription(true,
-            "The following debug screen entries are moved to the end of the list:" + getMovedLastDisplay());
         public static final ModOptionBoolean SKIP_EXPERIMENTAL_WARNING = registerModOption(
             new ModOptionBoolean("skip_experimental_warning", false, "Skip Experimental Warning").setDisplayItem(Items.STRUCTURE_BLOCK)
             .setDescription(true,

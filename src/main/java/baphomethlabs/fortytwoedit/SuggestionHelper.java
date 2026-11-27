@@ -560,6 +560,9 @@ public class SuggestionHelper {
     public static final SuggestionGetter REGISTRY_DIALOG_TYPE = registerSuggsList("REGISTRY_DIALOG_TYPE", () ->
         getRegistryIfEmpty(createOrGetCacheList("REGISTRY_DIALOG_TYPE", false), BuiltInRegistries.DIALOG_TYPE));
 
+    public static final SuggestionGetter REGISTRY_DISPENSE_BEHAVIOR_TYPE = registerSuggsList("REGISTRY_DISPENSE_BEHAVIOR_TYPE", () ->
+        getRegistryIfEmpty(createOrGetCacheList("REGISTRY_DISPENSE_BEHAVIOR_TYPE", false), BuiltInRegistries.DISPENSE_BEHAVIOR_TYPE));
+
     public static final SuggestionGetter REGISTRY_ITEM = registerSuggsList("REGISTRY_ITEM", () ->
         getRegistryIfEmpty(createOrGetCacheList("REGISTRY_ITEM", false), BuiltInRegistries.ITEM));
 
@@ -629,6 +632,9 @@ public class SuggestionHelper {
 
     public static final SuggestionGetter DATA_DIALOG = registerSuggsList("DATA_DIALOG", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_DIALOG", true), Registries.DIALOG));
+
+    public static final SuggestionGetter DATA_DISPENSE_BEHAVIOR = registerSuggsList("DATA_DISPENSE_BEHAVIOR", () ->
+        getDataIfEmpty(createOrGetCacheList("DATA_DISPENSE_BEHAVIOR", true), Registries.DISPENSE_BEHAVIOR));
 
     public static final SuggestionGetter DATA_ENCHANTMENT = registerSuggsList("DATA_ENCHANTMENT", () ->
         getDataIfEmpty(createOrGetCacheList("DATA_ENCHANTMENT", true), Registries.ENCHANTMENT));

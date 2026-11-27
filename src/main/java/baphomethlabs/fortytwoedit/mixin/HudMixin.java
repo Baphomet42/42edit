@@ -9,7 +9,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import baphomethlabs.fortytwoedit.FortytwoEdit;
 import baphomethlabs.fortytwoedit.OptionsUtil;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Hud;
@@ -27,7 +26,7 @@ public abstract class HudMixin {
      * see {@link net.minecraft.client.gui.components.DebugScreenOverlay#extractRenderState}
      */
     @Inject(method = "extractRenderState", at = @At("TAIL"))
-    private void injectExtractRenderState(GuiGraphicsExtractor graphics, DeltaTracker tickCounter, CallbackInfo c) {
+    private void injectExtractRenderState(GuiGraphicsExtractor graphics, CallbackInfo c) {
         if (FortytwoEdit.autoMove || FortytwoEdit.autoClicker || FortytwoEdit.isRandoModeActive() || OptionsUtil.ModOptions.COORD_HUD.getSetting()) {
             final Minecraft minecraft = Minecraft.getInstance();
             if (!minecraft.gui.hud.isHidden() && minecraft.player != null) {

@@ -3,7 +3,7 @@ package baphomethlabs.fortytwoedit.gui.widget;
 import baphomethlabs.fortytwoedit.gui.screen.GenericScreen;
 import baphomethlabs.fortytwoedit.gui.widget.ItemSlotButton.ItemError;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiPipeline;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -71,8 +71,8 @@ public class SpriteButton extends SmartButton {
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-        super.extractContents(context, mouseX, mouseY, delta);
+    protected void extractContents(GuiGraphicsExtractor context) {
+        super.extractContents(context);
 
         if (spriteId != null) {
             int safeButtonWidth = this.getWidth() - MARGIN - MARGIN;
@@ -86,11 +86,11 @@ public class SpriteButton extends SmartButton {
             int top = this.getY() + MARGIN + (this.canStretch ? 0 : topOffset);
 
             if (isSprite)
-                context.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, left, top,
+                context.blitSprite(GuiPipeline.TEXTURED, spriteId, left, top,
                     this.canStretch ? safeButtonWidth : (stretch * this.spritePixelWidth),
                     this.canStretch ? safeButtonHeight : (stretch * this.spritePixelHeight));
             else
-                context.blit(RenderPipelines.GUI_TEXTURED, spriteId, left, top, this.spriteU, this.spriteV,
+                context.blit(GuiPipeline.TEXTURED, spriteId, left, top, this.spriteU, this.spriteV,
                     this.canStretch ? safeButtonWidth : (stretch * this.spritePixelWidth),
                     this.canStretch ? safeButtonHeight : (stretch * this.spritePixelHeight),
                     this.spritePixelWidth, this.spritePixelHeight, this.spriteTextureWidth, this.spriteTextureHeight);
@@ -104,7 +104,7 @@ public class SpriteButton extends SmartButton {
                 case NONE: break;
             }
             if (sprite != null) {
-                context.blitSprite(RenderPipelines.GUI_TEXTURED,
+                context.blitSprite(GuiPipeline.TEXTURED,
                     sprite, this.getX() + ((getWidth() - SIZE_ERROR) / 2), this.getY() + ((getHeight() - SIZE_ERROR) / 2), SIZE_ERROR, SIZE_ERROR);
             }
         }

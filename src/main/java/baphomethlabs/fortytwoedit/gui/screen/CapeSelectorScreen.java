@@ -124,9 +124,10 @@ public class CapeSelectorScreen extends GenericScreen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(context, mouseX, mouseY, delta);
-        drawEntity(context, x + playerX, y + playerY, x + playerX + playerWidth, y + playerY + playerHeight, 60, 0.0F, mouseX, mouseY, (LivingEntity)this.minecraft.player, true);
+    public void extractRenderState(GuiGraphicsExtractor context) {
+        super.extractRenderState(context);
+        drawEntity(context, x + playerX, y + playerY, x + playerX + playerWidth, y + playerY + playerHeight, 60, 0.0F,
+            context.mouseX(), context.mouseY(), (LivingEntity)this.minecraft.player, true);
     }
 
 }

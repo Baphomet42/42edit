@@ -57,6 +57,7 @@ public class FileTools {
         CACHE_DIRECTORY,
         FILE_OPTIONS,
         FILE_SAVED_ITEMS,
+        FILE_HEADS,
         FILE_WEB_CACHE
     };
 

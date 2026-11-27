@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.inventory.tooltip.BelowOrAboveWidgetTooltipPositioner;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.input.KeyEvent;
@@ -15,14 +16,13 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2ic;
 
 /**
  * Modified from {@link net.minecraft.client.gui.components.CommandSuggestions}
  */
-public class TextSuggestor {
+public class TextSuggestor implements Renderable {
     final Minecraft client;
     final EditBox input;
     final Font font;
@@ -57,11 +57,11 @@ public class TextSuggestor {
     }
 
     public boolean mouseScrolled(double d) {
-        return this.suggestionsWindow != null && this.suggestionsWindow.mouseScrolled(Mth.clamp(d, -1.0, 1.0));
+        return this.suggestionsWindow != null && this.suggestionsWindow.mouseScrolled(Math.clamp(d, -1.0, 1.0));
     }
 
-    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
-        return this.suggestionsWindow != null && this.suggestionsWindow.mouseClicked(mouseButtonEvent, doubleTap);
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent) {
+        return this.suggestionsWindow != null && this.suggestionsWindow.mouseClicked(mouseButtonEvent);
     }
 
     public void showSuggestions() {
@@ -155,13 +155,14 @@ public class TextSuggestor {
         }
     }
 
-    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int i, int j) {
-        this.renderSuggestions(guiGraphics, i, j);
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics) {
+        this.extractSuggestions(guiGraphics);
     }
 
-    public boolean renderSuggestions(GuiGraphicsExtractor guiGraphics, int i, int j) {
+    public boolean extractSuggestions(GuiGraphicsExtractor guiGraphics) {
         if (this.suggestionsWindow != null) {
-            this.suggestionsWindow.extractRenderState(guiGraphics, i, j);
+            this.suggestionsWindow.extractRenderState(guiGraphics);
             return true;
         }
         return false;
@@ -239,7 +240,7 @@ public class TextSuggestor {
 
     }
 
-    public class SuggestionsList {
+    public class SuggestionsList implements Renderable {
         private final Rect2i rect;
         private final List<SuggestionEntry> suggestionList;
         private int offset;
@@ -256,7 +257,8 @@ public class TextSuggestor {
             this.select(0);
         }
 
-        public void extractRenderState(GuiGraphicsExtractor guiGraphics, int i, int j) {
+        @Override
+        public void extractRenderState(GuiGraphicsExtractor graphics) {
             int k = Math.min(this.suggestionList.size(), TextSuggestor.this.suggestionLineLimit);
 
             List<ClientTooltipComponent> tooltipList = Lists.newArrayList();
@@ -272,20 +274,20 @@ public class TextSuggestor {
             rect.setWidth(maxWidth + WIDTH_PADDING * 2);
 
             BelowOrAboveWidgetTooltipPositioner ttPositioner = new BelowOrAboveWidgetTooltipPositioner(TextSuggestor.this.input.getRectangle());
-            Vector2ic vec = getTooltipPosition(TextSuggestor.this.font, guiGraphics, i, j, tooltipList, ttPositioner);
+            Vector2ic vec = getTooltipPosition(TextSuggestor.this.font, graphics, graphics.mouseX(), graphics.mouseY(), tooltipList, ttPositioner);
             rect.setX(vec.x() - WIDTH_PADDING);
             rect.setY(vec.y());
 
-            if (this.rect.contains(i, j)) {
-                int lineNum = (j - this.rect.getY()) / LINE_HEIGHT;
+            if (this.rect.contains(graphics.mouseX(), graphics.mouseY())) {
+                int lineNum = (graphics.mouseY() - this.rect.getY()) / LINE_HEIGHT;
                 int suggsNum = lineNum + this.offset;
                 if (suggsNum >= 0 && suggsNum < this.suggestionList.size() && lineNum >= 0 && lineNum < TextSuggestor.this.suggestionLineLimit) {
                     this.select(suggsNum);
-                    guiGraphics.requestCursor(CursorTypes.POINTING_HAND);
+                    graphics.requestCursor(CursorTypes.POINTING_HAND);
                 }
             }
 
-            guiGraphics.tooltip(TextSuggestor.this.font, tooltipList, i, j, ttPositioner, null, false);
+            graphics.tooltip(TextSuggestor.this.font, tooltipList, graphics.mouseX(), graphics.mouseY(), ttPositioner, null, 0);
         }
 
         /**
@@ -307,7 +309,7 @@ public class TextSuggestor {
             return clientTooltipPositioner.positionTooltip(guiGraphics.guiWidth(), guiGraphics.guiHeight(), i, j, k, l);
         }
 
-        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
+        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent) {
             if (!this.rect.contains((int)mouseButtonEvent.x(), (int)mouseButtonEvent.y())) {
                 return false;
             }
@@ -325,7 +327,7 @@ public class TextSuggestor {
         public boolean mouseScrolled(double d) {
             int j = (int)TextSuggestor.this.client.mouseHandler.getScaledYPos(TextSuggestor.this.client.getWindow());
             if (this.rect.getY() <= j && j <= this.rect.getY() + this.rect.getHeight()) {
-                this.offset = Mth.clamp((int)(this.offset - d), 0, Math.max(this.suggestionList.size() - TextSuggestor.this.suggestionLineLimit, 0));
+                this.offset = Math.clamp((int)(this.offset - d), 0, Math.max(this.suggestionList.size() - TextSuggestor.this.suggestionLineLimit, 0));
                 return true;
             }
             return false;
@@ -367,12 +369,12 @@ public class TextSuggestor {
             int j = this.offset;
             int k = this.offset + TextSuggestor.this.suggestionLineLimit - 1;
             if (this.current < j + SUGGS_PADDING) {
-                this.offset = Mth.clamp(
+                this.offset = Math.clamp(
                     this.current - SUGGS_PADDING,
                     0, Math.max(this.suggestionList.size() - TextSuggestor.this.suggestionLineLimit, 0)
                 );
             } else if (this.current > k - SUGGS_PADDING) {
-                this.offset = Mth.clamp(
+                this.offset = Math.clamp(
                     this.current + SUGGS_PADDING + TextSuggestor.this.lineStartOffset - TextSuggestor.this.suggestionLineLimit,
                     0, Math.max(this.suggestionList.size() - TextSuggestor.this.suggestionLineLimit, 0)
                 );

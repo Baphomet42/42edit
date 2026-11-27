@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.HotbarManager;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiPipeline;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -24,8 +25,7 @@ import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.PlayerSkinRenderCache;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.commands.arguments.item.ItemArgument;
+import net.minecraft.commands.arguments.item.ItemParser;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.ByteArrayTag;
@@ -656,7 +656,7 @@ public class ItemBuilderScreen extends GenericScreen {
         if (widgetCacheTest(WidgetCacheType.BTN_HEADS_MODE, WidgetCacheType.BTN_HEADS_DEL)) {
             ItemSlotButton btnMode = (ItemSlotButton)widgetCacheGet(WidgetCacheType.BTN_HEADS_MODE);
             Button btnDelMode = (Button)widgetCacheGet(WidgetCacheType.BTN_HEADS_DEL);
-            btnMode.setTooltip(TOOLTIP_SAVED_HEADS);//TODO
+            btnMode.setTooltip(TOOLTIP_SAVED_HEADS);//TODO implement head tab mode
             btnMode.setItem(HEADS_TAB_MODE_ITEMS[0].get());
             if (headModeDel) {
                 btnDelMode.setTooltip(Tooltip.create(Component.nullToEmpty("X - Delete")));
@@ -1835,7 +1835,7 @@ public class ItemBuilderScreen extends GenericScreen {
                                 }
 
                                 try {
-                                    item = ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(inp)).createItemStack(1);
+                                    item = (new ItemParser(BlackMagick.getRegistryAccess())).parse(new StringReader(inp)).createItemStack(1);
                                 }
                                 catch (Exception ex) {
                                     if (ex instanceof CommandSyntaxException ex2) {
@@ -1944,7 +1944,7 @@ public class ItemBuilderScreen extends GenericScreen {
                                 }
 
                                 try {
-                                    item = ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(inp)).createItemStack(1);
+                                    item = (new ItemParser(BlackMagick.getRegistryAccess())).parse(new StringReader(inp)).createItemStack(1);
                                 } catch (Exception ex) {}
 
                                 if (!item.isEmpty()) {
@@ -2218,7 +2218,7 @@ public class ItemBuilderScreen extends GenericScreen {
             {
                 // button is setup in updateHeadsTabButtons()
                 ItemSlotButton w = new ItemSlotButton(this, ItemSlotButton.SLOT_HEIGHT, null, btn -> {
-                    //TODO
+                    //TODO implement head tab mode
                     updateHeadsTabButtons();
                     ItemBuilderScreen.this.unsel();
                 });
@@ -3586,23 +3586,23 @@ public class ItemBuilderScreen extends GenericScreen {
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void extractContent(GuiGraphicsExtractor context, boolean hovered) {
             for (int i = 0; i < btns.length; i++) {
                 this.btns[i].setX(this.getContentX() + this.btnX[i]);
                 if (this.btnY == null)
                     this.btns[i].setY(this.getContentY());
                 else
                     this.btns[i].setY(this.getContentY() + this.btnY[i]);
-                this.btns[i].extractRenderState(context, mouseX, mouseY, tickDelta);
+                this.btns[i].extractRenderState(context);
             }
             for (int i = 0; i < txts.length; i++) {
                 this.txts[i].setX(this.getContentX() + this.txtX[i]);
                 this.txts[i].setY(this.getContentY());
-                this.txts[i].extractRenderState(context, mouseX, mouseY, tickDelta);
+                this.txts[i].extractRenderState(context);
             }
             for (PosWidget posWidget : this.wids) {
                 posWidget.repositionInRow(this);
-                posWidget.w().extractRenderState(context, mouseX, mouseY, tickDelta);
+                posWidget.w().extractRenderState(context);
             }
             if (lbl != null) {
                 if (lblCentered)
@@ -3811,7 +3811,7 @@ public class ItemBuilderScreen extends GenericScreen {
                                         setErrorMsg(BlackMagick.getItemCompoundErrors(BlackMagick.nbtToSnbt(BlackMagick.setNbtPath(itemStack, path, el)), inpError));
                                     else {
                                         try {
-                                            ItemArgument.item(BlackMagick.getCommandRegistries()).parse(
+                                            (new ItemParser(BlackMagick.getRegistryAccess())).parse(
                                                 new StringReader("stone[" + path.replaceFirst("components\\.", "") + "=" + value + "]"));
                                         }
                                         catch (Exception ex) {
@@ -3836,7 +3836,7 @@ public class ItemBuilderScreen extends GenericScreen {
                                     }
                                     else {
                                         try {
-                                            ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(idValue));
+                                            (new ItemParser(BlackMagick.getRegistryAccess())).parse(new StringReader(idValue));
                                         }
                                         catch (Exception ex) {
                                             if (ex instanceof CommandSyntaxException ex2) {
@@ -5297,10 +5297,10 @@ public class ItemBuilderScreen extends GenericScreen {
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            super.extractContent(context, mouseX, mouseY, hovered, tickDelta);
+        public void extractContent(GuiGraphicsExtractor context, boolean hovered) {
+            super.extractContent(context, hovered);
             if (this.renderHotbarSel)
-                context.blitSprite(RenderPipelines.GUI_TEXTURED, SEL_SLOT,
+                context.blitSprite(GuiPipeline.TEXTURED, SEL_SLOT,
                     this.getContentX() + (minecraft.player.getInventory().getSelectedSlot() * 20) + 40 - 2, this.getContentY() - 2 - 20, 24, 23);
         }
 
@@ -5429,8 +5429,8 @@ public class ItemBuilderScreen extends GenericScreen {
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            super.extractContent(context, mouseX, mouseY, hovered, tickDelta);
+        public void extractContent(GuiGraphicsExtractor context, boolean hovered) {
+            super.extractContent(context, hovered);
 
             boolean editorEqual = false;
             switch (this.cacheType) {
@@ -5676,22 +5676,22 @@ public class ItemBuilderScreen extends GenericScreen {
 
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context) {
+        super.extractRenderState(context);
 
         if (!tabs[tab].hideTabs()) {
             drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
-                mouseX, mouseY, (LivingEntity)((prevArmorStand && renderArmorStand != null) ? renderArmorStand : this.minecraft.player), false);
+                context.mouseX(), context.mouseY(), (LivingEntity)((prevArmorStand && renderArmorStand != null) ? renderArmorStand : this.minecraft.player), false);
 
             txtFormat.setX(x + 50);
-            txtFormat.extractRenderState(context, mouseX, mouseY, delta);
+            txtFormat.extractRenderState(context);
             if (!this.UNSAVED_TEXT_WIDGETS.isEmpty())
                 context.centeredText(this.font, Component.nullToEmpty("Unsaved"), this.width / 2, y - 11, TEXT_COLOR);
         }
         else {
             if (textComponentPreview != null) {
                 txtFormat.setX(x - 15);
-                txtFormat.extractRenderState(context, mouseX, mouseY, delta);
+                txtFormat.extractRenderState(context);
 
                 if (textComponentPreviewBook) {
                     // Modified from {@link net.minecraft.client.gui.screens.inventory.BookViewScreen#visitText}
@@ -5726,14 +5726,14 @@ public class ItemBuilderScreen extends GenericScreen {
 
             if (showPosePreview) {
                 drawEntity(context, x + playerX, y + playerY, x + playerX + 100, y + playerY + 100, ENTITY_RENDER_SIZE, 0f,
-                    mouseX, mouseY, (LivingEntity)renderArmorPose, false);
+                    context.mouseX(), context.mouseY(), (LivingEntity)renderArmorPose, false);
             }
         }
         if (lblInpError != null)
-            lblInpError.extractRenderState(context, mouseX, mouseY, delta);
+            lblInpError.extractRenderState(context);
 
         if (suggs != null)
-            suggs.extractRenderState(context, mouseX, mouseY);
+            suggs.extractRenderState(context);
     }
 
     @Override
@@ -5744,7 +5744,7 @@ public class ItemBuilderScreen extends GenericScreen {
     @Override
     protected void extractBehindBackgroundTexture(GuiGraphicsExtractor context) {
         if (textComponentPreviewBook && tabs[tab].hideTabs())
-            context.blit(RenderPipelines.GUI_TEXTURED, BookViewScreen.BOOK_LOCATION, x + bookX, y + bookY, 0.0F, 0.0F, 192, 192, 256, 256);
+            context.blit(GuiPipeline.TEXTURED, BookViewScreen.BOOK_LOCATION, x + bookX, y + bookY, 0.0F, 0.0F, 192, 192, 256, 256);
     }
 
     @Override
@@ -5800,7 +5800,7 @@ public class ItemBuilderScreen extends GenericScreen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleTap) {
-        if (suggs != null && suggs.mouseClicked(mouseButtonEvent, doubleTap)) {
+        if (suggs != null && suggs.mouseClicked(mouseButtonEvent)) {
             return true;
         }
         resetSuggs();

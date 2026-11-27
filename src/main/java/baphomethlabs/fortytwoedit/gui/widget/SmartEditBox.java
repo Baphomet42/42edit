@@ -40,8 +40,8 @@ public class SmartEditBox extends EditBox {
     }
 
     @Override
-    public void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int i, int j, float f) {
-        super.extractWidgetRenderState(guiGraphics, i, j, f);
+    public void extractWidgetRenderState(GuiGraphicsExtractor graphics) {
+        super.extractWidgetRenderState(graphics);
 
         if (this.smartTooltip != null) {
             if (isFocused())

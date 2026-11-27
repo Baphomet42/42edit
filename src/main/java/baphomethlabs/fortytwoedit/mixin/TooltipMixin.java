@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,11 +27,17 @@ public abstract class TooltipMixin {
 
     @Shadow
     @Final
-    protected Component message;
+    @Nullable
+    protected Component title;
+
+    @Shadow
+    @Final
+    protected List<Component> messages;
 
     @Inject(method = "toCharSequence", at = @At("RETURN"), cancellable = true)
     private void injectToCharSequence(Minecraft client, CallbackInfoReturnable<List<FormattedCharSequence>> cir) {
-        if (client.gui != null && client.gui.screen() != null && client.gui.screen() instanceof GenericScreen) {
+        if (title == null && messages != null && messages.size() == 1 && client.gui != null && client.gui.screen() != null && client.gui.screen() instanceof GenericScreen) {
+            Component message = messages.get(0);
             GenericScreen.setCurrentTooltip(message);
             if (client.font.split(message, small).size() > lineSwap) {
 

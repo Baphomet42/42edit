@@ -16,9 +16,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.PlayerSkinRenderCache.RenderInfo;
-import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.arguments.NbtPathArgument.NbtPath;
-import net.minecraft.commands.arguments.item.ItemArgument;
+import net.minecraft.commands.arguments.item.ItemParser;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentType;
@@ -547,7 +546,7 @@ public class BlackMagick {
             return invalidMsg;
         try {
             String giveMsg = "bundle[bundle_contents=[" + item + "]]";
-            ItemArgument.item(BlackMagick.getCommandRegistries()).parse(new StringReader(giveMsg));
+            (new ItemParser(BlackMagick.getRegistryAccess())).parse(new StringReader(giveMsg));
         }
         catch (Exception ex) {
             if (ex instanceof CommandSyntaxException ex2) {
@@ -1216,14 +1215,6 @@ public class BlackMagick {
      */
     public static String hexFromInt(int dec) {
         return "0x" + Integer.toHexString(dec).toUpperCase();
-    }
-
-    /**
-     * 
-     * @return vanilla command registries with all features enabled
-     */
-    public static CommandBuildContext getCommandRegistries() {
-        return CommandBuildContext.simple(BlackMagick.getRegistryAccess(), FortytwoEdit.FEATURES);
     }
 
     public static Component getElementDifferencesOrColorfulText(Tag left, Tag right) {
